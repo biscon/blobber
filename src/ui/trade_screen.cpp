@@ -220,12 +220,8 @@ void HudPainter::tradeTooltip(const HudSnapshot& h) const {
                                                        : "Sell",
                   cell.price, cell.quantity);
     offered.add(cell.price ? lineText : "The merchant does not buy this item.");
-    if (cell.buyback) {
-        char duration[48];
-        remaining(duration, sizeof(duration), cell.expiresMs, t.nowMs);
-        std::snprintf(lineText, sizeof(lineText), "Buyback expires in %s", duration);
-        offered.add(lineText);
-    }
+    if (cell.buyback)
+        offered.add("Available until you close trading.");
     itemText(offered, *this, *cell.definition, comparison.offeredWeapon, comparison.offeredArmorClass,
              width - 16);
     if (cell.definition->wearSlot != rules::WearSlot::None) {

@@ -59,7 +59,7 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
         for (unsigned i = 0; i < floor->definition().count; ++i) {
             const auto& f = floor->definition().entries[i];
             if (view.contains(f.cell))
-                marker(mapFixtureMarker(*floor, i, reveal),
+                marker(model->fixtureMarker(*floor, i, reveal),
                        {view.left(f.cell) + iconInset, view.top(f.cell) + iconInset, iconSize, iconSize});
         }
     if (view.contains(state.player.cell))

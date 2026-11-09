@@ -43,7 +43,7 @@ struct HudCard {
     rules::Abilities abilities{};
     int armorClass = 0, level = 1;
     std::uint64_t cooldownMs = 0;
-    bool spent = false, selecting = false, levelEligible = false;
+    bool spent = false, selecting = false, levelEligible = false, levelEarned = false;
     unsigned portrait = 100;
     bool castRisk = false, castRecipient = false, castEligible = true, castCaster = false,
          castHovered = false;

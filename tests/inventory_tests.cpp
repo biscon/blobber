@@ -6,6 +6,7 @@
 #include "support/early_equipment_fixtures.hpp"
 #include "support/inventory_fixtures.hpp"
 #include "ui/interaction.hpp"
+#include "ui/button_targets.hpp"
 #include "ui/inventory_layout.hpp"
 #include <chrono>
 #include <cstring>
@@ -877,14 +878,29 @@ void wearableInput() {
     for (unsigned n = 0; n < equipmentSlots; ++n) {
         const auto r = inventoryLayout::equipment(int(n));
         UiInput in;
+        in.pointerTracked = true;
+        in.pointerHeld = true;
         in.pointer = ArtPoint{float(r.x + r.width / 2), float(r.y + r.height / 2)};
         in.pressed[unsigned(UiKey::Click)] = true;
         routeHudInput(ui, in);
         check(ui.snapshot().inventory.cursor == bagCells + n, "Every compact equipment box is selectable");
+        in.pressed.fill(false);
+        in.pointerHeld = false;
+        in.pointerReleased = true;
+        routeHudInput(ui, in);
         const auto label = inventoryLayout::equipmentLabel(int(n));
+        ui.inventorySelect(0);
+        in.pointerTracked = true;
+        in.pointerHeld = true;
+        in.pointerReleased = false;
+        in.pressed[unsigned(UiKey::Click)] = true;
         in.pointer = ArtPoint{float(label.x + label.width / 2), float(label.y + label.height / 2)};
         routeHudInput(ui, in);
         check(ui.snapshot().inventory.cursor == bagCells + n, "Attached captions select their own slot");
+        in.pressed.fill(false);
+        in.pointerHeld = false;
+        in.pointerReleased = true;
+        routeHudInput(ui, in);
         check(r.width == 24 && r.height == 24, "Compact targets occupy 72 native pixels");
         for (unsigned m = 0; m < n; ++m) {
             const auto other = inventoryLayout::equipment(int(m));
@@ -926,6 +942,108 @@ void wearableInput() {
         check(s.party().inventory().at({{0}, static_cast<std::uint16_t>(expected)}) == ring,
               "Equip fills empty ring positions before deterministically replacing Ring 1");
     }
+}
+void physicalEquipmentInput() {
+    const auto cat = blobber::test::withMagicItems(inventoryCatalog(wearableFixture()));
+    const auto map = hybridRoom();
+    const Player spawn{{6, 8}, Heading::North};
+    const NpcWorld empty(map, spawn.cell, {}, {});
+    GameSession s(map, cat, empty, 5, spawn, false);
+    CommandController ui(s);
+    ui.refresh({}, false, false, true);
+    ui.openInventory(rules::CharacterId{0});
+    const auto physical = [&](UiRect r, bool press, bool held, bool release) {
+        UiInput in;
+        in.pointerTracked = true;
+        in.pointer = ArtPoint{float(r.x + r.width / 2), float(r.y + r.height / 2)};
+        in.pointerHeld = held;
+        in.pointerReleased = release;
+        in.pressed[unsigned(UiKey::Click)] = press;
+        routeHudInput(ui, in);
+    };
+    const auto drag = [&](UiRect from, UiRect to) {
+        physical(from, true, true, false);
+        check(ui.snapshot().inventory.pointerDown, "Physical card/bag press captures an item");
+        const auto before = s.party().inventory().revision();
+        physical(to, false, true, false);
+        check(ui.snapshot().inventory.dragging && s.party().inventory().revision() == before,
+              "Physical drag stages without changing inventory before release");
+        physical(to, false, false, true);
+    };
+    for (unsigned n = 0; n < equipmentSlots; ++n) {
+        const auto slot = std::uint16_t(bagCells + n);
+        auto handle = s.party().inventory().at({{0}, slot});
+        if (!handle) {
+            const auto definition = std::uint16_t(n == 3 ? 3 : 12 + n - 4);
+            check(bool(s.party().acquire({{0}, {definition}, 1, s.party().inventory().revision()})),
+                  "Acquire owned item for an empty equipment position");
+            handle = findInventoryItem(s.party(), 0, definition);
+        }
+        std::uint16_t target = 0;
+        while (target < bagCells && s.party().inventory().at({{0}, target}))
+            ++target;
+        check(target < bagCells, "Equipment regression has an empty destination");
+        ui.refresh({}, false, false, true);
+        const auto frame = inventoryLayout::equipmentFrame(int(n));
+        if (s.party().inventory().locate(handle).cell >= bagCells)
+            drag(frame, inventoryLayout::cell(target));
+        const auto source = s.party().inventory().locate(handle).cell;
+        check(source < bagCells, "Physical unequip returns the original equipped item to the bag");
+        drag(inventoryLayout::cell(source), frame);
+        check(s.party().inventory().at({{0}, slot}) == handle, "Physical drop equips every position");
+        drag(inventoryLayout::equipmentLabel(int(n)), inventoryLayout::cell(source));
+        check(s.party().inventory().at({{0}, source}) == handle && !s.party().inventory().at({{0}, slot}),
+              "Dragging the attached caption unequips every position into its bag");
+        check(!hudButtonTargets(ui.snapshot()).overflow, "All equipment controls fit bounded router storage");
+    }
+    const auto beltId = cat.findItem("belt_of_vigor");
+    check(bool(s.party().acquire({{0}, beltId, 1, s.party().inventory().revision()})), "Acquire vigor belt");
+    const auto belt = findInventoryItem(s.party(), 0, beltId.index);
+    const auto bag = s.party().inventory().locate(belt).cell;
+    const auto frame = inventoryLayout::equipmentFrame(int(unsigned(EquipmentSlot::Belt) - bagCells));
+    const auto hp = s.party().character({0})->stats.maxHitPoints;
+    ui.refresh({}, false, false, true);
+    drag(inventoryLayout::cell(bag), frame);
+    check(s.party().character({0})->stats.maxHitPoints == hp + 3, "Physical belt equip adds its HP capacity");
+    s.party().heal({0}, 100);
+    drag(frame, inventoryLayout::cell(bag));
+    check(s.party().character({0})->stats.maxHitPoints == hp && s.party().character({0})->hitPoints == hp,
+          "Physical vigor belt removal reconciles the HP cap and clamps current HP");
+    drag(inventoryLayout::cell(bag), frame);
+    const auto revision = s.party().inventory().revision();
+    physical(frame, true, true, false);
+    physical(inventoryLayout::cell(bag), false, true, false);
+    UiInput cancel;
+    cancel.pressed[unsigned(UiKey::Cancel)] = true;
+    routeHudInput(ui, cancel);
+    physical(inventoryLayout::cell(bag), false, false, true);
+    check(s.party().inventory().revision() == revision && !ui.snapshot().inventory.dragging,
+          "Cancel followed by physical release cannot unequip a captured belt");
+    while (s.party().acquire({{0}, {21}, 1, s.party().inventory().revision()})) {
+    }
+    ui.refresh({}, false, false, true);
+    ui.inventorySelect(unsigned(EquipmentSlot::Belt));
+    ui.inventoryAction(InventoryAction::Equip);
+    check(s.party().inventory().at({{0}, unsigned(EquipmentSlot::Belt)}) == belt &&
+              !ui.snapshot().inventory.actions[unsigned(InventoryAction::Equip)].enabled,
+          "A full bag disables Unequip and preserves the belt");
+
+    const NpcWorld enemies(map, spawn.cell, {"goblin"}, {{{0}, {6, 7}, {0, 0}, Heading::South}});
+    auto danger = std::make_unique<GameSession>(map, cat, enemies, 5, spawn, false);
+    check(bool(danger->party().acquire({{0}, beltId, 1, danger->party().inventory().revision()})),
+          "Acquire unsafe-removal fixture");
+    const auto worn = findInventoryItem(danger->party(), 0, beltId.index);
+    check(bool(danger->party().inventoryChange(inventoryRequest(danger->party(), worn, 0,
+                                                               unsigned(EquipmentSlot::Belt)))),
+          "Prepare equipped belt before testing session safety");
+    CommandController locked(*danger);
+    locked.refresh({}, false, false, true);
+    locked.openInventory(rules::CharacterId{0});
+    locked.inventorySelect(unsigned(EquipmentSlot::Belt));
+    locked.inventoryAction(InventoryAction::Equip);
+    check(danger->party().inventory().at({{0}, unsigned(EquipmentSlot::Belt)}) == worn &&
+              !locked.snapshot().inventory.actions[unsigned(InventoryAction::Equip)].enabled,
+          "Nearby danger still blocks belt removal through the normal action");
 }
 void crossbowAmmunition() {
     using namespace rules;
@@ -1083,6 +1201,7 @@ int main(int argc, char** argv) {
         crossbowAmmunition();
         paperdollGeometry();
         wearableInput();
+        physicalEquipmentInput();
         std::cout << "Inventory transactions, costs, effects and input passed ("
                   << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                            start)

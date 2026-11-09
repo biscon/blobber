@@ -15,9 +15,10 @@
 
 using namespace blobber;
 int main(int argc, char** argv) try {
-    if (argc != 3)
-        throw std::runtime_error("Usage: blobber_review_trade ASSETS NEW_OUTPUT");
-    const std::filesystem::path root(argv[1]), output(argv[2]);
+    if (argc != 3 && argc != 4)
+        throw std::runtime_error("Usage: blobber_review_trade ASSETS [PREPARED] NEW_OUTPUT");
+    const std::filesystem::path root(argv[1]), output(argv[argc - 1]);
+    const auto prepared = argc == 4 ? std::filesystem::path(argv[2]) : root / "prepared";
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
     auto catalog = loadRules(root / "rules/catalog.json");
@@ -49,9 +50,9 @@ int main(int argc, char** argv) try {
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
         throw std::runtime_error("Review window must remain hidden");
     GpuResources resources;
-    Presenter presenter(resources, root);
+    Presenter presenter(resources, root, nullptr, prepared);
     prepareDialogueUi(dialogue, presenter.fonts());
-    WorldRenderer renderer(resources, world_assets::load(root / "prepared/world"));
+    WorldRenderer renderer(resources, world_assets::load(prepared / "world"));
     auto view = std::make_unique<GameView>(renderer);
     NpcAnimator animation(game.actors(), definitions.timings);
     game.discover();
@@ -142,12 +143,21 @@ int main(int argc, char** argv) try {
     key(UiKey::Confirm);
     if (run->party().gold() != initialGold + 972)
         throw std::runtime_error("Review sale failed");
-    cell(TradeSide::Merchant, 12, true);
+    unsigned buyback = 48;
+    for (unsigned i = 0; i < 48; ++i)
+        if (controls.snapshot().trade.merchant[i].buyback &&
+            controls.snapshot().trade.merchant[i].definition->id == "dagger")
+            buyback = i;
+    if (buyback == 48)
+        throw std::runtime_error("Review dagger buyback not found");
+    cell(TradeSide::Merchant, buyback, true);
+    cell(TradeSide::Merchant, buyback, false);
+    controls.tickDialogue(.35, true);
     shot("trade-buyback");
-    if (!controls.snapshot().trade.merchant[12].buyback || controls.snapshot().trade.merchant[12].price != 3)
+    if (controls.snapshot().trade.merchant[buyback].price != 3)
         throw std::runtime_error("Review buyback markup failed");
     UiInput drag;
-    const auto source = tradeLayout::cell(TradeSide::Merchant, 12);
+    const auto source = tradeLayout::cell(TradeSide::Merchant, buyback);
     drag.pointerTracked = true;
     drag.pointerHeld = true;
     drag.pointer = ArtPoint{float(source.x + 8), float(source.y + 8)};

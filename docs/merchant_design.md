@@ -1,5 +1,32 @@
 # Merchants and trading
 
+## Session-only buyback — 2026-11-09
+
+Implemented and mechanically verified; interactive user review pending. One session is one opening of the trade overlay;
+character/page changes do not end it. MerchantLedger exposes a bounded clearBuyback
+operation that clears only the selected resident's sold goods and advances its
+revision when changed, invalidating outstanding requests. Open clears legacy
+buyback before displaying offers; close clears before resetting the trade HUD.
+Escape, Back, X, overlay/dialogue teardown, rebinding and destruction share close.
+Authored stock, restock deadlines, gold and markup remain unchanged. No allocation
+is added. Revision exhaustion clears goods but leaves trading permanently rejected
+by its existing exhaustion check rather than wrapping the revision.
+
+Campaign-time expiry no longer controls buyback. Existing buyback_hours and saved
+expiresMs fields remain validated/serialized compatibility metadata (new sales
+still populate them); no schema/simulation/content changes or save edits. Tooltip
+copy explains that buyback ends when trading closes. CPU regressions exercise all
+exit paths, reopening, legacy stock, stale requests, vendor isolation, unchanged
+purse/retail stock, capacity, lifetime and allocation invariants; existing save
+smoke checks validate wire compatibility.
+
+Debug `trade` passes (0.01 s), including tracked close-X/Back, Escape, overlay/
+dialogue teardown, rebinding and destruction; warm refresh and cleanup allocate
+no engine-owned C++ storage. Hidden production buyback tooltip/drag and resource
+release checks pass. See [shared commands and limitations](map_revision.md#playthrough-correction-verification--2026-11-09)
+and [review evidence](screenshots/playthrough-fixes/README.md). Interactive review
+remains pending; this correction supersedes historical timed-buyback behavior.
+
 Status: implemented and mechanically verified; runtime user review pending,
 2026-11-07. The user accepted the
 [two-grid mockup](mockups/trade-v1/README.md), with uniform square slots and item
@@ -14,7 +41,7 @@ shop definitions live separately under `assets/shops/`. No general NPC registry
 is needed for this concrete feature. Loading validates all dialogue shop references.
 The immutable shop catalog owns prices and finite restock targets; it lives beside
 the rules/dialogue catalogs for gameplay. No text parsing or file I/O during play.
-Shop YAML includes `restock_days`, `buyback_hours`, `buyback_markup_percent`,
+Shop YAML includes `restock_days`, legacy `buyback_hours`, `buyback_markup_percent`,
 per-item buy/sell prices and stocked quantities. Currency cannot be merchandise.
 Unpriced items cannot be sold. Buyback costs the sale proceeds plus the configured
 markup, rounded up; ordinary retail prices must exceed selling prices.
@@ -26,8 +53,8 @@ shop and 48 buyback stacks per vendor. Counts/prices are bounded at load time;
 fixed runtime arrays keep updates, inspection and transactions allocation-free.
 Full buyback storage rejects a sale explicitly rather than deleting an item.
 Display stock/buyback pages contain 48 cells; bought-out authored stock remains
-visible with zero quantity. Buyback entries reuse slots only after expiry or
-purchase; requests validate resident/shop identity and ledger/inventory revisions.
+visible with zero quantity. Buyback entries reuse slots after purchase or session
+close; requests validate resident/shop identity and ledger/inventory revisions.
 
 ## Transactions, time and saves
 
@@ -46,12 +73,12 @@ requests change neither side. Prices and arithmetic use checked bounded values;
 purse overflow rejects before publication. Currency acquisition ignores bag
 capacity/weight but retains revision, quantity, valid recipient and loot-access checks.
 
-Restock and expiry use existing elapsed campaign GameTime. First visit starts
+Restock uses existing elapsed campaign GameTime. First visit starts
 the restock deadline; each due interval refills authored quantities to their
 targets, without accumulating missed deliveries. Large time jumps use arithmetic
-rather than per-day loops. Each sale expires after the shop's buyback duration;
-restocking never extends those deadlines. Refresh at entry and transaction time,
-with bounded work; conversations and trade freeze gameplay time.
+rather than per-day loops. Buyback lasts only until the trade overlay closes;
+legacy duration/deadline fields remain for save/content compatibility. Refresh at
+entry and transaction time, with bounded work; conversations and trade freeze gameplay time.
 
 Checkpointing serializes only visited vendors and Party's purse. Save schema 14
 is the sole accepted version; simulation remains 17. There is no runtime save

@@ -18,8 +18,6 @@ enum class MapMarker : std::uint8_t {
     Downstairs,
     Objective
 };
-MapMarker mapFixtureMarker(const FloorGeometry&, unsigned slot, bool reveal) noexcept;
-
 struct MapBounds {
     Cell first{};
     int width = 0, height = 0;
@@ -44,6 +42,7 @@ class MapOverlayModel {
     void prepare(const Map&, const generation::FloorLayout* rooms = nullptr) noexcept;
     void refresh(const FloorGeometry*) noexcept;
     MapTile tile(Cell, bool reveal = false) const noexcept;
+    MapMarker fixtureMarker(const FloorGeometry&, unsigned slot, bool reveal = false) const noexcept;
     MapBounds bounds() const noexcept { return bounds_; }
 
   private:

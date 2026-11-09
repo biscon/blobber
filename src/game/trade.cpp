@@ -38,15 +38,27 @@ MerchantState* MerchantLedger::visit(DialogueKey resident, const ShopDefinition&
             state.stock[entry.item.index] = entry.quantity;
     return &state;
 }
+bool MerchantLedger::clearBuyback(DialogueKey resident) noexcept {
+    for (unsigned i = 0; i < count_; ++i) {
+        auto& state = merchants_[i];
+        if (state.resident != resident)
+            continue;
+        bool changed = false;
+        for (auto& entry : state.buyback) {
+            changed |= entry.quantity != 0;
+            entry = {};
+        }
+        // Exhausted ledgers already reject trades; never wrap or create an invalid save revision.
+        if (changed && state.revision < UINT64_MAX - 1)
+            ++state.revision;
+        return changed;
+    }
+    return false;
+}
 bool MerchantLedger::refresh(MerchantState& state, const ShopDefinition& shop, GameTime now) noexcept {
     if (state.revision >= UINT64_MAX - 1 || state.shop != shop.id)
         return false;
     bool changed = false;
-    for (auto& entry : state.buyback)
-        if (entry.quantity && now.elapsedMs >= entry.expiresMs) {
-            entry = {};
-            changed = true;
-        }
     const auto period = std::uint64_t(shop.restockDays) * gameDuration::day;
     if (period && now.elapsedMs >= state.restockMs) {
         state.stock = {};

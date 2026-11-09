@@ -1,5 +1,17 @@
 # System design
 
+**Playthrough corrections — 2026-11-09 (implemented and mechanically verified; user review pending).**
+[Room-revealed fixture icons](map_revision.md#room-revealed-fixtures--2026-11-09),
+[session-only buyback](merchant_design.md#session-only-buyback--2026-11-09),
+[complete equipment pointer routing](inventory_design.md#equipment-pointer-routing--2026-11-09)
+and [stable earned-level reminders](progression_design.md#earned-level-reminders--2026-11-09)
+correct four reported playthrough bugs without changing campaign formats/content.
+Current campaigns remain compatible; no user-save edits are required. The Debug
+game builds; nine focused CPU suites and two hidden UI/merchant checks pass.
+[Verification](map_revision.md#playthrough-correction-verification--2026-11-09) and
+[six review images](screenshots/playthrough-fixes/README.md). Disposable output is
+cleaned; interactive review remains pending.
+
 [Early equipment and continued campaign play](early_equipment_design.md): implemented
 and mechanically verified; interactive review pending. Adds 31 ordinary/magical
 items with generated artwork, modest equipped bonuses, five party-matched seeded

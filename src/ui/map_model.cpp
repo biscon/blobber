@@ -15,12 +15,14 @@ MapGridView MapGridView::fit(MapBounds bounds, Cell party, int cx, int cy, int w
     axis(bounds.first.y, bounds.height, party.y, cy, h, result.first.y, result.rows, result.y);
     return result;
 }
-MapMarker mapFixtureMarker(const FloorGeometry& floor, unsigned slot, bool reveal) noexcept {
-    if (slot >= floor.definition().count || (!reveal && !floor.known(slot)))
+MapMarker MapOverlayModel::fixtureMarker(const FloorGeometry& floor, unsigned slot, bool reveal) const noexcept {
+    if (!ready_ || &floor.view().base() != map_ || floor.world() != world_ ||
+        slot >= floor.definition().count || tile(floor.definition().entries[slot].cell, reveal) != MapTile::Floor)
         return MapMarker::None;
     const auto kind = floor.definition().entries[slot].kind;
-    const bool open = reveal ? floor.open(slot) : floor.rememberedOpen(slot);
-    const bool done = reveal ? floor.completed(slot) : floor.rememberedComplete(slot);
+    const bool current = reveal || !floor.known(slot);
+    const bool open = current ? floor.open(slot) : floor.rememberedOpen(slot);
+    const bool done = current ? floor.completed(slot) : floor.rememberedComplete(slot);
     switch (kind) {
     case FixtureKind::Door:
         return open ? MapMarker::OpenDoor : MapMarker::ClosedDoor;

@@ -14,6 +14,9 @@
 using namespace blobber;
 namespace {
 constexpr auto host = dialogueKey("fixture.host");
+bool hasBuyback(const MerchantState& state) {
+    return std::any_of(state.buyback.begin(), state.buyback.end(), [](const auto& entry) { return entry.quantity; });
+}
 rules::Catalog fixtureCatalog(bool atCapacity = false) {
     auto f = inventoryFixture();
     if (atCapacity)
@@ -245,10 +248,10 @@ void capacityAndTime() {
               seller.gold() == sellerGold,
           "Full buyback storage rejects without losing goods");
     auto* state = ledger.visit(host, content.shops[0], {gameDuration::day - 1});
-    check(state->buyback[0].quantity == 1, "Buyback remains until exact expiry");
+    check(state->buyback[0].quantity == 1, "Buyback remains available within a trading session");
     state = ledger.visit(host, content.shops[0], {gameDuration::day});
-    check(state->buyback[0].quantity == 0 && state->stock[10] == 2,
-          "Expiry clears sold items without prematurely restocking ordinary stock");
+    check(state->buyback[0].quantity == 1 && state->stock[10] == 2,
+          "Legacy expiry metadata no longer removes session buyback or restocks ordinary goods");
     ledger.visit(host, content.shops[0], {2 * gameDuration::day - 1});
     check(state->stock[10] == 2, "Restock waits until deadline");
     ledger.visit(host, content.shops[0], {2 * gameDuration::day});
@@ -259,6 +262,26 @@ void capacityAndTime() {
           "Large time jump computes the next interval without iterative deliveries");
     const auto* other = ledger.visit(dialogueKey("fixture.other"), content.shops[0], {});
     check(other != state && other->stock[10] == 3, "Shared shop template has independent per-resident stock");
+    auto* independent = ledger.visit(other->resident, content.shops[0], {});
+    independent->buyback[0] = {{10}, 1, 15, gameDuration::day};
+    const auto stale = request(seller, ledger, content, shopStockCapacity);
+    const auto retail = state->stock;
+    const auto deadline = state->restockMs;
+    const auto revision = state->revision;
+    const auto goldBeforeClear = seller.gold();
+    allocations = 0;
+    watching = true;
+    const bool cleared = ledger.clearBuyback(host);
+    watching = false;
+    check(cleared && allocations == 0 && !hasBuyback(*state) && state->revision == revision + 1 &&
+              state->stock == retail && state->restockMs == deadline && seller.gold() == goldBeforeClear &&
+              hasBuyback(*independent),
+          "Session clear is allocation-free, vendor-local and preserves gold, retail stock and restock time");
+    check(trade(seller, ledger, content, stale, {100 * gameDuration::day}).error == TradeError::Stale,
+          "Clearing buyback invalidates an outstanding purchase request");
+    check(!ledger.clearBuyback(host) && state->revision == revision + 1 &&
+              !ledger.clearBuyback(dialogueKey("missing")),
+          "Repeated and unknown-vendor clears are harmless");
     auto saved = ledger.checkpoint();
     MerchantLedger restored;
     restored.restore(saved, catalog);
@@ -277,6 +300,11 @@ void capacityAndTime() {
     check(!ledger.visit(dialogueKey("fixture.excess"), content.shops[0], {}) &&
               ledger.checkpoint().size() == merchantCapacity,
           "Visited-vendor capacity rejects without unbounded storage growth");
+    state->buyback[0] = {{10}, 1, 15, gameDuration::day};
+    state->revision = UINT64_MAX - 1;
+    check(ledger.clearBuyback(host) && !hasBuyback(*state) && state->revision == UINT64_MAX - 1 &&
+              trade(seller, ledger, content, request(seller, ledger, content), {}).error == TradeError::Stale,
+          "Exhausted revision still clears goods, never wraps and cannot resume trading");
 }
 void comparisons() {
     const auto catalog = fixtureCatalog();
@@ -569,6 +597,9 @@ void ui() {
     prepareDialogueLayout(dialogue, measure, nullptr);
     auto content = shops();
     MerchantLedger ledger;
+    auto* legacy = ledger.visit(host, content.shops[0], {});
+    legacy->buyback[0] = {{10}, 1, 15, gameDuration::day};
+    ledger.restore(ledger.checkpoint(), catalog);
     DialogueHistory history;
     CommandController controls(game);
     controls.bindDialogue(&dialogue, &history);
@@ -588,6 +619,8 @@ void ui() {
     check(controls.snapshot().trade.open && controls.snapshot().dialogue.open &&
               !controls.snapshot().modal(false) && !controls.dialoguePlayer().beat(),
           "Trade topic opens a paused subview and clears speech cues without pausing ambience");
+    check(!hasBuyback(*ledger.find(host)) && ledger.find(host)->stock[10] == 3,
+          "Opening trade discards loaded legacy buyback while preserving ordinary stock");
     const auto clock = game.gameTime().elapsedMs;
     game.update(1, false);
     check(game.gameTime().elapsedMs == clock && game.saveSafety() && game.travelSafety(),
@@ -747,9 +780,14 @@ void ui() {
     close.pressed.fill(false);
     close.pointerHeld = false;
     close.pointerReleased = true;
+    const auto stockBeforeClose = ledger.find(host)->stock;
+    const auto goldBeforeClose = game.party().gold();
     routeHudInput(controls, close);
     check(!controls.snapshot().trade.open && controls.snapshot().dialogue.open,
           "Close X returns to dialogue without click-through");
+    check(!hasBuyback(*ledger.find(host)) && ledger.find(host)->stock == stockBeforeClose &&
+              game.party().gold() == goldBeforeClose,
+          "Closing X discards sold goods while preserving purchased retail stock and sale proceeds");
     check(controls.openTrade(), "Trade can reopen after mouse close");
     UiInput back;
     back.pressed[unsigned(UiKey::Cancel)] = true;
@@ -766,6 +804,75 @@ void ui() {
     controls.closeOverlay();
     check(!controls.snapshot().trade.open && !game.inConversation(),
           "Conversation teardown closes trade safely");
+
+    const auto reopen = [&](CommandController& controller) {
+        if (!game.inConversation()) {
+            residents.revision = game.actors().snapshot().revision;
+            controller.residentVisibility(residents);
+            controller.refresh({}, false, false, true);
+            check(controller.startDialogue(), "Reenter conversation for buyback lifetime check");
+            controller.tickDialogue(.7, true);
+        }
+        check(controller.openTrade(), "Open another isolated trading session");
+        check(!hasBuyback(*ledger.find(host)), "Reopening never resurrects buyback from a closed session");
+    };
+    const auto sellOne = [&](CommandController& controller) {
+        acquire(game.party(), 13, 1);
+        const auto item = findInventoryItem(game.party(), 0, 13);
+        check(bool(trade(game.party(), ledger, content, sale(game.party(), ledger, content, item), {})),
+              "Sell an owned item for session lifetime regression");
+        controller.refresh({}, false, false, true);
+        check(hasBuyback(*ledger.find(host)), "Fresh sale is available for same-session buyback");
+    };
+    for (unsigned exit = 0; exit < 6; ++exit) {
+        reopen(controls);
+        sellOne(controls);
+        check(controls.openTrade() && hasBuyback(*ledger.find(host)),
+              "Reentrant open preserves the current trading session");
+        UiInput selectOther;
+        selectOther.pressed[unsigned(UiKey::Two)] = true;
+        routeHudInput(controls, selectOther);
+        check(hasBuyback(*ledger.find(host)), "Character changes preserve this session's sold goods");
+        const auto gold = game.party().gold();
+        const auto stock = ledger.find(host)->stock;
+        allocations = 0;
+        watching = true;
+        if (exit == 0)
+            routeHudInput(controls, back); // Escape.
+        else if (exit == 1) {
+            auto mouseBack = close;
+            mouseBack.pointer = ArtPoint{float(tradeLayout::back.x + 3), float(tradeLayout::back.y + 3)};
+            mouseBack.pointerHeld = true;
+            mouseBack.pointerReleased = false;
+            mouseBack.pressed[unsigned(UiKey::Click)] = true;
+            routeHudInput(controls, mouseBack);
+            mouseBack.pressed.fill(false);
+            mouseBack.pointerHeld = false;
+            mouseBack.pointerReleased = true;
+            routeHudInput(controls, mouseBack);
+        } else if (exit == 2)
+            controls.closeOverlay();
+        else if (exit == 3)
+            controls.finishDialogue();
+        else if (exit == 4)
+            controls.bindTrade(&content, &ledger);
+        else
+            controls.bindDialogue(&dialogue, &history);
+        watching = false;
+        check(allocations == 0 && !controls.snapshot().trade.open && !hasBuyback(*ledger.find(host)) &&
+                  ledger.find(host)->stock == stock && game.party().gold() == gold,
+              "Every trade exit clears buyback without allocation or changing gold/retail stock");
+        controls.finishDialogue();
+    }
+    {
+        CommandController transient(game);
+        transient.bindDialogue(&dialogue, &history);
+        transient.bindTrade(&content, &ledger);
+        reopen(transient);
+        sellOne(transient);
+    }
+    check(!hasBuyback(*ledger.find(host)) && !game.inConversation(),
+          "Controller destruction closes the conversation and discards session buyback");
 }
 } // namespace
 int main() try {

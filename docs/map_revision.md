@@ -1,5 +1,63 @@
 # Floor map revision
 
+## Room-revealed fixtures — 2026-11-09
+
+Implemented and mechanically verified; interactive user review pending. MapOverlayModel owns fixture-marker queries as
+well as tile visibility. Markers appear on mapped floor cells, including stairs
+behind the arriving party, and remain hidden in unrevealed rooms. Known fixtures
+retain their remembered open/completion state; never-observed fixtures use current
+state. Full-map mode uses current state. This is derived presentation only:
+FloorGeometry sight/interaction knowledge, perception, saves and digests do not
+change. Queries borrow the active floor and use existing fixed bitsets, without
+allocating. Regressions cover all fixture kinds, closed thresholds, arrival facing
+away, persisted discovery, state memory and allocation-free queries.
+
+### Playthrough correction verification — 2026-11-09
+
+The Debug game and focused tests build using the configured CLion CMake/Ninja.
+Build with `/home/bison/clion/bin/cmake/linux/x64/bin/cmake --build --preset debug
+--target blobber blobber_map_tests blobber_inventory_tests blobber_trade_tests
+blobber_progression_tests blobber_progression_allocations_tests blobber_buttons_tests
+blobber_hud_tests blobber_fixtures_tests blobber_campaign_save_tests` (one shell line).
+All intensive commands use `nice -n 15 ionice -c 3`, two build workers and one test
+process. Existing dependency edges rebuilt the portrait/creator/world preparation
+tools and prepared assets once; there was no toolchain change or benchmark.
+
+`/home/bison/clion/bin/cmake/linux/x64/bin/ctest --test-dir cmake-build-debug -R
+'^(map|inventory|trade|progression|progression_allocations|buttons|hud|fixtures|campaign_save_smoke)$'
+-j 1 --output-on-failure` passes all nine selected suites in 2.58 s (one shell line).
+Map tests include all fixture kinds, stairs behind the arriving party, closed-room
+isolation, persisted room discovery, remembered/current states and unchanged
+simulation digests. Inventory exercises tracked physical edges for all thirteen
+icons/captions, equip/unequip, vigor-belt HP clamping, cancellation, full bags and
+unsafe removal. Trade covers same-session purchase, every exit/rebind/destructor,
+loaded legacy goods, vendor isolation, unchanged gold/retail stock, revision
+exhaustion and allocation-free cleanup. Progression covers animated steps/turns,
+combat, incapacity, completion, unsupported classes and the level cap. Existing
+progression allocation guards and campaign-save smoke coverage pass. No save
+fields, restore rules or fingerprints changed, so the full slow persistence suite
+was not rerun.
+
+Build `blobber_review_paperdoll` and `blobber_review_trade` with the same configured
+CMake. Both accept `ASSETS [PREPARED] NEW_OUTPUT`; this run used `assets` and
+`cmake-build-debug/assets/prepared`. The hidden paperdoll runner passes actual
+belt/shield pointer gestures, HP/AC reconciliation, native caption fit, first and
+repeated inventory C++ allocation checks, map-frame allocation checks, constant
+prepared GPU residency and OpenGL/resource cleanup. All four LEVEL UP label crops
+are pixel-identical between idle and active-turn captures. The merchant runner
+passes purchase/sale, tooltip, drag buyback, frozen time/pose, close-X return and
+resource release. Its obsolete hardcoded stock index was replaced with an item
+lookup after the first attempt failed against the expanded shop. An initial
+sandbox attempt could not open X11; hidden checks then ran with authorized display
+access. No OS input, focus switching or visible windows were used.
+
+[Six inspected captures](screenshots/playthrough-fixes/README.md) await user review.
+The small paperdoll fixture intentionally uses a blank prepared viewport; it does
+not establish dungeon-world appearance or a complete playthrough. Driver/C heap
+allocations are outside the engine-owned C++ allocation guarantee. User saves were
+not read or edited. Disposable run output was previewed and cleaned; build caches
+and unrelated output remain intact.
+
 Status: implemented and mechanically verified (2026-11-04). Visual acceptance
 remains user review. [Approved layout reference](mockups/floor-map-approved.png)
 and [current application captures](screenshots/map-icons-desktop/README.md).
@@ -69,8 +127,9 @@ frame processing reuses storage and performs no engine-owned heap allocation.
 Invalid/missing room metadata falls back to sight-based discovery. No capacity
 growth or unbounded traversal occurs during frames.
 
-Fixture markers retain existing known/remembered rules, open/completed state and
-collected-key hiding. Derived room revelation does not change interaction
+Fixture-marker presence follows mapped floor cells; observed fixtures retain
+remembered open/completed state, while never-observed mapped fixtures use current
+state. Collected keys remain hidden. Derived room revelation does not change interaction
 knowledge, enemy perception, simulation digests or save bytes. Existing saves
 benefit immediately from their recorded discovery; no schema migration is needed.
 Presenter borrows the model only during drawing, before its GameView is destroyed.

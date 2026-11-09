@@ -67,19 +67,19 @@ void roomKnowledge() {
         for (int x = 0; x < map.width(); ++x)
             check(model.tile({x, y}) == restoredMap.tile({x, y}),
                   "Existing persisted LOS bits reproduce complete room maps");
-    check(mapFixtureMarker(game->fixtures(), 0, false) == MapMarker::ClosedDoor &&
-              mapFixtureMarker(game->fixtures(), 1, false) == MapMarker::None,
+    check(model.fixtureMarker(game->fixtures(), 0, false) == MapMarker::ClosedDoor &&
+              model.fixtureMarker(game->fixtures(), 1, false) == MapMarker::None,
           "Known door and hidden stairs retain existing fixture knowledge");
     check(game->interact(fixtureRequest(*game, 0)).changed, "Owned test opens the blocking door");
     model.refresh(&game->fixtures());
     check(game->fixtures().discovered({6, 3}) && model.tile({9, 5}) == MapTile::Floor,
           "Opening the door supplies real LOS and reveals the next room");
-    check(mapFixtureMarker(game->fixtures(), 0, false) == MapMarker::OpenDoor,
+    check(model.fixtureMarker(game->fixtures(), 0, false) == MapMarker::OpenDoor,
           "Open door uses remembered open-door pictogram");
     check(game->interact(fixtureRequest(*game, 0)).changed, "Owned test recloses the door");
     model.refresh(&game->fixtures());
     check(model.tile({9, 5}) == MapTile::Floor &&
-              mapFixtureMarker(game->fixtures(), 0, false) == MapMarker::ClosedDoor,
+              model.fixtureMarker(game->fixtures(), 0, false) == MapMarker::ClosedDoor,
           "Reclosing does not erase previously mapped rooms and updates remembered state");
     for (int y = 0; y < map.height(); ++y)
         for (int x = 0; x < map.width(); ++x)
@@ -111,14 +111,15 @@ void roomKnowledge() {
                                       std::vector<NpcTimings>{}, RecoveryLevel{}, gates, objective);
     model.refresh(&gateGame->fixtures());
     check(model.tile({9, 5}) == MapTile::Hidden &&
-              mapFixtureMarker(gateGame->fixtures(), 0, false) == MapMarker::GuardianGate,
+              model.fixtureMarker(gateGame->fixtures(), 0, false) == MapMarker::GuardianGate,
           "New world identity invalidates cache and a seen guardian gate blocks room revelation");
     game->exportFloor(*saved);
     saved->fixtures.open[0] = true;
     restored->importFloor(*saved);
-    check(mapFixtureMarker(restored->fixtures(), 0, false) == MapMarker::ClosedDoor &&
-              mapFixtureMarker(restored->fixtures(), 0, true) == MapMarker::OpenDoor &&
-              mapFixtureMarker(restored->fixtures(), fixtureCapacity, true) == MapMarker::None,
+    model.refresh(&restored->fixtures());
+    check(model.fixtureMarker(restored->fixtures(), 0, false) == MapMarker::ClosedDoor &&
+              model.fixtureMarker(restored->fixtures(), 0, true) == MapMarker::OpenDoor &&
+              model.fixtureMarker(restored->fixtures(), fixtureCapacity, true) == MapMarker::None,
           "Player markers honor remembered state, full reveal uses current state, invalid slots are empty");
 }
 void corridorAndFallback() {
@@ -144,6 +145,70 @@ void corridorAndFallback() {
     model.refresh(nullptr);
     check(model.tile({1, 3}) == MapTile::Floor && model.tile({-1, 1}) == MapTile::Hidden,
           "Non-discovery maps show full terrain and out-of-map cells stay dark");
+}
+void revealedFixtures() {
+    const auto map = roomsMap();
+    const auto layout = membership(map);
+    auto defs = definitions();
+    defs.entries[defs.count++] = {{1, 3}, Heading::West, FixtureKind::Upstairs};
+    defs.entries[defs.count++] = {{1, 1}, Heading::North, FixtureKind::Key, 2};
+    defs.entries[defs.count++] = {{1, 5}, Heading::South, FixtureKind::Door, 2};
+    defs.entries[defs.count++] = {{3, 1}, Heading::North, FixtureKind::Endpoint};
+    defs.entries[defs.count++] = {{3, 5}, Heading::South, FixtureKind::GuardianGate};
+    // Spawn on the stair landing, looking into the room rather than back at the stairs.
+    const auto catalog = fixtureCatalog();
+    const NpcWorld guards(map, {2, 3}, {"goblin"}, {{{0}, {8, 5}, {0, 0}, Heading::South}});
+    FloorObjectiveDefinition objective;
+    objective.count = 1;
+    objective.members[0] = 0;
+    objective.approachDoor = 0;
+    objective.gate = 6;
+    auto game = std::make_unique<GameSession>(map, catalog, guards, 5, Player{{2, 3}, Heading::East}, false,
+                                             std::vector<NpcTimings>{}, RecoveryLevel{}, defs, objective);
+    const auto& floor = game->fixtures();
+    check(!floor.known(2) && !floor.discovered({1, 3}), "Arrival has not seen the upstairs behind it");
+    MapOverlayModel model;
+    model.prepare(map, &layout);
+    model.refresh(&floor);
+    constexpr MapMarker expected[]{MapMarker::ClosedDoor, MapMarker::None, MapMarker::Upstairs,
+                                    MapMarker::Key, MapMarker::ClosedDoor, MapMarker::Objective,
+                                    MapMarker::GuardianGate};
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < defs.count; ++i)
+        check(model.fixtureMarker(floor, i) == expected[i], "Every mapped fixture has its room-revealed icon");
+    check(model.fixtureMarker(floor, 1, true) == MapMarker::Downstairs,
+          "Full map reveals downstairs beyond the closed threshold");
+    watching = false;
+    check(allocations == 0 && !floor.known(2), "Marker queries allocate nothing and do not grant sight knowledge");
+    auto saved = std::make_unique<FloorState>();
+    game->exportFloor(*saved);
+    const auto digest = saved->digest();
+    auto restored = std::make_unique<GameSession>(map, catalog, guards, 5, Player{{2, 3}, Heading::East}, false,
+                                                 std::vector<NpcTimings>{}, RecoveryLevel{}, defs, objective);
+    restored->importFloor(*saved);
+    MapOverlayModel restoredModel;
+    restoredModel.prepare(map, &layout);
+    restoredModel.refresh(&restored->fixtures());
+    for (unsigned i = 0; i < defs.count; ++i)
+        check(restoredModel.fixtureMarker(restored->fixtures(), i) == expected[i],
+              "Persisted discovery reconstructs room fixture icons without turning to see them");
+    game->exportFloor(*saved);
+    check(saved->digest() == digest, "Room-revealed markers leave saved simulation state unchanged");
+    // Import a changed world state through the preparation boundary; leave sight memory unchanged.
+    saved->fixtures.completed[3] = saved->fixtures.completed[4] = saved->fixtures.completed[6] = true;
+    saved->fixtures.open[4] = true;
+    game->importFloor(*saved);
+    check(model.fixtureMarker(floor, 3) == MapMarker::None &&
+              model.fixtureMarker(floor, 4) == MapMarker::OpenDoor &&
+              model.fixtureMarker(floor, 6) == MapMarker::OpenDoor,
+          "Never-observed mapped fixtures use current completion/open state without a discovery refresh");
+    const FloorGeometry other(map, defs);
+    check(model.fixtureMarker(other, 2) == MapMarker::None, "A model cannot expose another floor's markers");
+    model.prepare(map);
+    model.refresh(&floor);
+    check(model.fixtureMarker(floor, 2) == MapMarker::None,
+          "Without room metadata an unseen corridor fixture stays hidden");
 }
 void framing() {
     auto view = MapGridView::fit({{0, 0}, 12, 10}, {1, 1}, 8, 42, 370, 254);
@@ -255,10 +320,14 @@ void keyMemory() {
                                       std::vector<NpcTimings>{}, RecoveryLevel{}, fixtureDefinitions());
     game->setAnimated(false);
     game->move(Action::TurnLeft);
-    check(mapFixtureMarker(game->fixtures(), 1, false) == MapMarker::Key,
+    MapOverlayModel model;
+    model.prepare(map);
+    model.refresh(&game->fixtures());
+    check(model.fixtureMarker(game->fixtures(), 1, false) == MapMarker::Key,
           "Observed uncollected key has a map pictogram");
-    check(game->interact(fixtureRequest(*game, 1)).changed &&
-              mapFixtureMarker(game->fixtures(), 1, false) == MapMarker::None,
+    check(game->interact(fixtureRequest(*game, 1)).changed, "Collect observed key");
+    model.refresh(&game->fixtures());
+    check(model.fixtureMarker(game->fixtures(), 1, false) == MapMarker::None,
           "Collected keys disappear from the floor map");
 }
 } // namespace
@@ -266,6 +335,7 @@ int main() {
     try {
         roomKnowledge();
         corridorAndFallback();
+        revealedFixtures();
         framing();
         paddedBounds();
         keyMemory();

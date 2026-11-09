@@ -1,5 +1,23 @@
 # Slice 13: levels 2 and 3
 
+## Earned-level reminders — 2026-11-09
+
+Implemented and mechanically verified; interactive user review pending. HudCard adds levelEarned (supported progression
+class, below level cap, sufficient XP), independent of life/action/safety gates.
+Portrait reminders use this flag, so movement and combat cannot flicker it.
+levelEligible continues to represent immediate session eligibility for the
+Character-tab action; GameSession revalidates actual advancement unchanged.
+No persistent fields or allocations are added. Regressions sample movement and
+turn interpolation, unsafe combat, incapacity, advancement completion and the
+level cap; existing progression allocation checks remain required.
+
+Debug `progression` (0.01 s) and `progression_allocations` (0.02 s) pass. Hidden
+captures show the reminder during an active turn while immediate eligibility is
+false; all four label regions match their idle pixels exactly. Actual advancement
+admission remains unchanged. See [commands and limitations](map_revision.md#playthrough-correction-verification--2026-11-09)
+and [selected evidence](screenshots/playthrough-fixes/README.md). Interactive review
+remains pending; disposable output is cleaned.
+
 Status: implemented, **accepted and closed** (2026-10-30), including milestone C
 and the review corrections below. Implementation was authorized by “Implement the
 plan.” Acceptance: “I accept the slice, record it in the documentation.”
@@ -87,7 +105,8 @@ Pure progression API, Party staged commit and GameSession preview/advance APIs
 separate rules, ownership and safety. UI owns a bounded isolated draft and reuses
 SpellSelection/FlowControls/review. Overview → Class features → applicable Spells
 → Review follows approved mockup 14 (Color Spray correction retained). Character
-sheet/portraits show eligibility. Development-only `--development` exposes a pause
+sheet shows immediate eligibility; portraits show an earned-level reminder independent
+of temporary safety/action restrictions. Development-only `--development` exposes a pause
 button topping every eligible member up to its next threshold without auto-level;
 repeat before advancement is a no-op. No live file I/O in advancement.
 The command-line parser explicitly enables this default-off flag; headless parser

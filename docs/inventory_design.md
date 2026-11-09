@@ -1,5 +1,24 @@
 # Inventory and equipment — slice 11
 
+## Equipment pointer routing — 2026-11-09
+
+Implemented and mechanically verified; interactive user review pending. Register all thirteen equipment cards in the
+shared physical pointer router, using equipmentFrame rectangles to match inventory
+hit testing (caption and icon included). The original four-only registration
+swallows physical presses on added slots even though inventory commands support
+unequipping. Storage, transactions, management safety and bonus reconciliation stay
+unchanged. Regressions must use pointerTracked press/held/release edges through
+routeHudInput, cover every card/caption, equip/unequip, full bags, cancellation and
+unsafe removal, and verify Belt of Vigor HP-cap reconciliation. Logical-click
+tests alone bypass the faulty boundary. Fixed button storage remains sufficient.
+
+Debug `inventory` passes (0.02 s), including all thirteen tracked icon/caption
+targets, physical equip/unequip, bonus reconciliation and unchanged safety gates.
+Hidden production belt/shield gestures, caption fit, allocation/residency and
+OpenGL cleanup checks pass. See [commands and limitations](map_revision.md#playthrough-correction-verification--2026-11-09)
+and [selected evidence](screenshots/playthrough-fixes/README.md). Interactive review
+remains pending; disposable output is cleaned.
+
 The [early equipment expansion](early_equipment_design.md) extends the accepted
 paperdoll with shipped wearables, typed additive equipped bonuses and magic
 weapons. Party uses shared stat/resource reconciliation across inventory changes,

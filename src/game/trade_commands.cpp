@@ -17,6 +17,8 @@ void CommandController::clearTradeGesture() noexcept {
     state_.trade.gesture = {};
 }
 bool CommandController::openTrade() noexcept {
+    if (state_.trade.open)
+        return true;
     const auto* c = dialogue_.character();
     const auto* shop = c && shops_ ? shops_->find(c->shop) : nullptr;
     if (!shop || !merchants_ || !dialogue_.active() || dialogue_.leaving() || !session_.inConversation() ||
@@ -24,6 +26,7 @@ bool CommandController::openTrade() noexcept {
         state_.log.append("This merchant is unavailable.");
         return false;
     }
+    merchants_->clearBuyback(c->id);
     auto& t = state_.trade;
     t = {};
     t.open = true;
@@ -41,6 +44,8 @@ bool CommandController::openTrade() noexcept {
     return true;
 }
 void CommandController::closeTrade() noexcept {
+    if (state_.trade.open && merchants_)
+        merchants_->clearBuyback(state_.trade.resident);
     state_.trade = {};
     cancelPointerButtons();
 }

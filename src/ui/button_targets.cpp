@@ -159,8 +159,8 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
                               h.inventory.actions[i].enabled, false, 0x10000u + i);
                 for (int i = 0; i < 48; ++i)
                     t.add(inventoryLayout::cell(i), true, true);
-                for (int i = 0; i < 4; ++i)
-                    t.add(inventoryLayout::equipment(i), true, true);
+                for (unsigned i = 0; i < equipmentSlots; ++i)
+                    t.add(inventoryLayout::equipmentFrame(int(i)), true, true);
             }
         }
     } else if (h.magic.open) {

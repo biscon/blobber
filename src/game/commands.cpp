@@ -751,6 +751,9 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.abilities = member.stats.abilities;
         card.armorClass = member.stats.armorClass;
         card.level = member.build.level;
+        card.levelEarned = member.build.level < 3 &&
+                           party_.progressionClass(id) != rules::ProgressionClass::None &&
+                           member.experience >= rules::nextLevelExperience(member.build.level);
         card.levelEligible =
             session_.advancementEligibility(session_.advancementRequest(id)) == AdvancementError::None;
         card.portrait =

@@ -26,7 +26,7 @@ struct ShopCatalog {
 struct BuybackStack {
     rules::ItemId item;
     unsigned quantity = 0, price = 0;
-    std::uint64_t expiresMs = 0;
+    std::uint64_t expiresMs = 0; // Legacy save metadata; buyback ends when trading closes.
 };
 struct MerchantState {
     DialogueKey resident = 0, shop = 0;
@@ -38,6 +38,7 @@ class MerchantLedger {
   public:
     const MerchantState* find(DialogueKey resident) const noexcept;
     MerchantState* visit(DialogueKey resident, const ShopDefinition&, GameTime) noexcept;
+    bool clearBuyback(DialogueKey resident) noexcept;
     std::vector<MerchantState> checkpoint() const;
     void restore(const std::vector<MerchantState>&, const rules::Catalog&);
     static bool refresh(MerchantState&, const ShopDefinition&, GameTime) noexcept;

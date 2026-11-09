@@ -247,6 +247,8 @@ void advancementUi() {
     check(!ui.snapshot().advancement.open && s.party().character({3})->build.level == 2,
           "confirmation commits once and returns to sheet");
     check(!s.advance(request), "old UI request cannot be replayed");
+    ui.refresh({}, false, false, true);
+    check(!ui.snapshot().cards[3].levelEarned, "Completing advancement clears the earned-level reminder");
     ui.openAdvancement({1});
     click(FlowAction::Next);
     click(FlowAction::Next);
@@ -263,6 +265,63 @@ void advancementUi() {
     check(s.previewAdvancement(stale).error == AdvancementError::Stale,
           "stale draft is rejected without changes");
 }
+void earnedLevelReminders() {
+    const auto catalog = creationCatalog(true);
+    const auto map = hybridRoom();
+    const auto empty = spellPlacements(map, 0);
+    GameSession game(map, catalog, empty, 5, spellSpawn, false);
+    CommandController ui(game);
+    ui.refresh({}, false, false, true);
+    check(!ui.snapshot().cards[0].levelEarned, "Insufficient XP shows no level reminder");
+    game.party().grantNextLevelExperience();
+    for (const auto action : {Action::Forward, Action::TurnLeft, Action::Back, Action::TurnRight}) {
+        game.move(action);
+        check(game.movement().transition.active(), "Reminder regression exercises animated movement");
+        for (unsigned frame = 0; frame < 4; ++frame) {
+            ui.refresh({}, false, false, true);
+            for (const auto& card : ui.snapshot().cards)
+                check(card.levelEarned && !card.levelEligible,
+                      "Earned reminder stays visible throughout movement while immediate action is disabled");
+            check(game.advance(chosen(game, {0})).error == AdvancementError::Moving,
+                  "Movement reminder cannot bypass actual advancement admission");
+            game.update(.03, false);
+        }
+        game.update(.1, false);
+        ui.refresh({}, false, false, true);
+        check(ui.snapshot().cards[0].levelEarned && ui.snapshot().cards[0].levelEligible,
+              "Stopping preserves the reminder and restores safe advancement");
+    }
+    game.party().damage({0}, game.party().character({0})->hitPoints);
+    ui.refresh({}, false, false, true);
+    check(ui.snapshot().cards[0].levelEarned && !ui.snapshot().cards[0].levelEligible,
+          "Incapacitation retains earned XP reminder without permitting advancement");
+    game.party().heal({0}, 1);
+    check(bool(game.advance(chosen(game, {0}))), "Advance once after movement settles");
+    game.party().grantNextLevelExperience();
+    check(bool(game.advance(chosen(game, {0}))), "Advance to supported level cap");
+    ui.refresh({}, false, false, true);
+    check(!ui.snapshot().cards[0].levelEarned && !ui.snapshot().cards[0].levelEligible,
+          "Level cap clears the reminder even with maximum XP");
+
+    const auto nearby = spellPlacements(map, 1, true);
+    auto danger = std::make_unique<GameSession>(map, catalog, nearby, 5, spellSpawn, false);
+    danger->party().grantNextLevelExperience();
+    danger->update(0, false);
+    CommandController fighting(*danger);
+    fighting.refresh({}, false, false, true);
+    check(danger->combat().snapshot().phase != CombatPhase::Exploration &&
+              fighting.snapshot().cards[0].levelEarned && !fighting.snapshot().cards[0].levelEligible &&
+              danger->advance(chosen(*danger, {0})).error == AdvancementError::Unsafe,
+          "Combat keeps the earned reminder but rejects actual advancement");
+
+    const auto unsupported = creationCatalog(false);
+    auto noProgression = std::make_unique<GameSession>(map, unsupported, empty, 5, spellSpawn, false);
+    noProgression->party().awardExperience(10000);
+    CommandController staticParty(*noProgression);
+    staticParty.refresh({}, false, false, true);
+    check(!staticParty.snapshot().cards[0].levelEarned,
+          "Classes without supported progression do not show a misleading reminder");
+}
 
 } // namespace
 int main() {
@@ -271,6 +330,7 @@ int main() {
         equippedAdvancement();
         rewards();
         advancementUi();
+        earnedLevelReminders();
         std::cout << "Progression checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
