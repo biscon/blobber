@@ -1,6 +1,15 @@
 # System design
 
-[Authored blueprint rooms](blueprint_rooms_plan.md): **proposed roadmap, not implemented**.
+[BR01 blueprint foundation](br01_blueprint_rooms_design.md): **accepted and closed by
+the user, 2026-11-09**. Four compact authored
+rooms, strict bounded loading/validation, a connected kitchen/hall pair and isolated
+walk/capture tools reuse scenery and the prepared renderer. Six focused Debug suites,
+192 shipped socket/rotation combinations and 25 hidden views pass. [Ten review
+images](screenshots/blueprint-rooms-br01/README.md); disposable output cleaned.
+Campaign generation, persistence and production pack sources remain unchanged.
+
+[Authored blueprint rooms](blueprint_rooms_plan.md): **BR01 accepted and closed;
+BR02 and BR03 proposed**.
 Three slices cover validated layouts/blockouts, finished room artwork, and procedural
 campaign integration. Initial target: one kitchen, mead hall, barracks and armory per
 generated floor, with authored arrangements and contextual connections.

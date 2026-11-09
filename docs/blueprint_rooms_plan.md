@@ -1,7 +1,8 @@
 # Authored dungeon rooms: proposed delivery roadmap
 
 Created: 2026-11-09.
-Status: **Proposed roadmap; no slice implemented or accepted.**
+Status: **BR01 accepted and closed by the user on 2026-11-09.
+BR02 and BR03 remain proposed.**
 
 The user wants recognizable kitchen, armory, mead hall and barracks blueprints,
 placed by rules within randomized dungeons. The proposed first playable version
@@ -48,11 +49,14 @@ it survives in ordinary rooms is an explicit BR03 dressing-policy decision.
 
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
-| BR01 | Blueprint layouts, contracts and playable blockouts | Existing generation/rendering | Proposed |
+| BR01 | Blueprint layouts, contracts and playable blockouts | Existing generation/rendering | Accepted and closed — 2026-11-09 |
 | BR02 | Finished room kit and isolated in-engine room review | Reviewed BR01 layouts/contracts | Proposed |
 | BR03 | Procedural placement, population, persistence and campaign integration | Reviewed BR02 rooms | Proposed |
 
 ### BR01 — Layouts and blueprint foundation
+
+Detailed implementation: [BR01 design and handoff](br01_blueprint_rooms_design.md)
+(implemented, mechanically verified and accepted by the user 2026-11-09).
 
 Author the four top-down layouts before producing finished models. Each specifies
 its exact grid footprint, allowed rotations and doorway sockets, ceiling profile,
@@ -172,12 +176,16 @@ owned disposable runs after selecting evidence and preserve source art and test 
 
 ## Current checkpoint
 
-- Roadmap drafted; all three slices are proposed, with no implementation started.
-- Next action: review the split, then detail BR01's four layouts and minimal preview/data
-  contract. The purpose of BR01 is to settle spatial decisions before producing models.
-- This documentation-only task used `git diff --check` and local link checks; no builds,
-  game runs, asset generation or tests were necessary. Its disposable artifact run was
-  cleaned without retaining output.
+- BR01 is **accepted and closed**, 2026-11-09. User approval: “slice approved, update the plan doc”.
+  The [detailed handoff](br01_blueprint_rooms_design.md)
+  records the four layouts, eight kit contracts, developer launcher, focused CPU/GPU
+  checks, failure corrections and reproduction commands.
+- [Five plans and five native blockout views](screenshots/blueprint-rooms-br01/README.md)
+  record the accepted BR01 layouts and circulation contracts. Campaign generation and
+  save versions are unchanged.
+- Next action: separately plan BR02 artwork and assembled-room review against the accepted
+  BR01 contracts. Approval of BR01 does not authorize implementation of BR02 or BR03.
+  Disposable run output has been cleaned.
 
 Related foundations: [variable layouts and ceilings](procedural_layout_design.md),
 [Underkeep dressing](underkeep_dressing_design.md),

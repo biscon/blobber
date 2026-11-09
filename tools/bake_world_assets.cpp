@@ -1,3 +1,5 @@
+#include "assets/blueprint_blockouts.hpp"
+#include "assets/blueprint_loader.hpp"
 #include "assets/fingerprint.hpp"
 #include "assets/image.hpp"
 #include "assets/npc_sheet.hpp"
@@ -39,7 +41,7 @@ fs::path relative(const std::string& text) {
             throw std::runtime_error("World asset escapes source directory");
     return p;
 }
-std::map<std::string, std::string> sourceFingerprints(const fs::path& source) {
+std::map<std::string, std::string> sourceFingerprints(const fs::path& source, bool blockouts = false) {
     std::map<std::string, std::string> result;
     for (const auto* folder : {"npcs", "textures", "fixtures", "effects", "packs"})
         for (const auto& entry : fs::recursive_directory_iterator(source / folder))
@@ -48,10 +50,17 @@ std::map<std::string, std::string> sourceFingerprints(const fs::path& source) {
                 result.emplace(fs::relative(entry.path(), source).generic_string(),
                                fingerprintFile(entry.path()));
     result.emplace("ui/items/loot-bag.png", fingerprintFile(source / "ui/items/loot-bag.png"));
+    if (blockouts)
+        result.emplace("blueprints/underkeep.json", fingerprintFile(source / "blueprints/underkeep.json"));
     return result;
 }
-int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
-    const auto inputs = sourceFingerprints(source);
+int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool blockouts) {
+    if (blockouts && fs::exists(output))
+        throw std::runtime_error("Blockout bake requires a new output path; never replace production assets");
+    const auto blockoutCatalog = blockouts ? std::optional<blueprints::BlueprintCatalog>(
+                                                 blueprints::load(source / "blueprints/underkeep.json"))
+                                           : std::nullopt;
+    const auto inputs = sourceFingerprints(source, blockouts);
     const Map dummy({"###", "#.#", "###"});
     const auto parsed = parseNpcMetadata(source / "npcs/level.json", dummy, {1, 1}, false);
     for (const auto& definition : parsed.definitions)
@@ -265,6 +274,8 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     }
     if (packs.empty() || packs.size() > world_assets::packCapacity)
         throw std::runtime_error("World asset pack capacity exceeded");
+    if (blockoutCatalog)
+        blueprints::appendBlockouts(*blockoutCatalog, writer, packs, meshes);
     for (const auto* name : {"grease", "web", "spiritual_weapon"})
         add(std::string("effect/") + (std::string(name) == "spiritual_weapon" ? "weapon" : name),
             source / "effects" / (std::string(name) + ".png"), true, 0, {}, false, false, 512);
@@ -379,7 +390,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
     add("loot/bag", source / "ui/items/loot-bag.png", true, 0, {}, false, false, 512);
     for (const auto* name : {"key-bronze", "key-silver", "endpoint", "threshold"})
         add(std::string("fixture/") + name, source / "fixtures" / (std::string(name) + ".png"), true);
-    if (sourceFingerprints(source) != inputs)
+    if (sourceFingerprints(source, blockouts) != inputs)
         throw std::runtime_error("World source assets changed during preparation; rebuild");
     unsigned effectWidth = 0, effectHeight = 0;
     const auto bodyPixels = pixels(source / "effects/se01/body.png", effectWidth, effectHeight);
@@ -437,10 +448,13 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs) {
 } // namespace
 int main(int argc, char** argv) {
     try {
-        if (argc != 3 && !(argc == 4 && std::string(argv[3]) == "--uncropped-npcs"))
-            throw std::runtime_error("Usage: blobber_bake_world SOURCE OUTPUT [--uncropped-npcs]");
+        if (argc != 3 && !(argc == 4 && (std::string(argv[3]) == "--uncropped-npcs" ||
+                                         std::string(argv[3]) == "--blueprint-blockouts")))
+            throw std::runtime_error(
+                "Usage: blobber_bake_world SOURCE OUTPUT [--uncropped-npcs|--blueprint-blockouts]");
         SetTraceLogLevel(LOG_WARNING);
-        return run(fs::absolute(argv[1]), fs::absolute(argv[2]), argc == 3);
+        const bool blockouts = argc == 4 && std::string(argv[3]) == "--blueprint-blockouts";
+        return run(fs::absolute(argv[1]), fs::absolute(argv[2]), argc == 3 || blockouts, blockouts);
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         return 1;

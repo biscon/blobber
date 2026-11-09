@@ -1,0 +1,584 @@
+{
+  "schema_version": 1,
+  "kits": [
+    {
+      "id": "hearth",
+      "size": [
+        2,
+        1
+      ],
+      "height": 1
+    },
+    {
+      "id": "work-surface",
+      "size": [
+        2,
+        1
+      ],
+      "height": 0.35
+    },
+    {
+      "id": "provisions",
+      "size": [
+        2,
+        1
+      ],
+      "height": 0.45
+    },
+    {
+      "id": "table-and-benches",
+      "size": [
+        2,
+        3
+      ],
+      "height": 0.4
+    },
+    {
+      "id": "sleeping-bay",
+      "size": [
+        1,
+        2
+      ],
+      "height": 0.6
+    },
+    {
+      "id": "footlocker",
+      "size": [
+        1,
+        1
+      ],
+      "height": 0.2
+    },
+    {
+      "id": "weapon-storage",
+      "size": [
+        2,
+        1
+      ],
+      "height": 0.8
+    },
+    {
+      "id": "armor-display",
+      "size": [
+        1,
+        1
+      ],
+      "height": 0.8
+    }
+  ],
+  "rooms": [
+    {
+      "id": "kitchen",
+      "purpose": "kitchen",
+      "size": [
+        5,
+        5
+      ],
+      "ceiling": 6,
+      "rotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "solid": [],
+      "placements": [
+        {
+          "kit": "hearth",
+          "anchor": [
+            1,
+            0
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "work-surface",
+          "anchor": [
+            4,
+            1
+          ],
+          "facing": "west"
+        },
+        {
+          "kit": "provisions",
+          "anchor": [
+            0,
+            3
+          ],
+          "facing": "east"
+        }
+      ],
+      "sockets": [
+        {
+          "id": "north",
+          "cell": [
+            2,
+            -1
+          ],
+          "outward": "north"
+        },
+        {
+          "id": "east",
+          "cell": [
+            5,
+            2
+          ],
+          "outward": "east"
+        },
+        {
+          "id": "south",
+          "cell": [
+            2,
+            5
+          ],
+          "outward": "south"
+        },
+        {
+          "id": "west",
+          "cell": [
+            -1,
+            2
+          ],
+          "outward": "west"
+        }
+      ],
+      "lanes": [
+        {
+          "origin": [
+            2,
+            0
+          ],
+          "size": [
+            1,
+            5
+          ]
+        },
+        {
+          "origin": [
+            0,
+            2
+          ],
+          "size": [
+            5,
+            1
+          ]
+        }
+      ],
+      "encounters": [
+        {
+          "origin": [
+            2,
+            3
+          ],
+          "size": [
+            2,
+            2
+          ]
+        }
+      ],
+      "rewards": [
+        {
+          "cell": [
+            4,
+            4
+          ],
+          "access": [
+            3,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mead-hall",
+      "purpose": "mead-hall",
+      "size": [
+        7,
+        7
+      ],
+      "ceiling": 8,
+      "rotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "solid": [
+        [
+          1,
+          5
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "placements": [
+        {
+          "kit": "table-and-benches",
+          "anchor": [
+            0,
+            1
+          ],
+          "facing": "north"
+        },
+        {
+          "kit": "table-and-benches",
+          "anchor": [
+            5,
+            1
+          ],
+          "facing": "north"
+        }
+      ],
+      "sockets": [
+        {
+          "id": "north",
+          "cell": [
+            3,
+            -1
+          ],
+          "outward": "north"
+        },
+        {
+          "id": "east",
+          "cell": [
+            7,
+            4
+          ],
+          "outward": "east"
+        },
+        {
+          "id": "south",
+          "cell": [
+            3,
+            7
+          ],
+          "outward": "south"
+        },
+        {
+          "id": "west",
+          "cell": [
+            -1,
+            4
+          ],
+          "outward": "west"
+        }
+      ],
+      "lanes": [
+        {
+          "origin": [
+            2,
+            0
+          ],
+          "size": [
+            3,
+            7
+          ]
+        },
+        {
+          "origin": [
+            0,
+            4
+          ],
+          "size": [
+            7,
+            1
+          ]
+        }
+      ],
+      "encounters": [
+        {
+          "origin": [
+            2,
+            4
+          ],
+          "size": [
+            3,
+            2
+          ]
+        }
+      ],
+      "rewards": [
+        {
+          "cell": [
+            6,
+            6
+          ],
+          "access": [
+            5,
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "id": "barracks",
+      "purpose": "barracks",
+      "size": [
+        5,
+        7
+      ],
+      "ceiling": 7,
+      "rotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "solid": [],
+      "placements": [
+        {
+          "kit": "sleeping-bay",
+          "anchor": [
+            0,
+            1
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "sleeping-bay",
+          "anchor": [
+            4,
+            1
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "sleeping-bay",
+          "anchor": [
+            0,
+            5
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "sleeping-bay",
+          "anchor": [
+            4,
+            5
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "footlocker",
+          "anchor": [
+            0,
+            2
+          ],
+          "facing": "east"
+        },
+        {
+          "kit": "footlocker",
+          "anchor": [
+            4,
+            2
+          ],
+          "facing": "west"
+        },
+        {
+          "kit": "footlocker",
+          "anchor": [
+            0,
+            6
+          ],
+          "facing": "east"
+        },
+        {
+          "kit": "footlocker",
+          "anchor": [
+            4,
+            6
+          ],
+          "facing": "west"
+        }
+      ],
+      "sockets": [
+        {
+          "id": "north",
+          "cell": [
+            2,
+            -1
+          ],
+          "outward": "north"
+        },
+        {
+          "id": "east",
+          "cell": [
+            5,
+            3
+          ],
+          "outward": "east"
+        },
+        {
+          "id": "south",
+          "cell": [
+            2,
+            7
+          ],
+          "outward": "south"
+        },
+        {
+          "id": "west",
+          "cell": [
+            -1,
+            3
+          ],
+          "outward": "west"
+        }
+      ],
+      "lanes": [
+        {
+          "origin": [
+            2,
+            0
+          ],
+          "size": [
+            1,
+            7
+          ]
+        },
+        {
+          "origin": [
+            0,
+            3
+          ],
+          "size": [
+            5,
+            1
+          ]
+        }
+      ],
+      "encounters": [
+        {
+          "origin": [
+            1,
+            2
+          ],
+          "size": [
+            3,
+            2
+          ]
+        }
+      ],
+      "rewards": [
+        {
+          "cell": [
+            3,
+            6
+          ],
+          "access": [
+            2,
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "id": "armory",
+      "purpose": "armory",
+      "size": [
+        5,
+        5
+      ],
+      "ceiling": 6,
+      "rotations": [
+        0,
+        90,
+        180,
+        270
+      ],
+      "solid": [],
+      "placements": [
+        {
+          "kit": "weapon-storage",
+          "anchor": [
+            1,
+            0
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "work-surface",
+          "anchor": [
+            4,
+            1
+          ],
+          "facing": "west"
+        },
+        {
+          "kit": "armor-display",
+          "anchor": [
+            0,
+            4
+          ],
+          "facing": "east"
+        }
+      ],
+      "sockets": [
+        {
+          "id": "south",
+          "cell": [
+            2,
+            5
+          ],
+          "outward": "south"
+        },
+        {
+          "id": "west",
+          "cell": [
+            -1,
+            2
+          ],
+          "outward": "west"
+        }
+      ],
+      "lanes": [
+        {
+          "origin": [
+            2,
+            0
+          ],
+          "size": [
+            1,
+            5
+          ]
+        },
+        {
+          "origin": [
+            0,
+            2
+          ],
+          "size": [
+            5,
+            1
+          ]
+        }
+      ],
+      "encounters": [
+        {
+          "origin": [
+            1,
+            3
+          ],
+          "size": [
+            2,
+            2
+          ]
+        }
+      ],
+      "rewards": [
+        {
+          "cell": [
+            4,
+            4
+          ],
+          "access": [
+            3,
+            4
+          ]
+        }
+      ]
+    }
+  ]
+}
