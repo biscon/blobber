@@ -112,6 +112,28 @@ int main() try {
         decorative.scenery.push_back(decorative.scenery[0]);
         rejects([&] { Map overlap(rows, decorative); }, "Decorative visual bases still reject overlap");
     }
+    {
+        auto suspended = definition;
+        for (auto& surface : suspended.surfaces)
+            surface.ceiling = 8;
+        auto ceiling = suspended.scenery[0];
+        ceiling.blocking = false;
+        ceiling.clearance = 1.25f;
+        suspended.scenery.push_back(ceiling);
+        const Map layered(rows, suspended);
+        check(layered.movementBlocked(ceiling.anchor), "Ceiling overlap preserves floor furniture collision");
+        suspended.scenery.erase(suspended.scenery.begin());
+        const Map overhead(rows, suspended);
+        check(!overhead.movementBlocked(ceiling.anchor) && !overhead.npcBlocked(ceiling.anchor),
+              "Ceiling geometry alone reserves no party or NPC cells");
+        auto ground = suspended;
+        ground.scenery[0].clearance = 0;
+        check(ground.fingerprint() != suspended.fingerprint(), "Clearance participates in world identity");
+        for (float bad : {-1.f, .5f, 2.f, std::numeric_limits<float>::quiet_NaN()}) {
+            suspended.scenery[0].clearance = bad;
+            rejects([&] { Map invalid(rows, suspended); }, "Invalid or ceiling-exceeding clearance rejects");
+        }
+    }
     check(map.movementBlocked({7, 6}) && map.npcBlocked({7, 6}) && !map.solid({7, 6}) &&
               !map.buildingOwned({7, 6}),
           "Scenery blocks movement without becoming terrain");

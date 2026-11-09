@@ -58,11 +58,12 @@ int main() try {
     test::WorldFixture storage;
     auto c = test::blueprintCatalog();
     // Own kit fixtures cover every blockout primitive without loading game content.
-    const std::array<const char*, 14> names{
-        "hearth",         "work-surface",  "provisions", "table-and-benches", "sleeping-bay", "footlocker",
-        "weapon-storage", "armor-display", "barrel",     "crate-large",       "crate-small",  "grain-sack",
-        "tapestry",       "brazier"};
-    const std::array<Cell, 14> sizes{{{1, 1},
+    const std::array<const char*, 15> names{
+        "hearth",       "work-surface", "pottery-shelves", "table-and-benches",
+        "sleeping-bay", "footlocker",   "weapon-storage",  "armor-display",
+        "barrel",       "crate-large",  "crate-small",     "grain-sack",
+        "tapestry",     "brazier",      "chandelier"};
+    const std::array<Cell, 15> sizes{{{1, 1},
                                       {1, 1},
                                       {1, 1},
                                       {1, 2},
@@ -75,15 +76,18 @@ int main() try {
                                       {1, 1},
                                       {1, 1},
                                       {1, 1},
-                                      {1, 1}}};
-    const std::array<float, 14> heights{.5f, .38f,  .225f, .34f, .6f,  .2f,   .8f,
-                                        .8f, .411f, .23f,  .14f, .17f, 1.62f, .38f};
+                                      {1, 1},
+                                      {3, 3}}};
+    const std::array<float, 15> heights{.5f,  .38f, .82f, .34f, .6f,   .2f,  .8f, .8f,
+                                        .34f, .23f, .14f, .17f, 1.62f, .38f, 2.f};
     for (unsigned i = 0; i < names.size(); ++i) {
         bp::Kit k;
         std::copy_n(names[i], std::strlen(names[i]), k.id.begin());
         k.size = sizes[i];
         k.height = heights[i];
-        k.blocking = i < 8 || i == 13;
+        k.blocking = (i < 7 && i != 2) || i == 13;
+        k.closedWall = i == 2;
+        k.clearance = i == 14 ? 1.25f : 0;
         c.kits[c.kitCount++] = k;
     }
     world_assets::Writer writer(storage.directory);
@@ -113,6 +117,10 @@ int main() try {
     packs[0].materialCount = packs[1].materialCount;
     for (unsigned i = 0; i < c.kitCount; ++i) {
         bp::validateKitArt(c.kits[i], meshes[i]);
+        auto low = meshes[i];
+        low.vertices[0][1] = c.kits[i].clearance - .01f;
+        rejects([&] { bp::validateKitArt(c.kits[i], low); },
+                "Geometry cannot intrude below promised clearance");
         for (unsigned axis = 0; axis < 3; ++axis) {
             auto bad = meshes[i];
             bad.vertices[0][axis] = axis == 1 ? c.kits[i].height + .01f : 4;

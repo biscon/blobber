@@ -100,8 +100,11 @@ RoomBlueprint transform(const RoomBlueprint& r, unsigned turns) {
     }
     return out;
 }
+static bool backsSocket(const Kit& kit, const Placement& p, const Socket& s) {
+    return kit.closedWall && p.anchor == s.cell + forward(s.outward) * -1 && p.facing == rotate(s.outward, 2);
+}
 static Mask placementMask(const BlueprintCatalog& c, const RoomBlueprint& r, bool blockingOnly) {
-    Mask out = r.solid, visual = r.solid;
+    Mask out = r.solid;
     require(r.placementCount <= maxPlacements, Error::Capacity, "Too many placements");
     for (unsigned i = 0; i < r.placementCount; ++i) {
         const auto& p = r.placements[i];
@@ -112,10 +115,20 @@ static Mask placementMask(const BlueprintCatalog& c, const RoomBlueprint& r, boo
             for (unsigned x = 0; x < unsigned(k.size.x); ++x) {
                 const auto cell = footprint(k, p, x, y);
                 require(inside(cell, r.size), Error::Bounds, "Furniture footprint outside room");
-                require(!visual[index(cell)], Error::Overlap,
-                        "Furniture footprints overlap terrain or furniture");
-                visual[index(cell)] = true;
-                if (!blockingOnly || k.blocking)
+                require(!r.solid[index(cell)], Error::Overlap, "Furniture overlaps terrain");
+                for (unsigned j = 0; j < i; ++j) {
+                    const auto& other = r.placements[j];
+                    const auto& bounds = c.kits[other.kit.index];
+                    // Floor and overhead scenery may share cells, but not occupied heights.
+                    const bool sameLayer = (k.clearance > 0) == (bounds.clearance > 0);
+                    if (!sameLayer && (k.clearance >= bounds.height || bounds.clearance >= k.height))
+                        continue;
+                    for (unsigned oy = 0; oy < unsigned(bounds.size.y); ++oy)
+                        for (unsigned ox = 0; ox < unsigned(bounds.size.x); ++ox)
+                            require(!(cell == footprint(bounds, other, ox, oy)), Error::Overlap,
+                                    "Furniture volumes overlap");
+                }
+                if (blockingOnly ? k.blocking : k.clearance == 0)
                     out[index(cell)] = true;
             }
     }
@@ -148,9 +161,9 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
         require(k.height <= float(r.ceiling) * .25f, Error::Clearance, "Furniture exceeds ceiling");
         // Concrete wall-backed kit contracts; tables, beds and lockers are free-standing.
         const std::string_view id = k.id.data();
-        if (id == "hearth" || id == "work-surface" || id == "provisions" || id == "weapon-storage" ||
-            id == "armor-display" || id == "barrel" || id == "crate-large" || id == "crate-small" ||
-            id == "grain-sack" || id == "tapestry")
+        if (k.closedWall || id == "hearth" || id == "work-surface" || id == "provisions" ||
+            id == "weapon-storage" || id == "armor-display" || id == "barrel" || id == "crate-large" ||
+            id == "crate-small" || id == "grain-sack" || id == "tapestry")
             for (unsigned x = 0; x < unsigned(k.size.x); ++x) {
                 const auto back = footprint(k, p, x, unsigned(k.size.y - 1)) + forward(p.facing) * -1;
                 require(!inside(back, r.size) || r.solid[index(back)], Error::Clearance,
@@ -160,7 +173,7 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
     for (unsigned i = 0; i < r.laneCount; ++i) {
         rect(r.lanes[i], r.size);
         each(r.lanes[i], [&](Cell p) {
-            require(!visual[index(p)], Error::Clearance, "Obstructed reserved lane");
+            require(!blocked[index(p)], Error::Clearance, "Obstructed reserved lane");
             reserved[index(p)] = true;
         });
     }
@@ -192,7 +205,11 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
         require(s.cell.x >= -1 && s.cell.y >= -1 && s.cell.x <= r.size.x && s.cell.y <= r.size.y,
                 Error::Socket, "Socket outside wall ring");
         const auto a = s.cell + forward(s.outward) * -1;
-        require(!inside(s.cell, r.size) && inside(a, r.size) && !visual[index(a)] && !rewards[index(a)],
+        bool conditionalWall = false;
+        for (unsigned p = 0; p < r.placementCount; ++p)
+            conditionalWall |= backsSocket(c.kits[r.placements[p].kit.index], r.placements[p], s);
+        require(!inside(s.cell, r.size) && inside(a, r.size) && (!visual[index(a)] || conditionalWall) &&
+                    !rewards[index(a)],
                 Error::Socket, "Socket must face out through an unblocked room boundary");
         for (unsigned j = 0; j < i; ++j)
             require(s.id != r.sockets[j].id && !(s.cell == r.sockets[j].cell), Error::Socket,
@@ -225,8 +242,11 @@ void validate(const BlueprintCatalog& c) {
     for (unsigned i = 0; i < c.kitCount; ++i) {
         const auto& k = c.kits[i];
         require(validName(k.id) && k.size.x > 0 && k.size.y > 0 && k.size.x <= 4 && k.size.y <= 4 &&
-                    std::isfinite(k.height) && k.height > 0 && k.height <= 2,
+                    std::isfinite(k.height) && k.height > 0 && k.height <= 2 && std::isfinite(k.clearance) &&
+                    (k.clearance == 0 || (k.clearance >= 1 && k.clearance < k.height && !k.blocking)),
                 Error::Content, "Invalid kit contract");
+        require(!k.closedWall || (!k.blocking && k.size == Cell{1, 1} && k.clearance == 0), Error::Content,
+                "Conditional wall kits must be nonblocking 1x1 floor-layer scenery");
         if (k.fire) {
             const auto& f = *k.fire;
             require(std::isfinite(f.x) && std::isfinite(f.y) && std::isfinite(f.z) && f.x >= -.5f &&
@@ -294,6 +314,27 @@ ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection
         auto& r = rr.blueprint;
         rr.origin = rr.origin + Cell{3, 3};
         require((r.rotations & (1u << turns)) != 0, Error::Content, "Room disallows assembly rotation");
+        const unsigned selected = sockets ? sockets : defaultSockets(r);
+        require(selected < (1u << r.socketCount), Error::Socket, "Unknown selected socket bits");
+        unsigned activeSockets = 0;
+        for (unsigned i = 0; i < r.socketCount; ++i) {
+            const auto heading = r.sockets[i].outward;
+            if (pair ? (heading == Heading::South || heading == (n ? Heading::West : Heading::East))
+                     : bool(selected & (1u << i)))
+                activeSockets |= 1u << i;
+        }
+        // Filter the owned copy so scene metadata and diagrams match the actual solid walls.
+        unsigned retained = 0;
+        for (unsigned i = 0; i < r.placementCount; ++i) {
+            const auto p = r.placements[i];
+            bool omit = false;
+            for (unsigned s = 0; s < r.socketCount; ++s)
+                omit |=
+                    (activeSockets & (1u << s)) && backsSocket(catalog.kits[p.kit.index], p, r.sockets[s]);
+            if (!omit)
+                r.placements[retained++] = p;
+        }
+        r.placementCount = retained;
         for (int y = 0; y < r.size.y; ++y)
             for (int x = 0; x < r.size.x; ++x)
                 if (!r.solid[index({x, y})])
@@ -307,7 +348,8 @@ ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection
                                      rotate(p.facing, turns),
                                      unsigned(k.size.x),
                                      unsigned(k.size.y),
-                                     k.blocking});
+                                     k.blocking,
+                                     k.clearance});
             if (k.fire) {
                 require(world.ambientFires.size() < ambientFireCapacity, Error::Capacity,
                         "Too many assembled ambient fires");
@@ -334,13 +376,11 @@ ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection
         chest.height = .36f;
         chest.depth = .58f;
         world.decorations.push_back(chest);
-        unsigned selected = sockets ? sockets : defaultSockets(r);
-        require(selected < (1u << r.socketCount), Error::Socket, "Unknown selected socket bits");
         unsigned joined = 0;
         for (unsigned i = 0; i < r.socketCount; ++i) {
             const auto& s = r.sockets[i];
             const bool shared = pair && s.outward == (n ? Heading::West : Heading::East);
-            const bool active = pair ? (shared || s.outward == Heading::South) : bool(selected & (1u << i));
+            const bool active = bool(activeSockets & (1u << i));
             if (!active)
                 continue;
             const auto p = rr.origin + s.cell;

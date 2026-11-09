@@ -308,6 +308,21 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
                     shot("kitchen-provisions");
                     place({3, 1}, Heading::North);
                     shot("kitchen-barrel");
+                    place({2, 3}, Heading::North);
+                    shot("kitchen-shelves-north");
+                    place({3, 2}, Heading::West);
+                    shot("kitchen-shelves-west");
+                    for (const auto target : {Cell{0, 1}, Cell{0, 2}, Cell{2, 0}}) {
+                        const auto heading = target.x == 0 ? Heading::West : Heading::North;
+                        place(target + forward(heading) * -1, heading);
+                        game.move(Action::Forward);
+                        game.update(.2, false);
+                        const auto cell =
+                            room.origin +
+                            bp::rotate(target, bp::rotatedSize(room.blueprint.size, a.turns), a.turns);
+                        require(game.movement().player.cell == cell && !scene.map.npcBlocked(cell),
+                                "Wall shelves must have no party or NPC collision footprint");
+                    }
                     place({1, 1}, Heading::North);
                     game.move(Action::Forward);
                     game.update(.2, false);
@@ -318,6 +333,42 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
                             "Decorative storage must allow party traversal and NPC placement");
                     shot("storage-walkthrough");
                 } else if (hall) {
+                    // Walk a closed loop around all four sides of the central table.
+                    const std::array<Cell, 11> loop{{{2, 0},
+                                                     {3, 0},
+                                                     {4, 0},
+                                                     {4, 1},
+                                                     {4, 2},
+                                                     {4, 3},
+                                                     {3, 3},
+                                                     {2, 3},
+                                                     {2, 2},
+                                                     {2, 1},
+                                                     {2, 0}}};
+                    for (unsigned step = 1; step < loop.size(); ++step) {
+                        Heading heading = Heading::North;
+                        for (unsigned h = 0; h < 4; ++h)
+                            if (loop[step - 1] + forward(Heading(h)) == loop[step])
+                                heading = Heading(h);
+                        place(loop[step - 1], heading);
+                        game.move(Action::Forward);
+                        game.update(.2, false);
+                        const auto target =
+                            room.origin +
+                            bp::rotate(loop[step], bp::rotatedSize(room.blueprint.size, a.turns), a.turns);
+                        require(game.movement().player.cell == target && !scene.map.npcBlocked(target),
+                                "Central table loop, armor and overhead cells must remain walkable");
+                    }
+                    place({3, 5}, Heading::North);
+                    shot("hall-furnished");
+                    place({3, 3}, Heading::North);
+                    shot("central-table");
+                    place({2, 1}, Heading::North);
+                    shot("armor-detail");
+                    place({2, 0}, Heading::North);
+                    shot("armor-near");
+                    place({3, 4}, Heading::North);
+                    shot("chandelier-detail");
                     place({0, 3}, Heading::North);
                     shot("table-end");
                     place({1, 2}, Heading::North);

@@ -40,7 +40,7 @@ for obj in objects:
         other.hide_render = other != obj
     corners = [obj.matrix_world @ Vector(c) for c in obj.bound_box]
     center = sum(corners, Vector()) / 8
-    cam.data.ortho_scale = 2.0 if obj.name.endswith('table-and-benches') else 1.5
+    cam.data.ortho_scale = 2.0 if obj.name.endswith(('table-and-benches', 'chandelier')) else 1.5
     for label, offset in [('front', (2, 3, 2.5)), ('rear', (-2, -3, 2)), ('underside', (1, -2, -3))]:
         cam.location = center + Vector(offset)
         cam.rotation_euler = (center - cam.location).to_track_quat('-Z', 'Y').to_euler()

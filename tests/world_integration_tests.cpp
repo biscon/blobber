@@ -6,6 +6,7 @@
 #include "support/spell_parties.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <chrono>
+#include <cmath>
 #include <iostream>
 #include <limits>
 using namespace blobber;
@@ -80,6 +81,25 @@ void multipleFires() {
     watching = false;
     check(!allocations && effects.frame().count == 48,
           "Two-fire frame work remains bounded and allocation-free");
+    // All flame quad corners remain within the .15-cell bowl radius, even mid-turn.
+    // Sampling 60 presentation ticks covers multiple phases without loading game artwork.
+    for (unsigned angle = 0; angle < 8; ++angle) {
+        const float a = float(angle) * .785398163f;
+        world.camera.right = {std::cos(a), 0, std::sin(a)};
+        ++world.revision;
+        for (unsigned tick = 0; tick < 60; ++tick) {
+            input.now += 50;
+            effects.update(input, world);
+            // Transparent packets are depth sorted, so match spatially, not by submission index.
+            for (unsigned i = 0; i < effects.frame().count; ++i)
+                for (const auto& p : effects.frame().packets[i].points) {
+                    float distance = 10.f;
+                    for (const auto& fire : definition.ambientFires)
+                        distance = std::min(distance, std::hypot(p.x - fire.x, p.z - fire.z));
+                    check(distance < .15f, "Brazier flame bases remain inside bowl at all viewing angles");
+                }
+        }
+    }
     movement.player.heading = Heading::South;
     world.camera = camera(movement, map);
     ++world.revision;

@@ -1,16 +1,16 @@
 # System design
 
-[BR02 furniture proportions and room dressing](br02_blueprint_rooms_design.md#furniture-proportions-and-room-dressing):
-**implemented and mechanically verified; revised pair awaiting user review**.
-The accepted fireplace is preserved. Dining benches/table and kitchen worktop have
-properly raised supports; five separate enlarged storage pieces are nonblocking.
-Two matched heraldic tapestries and two animated braziers dress the hall. Optional
-scenery blocking and two bounded additional ambient fires reuse existing preparation,
-rendering, persistence and residency; absent extensions retain existing identities.
-Seven focused suites, 192 room variants/four pair orientations, production preparation
-and 42 hidden views pass. [Six refreshed images](screenshots/blueprint-rooms-br02/README.md).
-Run `./review-rooms`. Barracks/armory remain behind pair review; campaign placement
-remains BR03. Owned disposable output cleaned; durable sources and caches retained.
+[BR02 armor finish and kitchen shelving](br02_blueprint_rooms_design.md#armor-finish-table-centered-chandelier-and-kitchen-shelves):
+**implemented and mechanically verified; latest visual review pending**.
+Armor retains its accepted shape with continuous metal finish. The chandelier is
+centered directly over the middle table. Three nonblocking pottery racks fill the
+marked kitchen wall positions. Preparation-only `closedWall` kits are omitted when
+their backing sockets are selected; runtime collision/render/save systems are unchanged.
+The accepted fireplace and prior clear routes/nonblocking displays remain intact.
+Four focused suites, 192 room variants/four pair orientations, production bake,
+launcher validation and 56 hidden views pass. [Six current images](screenshots/blueprint-rooms-br02/README.md).
+Run `./review-rooms`. Barracks/armory rooms remain behind pair review; campaign
+placement remains BR03. Owned temporary output cleaned; sources/caches retained.
 
 [BR01 blueprint foundation](br01_blueprint_rooms_design.md): **accepted and closed by
 the user, 2026-11-09**. Four compact authored

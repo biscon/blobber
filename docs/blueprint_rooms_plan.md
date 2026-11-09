@@ -194,9 +194,15 @@ owned disposable runs after selecting evidence and preserve source art and test 
   grouped provisions were rejected. The approved follow-up is implemented: taller
   supports, five separate nonblocking storage pieces, 14% larger crates/sack/barrel
   diameter, upright barrel bodies, two heraldic tapestries and two animated braziers.
-  Room/socket/ceiling contracts and historical BR01 acceptance are preserved.
-- Seven affected CPU suites, 192 room variants/four pair orientations, production
-  preparation and 42 hidden views pass. [Six current images](screenshots/blueprint-rooms-br02/README.md)
+  The next user revision adds a centered third table, two nonblocking armor suits
+  and a nonblocking ceiling chandelier, shortens barrels about 17%, and pulls brazier
+  flames inward. All sides of the central table remain walkable. Room/socket/ceiling
+  contracts and historical BR01 acceptance are preserved. The latest follow-up keeps
+  the accepted armor shape, removes its painted face grid, centers the chandelier
+  over the middle table and adds three nonblocking pottery racks at the marked
+  kitchen walls. Racks are omitted where an optional backing doorway is enabled.
+- Four focused CPU suites, 192 room variants/four pair orientations, production
+  preparation, launcher validation and 56 hidden views pass. [Six current images](screenshots/blueprint-rooms-br02/README.md)
   and the [BR02 handoff](br02_blueprint_rooms_design.md) record the result.
   Run `./review-rooms`. Revised pair visual/interactive review precedes barracks/armory;
   BR03 remains separately proposed. Owned disposable output is cleaned; durable

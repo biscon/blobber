@@ -1,14 +1,183 @@
 # BR02: finished room kit and assembled review
 
-Status: **Furniture proportions and room dressing implemented and mechanically verified;
+Status: **Armor finish, chandelier alignment and kitchen shelving implemented and verified;
 awaiting user review**, 2026-11-09.
-The user accepted the revised fireplace, rejected the remaining flattened furniture,
-and approved the implementation plan below. Earlier verification is historical.
+The user accepted the revised fireplace and armor shape. The armor finish,
+chandelier alignment and new kitchen shelving follow the latest marked screenshots.
+Earlier verification is historical.
 The user requested implementation of the detailed plan and chose pair-first review.
 Stop after delivering the finished kitchen/mead hall in-engine review; complete
 barracks/armory only after that checkpoint. BR03 remains separately proposed.
 
 ## Design and ownership
+
+### Armor finish, table-centered chandelier and kitchen shelves
+
+Implemented and mechanically verified, 2026-11-09; visual review pending. Preserve
+the accepted armor shape; remove
+per-face dark edge painting from its steel/iron, retaining restrained metal grain
+and broad directional shading. Other furniture materials keep their existing finish.
+Move the chandelier over the actual table center (3,1.5): placement (2,1), 3×2
+visual envelope, mesh-local center (1,.5). No runtime offset/scale or collision change.
+
+Add one reusable nonblocking `pottery-shelves` kit, three wooden shelves with varied
+open/lidded clay jars, at kitchen (0,1)/(0,2) east-facing and (2,0) south-facing.
+The shallow rack stays against the wall, with no movement/NPC footprint. These
+positions include optional west/north socket entries; the pair leaves both walls
+solid. Add optional default-false Kit `closedWall`, restricted to nonblocking 1×1
+kits: preparation requires wall backing and omits the placement when its backing
+socket is selected. Socket validation permits only that matching conditional kit;
+other furnishings still cannot obstruct entries. Assemble filters its owned room
+copy before generating scenery and plans. This metadata is preparation-only: no
+WorldDefinition, persistence, rendering or frame-work changes. Keep bounded catalog
+and placement storage, and reuse the existing atlas, timber/clay masters and bake.
+
+Verify conditional shelf presence/absence and movement in all four rotations using
+owned fixtures; extend blockout coverage without increasing kit capacity. Validate
+shipped variants, asset bounds/UVs and the actual launcher. Inspect hidden in-game
+views of both marked kitchen walls, close armor, and chandelier/table alignment.
+Retain six current images and clean this run; prior accepted fireplace remains intact.
+
+### Shelving and finish verification
+
+Configured Debug build passes. The focused selection `blueprints|blueprint_render|
+scenery|fixtures` passes all four suites in 0.99 seconds. These cover the changed
+catalog/assembly/blockout path and its collision/door callers; persistence and
+runtime effects did not change in this revision. Owned fixtures exercise conditional
+shelf inclusion/omission for five socket selections in every rotation, actual
+solid-wall backing, nonblocking movement/NPC reservations, room metadata consistency,
+and malformed conditions. Shipped validation passes 192 variants/four pair rotations.
+
+The final exporter passes bounds and metric-UV assertions. Twelve models fit the
+existing atlas/mesh budgets: shelves 1,748 triangles, armor 1,548, chandelier 1,924;
+atlas 2048², 774 rows used, 256 texels/cell. Inspected front/back model views of the
+shelves and the revised armor finish. Armor positions/normals are exactly unchanged;
+accepted hearth positions/normals and 5,382 atlas sample colors also match the prior
+revision. Table and chandelier exported horizontal centers both equal (3,1.5).
+Background Blender writes complete checked output but stalls in PulseAudio shutdown;
+bounded timers ended those processes with 124, not a normal Blender exit.
+
+Production bake and `./review-rooms --check` pass. Publication fingerprint
+`9352054891326440930`; unchanged 556 textures / 883,633,616 mip bytes /
+64,967,422 alpha bytes. Hidden captures use `blobber_review_blueprints capture
+--art finished --room kitchen-hall --assets assets
+--prepared cmake-build-debug/assets/prepared --ui-prepared cmake-build-debug/assets/prepared
+--output RUN/pair`, plus `--rotation 90 --output RUN/pair90` for the second run.
+All **56 views** have zero nonedge CPU/GPU picking disagreements and no GL errors.
+In-process movement traverses every shelf cell, both armor cells and all four sides
+of the center table in both orientations. Door/reward interaction, GPU preparation
+rollback and resource cleanup pass. No OS input or focus control was used.
+
+Inspected both marked kitchen walls, the near armor pose matching the user’s
+screenshot, chandelier/table alignment, and rotated wall/hall views. Shelves sit
+against the intended walls; no rack occupies an open doorway in alternate fixtures.
+Six native images replace the [current gallery](screenshots/blueprint-rooms-br02/README.md).
+The fireplace and armor geometry acceptance is preserved; latest visual/interactive
+acceptance remains pending. Chandelier candles remain static and unlit.
+
+Pair residency: 51 textures, 114,800,228 mip bytes, 12,613,249 alpha bytes,
+1,298,304 source mesh bytes; scene CPU/upload 3,677,624 / 3,676,848 bytes;
+renderer CPU 26,043,137; world GPU 143,310,524; peak application GPU 296,707,848.
+No capacity was increased. These are engine accounting, not process/driver totals.
+No unrelated configurations, campaign sweep, benchmark or interactive desktop
+play was run. All owned runners are closed and temporary authoring outputs,
+model renders, extra captures and logs cleaned; durable sources and normal caches
+remain, with no retained diagnostic exception.
+
+### Central hall furnishing revision
+
+Historical preceding revision; chandelier placement/finish are superseded above.
+
+Implemented and mechanically verified (2026-11-09), awaiting user review. Add the third identical 1×2 table at
+(3,1), equidistant from tables at x=0/6, with clear cells on both sides and ends.
+Reserve side lanes x=2/4 and cross lanes y=0/3/4. Put matching nonblocking armor
+at (2,0)/(4,0), facing into the hall, and a large iron candle chandelier centered
+at (3,3), suspended from the two-cell ceiling. Both armor instances and the
+chandelier have no movement or NPC footprint. Keep the accepted fireplace.
+Reduce barrel height from .4104 to .34 cells with its diameter unchanged; tighten
+additional brazier flame centers to 40% of their previous horizontal spread.
+Legacy hearth flames retain their established spread.
+
+Kit and SceneryPlacement gain default-zero `clearance`: minimum native mesh Y.
+A positive clearance must be at least one cell and requires nonblocking scenery.
+The chandelier uses a 3×3 visual envelope and clearance 1.25, height 2.0. Blueprint
+validation checks horizontal bounds and vertical intervals; overhead furniture
+may overlap floor furniture only with disjoint height intervals. Overhead objects
+do not reserve floor lanes, encounters or reward space. Lanes use movement
+occupancy, allowing walk-through wall displays. Map preparation tracks separate
+floor/overhead visual layers, rejects same-layer overlaps and validates clearance
+against local ceilings. No runtime allocation or new render path: the same static
+meshes remain owned by the existing prepared publication. Save fields and tagged
+hash extensions preserve existing identities when clearance is zero. Finished-art
+validation enforces the lower mesh bound as well as the existing upper bound.
+
+Author armor with shaped plate, articulated limbs, visor and boots; use retained
+metal textures. Author a closed iron hoop, candle cups, wax candles and suspension
+chains for the chandelier, within existing mesh/atlas limits. Candles are static;
+braziers remain the animated fire sources. Geometry and UVs are final native size.
+The armor kit is finished for these hall displays; the armory room remains deferred.
+
+Verify owned-fixture overhead/floor overlap and rejection, no collision in four
+rotations, minimum mesh height, save/hash round trips and brazier containment.
+Then validate shipped layouts, explicitly walk around the central table and through
+armor/under chandelier, inspect hidden GL overview/detail/rotated captures, update
+six evidence images and clean the owned run. Interactive desktop review remains
+with the user; visual acceptance remains pending.
+
+### Central hall verification
+
+Preceding revision: the configured Debug build and seven focused suites pass:
+`blueprints`, `blueprint_render`, `scenery`, `fixtures`, `world_integration`,
+`world_residency`, `campaign_save_smoke`. Run with the configured CLion CMake/CTest,
+two build workers and `ctest --test-dir cmake-build-debug -R
+'^(blueprints|blueprint_render|scenery|fixtures|world_integration|world_residency|campaign_save_smoke)$'
+-j 1 --output-on-failure`. Six suites passed initially; the new flame containment
+test initially assumed packet submission order, overlooking transparent depth
+sorting. Corrected the test to match particles spatially; rebuilt/reran only
+`world_integration`, which passes. The test covers 480 time/angle combinations.
+Owned fixtures cover floor/overhead overlap, height intrusion, invalid clearances,
+movement/NPC reservations in all rotations, lower mesh bounds and save/hash round
+trips. Shipped catalog validation passes 192 variants and four pair orientations.
+
+Source authoring produces eleven meshes; armor is 1,548 triangles and chandelier
+1,924, under the unchanged 2,000-triangle limits. Shared atlas remains 2048² with
+256 texels/cell and 684 used rows. Barrel height .34, diameter .2736. Armor height
+.737; chandelier spans 1.23 horizontally, native Y 1.27–2.0. Front/rear/underside
+emission views of both new models were inspected. The first chandelier review
+framing cropped the hoop; the review tool now frames it at scale 2 and all three
+views were regenerated. Background Blender wrote complete outputs, then stalled
+in this environment's PulseAudio shutdown; bounded timeouts terminated it (124).
+This is not reported as a clean Blender process exit. Geometry/UV assertions and
+mesh exports completed before shutdown. Fireplace positions/normals and 5,382
+interior atlas samples exactly match the accepted version despite atlas repacking.
+
+Production preparation and `./review-rooms --check` pass. Publication fingerprint
+`5748434849109123582`, unchanged 556 textures / 883,633,616 mip bytes /
+64,967,422 alpha bytes. Hidden captures with `blobber_review_blueprints capture
+--art finished --room kitchen-hall --assets assets
+--prepared cmake-build-debug/assets/prepared --ui-prepared cmake-build-debug/assets/prepared
+--output RUN/pair` and the same command with `--rotation 90 --output RUN/pair90`
+pass **50 views**, all with zero nonedge CPU/GPU picking disagreements and no GL
+errors. The in-process closed walk loop goes around every side of the center table,
+through both armor cells, and under the chandelier; movement and NPC availability
+assertions pass in both orientations. Storage traversal, door/reward interaction,
+injected GPU acquisition rollback and renderer/asset cleanup also pass.
+
+Inspected normal/rotated hall overviews, central table, armor close-up, barrel and
+both brazier animation phases. The chandelier is visible from the hall entrance,
+with its hoop, candles and suspensions above the clear floor. Candles are unlit
+static geometry, not additional fire effects. Six current native captures replace
+the prior evidence in the [gallery](screenshots/blueprint-rooms-br02/README.md).
+
+Pair residency: 51 textures, 114,800,228 mip bytes, 12,613,249 alpha bytes,
+1,130,496 source mesh bytes. Scene CPU/upload: 2,796,632 / 2,795,856 bytes;
+renderer CPU accounting 24,993,977; world GPU 142,429,532; peak application GPU
+295,826,856. Existing capacities are unchanged. These are engine accounting,
+not driver or whole-process memory measurements. No benchmark, other build
+configuration, full campaign test or desktop interaction was run. User visual
+acceptance and interactive review remain pending; accepted fireplace status is
+preserved. All owned runners are closed and disposable output cleaned, with no
+retained diagnostic exception. Sources, packed models and prepared caches remain.
 
 ### Furniture proportions and room dressing
 

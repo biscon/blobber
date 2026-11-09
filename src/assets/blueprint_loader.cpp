@@ -82,12 +82,20 @@ BlueprintCatalog decode(std::string_view input) {
         need(number(j.at("schema_version"), 1, 1) == 1, "Unsupported blueprint schema");
         BlueprintCatalog c;
         c.kitCount = records(j.at("kits"), c.kits, [](const Json& v) {
-            fields(v, {"id", "size", "height"}, {"blocking", "fire"});
+            fields(v, {"id", "size", "height"}, {"blocking", "fire", "clearance", "closedWall"});
             need(v.at("height").is_number(), "Expected kit height");
             Kit k;
             k.id = name(v.at("id"));
             k.size = cell(v.at("size"), 1, 4);
             k.height = v.at("height").get<float>();
+            if (v.contains("clearance")) {
+                need(v["clearance"].is_number(), "Expected kit clearance");
+                k.clearance = v["clearance"].get<float>();
+            }
+            if (v.contains("closedWall")) {
+                need(v["closedWall"].is_boolean(), "Expected closedWall boolean");
+                k.closedWall = v["closedWall"].get<bool>();
+            }
             if (v.contains("blocking")) {
                 need(v["blocking"].is_boolean(), "Expected blocking boolean");
                 k.blocking = v["blocking"].get<bool>();

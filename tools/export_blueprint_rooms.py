@@ -118,6 +118,27 @@ class Model:
         self.face([(x+radius*math.cos(-math.tau*i/sides),y,z+radius*math.sin(-math.tau*i/sides))
                    for i in range(sides)], material)
 
+    def shell(self, center, profile, material='steel', sides=10, depth=1):
+        """Closed elliptical turned shell: fitted plate volumes with readable bevels."""
+        shape=Model('part')
+        shape.lathe((0,0,0),profile,material,sides)
+        for (r,h),sign in ((profile[0],-1),(profile[-1],1)):
+            shape.oriented([(r*math.cos(math.tau*i/sides),h,r*math.sin(math.tau*i/sides))
+                            for i in range(sides)],material,(0,sign,0))
+        for p,n,mat in shape.faces:
+            self.face(p*np.array([1,1,depth])+np.array(center),mat)
+
+    def rod(self, a, b, radius, material='iron', sides=8):
+        a,b=np.array(a),np.array(b);axis=(b-a)/np.linalg.norm(b-a)
+        seed=np.array([0,1,0]) if abs(axis[1])<.9 else np.array([1,0,0])
+        u=np.cross(axis,seed);u/=np.linalg.norm(u);v=np.cross(axis,u)
+        lo=[a+radius*(math.cos(math.tau*j/sides)*u+math.sin(math.tau*j/sides)*v) for j in range(sides)]
+        hi=[p+(b-a) for p in lo]
+        self.oriented(lo,material,-axis);self.oriented(hi,material,axis)
+        for j in range(sides):
+            k=(j+1)%sides
+            self.oriented([lo[j],lo[k],hi[k],hi[j]],material,lo[j]-a)
+
     def vessel(self, center, radius, height, material='clay'):
         self.lathe(center, [(radius*.62,0),(radius,height*.65),(radius*.9,height),
                             (radius*.73,height),(radius*.73,height*.62)], material)
@@ -185,7 +206,7 @@ def author():
         m.vessel((x,.082,.30),.065,.06)
 
     m = Model('barrel'); models.append(m)
-    radius=.24*.57; h=radius*3; z=.495-radius
+    radius=.24*.57; h=.34; z=.495-radius
     profile=[(radius*.80,0),(radius*.96,h*.20),(radius,h*.50),
              (radius*.96,h*.80),(radius*.80,h)]
     m.lathe((0,0,z),profile,'wood',sides=20)
@@ -273,6 +294,85 @@ def author():
             k=(j+1)%8
             m.oriented([lo[j],lo[k],hi[k],hi[j]],'iron',lo[j]-a)
         m.bevel_box((a[0],.012,a[2]),(.06,.024,.06),'iron',.004)
+
+    m=Model('armor-display');models.append(m);z=.35
+    # Empty articulated suit, facing -Z. Fitted curved plate over dark joint gaps.
+    m.bevel_box((0,.012,z),(.27,.024,.25),'darkwood',.008)
+    m.rod((0,.025,z+.035),(0,.62,z+.035),.012,'darkwood')
+    m.shell((0,0,z),[(.065,.345),(.069,.39),(.105,.51),(.085,.565)],depth=.58)
+    m.shell((0,0,z),[(.068,.326),(.075,.345),(.069,.368)],'iron',depth=.64)
+    # Neck gorget and rounded sallet with raised brow and a dark recessed visor.
+    m.shell((0,0,z),[(.052,.552),(.055,.572),(.036,.595)],depth=.8)
+    m.shell((0,0,z),[(.051,.59),(.065,.625),(.063,.687),(.045,.725),(.016,.737)],sides=12,depth=.85)
+    m.extrude([(-.052,.644),(-.038,.659),(.038,.659),(.052,.644),(.04,.636),(-.04,.636)],z-.057,z-.047,'dark')
+    m.bevel_box((0,.648,z-.059),(.011,.027,.007),'steel',.002)
+    for x in (-.027,-.014,.014,.027):
+        m.plain_box((x,.617,z-.053),(.004,.014,.003),'dark')
+    for sign in (-1,1):
+        x=sign*.052
+        m.shell((x,0,z),[(.029,.165),(.034,.255),(.043,.329)],'iron',depth=.83)
+        m.shell((x,0,z-.002),[(.027,.05),(.035,.095),(.033,.165)],depth=.84)
+        m.shell((x,0,z-.014),[(.028,.151),(.039,.174),(.032,.196)],depth=.88)
+        m.bevel_box((x,.04,z-.028),(.073,.045,.128),'steel',.014)
+        # Split skirt plates over each thigh, with flared lower edges.
+        m.extrude([(x-.04,.345),(x+.04,.345),(x+.047,.285),(x-.045,.285)],z-.058,z-.043,'steel')
+        m.shell((sign*.12,0,z),[(.025,.437),(.034,.493),(.037,.538)],'iron',depth=.8)
+        m.shell((sign*.122,0,z),[(.039,.514),(.054,.542),(.049,.564),(.025,.58)],depth=.85)
+        m.shell((sign*.135,0,z-.01),[(.025,.347),(.034,.405),(.031,.443)],depth=.8)
+        m.shell((sign*.133,0,z-.012),[(.025,.421),(.038,.44),(.026,.458)],depth=.85)
+        m.shell((sign*.141,0,z-.018),[(.026,.307),(.030,.329),(.025,.351)],depth=.85)
+    # Raised breastplate ridge catches light without a flat rectangular breastplate.
+    m.extrude([(-.012,.40),(0,.539),(.012,.40),(0,.382)],z-.065,z-.056,'steel')
+
+    # Preserve accepted armor geometry; metal is continuous across tessellation edges.
+    m.faces=[(p,n,mat+'-smooth' if mat in ('steel','iron') else mat) for p,n,mat in m.faces]
+
+    m=Model('pottery-shelves');models.append(m)
+    for x in (-.37,.37):
+        m.box((x,.41,.469),(.045,.66,.042),'darkwood')
+    for tier,y in enumerate((.15,.39,.63)):
+        m.box((0,y+.0125,.36),(.84,.025,.26))
+        for x in (-.34,.34):
+            m.box((x,y-.022,.355),(.032,.045,.22),'darkwood')
+        xs=(-.28,0,.28) if tier!=1 else (-.20,.19)
+        for j,x in enumerate(xs):
+            radius=(.068,.083,.062)[(j+tier)%3]
+            h=(.135,.16,.12)[(j+2*tier)%3];base=y+.025;z=.365
+            material=('clay-smooth','clay-ochre-smooth','clay-pale-smooth')[(j+tier)%3]
+            profile=[(.65*radius,0),(.82*radius,.015),(radius,h*.42),
+                     (.82*radius,h*.72),(.44*radius,h*.86),(.49*radius,h)]
+            closed=(j+tier)%2==0
+            if not closed: profile += [(.34*radius,h),(.34*radius,h-.023)]
+            m.lathe((x,base,z),profile,material,sides=12)
+            m.oriented([(x+.65*radius*math.cos(math.tau*i/12),base,z+.65*radius*math.sin(math.tau*i/12))
+                        for i in range(12)],material,(0,-1,0))
+            if closed:
+                m.disk((x,base+h,z),.49*radius,'clay-pale-smooth',sides=12)
+            else:
+                m.disk((x,base+h-.023,z),.34*radius,'dark',sides=12)
+
+    m=Model('chandelier');models.append(m);cx=1.0;cz=.5
+    # Large closed wrought-iron hoop, seen from below as well as across the hall.
+    m.lathe((cx,0,cz),[(.55,1.27),(.59,1.27),(.60,1.285),(.60,1.34),
+                        (.59,1.355),(.55,1.355),(.55,1.27)],'iron',sides=32)
+    for i in range(8):
+        a=math.tau*i/8;x=cx+.575*math.cos(a);z=cz+.575*math.sin(a)
+        m.shell((x,0,z),[(.024,1.35),(.04,1.365),(.04,1.378)],'iron',sides=8)
+        m.shell((x,0,z),[(.021,1.378),(.022,1.46),(.019,1.49)],'wax',sides=8)
+        m.rod((x,1.49,z),(x,1.505,z),.003,'dark',sides=4)
+    # Three chains ascend to a central ceiling rose. Alternating closed links.
+    for i in range(3):
+        a=math.tau*i/3
+        start=np.array([cx+.565*math.cos(a),1.35,cz+.565*math.sin(a)])
+        end=np.array([cx,1.955,cz]);axis=(end-start)/np.linalg.norm(end-start)
+        u=np.cross(axis,[0,1,0]);u/=np.linalg.norm(u);v=np.cross(axis,u)
+        for j in range(6):
+            c=start+(end-start)*(j+.5)/6;side=u if j%2==0 else v
+            link=Model('link');link.ring((0,0,0),.039,.006,'iron',segments=6,sides=3)
+            # Oval links overlap slightly along the suspension direction.
+            for p,n,mat in link.faces:
+                m.face(c+p[:,0,None]*side+p[:,1,None]*axis*1.65+p[:,2,None]*np.cross(side,axis),mat)
+    m.shell((cx,0,cz),[(.035,1.955),(.075,1.978),(.075,2.0)],'iron',sides=16)
     return models
 
 
@@ -322,6 +422,19 @@ def main():
     fields['ash'] = wall[110:138,95:135].copy()
     ash_gray=fields['ash'][:,:,:3].mean(axis=2,keepdims=True)
     fields['ash'][:,:,:3]=ash_gray*np.array([.48,.46,.43])
+    fields['steel'] = fields['iron'].copy()
+    metal=fields['steel'][:,:,:3].mean(axis=2,keepdims=True)
+    fields['steel'][:,:,:3]=np.clip(metal*1.35+.18,0,1)*np.array([.88,.91,.94])
+    fields['steel-smooth'] = fields['steel']
+    fields['iron-smooth'] = fields['iron']
+    for name,tint in [('clay-ochre',(1.04,.91,.71)),('clay-pale',(1.05,1.03,.94))]:
+        fields[name]=fields['clay'].copy()
+        rgb=fields[name][:,:,:3];gray=rgb.mean(axis=2,keepdims=True)
+        fields[name][:,:,:3]=np.clip((rgb*.45+gray*.55+(0.14 if name=='clay-pale' else 0))*np.array(tint),0,1)
+    for key in ('clay','clay-ochre','clay-pale'): fields[key+'-smooth']=fields[key]
+    fields['wax'] = fields['cloth'].copy()
+    wax=fields['wax'][:,:,:3].mean(axis=2,keepdims=True)
+    fields['wax'][:,:,:3]=np.clip(wax*.45+.5,0,1)*np.array([1,.87,.63])
     fields['dark'] = fields['iron'].copy(); fields['dark'][:,:,:3] *= .36
     fields['rope'] = fields['cloth'].copy(); fields['rope'][:,:,:3] *= .62
     # Match the desaturated accepted timber treatment, not the raw master's orange.
@@ -341,6 +454,9 @@ def main():
             else:
                 uv,size = mapping(points,normal)
             shade = .54 if normal[1]<-.5 else 1.0 if normal[1]>.5 else .83
+            if material.endswith('-smooth'):
+                light=np.array([-.35,.65,-.68]);light/=np.linalg.norm(light)
+                shade=round(.70+.30*max(0,float(normal@light)),3)
             key = (int(size[0]),int(size[1]),material,shade)
             entries[key] = None
             faces[m.name].append((points,normal,uv,key))
@@ -357,8 +473,8 @@ def main():
             q=q%(2*n); return np.where(q<n,q,2*n-q-1)
         patch=source[mirror(yy,source.shape[0]),mirror(xx,source.shape[1])].copy()
         edge=np.minimum(np.minimum(xx,w-1-xx),np.minimum(yy,h-1-yy))
-        painted=(.70+.30*np.minimum(edge/2.5,1))*shade
-        patch[:,:,:3]*=painted[:,:,None]
+        painted=shade if material.endswith('-smooth') else (.70+.30*np.minimum(edge/2.5,1))*shade
+        patch[:,:,:3]*=painted if np.isscalar(painted) else painted[:,:,None]
         atlas[y:y+h+8,x:x+w+8]=np.pad(patch,((4,4),(4,4),(0,0)),mode='edge')
         x+=w+8; row=max(row,h+8)
     image=bpy.data.images.new('room-pair-atlas',width=ATLAS,height=ATLAS,alpha=True)
@@ -381,7 +497,7 @@ def main():
                 for k in ids: vertices.append([round(float(v),8) for v in (*points[k],*normal,*uv[k])])
         contract=contracts[m.name]; arr=np.asarray(vertices); w,d=contract['size']
         assert len(vertices)<=6000 and np.all(np.isfinite(arr))
-        assert np.all(arr[:,:3].min(axis=0)>=np.array([-.5,0,-.5])-1e-6)
+        assert np.all(arr[:,:3].min(axis=0)>=np.array([-.5,contract.get("clearance",0),-.5])-1e-6)
         assert np.all(arr[:,:3].max(axis=0)<=np.array([w-.5,contract['height'],d-.5])+1e-6)
         record=dict(name='room-'+m.name,texture='packs/underkeep/source/rooms/pair-atlas.png',vertices=vertices)
         (pack/'models/rooms'/f'{m.name}.mesh.json').write_text(json.dumps(record,separators=(',',':'))+'\n')

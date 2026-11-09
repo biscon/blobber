@@ -76,6 +76,10 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         add(s.depth);
         if (!s.blocking)
             add(0x6465636f72617465ull); // Default true preserves established fingerprints.
+        if (s.clearance != 0) {
+            add(0x6f76657268656164ull);
+            real(s.clearance);
+        }
     }
     // Absent extension retains established dungeon generation fingerprints.
     if (hearth) {

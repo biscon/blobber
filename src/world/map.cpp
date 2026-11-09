@@ -145,7 +145,7 @@ void Map::validateWorld() {
     }
     unsigned decals = 0, props = 0, containers = 0;
     occupied_.assign(count, 0);
-    std::vector<bool> visualScenery(count, false); // Preparation-only overlap validation.
+    std::vector<unsigned char> visualScenery(count, 0); // Preparation-only overlap validation.
     for (const auto& s : world_.scenery) {
         if (s.model.empty() || s.model.size() > 32 ||
             !std::all_of(s.model.begin(), s.model.end(),
@@ -156,16 +156,21 @@ void Map::validateWorld() {
             s.anchor.y >= height_ - 1 || !s.width || !s.depth || s.width > 7 || s.depth > 7 ||
             s.footprint.x < -3 || s.footprint.y < -3 || s.footprint.x > 0 || s.footprint.y > 0 ||
             s.footprint.x + int(s.width) <= 0 || s.footprint.y + int(s.depth) <= 0 ||
-            s.footprint.x + int(s.width) > 4 || s.footprint.y + int(s.depth) > 4)
+            s.footprint.x + int(s.width) > 4 || s.footprint.y + int(s.depth) > 4 ||
+            !std::isfinite(s.clearance) ||
+            !(s.clearance == 0 || (s.clearance >= 1 && s.clearance < 3 && !s.blocking)))
             throw std::invalid_argument("Invalid scenery placement");
+        const unsigned char layer = s.clearance > 0 ? 2 : 1;
         for (unsigned z = 0; z < s.depth; ++z)
             for (unsigned x = 0; x < s.width; ++x) {
                 const auto c = s.cell(x, z);
                 if (c.x < 1 || c.y < 1 || c.x >= width_ - 1 || c.y >= height_ - 1 || solid(c) ||
                     surface(c).floor != surface(s.anchor).floor ||
-                    visualScenery[std::size_t(c.y * width_ + c.x)])
+                    (visualScenery[std::size_t(c.y * width_ + c.x)] & layer) ||
+                    (s.clearance > 0 && surface(c).ceiling != noCeiling &&
+                     s.clearance >= elevation(surface(c).ceiling) - elevation(surface(c).floor)))
                     throw std::invalid_argument("Scenery base overlaps or is unlevel/outside map");
-                visualScenery[std::size_t(c.y * width_ + c.x)] = true;
+                visualScenery[std::size_t(c.y * width_ + c.x)] |= layer;
                 if (s.blocking)
                     occupied_[std::size_t(c.y * width_ + c.x)] = 3;
             }
@@ -187,7 +192,7 @@ void Map::validateWorld() {
             for (unsigned n = 0; n < d.footprintCount(); ++n) {
                 const auto c = d.footprint(n);
                 if (solid(c) || occupied_[std::size_t(c.y * width_ + c.x)] ||
-                    visualScenery[std::size_t(c.y * width_ + c.x)])
+                    (visualScenery[std::size_t(c.y * width_ + c.x)] & 1))
                     throw std::invalid_argument("Furniture overlaps wall or furniture");
                 occupied_[std::size_t(c.y * width_ + c.x)] = 2 | unsigned(d.blocks());
             }

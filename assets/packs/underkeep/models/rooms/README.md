@@ -4,15 +4,25 @@ Pair-first checkpoint; fireplace accepted, revised furniture/storage/hall dressi
 awaiting visual review. These are prepared named scenery models, not additions to
 the legacy prop slots. Campaign placement is unchanged; barracks/armory follow review.
 
-Nine named meshes bind to blueprint kits. `hearth` retains the accepted geometry;
+Twelve named meshes bind to blueprint kits. `hearth` retains the accepted geometry;
 `work-surface` and `table-and-benches` keep their floor area with taller supports.
 `barrel`, `crate-large`, `crate-small`, and `grain-sack` replace the pallet with separate
 nonblocking pieces. `tapestry` is nonblocking; two instances share the same woven
 heraldry. Two `brazier` instances retain blocking bases and own local flame anchors.
+Three instances share the table model. Two nonblocking `armor-display` suits flank
+the back-wall center; the nonblocking `chandelier` hangs from the hall ceiling,
+with iron suspension chains and eight unlit wax candles, centered exactly above
+the middle table. Armor geometry is retained, with continuous metal finish instead
+of dark painted borders on each face. Three `pottery-shelves` instances use timber
+racks and eight clay jars each, against the marked kitchen walls. These are
+nonblocking; `closedWall` removes a rack if its backing doorway is selected. Barrel height is .34 cells
+at the previously enlarged diameter.
 
 Runtime scale is 1, origin is anchor-cell floor center, axes +X right/+Y up/+Z backward.
-Catalog size/height bound visible geometry; `blocking` separately controls movement
-and NPC reservations. All meshes fit their contracts. UV density is 256 texels/cell
+The chandelier has a 3×2 visual envelope and local horizontal center (1,.5).
+Catalog size/height/clearance bound visible geometry; `blocking` separately controls movement
+and NPC reservations. Overhead clearance 1.25 permits floor furnishings and walking
+under the chandelier. All meshes fit their contracts. UV density is 256 texels/cell
 with four-pixel gutters. Stone uses the actual dungeon wall texture; other materials
 use retained imagegen masters. Painted shading and real thickness/fitted joints stay
 within the existing 2,000-triangle limit per kit and one shared 2048² atlas.

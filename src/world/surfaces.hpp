@@ -86,6 +86,7 @@ struct SceneryPlacement {
     Heading facing = Heading::North;
     unsigned width = 1, depth = 1;
     bool blocking = true; // False: visual bounds only; no movement/NPC reservation.
+    float clearance = 0;  // Positive: overhead layer; no floor reservation.
     Cell cell(unsigned x, unsigned z) const noexcept {
         return anchor + right(facing) * (footprint.x + int(x)) + forward(facing) * -(footprint.y + int(z));
     }

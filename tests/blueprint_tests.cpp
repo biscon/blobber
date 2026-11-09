@@ -22,6 +22,9 @@ void malformed() {
     bad([](auto& j) { j["rooms"][0]["size"][0] = 5.5; });
     bad([](auto& j) { j["kits"][0]["height"] = -1; });
     bad([](auto& j) { j["kits"][0]["blocking"] = 0; });
+    for (const auto clearance : {-1.f, .5f, 1.f, 3.f})
+        bad([&](auto& j) { j["kits"][0]["clearance"] = clearance; });
+    bad([](auto& j) { j["kits"][0]["clearance"] = "high"; });
     bad([](auto& j) { j["kits"][0]["fire"] = {0, .2}; });
     bad([](auto& j) { j["kits"][0]["fire"] = {0, .8, 0}; });
     bad([](auto& j) { j["kits"].push_back(j["kits"][0]); });
@@ -53,6 +56,79 @@ void malformed() {
     c = test::blueprintCatalog();
     c.kitCount = bp::maxKits + 1;
     rejects([&] { bp::validate(c); }, "In-memory catalog capacity rejects before indexing");
+}
+void overhead() {
+    auto j = test::blueprintJson();
+    j["kits"].push_back(
+        {{"id", "overhead"}, {"size", {3, 3}}, {"height", 1.5}, {"clearance", 1.1}, {"blocking", false}});
+    j["rooms"][0]["placements"].push_back({{"kit", "overhead"}, {"anchor", {0, 0}}, {"facing", "north"}});
+    const auto c = bp::decode(j.dump()); // Overlaps a floor kit, lane and encounter region.
+    for (unsigned t = 0; t < 4; ++t) {
+        const auto scene = bp::assemble(c, "kitchen", t);
+        const auto& ceiling = scene.map.definition().scenery[1];
+        check(ceiling.clearance == 1.1f && !ceiling.blocking, "Ceiling placement retains clearance");
+        check(scene.map.movementBlocked(ceiling.cell(0, 0)),
+              "Floor furniture still blocks under ceiling kit");
+        check(!scene.map.movementBlocked(ceiling.cell(1, 1)) && !scene.map.npcBlocked(ceiling.cell(1, 1)),
+              "Overhead footprint leaves unused floor cells walkable in every rotation");
+    }
+    auto invalid = j;
+    invalid["kits"][1]["blocking"] = true;
+    rejects([&] { bp::decode(invalid.dump()); }, "Overhead geometry cannot block the floor");
+    invalid = j;
+    invalid["kits"][0]["height"] = 1.2;
+    rejects([&] { bp::decode(invalid.dump()); }, "Tall floor furniture cannot intersect overhead volume");
+    invalid = j;
+    invalid["rooms"][0]["placements"].push_back(invalid["rooms"][0]["placements"][1]);
+    rejects([&] { bp::decode(invalid.dump()); }, "Overhead visual overlap rejects");
+    invalid = j;
+    invalid["rooms"][0]["ceiling"] = 4;
+    rejects([&] { bp::decode(invalid.dump()); }, "Low ceiling cannot host suspended kit");
+}
+void closedWallKits() {
+    auto j = test::blueprintJson();
+    j["kits"].push_back({{"id", "wall-fixture"},
+                         {"size", {1, 1}},
+                         {"height", .8},
+                         {"blocking", false},
+                         {"closedWall", true}});
+    j["rooms"][0]["placements"].push_back({{"kit", "wall-fixture"}, {"anchor", {2, 0}}, {"facing", "south"}});
+    j["rooms"][0]["placements"].push_back({{"kit", "wall-fixture"}, {"anchor", {0, 2}}, {"facing", "east"}});
+    const auto catalog = bp::decode(j.dump());
+    for (unsigned turn = 0; turn < 4; ++turn) {
+        for (unsigned sockets : {1u, 4u, 8u, 9u, 15u}) {
+            const auto scene = bp::assemble(catalog, "kitchen", turn, sockets);
+            const unsigned expected = 3 - bool(sockets & 1) - bool(sockets & 8);
+            check(scene.map.definition().scenery.size() == expected &&
+                      scene.rooms[0].blueprint.placementCount == expected,
+                  "Conditional scenery and plan omit only kits attached to selected doorways");
+            for (const auto& prop : scene.map.definition().scenery)
+                if (prop.model == "wall-fixture") {
+                    check(!scene.map.movementBlocked(prop.anchor) && !scene.map.npcBlocked(prop.anchor),
+                          "Wall shelves have no party or NPC collision footprint");
+                    check(scene.map.solid(prop.anchor + forward(prop.facing) * -1),
+                          "Retained conditional kits have actual solid wall backing");
+                }
+        }
+        const auto pair = bp::assemble(catalog, "kitchen-hall", turn);
+        check(pair.rooms[0].blueprint.placementCount == 3,
+              "Pair retains kitchen shelving on unused north and west walls");
+    }
+    auto invalid = j;
+    invalid["kits"][1]["closedWall"] = "yes";
+    rejects([&] { bp::decode(invalid.dump()); }, "Wall condition requires a boolean");
+    invalid = j;
+    invalid["kits"][1]["blocking"] = true;
+    rejects([&] { bp::decode(invalid.dump()); }, "Conditional wall kit cannot reserve movement");
+    invalid = j;
+    invalid["kits"][1]["size"] = {1, 2};
+    rejects([&] { bp::decode(invalid.dump()); }, "Conditional wall kits must fit one backing cell");
+    invalid = j;
+    invalid["kits"][1]["closedWall"] = false;
+    rejects([&] { bp::decode(invalid.dump()); }, "Ordinary nonblocking furnishings cannot occupy sockets");
+    invalid = j;
+    invalid["rooms"][0]["placements"][1]["facing"] = "north";
+    rejects([&] { bp::decode(invalid.dump()); }, "Wall kit must face into room with backing wall");
 }
 void transforms() {
     {
@@ -214,6 +290,8 @@ void combatSpace() {
 } // namespace
 int main() try {
     malformed();
+    overhead();
+    closedWallKits();
     transforms();
     gameplay();
     combatSpace();

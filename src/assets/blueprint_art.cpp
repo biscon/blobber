@@ -17,7 +17,8 @@ void validateKitArt(const Kit& kit, const world_assets::PropMesh& mesh) {
             if (!std::isfinite(f))
                 fail("nonfinite vertex");
         if (v[0] < -.5f - epsilon || v[0] > float(kit.size.x) - .5f + epsilon || v[2] < -.5f - epsilon ||
-            v[2] > float(kit.size.y) - .5f + epsilon || v[1] < -epsilon || v[1] > kit.height + epsilon)
+            v[2] > float(kit.size.y) - .5f + epsilon || v[1] < kit.clearance - epsilon ||
+            v[1] > kit.height + epsilon)
             fail("mesh exceeds blueprint footprint or height");
     }
 }

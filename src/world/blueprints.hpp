@@ -30,6 +30,8 @@ struct Kit {
     Cell size{};
     float height = 0;
     bool blocking = true;
+    bool closedWall = false;         // Omit this nonblocking wall kit when its backing socket is active.
+    float clearance = 0;             // Minimum native Y; >=1 means nonblocking overhead geometry.
     std::optional<AmbientFire> fire; // Mesh-local position; authored in native cell units.
 };
 struct Placement {

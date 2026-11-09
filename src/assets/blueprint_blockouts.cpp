@@ -60,7 +60,11 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
         };
         if (k.blocking)
             add(-.5f, 0, -.5f, w, .035f, d); // Exact visible collision extent.
-        if (id == "hearth") {
+        if (k.clearance > 0) {
+            add(-.2f, k.clearance, -.2f, w - .6f, .08f, d - .6f);
+            add((w - 1.f) * .5f - .02f, k.clearance + .08f, (d - 1.f) * .5f - .02f, .04f,
+                h - k.clearance - .08f, .04f);
+        } else if (id == "hearth") {
             add(-.45f, .035f, .18f, w - .1f, h - .035f, .27f);
             add(-.45f, .035f, -.4f, .25f, h * .65f, .58f);
             add(w - .8f, .035f, -.4f, .25f, h * .65f, .58f);
@@ -79,12 +83,20 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
                     for (float z : {-.3f, d - .75f})
                         add(x, .035f, z, .12f, h * .5f - .035f, .16f);
             }
+        } else if (id == "pottery-shelves") {
+            for (float x : {-.39f, .35f})
+                add(x, .08f, .45f, .04f, .66f, .04f);
+            for (float y : {.15f, .39f, .63f}) {
+                add(-.42f, y, .23f, .84f, .025f, .26f);
+                for (float x : {-.30f, -.08f, .17f})
+                    add(x, y + .025f, .30f, .11f, .13f, .12f);
+            }
         } else if (id == "tapestry") {
             add(-.325f, .65f, .46f, .65f, h - .65f, .025f);
         } else if (id == "brazier") {
             add(-.10f, .035f, .15f, .20f, .25f, .20f);
             add(-.15f, .285f, .10f, .30f, h - .285f, .30f);
-        } else if (!k.blocking) {
+        } else if (!k.blocking && id != "armor-display") {
             add(-.15f, 0, .19f, .30f, h, .30f);
         } else if (id == "sleeping-bay") {
             add(-.4f, .08f, -.4f, .8f, .18f, d - .2f);
@@ -106,8 +118,8 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
                     h - .035f, d - .3f);
         }
         for (const auto& v : mesh.vertices)
-            if (v[0] < -.50001f || v[0] > w - .49999f || v[2] < -.50001f || v[2] > d - .49999f || v[1] < 0 ||
-                v[1] > h + .00001f)
+            if (v[0] < -.50001f || v[0] > w - .49999f || v[2] < -.50001f || v[2] > d - .49999f ||
+                v[1] < k.clearance || v[1] > h + .00001f)
                 throw Failure(Error::Bounds, "Blockout mesh exceeds kit contract: " + std::string(id));
         pack.buildings.push_back({std::string(id), {std::uint16_t(meshes.size())}});
         meshes.push_back(std::move(mesh));

@@ -92,6 +92,24 @@
       "parts": [
         "packs/underkeep/models/rooms/brazier.mesh.json"
       ]
+    },
+    {
+      "id": "armor-display",
+      "parts": [
+        "packs/underkeep/models/rooms/armor-display.mesh.json"
+      ]
+    },
+    {
+      "id": "chandelier",
+      "parts": [
+        "packs/underkeep/models/rooms/chandelier.mesh.json"
+      ]
+    },
+    {
+      "id": "pottery-shelves",
+      "parts": [
+        "packs/underkeep/models/rooms/pottery-shelves.mesh.json"
+      ]
     }
   ]
 }

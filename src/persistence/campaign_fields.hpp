@@ -108,6 +108,7 @@ template <class A> void visit(A& a, WorldDefinition& v, const WorldDefinition& b
 }
 template <class A> void visit(A& a, SceneryPlacement& v, const SceneryPlacement& base) {
     a("blocking", v.blocking, base.blocking);
+    a("clearance", v.clearance, base.clearance);
     a("model", v.model, base.model);
     a("anchor", v.anchor, base.anchor);
     a("footprint", v.footprint, base.footprint);
