@@ -172,3 +172,87 @@ Campaign length and population/resource quantities are unchanged. Caves, mines,
 additional campaign bands and biome decals/billboards/models are not implemented
 in this deliverable. Geometry changes can change combat circumstances despite equal
 recipes and XP; the fixed structural/pacing sample does not establish balance.
+
+## Architectural ceilings — 2026-11-09
+
+Status: **Implemented and mechanically verified; user visual acceptance pending.**
+
+A generation-owned architecture pass runs after successful dressing and before Map
+publication. The immutable WorldDefinition owns its existing row-major surface array;
+no height fields are duplicated in Room, and no frame processing is added. Count
+actual room-member floor cells before furniture, excluding pillars and missing corners.
+Entrance/objective stair regions, passages and door/gate cells keep ceiling 4 ticks.
+Other rooms use 5 ticks below 20 cells, 6 ticks otherwise, or 7 ticks at >=30 cells
+with both dimensions >=5. L rooms and narrow halls cap at 6. Large pillared rooms
+use 8 ticks. Each tick is a quarter cell; all floors stay at zero. Threshold overrides
+create lintels with existing interval geometry. Both profiles/depths/fallbacks share
+the rules. No new randomness, lighting, materials, artwork or movement changes.
+
+The pure classifier and bounded preparation helper live in generation/architecture.
+The pass counts membership once into maxRooms scratch, initializes at most maxCells
+surfaces, and adjusts existing decoration records. Pilasters reach the local ceiling;
+webs retain their ceiling offset and size. Door surrounds, furniture and other dressing
+retain their dimensions/positions. Surface allocation occurs only during preparation;
+existing Map budgets, invalid-surface checks, scene bounds and rollback apply. The
+pass accepts validated generation geometry and fresh, unadjusted dressing. Diagnostic
+room reports expose derived ceiling ticks; existing fingerprints cover final surfaces.
+
+Generator 13/templates 9 reject older campaigns unchanged under the existing strict
+policy. Dressing RNG explicitly retains 12/9, other streams retain 8/6; the ceiling
+change therefore preserves layouts, encounters and decoration/chest placements. No
+save schema, simulation or asset publication format changes are needed.
+
+Verification: small owned fixtures cover tier boundaries, irregular membership,
+rotations, narrow/L/pillared rooms, stair/door exceptions, dressing attachment, traversal
+and fingerprint changes. Existing fixed-seed normal/fallback cases exercise both
+profiles and all depths. Focused Debug generation/dressing/fixtures/environment/render,
+CLI/replay, save and allocation checks precede one hidden GL review, with <=2 build
+workers and one intensive job at low priority. Review corridor transitions, room tiers,
+pillars, open/closed doors and stairs; no OS input. Keep <=6 selected images and
+record commands/results here; user visual acceptance remains separate.
+
+### Architectural ceiling verification
+
+Debug game, headless runner, generation CLI, affected tests and hidden GPU review
+runner build with the existing `/home/bison/clion/bin/cmake/linux/x64/bin/cmake` and
+configured `/home/bison/clion/bin/ninja/linux/x64/ninja`, at most two workers. Existing
+baker relinks triggered world/creator/portrait preparation; source artwork and asset
+formats were not changed. One intensive job ran at a time, with low CPU/I/O priority.
+
+```sh
+nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest \
+  --test-dir cmake-build-debug \
+  -R '^(generation|dressing|fixtures|world_environment|underkeep_render|campaign_save|automation_allocations|generation_automation|generation_cli|campaign_save_cli)$' \
+  -j 1 --output-on-failure
+```
+
+**10/10 passed in 33.79 s**, including full persistence once (7.47 s), active/inactive
+world fingerprints, generator-12 rejection without file mutation, CLI/replay and
+engine-owned C++ allocation guards. Normal/fallback fixtures cover both profiles and
+all depths. Six pre/post CLI comparisons (seeds 0,5; depths 1–3) preserved map, room
+geometry, connections, fixtures, population, encounters, dressing locations, containers,
+landings, spawn, runtime seed, attempts and fallback state exactly. The only new room
+report field is nominal `ceiling_ticks`. No additional retained world surface storage
+is required: Map already allocated the same 8-byte-per-cell array for default heights.
+Classifier scratch is two maxRooms arrays (96 bytes); publication uses existing budgets.
+
+```sh
+nice -n 15 ionice -c 3 cmake-build-debug/blobber_world_integration_gpu_tests \
+  ASSET_ROOT NEW_OUTPUT --ceiling-review
+```
+
+Hidden raylib/OpenGL 3.3 review passed on NVIDIA RTX 3060. Twelve captures covered
+four room tiers, both profiles' low stair regions, doors closed/open and thresholds.
+Checks include GL errors, CPU/GPU interior picking (<100 nonedge discrepancies per
+500×282 view) and GPU resource return to the persistent presenter baseline. Selected
+images were visually inspected for ceiling joins, pilasters, pillar height and door
+proportions. [Six native captures](screenshots/architectural-ceilings/README.md) remain.
+
+The first sandbox run could not open X11; the authorized hidden display run was used.
+Its first attempt stopped on a review-harness omission: relocated poses had not called
+fixture discovery before interaction. Adding discovery fixed the harness; the rebuilt
+review passed. No game-code correction or CPU-suite rerun was needed. Interactive
+acceptance is pending; no desktop input/focus automation, broad seed sweep, benchmark,
+sanitizer or second build configuration ran. Allocation checks do not cover driver or
+third-party allocations. All runners closed; disposable artifacts and temporary asset
+links were removed after selecting evidence. Existing saves and build caches remain.

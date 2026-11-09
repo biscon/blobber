@@ -24,7 +24,8 @@ and four ticks common clearance. Player/actor movement, BFS and validation share
 Melee/touch/adjacent fixture and loot access additionally respect height and clearance.
 Sight uses center-to-center segments at floor+2 ticks, checking crossed floor/ceiling
 intervals with conservative supercover corners. Solid cells stay full-height blockers.
-Ranges, costs, clocks and spell footprints remain 2D. Generated floors remain flat.
+Ranges, costs, clocks and spell footprints remain 2D. Generated floors retain level floors; [architectural ceilings](procedural_layout_design.md#architectural-ceilings--2026-11-09)
+now assign room-based ceiling heights.
 
 ## Geometry, presentation and storage
 

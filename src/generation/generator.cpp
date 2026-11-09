@@ -1,3 +1,4 @@
+#include "generation/architecture.hpp"
 #include "generation/dressing.hpp"
 #include "generation/floor.hpp"
 #include "generation/stone_layout.hpp"
@@ -32,9 +33,9 @@ FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback
 } // namespace
 std::uint64_t seedFor(GenerationRequest r, Domain domain, unsigned id, unsigned attempt) noexcept {
     auto h = mix(0x424c4f4242455255ull ^ r.seed);
-    // Dressing changes metadata, not the accepted terrain/population seed streams.
-    const unsigned randomGenerator = domain == Domain::Dressing ? r.generator : 8;
-    const unsigned randomCatalog = domain == Domain::Dressing ? r.templates : 6;
+    // Preserve accepted placement streams independently of generation identity.
+    const unsigned randomGenerator = domain == Domain::Dressing ? 12 : 8;
+    const unsigned randomCatalog = domain == Domain::Dressing ? 9 : 6;
     for (const auto value : {r.depth, randomGenerator, randomCatalog, unsigned(domain), id, attempt})
         h = mix(h ^ (std::uint64_t(value) + 0x9e3779b97f4a7c15ull));
     return h;
@@ -200,6 +201,7 @@ GenerationResult generate(GenerationRequest request, bool forceFallback) {
         for (int x = 0; x < layout.width; ++x)
             if (layout.floor[y * layout.width + x])
                 rows[y][x] = '.';
+    prepareArchitecture(layout, dressing);
     Map map(rows, std::move(dressing));
     layout.dressingFingerprint = map.definition().fingerprint();
     out.floor.emplace(GeneratedFloor{request, layout, std::move(map), out.diagnostics, fingerprint(layout),

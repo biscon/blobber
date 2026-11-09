@@ -230,19 +230,19 @@ void environmentRoundtrip() {
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Pre-Speed simulation 19 rejects without implicit migration");
     bad = blobber::automation::Json::parse(text);
-    bad["generator"] = 9;
+    bad["generator"] = 12;
     {
         std::ofstream file(directory.path / "campaign.json");
         file << bad.dump();
     }
-    check(!store.inspect().active, "Campaign predating room-safe props is incompatible");
+    check(!store.inspect().active, "Campaign predating architectural ceilings is incompatible");
     {
         std::ifstream file(directory.path / "campaign.json");
         const std::string bytes((std::istreambuf_iterator<char>(file)), {});
-        check(bytes == bad.dump(), "Rejecting old prop generation never rewrites the save");
+        check(bytes == bad.dump(), "Rejecting old ceiling generation never rewrites the save");
     }
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
-            "Generator 9 campaign rejects explicitly");
+            "Generator 12 campaign rejects explicitly");
     bad = blobber::automation::Json::parse(text);
     bad["simulation"] = 3;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
@@ -481,7 +481,10 @@ void chestRoundtrip() {
     check(bool(game.pickup(
               {{game.loot().snapshot().world, slot, 1}, {0}, game.party().inventory().revision()})),
           "Partially loot campaign chest");
+    const auto architecturalIdentity = game.geometry().base().definition().fingerprint();
     auto loaded = copy(c, d, *run);
+    check(loaded->game().geometry().base().definition().fingerprint() == architecturalIdentity,
+          "Active floor architectural surfaces and dressing survive Continue");
     check(loaded->game().loot().snapshot().containers[0].opened &&
               loaded->game().movement().player.cell == chest.cell &&
               bool(loaded->game().containerAccess({loaded->game().loot().snapshot().world, 0})) &&
@@ -491,6 +494,8 @@ void chestRoundtrip() {
     travel(*loaded, FixtureKind::Upstairs);
     auto inactive = copy(c, d, *loaded);
     travel(*inactive, FixtureKind::Downstairs);
+    check(inactive->game().geometry().base().definition().fingerprint() == architecturalIdentity,
+          "Inactive architectural surfaces and dressing survive save and revisit");
     check(inactive->game().loot().snapshot().containers[0].opened &&
               !inactive->game().loot().snapshot().stacks[slot].active,
           "Inactive floor chest survives save and revisit without reroll");

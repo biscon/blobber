@@ -177,6 +177,10 @@ int main(int argc, char** argv) {
             test::underkeepReview(argv[1], argv[2], true);
             return 0;
         }
+        if (argc == 4 && std::string_view(argv[3]) == "--ceiling-review") {
+            test::layoutReview(argv[1], argv[2], true);
+            return 0;
+        }
         if (argc == 4 && std::string_view(argv[3]) == "--layout-review") {
             test::layoutReview(argv[1], argv[2]);
             return 0;

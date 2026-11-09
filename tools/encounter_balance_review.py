@@ -104,7 +104,7 @@ def main():
     directory = args.output/name; directory.mkdir()
     package = json.loads((profiles/(party+".json")).read_text())
     scenario = dict(kind="generated_floor" if kind == "guardian" else "campaign", schema_version=1,
-                    generator_version=12, template_version=9, seed=seed, party=package["party"])
+                    generator_version=13, template_version=9, seed=seed, party=package["party"])
     if kind == "guardian": scenario["depth"] = depth
     (directory/"scenario.json").write_text(json.dumps(scenario,indent=2)+"\n")
     deadline = time.monotonic()+max(0,provenance["deadline_wall"]-time.time())

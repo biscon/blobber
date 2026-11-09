@@ -1,7 +1,10 @@
+#include "generation/architecture.hpp"
 #include "generation/diagnostic_view.hpp"
+#include "generation/dressing.hpp"
 #include "generation/floor.hpp"
 #include "support/check.hpp"
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <set>
 using namespace blobber;
@@ -83,6 +86,90 @@ std::string signature(const FloorLayout& f) {
         }
     return best;
 }
+void architectureRules() {
+    auto fixture = [](unsigned area, Cell size, unsigned shape = 0) {
+        FloorLayout f;
+        f.roomCount = 1;
+        f.rooms[0].size = size;
+        f.rooms[0].shape = std::uint8_t(shape);
+        for (unsigned n = 0; n < area; ++n) {
+            const unsigned i = (1 + n / unsigned(size.x)) * unsigned(f.width) + 1 + n % unsigned(size.x);
+            f.floor[i] = 1;
+            f.membership[i] = 0;
+        }
+        return f;
+    };
+    check(roomCeilings(fixture(19, {5, 4}))[0] == 5, "19-cell room is small");
+    check(roomCeilings(fixture(20, {5, 4}))[0] == 6, "20-cell room is medium");
+    check(roomCeilings(fixture(29, {5, 6}))[0] == 6, "Missing corner prevents large tier");
+    check(roomCeilings(fixture(30, {5, 6}))[0] == 7, "30-cell broad room is large");
+    check(roomCeilings(fixture(32, {4, 8}))[0] == 6, "Narrow hall cannot become a great hall");
+    check(roomCeilings(fixture(30, {5, 7}, 2))[0] == 6, "L room remains medium");
+    check(roomCeilings(fixture(24, {5, 5}, 1))[0] == 6, "Small pillar room has no landmark bonus");
+    auto f = fixture(34, {5, 7}, 1);
+    check(roomCeilings(f)[0] == 8, "Large pillared room gets tallest ceiling");
+    for (unsigned turn = 0; turn < 4; ++turn)
+        check(roomCeilings(rotated(f, turn))[0] == 8, "Ceiling classification survives rotation");
+    for (auto role : {Role::Entrance, Role::Objective}) {
+        f.rooms[0].role = role;
+        check(roomCeilings(f)[0] == 4, "Stair regions retain original ceiling");
+    }
+    f.rooms[0].role = Role::Junction;
+    f.fixtures.count = 2;
+    f.fixtures.entries[0] = {{1, 1}, Heading::North, FixtureKind::Door, 0};
+    f.fixtures.entries[1] = {{2, 1}, Heading::North, FixtureKind::GuardianGate, 0};
+    WorldDefinition world;
+    world.decorations = {{{3, 1}, Heading::North, DecorationKind::Pilaster},
+                         {{3, 1}, Heading::North, DecorationKind::WebA, 0, .5f, .82f, .7f, .34f},
+                         {{1, 1}, Heading::North, DecorationKind::DoorSurround, 0, .5f, 0, 1, 1},
+                         {{3, 1}, Heading::North, DecorationKind::BannerA}};
+    const auto banner = world.decorations.back();
+    prepareArchitecture(f, world);
+    const auto at = [&](Cell c) { return world.surfaces[unsigned(c.y * f.width + c.x)]; };
+    check(at({1, 1}).ceiling == 4 && at({2, 1}).ceiling == 4 && at({3, 1}).ceiling == 8,
+          "Low door/gate thresholds override room height locally");
+    check(at({0, 0}).ceiling == 4 && at({3, 1}).floor == 0, "Default surfaces stay low and level");
+    check(surfacePassage(at({2, 1}), at({3, 1})), "Room transition retains movement clearance");
+    check(world.decorations[0].height == 2 && std::abs(world.decorations[1].elevation - 1.82f) < .00001f &&
+              world.decorations[1].height == .34f && world.decorations[2].height == 1 &&
+              world.decorations.back().elevation == banner.elevation,
+          "Pilaster reaches ceiling; web keeps offset/size; doorway and banner retain dimensions");
+    const auto identity = world.fingerprint();
+    world.surfaces[unsigned(f.width + 3)].ceiling = 7;
+    check(identity != world.fingerprint(), "World identity includes architectural ceilings");
+}
+void checkArchitecture(const GeneratedFloor& floor) {
+    const auto& f = floor.layout;
+    const auto ceilings = roomCeilings(f);
+    for (int y = 0; y < f.height; ++y)
+        for (int x = 0; x < f.width; ++x) {
+            const Cell c{x, y};
+            const auto region = regionAt(f, c);
+            int expected = floorCell(f, c) && region < f.roomCount ? ceilings[region] : 4;
+            for (unsigned i = 0; i < f.fixtures.count; ++i) {
+                const auto& v = f.fixtures.entries[i];
+                if (v.cell == c && (v.kind == FixtureKind::Door || v.kind == FixtureKind::GuardianGate))
+                    expected = 4;
+            }
+            check(floor.map.surface(c).floor == 0 && floor.map.surface(c).ceiling == expected,
+                  "Published surfaces honor room membership and thresholds");
+        }
+    // Recreate pre-architecture dressing through the preserved random stream.
+    auto layout = f;
+    WorldDefinition original;
+    check(dressUnderkeep(layout, floor.request, original), "Fresh dressing remains reproducible");
+    const auto& actual = floor.map.definition().decorations;
+    check(actual.size() == original.decorations.size(), "Architecture preserves decoration count");
+    for (unsigned i = 0; i < actual.size(); ++i) {
+        const auto& a = actual[i];
+        const auto& b = original.decorations[i];
+        check(a.cell == b.cell && a.kind == b.kind && a.face == b.face && a.container == b.container,
+              "Architecture preserves decoration placement and container identity");
+    }
+    check(seedFor(floor.request, Domain::Dressing) ==
+              seedFor({floor.request.seed, floor.request.depth, 12, 9}, Domain::Dressing),
+          "New generation identity retains accepted dressing stream");
+}
 void deterministicAndVariety() {
     std::set<LayoutProfile> profiles;
     for (unsigned depth = 1; depth <= 3; ++depth) {
@@ -95,6 +182,7 @@ void deterministicAndVariety() {
             check(!validate(f) && a.floor->map.connected(f.spawn.cell), "published cells and metadata agree");
             check(a.floor->fingerprint == b.floor->fingerprint && ascii(f) == ascii(b.floor->layout),
                   "deterministic geometry and metadata");
+            checkArchitecture(*a.floor);
             profiles.insert(f.profile);
             shapes.insert(signature(f));
             std::array<unsigned, maxRooms> d{};
@@ -210,6 +298,7 @@ void failures() {
                       a.diagnostics.fallbackId == depth && !validate(a.floor->layout),
                   "bounded exhaustion publishes checked authored fallback");
             check(a.floor->fingerprint == b.floor->fingerprint, "fallback reproducible");
+            checkArchitecture(*a.floor);
             fallbackProfiles.insert(a.floor->layout.profile);
             for (auto rejection : a.diagnostics.rejected)
                 check(rejection.code == Error::ForcedFallback, "every exhausted attempt diagnosed");
@@ -256,6 +345,7 @@ void progression() {
 } // namespace
 int main() {
     try {
+        architectureRules();
         deterministicAndVariety();
         pacing();
         failures();

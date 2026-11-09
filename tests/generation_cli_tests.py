@@ -78,6 +78,9 @@ def main(generator, runner):
     a = json.loads(generate('--seed', '5', '--format', 'json').stdout)
     b = json.loads(generate('--seed', '5', '--format', 'json').stdout)
     assert a['fingerprint'] == b['fingerprint'] and a['map'] == b['map']
+    assert all(4 <= r['ceiling_ticks'] <= 8 for r in a['rooms'])
+    assert all(r['ceiling_ticks'] == 4 for r in a['rooms'] if r['role'] in ('entrance', 'objective'))
+    assert any(r['ceiling_ticks'] > 4 for r in a['rooms'])
     forced = json.loads(generate('--seed', '5', '--format', 'json', '--force-fallback').stdout)
     assert forced['fallback'] and forced['attempts'] == 16 and len(forced['rejections']) == 16
     # Two records test the streaming interface only, not generator coverage/performance.
@@ -109,7 +112,7 @@ def main(generator, runner):
             (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name, role='resident')))
         definitions = ['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')], *[n+'.json' for n in residents]]
         (root/'npcs/level.json').write_text(json.dumps(dict(definitions=definitions, instances=[])))
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=12,
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=13,
                      template_version=9, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:

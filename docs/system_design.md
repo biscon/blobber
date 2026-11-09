@@ -1,5 +1,12 @@
 # System design
 
+[Architectural dungeon ceilings](procedural_layout_design.md#architectural-ceilings--2026-11-09):
+implemented and mechanically verified; user visual acceptance pending. Deterministic room-size/shape tiers, low
+thresholds and ceiling-attached dressing; level floors and existing RNG placements.
+Generator 13/templates 9 require a new campaign; existing saves remain untouched.
+Ten focused Debug suites and hidden OpenGL review pass;
+[six captures](screenshots/architectural-ceilings/README.md) retained, disposable output cleaned.
+
 **Inventory comparisons and earned-level audio — 2026-11-09 (implemented and mechanically verified; user review pending).**
 [Bag hover comparisons](inventory_design.md#bag-comparison-tooltips--2026-11-09)
 reuse trade's bounded comparison presentation after 350 ms of presentation time.

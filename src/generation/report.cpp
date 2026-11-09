@@ -1,4 +1,5 @@
 #include "generation/report.hpp"
+#include "generation/architecture.hpp"
 namespace blobber::generation {
 namespace {
 nlohmann::json failure(Failure f) {
@@ -64,6 +65,7 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
     j["spawn"] = {{"x", l.spawn.cell.x}, {"y", l.spawn.cell.y}, {"heading", unsigned(l.spawn.heading)}};
     j["loop_connection"] = l.loopConnection;
     j["rooms"] = nlohmann::json::array();
+    const auto ceilings = roomCeilings(l);
     for (unsigned i = 0; i < l.roomCount; ++i) {
         const auto& r = l.rooms[i];
         nlohmann::json cells = nlohmann::json::array();
@@ -78,6 +80,7 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                               {"anchor", {r.anchor.x, r.anchor.y}},
                               {"role", roleName(r.role)},
                               {"shape", r.shape},
+                              {"ceiling_ticks", ceilings[i]},
                               {"rotation", r.rotation},
                               {"clearance", r.clearance},
                               {"facing", unsigned(r.facing)}});
