@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Open the finished kitchen/mead hall walkthrough."""
+"""Open a finished blueprint room walkthrough."""
 import argparse
 from pathlib import Path
 import subprocess
@@ -13,6 +13,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true', help='Validate without opening a window')
     parser.add_argument('--combat', action='store_true', help='Include the fixed preview encounter')
+    parser.add_argument('--room', choices=['kitchen-hall', 'kitchen', 'mead-hall', 'barracks', 'armory'], default='kitchen-hall')
     args = parser.parse_args()
     root = Path(__file__).resolve().parent
     build = root / 'cmake-build-debug'
@@ -27,19 +28,23 @@ def main():
     for key in ('CMAKE_COMMAND', 'CMAKE_MAKE_PROGRAM'):
         if not Path(configured.get(key, '')).is_file():
             raise RuntimeError(f'The configured {key} is unavailable; reload the Debug project in CLion.')
-    print('Preparing the kitchen/mead hall walkthrough…', flush=True)
+    print(f'Preparing the {args.room} walkthrough…', flush=True)
     subprocess.run(['nice', '-n', '15', 'ionice', '-c', '3', configured['CMAKE_COMMAND'],
                     '--build', str(build), '--parallel', '1', '--target',
                     'blobber_review_blueprints', 'blobber_bake_world_assets',
                     'blobber_portraits', 'blobber_creator_art'], cwd=root, check=True)
     executable = str(build / 'blobber_review_blueprints')
     prepared = str(build / 'assets/prepared')
-    common = ['--art', 'finished', '--room', 'kitchen-hall',
+    common = ['--art', 'finished', '--room', args.room,
               '--catalog', str(root / 'assets/blueprints/underkeep.json'),
               '--prepared', prepared]
+    if args.room == 'barracks':
+        common += ['--sockets', 'north,south']
+    elif args.room == 'armory':
+        common += ['--sockets', 'south,west']
     subprocess.run([executable, 'validate', *common], cwd=root, check=True)
     if args.check:
-        print('Ready. Run ./review-rooms to walk around.')
+        print(f'Ready. Run ./review-rooms --room {args.room} to walk around.')
         return
     print('W/S: forward/back · A/D: strafe · Q/E: turn · F: open door · Esc: pause/quit', flush=True)
     run = create(root)

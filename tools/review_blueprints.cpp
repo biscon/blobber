@@ -166,9 +166,9 @@ unsigned parity(GpuResources& resources, WorldRenderer& renderer) {
     require(interior < 100, "Blockout CPU/GPU interior picking disagreement");
     return interior;
 }
-void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Catalog& rules,
-             const NpcDefinitions& definitions, const NpcWorld& placements, GpuResources& resources,
-             Presenter& presenter, WorldRenderer& renderer) {
+void capture(const Arguments& a, const bp::BlueprintCatalog& catalog, const bp::ReviewScene& scene,
+             const rules::Catalog& rules, const NpcDefinitions& definitions, const NpcWorld& placements,
+             GpuResources& resources, Presenter& presenter, WorldRenderer& renderer) {
     auto owner =
         std::make_unique<GameSession>(scene.map, rules, *rules.preset(), placements, 5, scene.spawn, a.combat,
                                       definitions.timings, RecoveryLevel{}, scene.fixtures);
@@ -281,8 +281,6 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
                 const auto& room = scene.rooms[i];
                 const bool kitchen = room.blueprint.purpose == bp::Purpose::Kitchen;
                 const bool hall = room.blueprint.purpose == bp::Purpose::MeadHall;
-                if (!kitchen && !hall)
-                    continue;
                 const auto place = [&](Cell cell, Heading facing) {
                     game.restorePose(
                         {room.origin +
@@ -290,6 +288,97 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
                          bp::rotate(facing, a.turns)},
                         true);
                 };
+                if (!kitchen && !hall) {
+                    const bool barracks = room.blueprint.purpose == bp::Purpose::Barracks;
+                    place(barracks ? Cell{1, 6} : Cell{2, 4}, Heading::North);
+                    shot(barracks ? "barracks-composition" : "armory-composition");
+                    if (barracks) {
+                        place({1, 1}, Heading::West);
+                        shot("bed-green");
+                        place({1, 5}, Heading::West);
+                        shot("bed-red");
+                        place({0, 6}, Heading::North);
+                        shot("bed-side");
+                        place({1, 0}, Heading::West);
+                        shot("coat-pegs");
+                        place({3, 0}, Heading::East);
+                        shot("bedding-shelf");
+                        place({1, 2}, Heading::West);
+                        shot("wall-sconce");
+                        place({2, 3}, Heading::West);
+                        shot("middle-bed-left");
+                        place({2, 3}, Heading::East);
+                        shot("middle-bed-right");
+                    } else {
+                        place({2, 2}, Heading::North);
+                        shot("weapon-rack");
+                        place({3, 1}, Heading::East);
+                        shot("maintenance-bench");
+                        place({1, 4}, Heading::West);
+                        shot("armory-armor");
+                        place({4, 2}, Heading::North);
+                        shot("bench-and-storage");
+                        place({3, 1}, Heading::North);
+                        shot("rack-oblique");
+                    }
+                    // Beds block their cells; other quarters furnishings remain decorative.
+                    unsigned bedsChecked = 0;
+                    for (unsigned p = 0; p < room.blueprint.placementCount; ++p) {
+                        const auto& placement = room.blueprint.placements[p];
+                        const std::string_view kit = catalog.kits[placement.kit.index].id.data();
+                        const bool bed = kit == "sleeping-bay" || kit == "sleeping-bay-red";
+                        const Cell target = room.origin + placement.anchor;
+                        require(scene.map.movementBlocked(target) == bed && scene.map.npcBlocked(target) == bed,
+                                "Only beds reserve quarters party and NPC cells");
+                        bool walked = false;
+                        for (unsigned h = 0; h < 4 && !walked; ++h) {
+                            const auto heading = Heading(h);
+                            const auto from = target + forward(heading) * -1;
+                            if (scene.map.movementBlocked(from))
+                                continue;
+                            game.restorePose({from, heading}, true);
+                            game.move(Action::Forward);
+                            game.update(.2, false);
+                            require(game.movement().player.cell == (bed ? from : target),
+                                    "Bed collision or decorative furniture traversal failed");
+                            walked = true;
+                        }
+                        require(walked, "Quarters furnishing lacks a walkable approach");
+                        bedsChecked += bed;
+                    }
+                    require(bedsChecked == (barracks ? 6u : 0u), "Expected six blocking barracks beds");
+                    report << "Quarters collision checked: " << bedsChecked << " blocking beds, "
+                           << room.blueprint.placementCount - bedsChecked << " decorative placements\n";
+                    // Check every declared lane, then walk both aisles using ordinary movement.
+                    for (unsigned lane = 0; lane < room.blueprint.laneCount; ++lane) {
+                        const auto& region = room.blueprint.lanes[lane];
+                        for (int y = 0; y < region.size.y; ++y)
+                            for (int x = 0; x < region.size.x; ++x) {
+                                const Cell target = room.origin + region.origin + Cell{x, y};
+                                require(!scene.map.movementBlocked(target) && !scene.map.npcBlocked(target),
+                                        "Quarters circulation lanes remain open");
+                            }
+                    }
+                    place({2, barracks ? 6 : 4}, Heading::North);
+                    for (int step = 0; step < (barracks ? 6 : 3); ++step) {
+                        const auto before = game.movement().player.cell;
+                        game.move(Action::Forward);
+                        game.update(.2, false);
+                        require(game.movement().player.cell ==
+                                    before + forward(bp::rotate(Heading::North, a.turns)),
+                                "Quarters center aisle traverses through normal movement");
+                    }
+                    place({barracks ? 1 : 0, barracks ? 3 : 2}, Heading::East);
+                    for (int step = 0; step < (barracks ? 2 : 4); ++step) {
+                        const auto before = game.movement().player.cell;
+                        game.move(Action::Forward);
+                        game.update(.2, false);
+                        require(game.movement().player.cell ==
+                                    before + forward(bp::rotate(Heading::East, a.turns)),
+                                "Quarters cross aisle and decorative sconces remain traversable");
+                    }
+                    continue;
+                }
                 const std::string name = kitchen ? "kitchen" : "hall";
                 place(kitchen ? Cell{2, 4} : Cell{3, 4}, Heading::North);
                 shot(name + "-composition");
@@ -447,7 +536,7 @@ int main(int argc, char** argv) try {
         {
             WorldRenderer renderer(resources, std::move(publication));
             if (hidden)
-                capture(a, scene, rules, definitions, placements, resources, presenter, renderer);
+                capture(a, catalog, scene, rules, definitions, placements, resources, presenter, renderer);
             else {
                 Options options;
                 options.assets = a.assets;

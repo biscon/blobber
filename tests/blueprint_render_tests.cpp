@@ -58,35 +58,39 @@ int main() try {
     test::WorldFixture storage;
     auto c = test::blueprintCatalog();
     // Own kit fixtures cover every blockout primitive without loading game content.
-    const std::array<const char*, 15> names{
-        "hearth",       "work-surface", "pottery-shelves", "table-and-benches",
-        "sleeping-bay", "footlocker",   "weapon-storage",  "armor-display",
-        "barrel",       "crate-large",  "crate-small",     "grain-sack",
-        "tapestry",     "brazier",      "chandelier"};
-    const std::array<Cell, 15> sizes{{{1, 1},
-                                      {1, 1},
-                                      {1, 1},
-                                      {1, 2},
-                                      {1, 2},
-                                      {1, 1},
-                                      {2, 1},
-                                      {1, 1},
-                                      {1, 1},
-                                      {1, 1},
-                                      {1, 1},
-                                      {1, 1},
-                                      {1, 1},
-                                      {1, 1},
-                                      {3, 3}}};
-    const std::array<float, 15> heights{.5f,  .38f, .82f, .34f, .6f,   .2f,  .8f, .8f,
-                                        .34f, .23f, .14f, .17f, 1.62f, .38f, 2.f};
+    const std::array<const char*, 21> names{"hearth",
+                                            "work-surface",
+                                            "pottery-shelves",
+                                            "table-and-benches",
+                                            "sleeping-bay",
+                                            "footlocker",
+                                            "weapon-storage",
+                                            "armor-display",
+                                            "barrel",
+                                            "crate-large",
+                                            "crate-small",
+                                            "grain-sack",
+                                            "tapestry",
+                                            "brazier",
+                                            "chandelier",
+                                            "sleeping-bay-red",
+                                            "armory-workbench",
+                                            "coat-pegs",
+                                            "bedding-shelf",
+                                            "wall-sconce",
+                                            "wall-sconce-near-table"};
+    const std::array<Cell, 21> sizes{{{1, 1}, {1, 1}, {1, 1}, {1, 2}, {1, 2}, {1, 1}, {2, 1},
+                                      {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1},
+                                      {3, 3}, {1, 2}, {1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}}};
+    const std::array<float, 21> heights{.5f,  .38f,  .82f, .34f, .6f, .2f,  .8f,   .8f,   .34f,  .23f, .14f,
+                                        .17f, 1.62f, .38f, 2.f,  .6f, 1.2f, 1.25f, 1.25f, 1.25f, .67f};
     for (unsigned i = 0; i < names.size(); ++i) {
         bp::Kit k;
         std::copy_n(names[i], std::strlen(names[i]), k.id.begin());
         k.size = sizes[i];
         k.height = heights[i];
-        k.blocking = (i < 7 && i != 2) || i == 13;
-        k.closedWall = i == 2;
+        k.blocking = i == 0 || i == 1 || i == 3 || i == 13;
+        k.closedWall = i == 2 || i >= 17;
         k.clearance = i == 14 ? 1.25f : 0;
         c.kits[c.kitCount++] = k;
     }

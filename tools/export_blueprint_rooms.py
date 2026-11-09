@@ -1,4 +1,4 @@
-"""BR02 pair-stage authoring. Run with background Blender, -t 2, -- --output-root NEW_ROOT.
+"""BR02 finished room authoring. Run with background Blender, -t 2, -- --output-root NEW_ROOT.
 Writes a staged asset tree; never edits the interactive Blender session or old props.
 Geometry is in native cell units, +Y up. Retained masters supply all painted surfaces.
 """
@@ -12,8 +12,10 @@ import numpy as np
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / 'tools'))
 from city_mesh_export import export_collection
+from blueprint_quarters_models import author_quarters
 
 DENSITY, ATLAS, GUTTER = 256, 2048, 4
 TAPESTRY_X = np.linspace(-.325,.325,17)
@@ -441,7 +443,11 @@ def main():
     for key in ('wood','endwood','darkwood'):
         rgb=fields[key][:,:,:3]; mean=rgb.mean(axis=2,keepdims=True)
         fields[key][:,:,:3]=(rgb*.72+mean*.28)*.78
-    models = author()
+    for name,tint in [("linen",(.95,.86,.67)),("wool-green",(.37,.42,.22)),("wool-red",(.50,.18,.13)),("wool-border",(.72,.52,.23))]:
+        fields[name+"-smooth"]=fields["cloth"].copy()
+        gray=fields["cloth"][:,:,:3].mean(axis=2,keepdims=True)
+        fields[name+"-smooth"][:,:,:3]=np.clip(gray*.7+.22,0,1)*np.array(tint)
+    models = author()+author_quarters(Model)
     # The accepted hearth remains exactly as exported in the preceding review.
     models[0].faces = [(p*.5+np.array([-.25,0,.25]),n,mat) for p,n,mat in models[0].faces]
     entries = {}; faces = {}

@@ -96,6 +96,7 @@ template <class A> void visit(A& a, AmbientFire& v, const AmbientFire& base) {
     a("x", v.x, base.x);
     a("y", v.y, base.y);
     a("z", v.z, base.z);
+    a("scale", v.scale, base.scale);
 }
 template <class A> void visit(A& a, WorldDefinition& v, const WorldDefinition& base) {
     a("hearth", v.hearth, base.hearth);

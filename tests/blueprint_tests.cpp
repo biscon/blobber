@@ -27,6 +27,10 @@ void malformed() {
     bad([](auto& j) { j["kits"][0]["clearance"] = "high"; });
     bad([](auto& j) { j["kits"][0]["fire"] = {0, .2}; });
     bad([](auto& j) { j["kits"][0]["fire"] = {0, .8, 0}; });
+    for (const auto scale : {0.f, -1.f, 1.1f})
+        bad([&](auto& j) { j["kits"][0]["fire"] = {0, .2, 0, scale}; });
+    bad([](auto& j) { j["kits"][0]["fire"] = {0, .2, 0, "small"}; });
+    bad([](auto& j) { j["kits"][0]["fire"] = {0, .2, 0, .5, 1}; });
     bad([](auto& j) { j["kits"].push_back(j["kits"][0]); });
     bad([](auto& j) { j["rooms"][0]["placements"][0]["kit"] = "absent"; });
     bad([](auto& j) { j["rooms"][0]["placements"][0]["facing"] = "mirror"; });
@@ -135,6 +139,8 @@ void transforms() {
         auto json = test::blueprintJson();
         json["kits"][0]["blocking"] = false;
         json["kits"][0]["fire"] = {.12, .2, .25};
+        check(bp::decode(json.dump()).kits[0].fire->scale == 1.f, "Legacy anchors retain default flame size");
+        json["kits"][0]["fire"] = {.12, .2, .25, .5};
         const auto decorative = bp::decode(json.dump());
         for (unsigned turn = 0; turn < 4; ++turn) {
             const auto scene = bp::assemble(decorative, "kitchen-hall", turn);
@@ -147,7 +153,7 @@ void transforms() {
                 const auto r = right(s.facing), f = forward(s.facing);
                 check(std::abs(fire.x - (s.anchor.x + .5f + .12f * r.x - .25f * f.x)) < .0001f &&
                           std::abs(fire.z - (s.anchor.y + .5f + .12f * r.y - .25f * f.y)) < .0001f &&
-                          fire.y == .2f,
+                          fire.y == .2f && fire.scale == .5f,
                       "Fire anchors rotate and translate with their models");
             }
         }

@@ -83,6 +83,24 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
                     for (float z : {-.3f, d - .75f})
                         add(x, .035f, z, .12f, h * .5f - .035f, .16f);
             }
+        } else if (id == "armory-workbench") {
+            add(-.348f, .25f, -.032f, .696f, .044f, .522f);
+            for (float x : {-.314f, .262f})
+                for (float z : {.003f, .403f})
+                    add(x, .035f, z, .052f, .221f, .052f);
+            add(-.258f, .638f, .34f, .516f, .024f, .15f);
+            for (float x : {-.18f, .06f})
+                add(x, .662f, .358f, .108f, .108f, .102f);
+        } else if (id == "coat-pegs") {
+            add(-.252f, .662f, .46f, .504f, .042f, .03f);
+            add(-.168f, .266f, .412f, .336f, .396f, .024f);
+        } else if (id == "bedding-shelf") {
+            add(-.258f, .638f, .328f, .516f, .027f, .162f);
+            add(-.21f, .665f, .346f, .42f, .108f, .12f);
+        } else if (id == "wall-sconce" || id == "wall-sconce-near-table") {
+            const float shift = id == "wall-sconce-near-table" ? .35f : 0.f;
+            add(shift - .036f, .454f, .466f, .072f, .204f, .024f);
+            add(shift - .09f, .544f, .244f, .18f, .042f, .18f);
         } else if (id == "pottery-shelves") {
             for (float x : {-.39f, .35f})
                 add(x, .08f, .45f, .04f, .66f, .04f);
@@ -96,12 +114,10 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
         } else if (id == "brazier") {
             add(-.10f, .035f, .15f, .20f, .25f, .20f);
             add(-.15f, .285f, .10f, .30f, h - .285f, .30f);
-        } else if (!k.blocking && id != "armor-display") {
-            add(-.15f, 0, .19f, .30f, h, .30f);
-        } else if (id == "sleeping-bay") {
-            add(-.4f, .08f, -.4f, .8f, .18f, d - .2f);
-            add(-.4f, .26f, d - .95f, .8f, .07f, .3f);
-            add(-.43f, .035f, d - .65f, .86f, h - .035f, .12f);
+        } else if (id == "sleeping-bay" || id == "sleeping-bay-red") {
+            add(-.2f, h * .15f, -.4f, .4f, h * .3f, d - .2f);
+            add(-.2f, h * .45f, d - .95f, .4f, h * .12f, .3f);
+            add(-.215f, .035f, d - .56f, .43f, h - .035f, .06f);
         } else if (id == "weapon-storage") {
             add(-.4f, .035f, .26f, w - .2f, .1f, .15f);
             add(-.4f, h - .15f, .26f, w - .2f, .1f, .15f);
@@ -111,6 +127,8 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
             add(-.06f, .035f, -.05f, .12f, h - .035f, .1f);
             add(-.25f, h * .45f, -.18f, .5f, h * .4f, .36f);
             add(-.13f, h * .85f, -.13f, .26f, h * .15f, .26f);
+        } else if (!k.blocking && id != "footlocker") {
+            add(-.15f, 0, .19f, .30f, h, .30f);
         } else {
             const auto pieces = id == "provisions" ? 3u : 1u;
             for (unsigned n = 0; n < pieces; ++n)

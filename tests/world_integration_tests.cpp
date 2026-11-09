@@ -56,7 +56,7 @@ void multipleFires() {
     const std::vector<std::string> rows{"#######", "#.....#", "#.....#", "#.....#",
                                         "#.....#", "#.....#", "#######"};
     WorldDefinition definition;
-    definition.ambientFires = {{3.2f, .2f, 2.5f}, {3.8f, .2f, 2.5f}};
+    definition.ambientFires = {{3.2f, .2f, 2.5f, .5f}, {3.8f, .2f, 2.5f}};
     const Map map(rows, definition);
     MovementState movement;
     movement.player = {{3, 4}, Heading::North};
@@ -95,10 +95,40 @@ void multipleFires() {
                 for (const auto& p : effects.frame().packets[i].points) {
                     float distance = 10.f;
                     for (const auto& fire : definition.ambientFires)
-                        distance = std::min(distance, std::hypot(p.x - fire.x, p.z - fire.z));
-                    check(distance < .15f, "Brazier flame bases remain inside bowl at all viewing angles");
+                        distance = std::min(distance, std::hypot(p.x - fire.x, p.z - fire.z) / fire.scale);
+                    check(distance < .15f,
+                          "Full and half-size flames remain inside their own bowls at all viewing angles");
                 }
         }
+    }
+    // One fire: every quad corner scales around the anchor, including vertical travel.
+    WorldDefinition fullDefinition;
+    fullDefinition.ambientFires = {{3.5f, .2f, 2.5f}};
+    auto halfDefinition = fullDefinition;
+    halfDefinition.ambientFires[0].scale = .5f;
+    check(fullDefinition.fingerprint() != halfDefinition.fingerprint(), "Fire size changes world identity");
+    const Map fullMap(rows, fullDefinition), halfMap(rows, halfDefinition);
+    EffectsPipeline fullEffects(assets), halfEffects(assets);
+    FrameInput fullInput{fullMap, movement}, halfInput{halfMap, movement};
+    fullInput.now = halfInput.now = 350;
+    world.camera = camera(movement, fullMap);
+    ++world.revision;
+    fullEffects.update(fullInput, world);
+    halfEffects.update(halfInput, world);
+    check(fullEffects.frame().count == 24 && halfEffects.frame().count == 24,
+          "Scaling retains bounded particles");
+    for (unsigned i = 0; i < 24; ++i)
+        for (unsigned j = 0; j < 4; ++j) {
+            const auto a = fullEffects.frame().packets[i].points[j];
+            const auto b = halfEffects.frame().packets[i].points[j];
+            check(std::abs(b.x - (3.5f + (a.x - 3.5f) * .5f)) < .00001f &&
+                      std::abs(b.y - (.2f + (a.y - .2f) * .5f)) < .00001f &&
+                      std::abs(b.z - (2.5f + (a.z - 2.5f) * .5f)) < .00001f,
+                  "Flame dimensions and motion shrink uniformly around their anchor");
+        }
+    for (float scale : {0.f, -1.f, 1.1f, std::numeric_limits<float>::quiet_NaN()}) {
+        halfDefinition.ambientFires[0].scale = scale;
+        rejects([&] { Map invalid(rows, halfDefinition); }, "Invalid flame scale rejects during loading");
     }
     movement.player.heading = Heading::South;
     world.camera = camera(movement, map);

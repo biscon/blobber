@@ -2,8 +2,7 @@
 
 Created: 2026-11-09.
 Status: **BR01 accepted and closed by the user on 2026-11-09.
-BR02 furniture proportions/storage/hall dressing implemented and mechanically verified;
-fireplace accepted, remaining revised pair awaiting user review before barracks/armory.
+BR02 accepted and closed, including the final bed collision correction.
 BR03 remains proposed.**
 
 The user wants recognizable kitchen, armory, mead hall and barracks blueprints,
@@ -52,7 +51,7 @@ it survives in ordinary rooms is an explicit BR03 dressing-policy decision.
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
 | BR01 | Blueprint layouts, contracts and playable blockouts | Existing generation/rendering | Accepted and closed — 2026-11-09 |
-| BR02 | Finished room kit and isolated in-engine room review | Reviewed BR01 layouts/contracts | Revised pair ready — awaiting user review |
+| BR02 | Finished room kit and isolated in-engine room review | Reviewed BR01 layouts/contracts | Accepted and closed — 2026-11-09 |
 | BR03 | Procedural placement, population, persistence and campaign integration | Reviewed BR02 rooms | Proposed |
 
 ### BR01 — Layouts and blueprint foundation
@@ -180,7 +179,7 @@ with acceptance status. Record commands, outcomes, limitations and the next acti
 the relevant slice design; do not create a permanent report for each attempt. Clean
 owned disposable runs after selecting evidence and preserve source art and test inputs.
 
-## Current checkpoint
+## Earlier pair checkpoint (historical)
 
 - BR01 is **accepted and closed**, 2026-11-09. User approval: “slice approved, update the plan doc”.
   The [detailed handoff](br01_blueprint_rooms_design.md)
@@ -211,3 +210,52 @@ owned disposable runs after selecting evidence and preserve source art and test 
 Related foundations: [variable layouts and ceilings](procedural_layout_design.md),
 [Underkeep dressing](underkeep_dressing_design.md),
 [world environment](renderer_environment_design.md).
+
+### Accepted pair and concept-first continuation — 2026-11-09
+
+The user accepts the kitchen and mead hall. Before modeling the barracks or armory,
+produce one imagegen mockup of each and stop for approval. Those two proposed
+references and their prompts are now retained in the
+[BR02 concept checkpoint](br02_blueprint_rooms_design.md#barracks-and-armory-concept-checkpoint).
+The user approved both references and explicitly requested continuation. Barracks/armory
+modeling is complete and mechanically verified. Five focused suites, all shipped
+variants, both launchers and hidden room captures pass.
+Run `./review-rooms --room barracks` or `./review-rooms --room armory`; see the
+[six new captures](screenshots/blueprint-rooms-br02-quarters/README.md).
+In-game acceptance is pending; accepted pair evidence remains intact.
+BR03 remains separately proposed.
+
+### Quarters scale correction — 2026-11-09
+
+User review accepted the model direction but found the new furniture oversized.
+Eight new kits are now half-size with matching bed/rack footprints and sconce
+flames; shield/rail clearance, bench supports and blanket seams are corrected.
+Four focused suites, production publication, both launchers and 21 hidden views
+pass. [Superseding evidence](screenshots/blueprint-rooms-br02-quarters/README.md)
+awaits visual re-review; accepted kitchen/hall and BR03 scope remain unchanged.
+
+### Six beds and wall furniture tuning — 2026-11-09
+
+Barracks now has six beds, three per side, with furniture enlarged 20% and lockers
+beside the bed feet. All barracks/armory furnishings are nonblocking. Armory's
+workbench is 60% larger; rack and small furnishings are 20% larger. Shelf/sconce
+mounts are lower, with the right sconce moved toward the table. Barracks keeps
+north/south doors, replacing optional middle side sockets with the new beds.
+Two focused suites, 144 room variants/four pair orientations, both launchers and
+23 hidden views pass, including normal walking into every furnishing anchor.
+[Six replacement images](screenshots/blueprint-rooms-br02-quarters/README.md) await
+user review. Owned scratch output is cleaned; kitchen/hall acceptance is preserved.
+See the [current handoff](br02_blueprint_rooms_design.md#six-bed-layout-and-wall-furniture-tuning).
+
+### Final BR02 acceptance — 2026-11-09
+
+The user accepted barracks and armory, completing appearance approval of all four
+rooms. The only requested final correction is a 1×1 collision footprint beneath
+each of the six beds. Other quarters furnishings stay nonblocking. The middle
+cross aisle now declares only the three open interior cells. Final collision
+verification passes: focused blueprint tests, 144 variants/four pair orientations,
+production preparation and a hidden barracks check of all six beds, four decorative
+placements and open aisles. The existing accepted gallery is visually unchanged.
+BR02 is accepted and closed; no remaining work in this slice. Owned scratch output
+is cleaned.
+BR03 campaign integration remains separately proposed.

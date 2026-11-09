@@ -10,7 +10,7 @@ from mathutils import Vector
 root = Path(__file__).resolve().parent.parent
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('output', type=Path)
-parser.add_argument('--kit', help='Review only one named kit after a localized edit')
+parser.add_argument('--kit', nargs='+', help='Review selected named kits after a localized edit')
 args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:])
 out = args.output.resolve()
 out.mkdir(parents=True, exist_ok=False)
@@ -34,13 +34,13 @@ scene.camera = cam
 cam.data.type = 'ORTHO'
 objects = [o for o in scene.objects if o.type == 'MESH']
 for obj in objects:
-    if args.kit and obj.name != 'room-' + args.kit:
+    if args.kit and obj.name not in ['room-' + name for name in args.kit]:
         continue
     for other in objects:
         other.hide_render = other != obj
     corners = [obj.matrix_world @ Vector(c) for c in obj.bound_box]
     center = sum(corners, Vector()) / 8
-    cam.data.ortho_scale = 2.0 if obj.name.endswith(('table-and-benches', 'chandelier')) else 1.5
+    cam.data.ortho_scale = max(1.5, Vector([max(c[i] for c in corners)-min(c[i] for c in corners) for i in range(3)]).length*1.4)
     for label, offset in [('front', (2, 3, 2.5)), ('rear', (-2, -3, 2)), ('underside', (1, -2, -3))]:
         cam.location = center + Vector(offset)
         cam.rotation_euler = (center - cam.location).to_track_quat('-Z', 'Y').to_euler()

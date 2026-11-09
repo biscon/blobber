@@ -147,7 +147,7 @@ void environmentRoundtrip() {
     world.scenery.push_back({"owned-tree", sceneryCell, {0, 0}, Heading::East, 1, 1, false, 1.25f});
     world.surfaces[std::size_t(sceneryCell.y * state->locations[1].rows[0].size() + sceneryCell.x)].ceiling =
         8;
-    world.ambientFires = {{sceneryCell.x + .3f, .3f, sceneryCell.y + .5f},
+    world.ambientFires = {{sceneryCell.x + .3f, .3f, sceneryCell.y + .5f, .5f},
                           {sceneryCell.x + .7f, .3f, sceneryCell.y + .5f}};
     // Own a one-cell static shell on an existing generated wall, away from dressing.
     auto& architecture = state->locations[1];
@@ -189,8 +189,12 @@ void environmentRoundtrip() {
     check(restoredWorld.scenery.size() == 1 && restoredWorld.scenery[0].model == "owned-tree" &&
               restoredWorld.scenery[0].facing == Heading::East && !restoredWorld.scenery[0].blocking &&
               restoredWorld.scenery[0].clearance == 1.25f && restoredWorld.ambientFires.size() == 2 &&
-              restoredWorld.ambientFires[1].x == world.ambientFires[1].x,
+              restoredWorld.ambientFires[1].x == world.ambientFires[1].x &&
+              restoredWorld.ambientFires[0].scale == .5f && restoredWorld.ambientFires[1].scale == 1.f,
           "Scenery identity, orientation and physical base survive campaign codec roundtrip");
+    auto legacyFire = blobber::automation::Json::parse(text);
+    check(!savedEntry(savedLocation(legacyFire, 1)["world"]["ambientFires"]["entries"], 1).contains("scale"),
+          "Default-size saved fires omit the optional field and load as scale one");
     auto bad = blobber::automation::Json::parse(text);
     savedEntry(savedLocation(bad, 0)["world"]["surfaces"]["entries"], 20)["floor"] = 99;
     rejects(

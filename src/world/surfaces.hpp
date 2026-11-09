@@ -93,6 +93,7 @@ struct SceneryPlacement {
 };
 struct AmbientFire {
     float x = 0, y = 0, z = 0;
+    float scale = 1; // Immutable native size multiplier in (0,1]; legacy fires retain size 1.
 };
 constexpr unsigned ambientFireCapacity = 2;
 struct WorldDefinition {

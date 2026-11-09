@@ -1,13 +1,300 @@
 # BR02: finished room kit and assembled review
 
-Status: **Armor finish, chandelier alignment and kitchen shelving implemented and verified;
-awaiting user review**, 2026-11-09.
-The user accepted the revised fireplace and armor shape. The armor finish,
-chandelier alignment and new kitchen shelving follow the latest marked screenshots.
-Earlier verification is historical.
-The user requested implementation of the detailed plan and chose pair-first review.
-Stop after delivering the finished kitchen/mead hall in-engine review; complete
-barracks/armory only after that checkpoint. BR03 remains separately proposed.
+Status: **BR02 accepted and closed, 2026-11-09. All four rooms approved by
+the user; the final requested bed collision correction is implemented and verified.**
+BR03 campaign generation remains separate.
+
+## Bed collision and BR02 acceptance
+
+The user accepts barracks and armory, requesting collision beneath the six beds.
+Reuse the existing whole-cell scenery contract: set both sleeping-bay kits to
+`blocking: true`, reserving only their existing 1×1 cells for party and NPCs.
+Keep all other quarters props nonblocking and all accepted artwork unchanged.
+Shorten the barracks row-3 lane to the three open interior cells (columns 1–3);
+its former wall endpoints now contain the middle beds. The center aisle, doors,
+encounter and reward space are unchanged. Update the review movement checks to
+reject entry into beds while allowing decorative wall props, and walk the actual
+interior cross aisle. This is catalog/review data maintenance, not a new runtime
+collision system. Validate all variants, run the focused blueprint suite and one
+hidden barracks movement check; existing accepted screenshots remain valid.
+BR02 is accepted and closed; no further BR02 work remains.
+BR03 is still proposed and is not started by this correction.
+
+### Final collision verification
+
+Configured Debug build passes. The focused owned-fixture suite
+`ctest --test-dir cmake-build-debug -R '^blueprints$' -j1 --output-on-failure`
+passes (0.08 seconds), covering blocking/decorative footprints and transforms.
+`./review-rooms --room barracks --check` passes after production preparation:
+144 room variants and four pair orientations validate, with finished bindings intact.
+The hidden `blobber_review_blueprints capture --art finished --room barracks
+--sockets north,south` check confirms six blocking beds, four nonblocking decorative
+placements, and normal center/cross-aisle, doorway and reward access. All thirteen
+views have zero interior CPU/GPU picking differences; preparation rollback and GPU
+cleanup pass. No armory artwork or catalog placements changed, so its accepted
+review was not repeated. No OS input/focus automation was used.
+
+Retained the existing six accepted quarters images: this correction has no visual
+change. Owned temporary capture/build logs were cleaned; normal build caches remain.
+The sections below are historical iterations, superseded by this accepted closure.
+
+## Six-bed layout and wall furniture tuning
+
+User-directed follow-up: all furnishings in barracks/armory are decorative and
+must not reserve party or NPC cells. Set their existing `blocking` flags false;
+visual envelopes still protect content from mesh overlap. Increase sleeping bays,
+lockers, rack and small wall items 20% from the last review (0.6 original native
+scale). Increase the workbench itself 60% (0.8 original scale), with its helmet
+shelf/contents at 0.6 scale. Lower the helmet and bedding shelf mounts to 0.65,
+coat peg mount to 0.68, and both sconce flames to 0.58 cells. Use a named sconce
+variant shifted 0.35 cells along its wall toward the armory table; its local fire
+anchor follows the mesh. Shared accepted kitchen/hall models stay unchanged.
+
+Place three inward-facing sleeping bays on each side at rows 1,3,5. Larger beds
+use a 1×1 visual envelope, anchored at columns 0/4 and backed against the side
+walls; their full-size lockers rotate beside the foot of the bed. This preserves
+the 20% enlargement without reserving another visual cell; no collision footprint. Move barracks sconces to row 2.
+Keep the north/south doors; the furnished middle side walls replace the unused
+optional east/west doorway sockets. Keep the existing 3×2 encounter space at (1,2) in the open center, so decorative
+beds do not overlap encounter visuals.
+This changes the shipped socket/rotation review set from 192 to 144 variants.
+
+Reuse existing authoring, immutable fire scale, nonblocking scenery and capacities
+(21 kits of 24, ten barracks placements of 16). No renderer, save or frame-path
+change. Update blockout representations and use focused blueprint/render checks,
+production validation and game captures. Walk into every decorative placement to
+verify party and NPC noncollision; inspect both new middle beds and the armory
+wall as a group. Replace superseded evidence, retaining six images, then clean the
+owned run. Revised appearance still needs user review.
+
+### Six-bed tuning verification — 2026-11-09
+
+Implemented and mechanically verified; visual re-review pending. Configured Debug
+build passes. Focused command `ctest --test-dir cmake-build-debug -R
+'^(blueprints|blueprint_render)$' -j1 --output-on-failure` passes both suites in
+0.83 seconds. These cover the changed catalog/blockout behavior; no unrelated
+matrix, stress run or benchmark was run.
+
+`./review-rooms --room barracks --check` and `./review-rooms --room armory --check`
+pass after production preparation, validating all 144 variants and four pair
+orientations. The smaller variant count follows the removed barracks side sockets.
+Native exports pass bounds, finite data, metric 256 texels/cell and triangle limits;
+the 2048² atlas uses 1,218 rows. Accepted kitchen/hall mesh positions/normals and
+sampled paint at every triangle centroid match the pre-task assets.
+
+Hidden finished-art captures with north/south barracks sockets and south/west
+armory sockets pass: thirteen barracks views and ten armory views, all with zero
+interior CPU/GPU picking differences, successful preparation rollback and GPU
+cleanup. Normal movement into every furnishing anchor passes (ten barracks, six
+armory), and each is also clear in NPC collision data. Center/cross aisles, doors
+and reward access pass. Inspected room compositions, both middle bed positions,
+the maintenance wall and oblique shields; six selected images replace the prior
+quarters gallery. Interactive desktop review remains unverified; no OS input or
+focus automation was used.
+
+Blender completed and exported valid artifacts, then hit the known PulseAudio
+teardown hang and was terminated by its bounded timeout (exit 124). Production
+preparation and game captures independently consumed the exported assets. Owned
+scratch output was cleaned after evidence promotion; durable sources and normal
+build caches remain. The following sections record superseded historical iterations.
+
+## Quarters scale and joinery correction
+
+Implemented and mechanically verified, 2026-11-09; revised scale awaits user review.
+
+User review found the new quarters furniture oversized, with a shield intersecting
+its rack and rear workbench legs outside the top. Reduce all eight new kit models
+to 50% native dimensions with uniform scaling; keep accepted shared armor and
+kitchen/hall models unchanged. Floor furniture stays on the floor and backs toward
+the wall. Preserve wall mounting heights while shrinking sconces, coat pegs,
+bedding/helmet shelves and their contents. Sleeping bays now fit one cell, moved
+back to side-wall anchors (0,1)/(4,1)/(0,5)/(4,5); weapon storage fits two cells.
+Update contracts and blockouts so former bed cells become walkable. Move shields
+forward with a real gap from the rail; derive bench legs/braces from matching
+front/rear support positions under the top. Correct exposed mattress intersections
+at the side folds as part of the same bedding geometry repair.
+
+Sconce flames must shrink too. Add immutable `AmbientFire::scale` (default 1,
+finite and in (0,1]) and an optional fourth number in a kit fire array. Carry it
+through assembly, map validation and the existing delta persistence visitor;
+missing saved scale stays at baseline/default 1, preserving existing saves.
+Only nondefault scales extend world fingerprints, leaving existing fire/map
+identities unchanged.
+Scale particle offsets and quad sizes together; leave animation timing, fixed
+particle capacity and conservative visibility margin unchanged. Existing hearths
+and braziers retain scale 1. This introduces no frame allocation or new render path.
+
+Verify bounds/metric UV export, shield separation and top/support containment;
+exercise reduced-fire containment at multiple angles, default-size compatibility,
+invalid scale rejection, blueprint transforms and save roundtrip. Use focused
+blueprint/render/world-integration/save checks, production bake and hidden game
+side captures matching the user's views. Replace superseded quarters evidence
+and clean the owned run. Visual approval remains pending.
+
+### Scale correction verification
+
+Configured Debug build and the focused `blueprints|blueprint_render|world_integration|
+campaign_save_smoke` selection pass (four suites, 3.29 seconds). The fire regression
+checks full-size and half-size bowls through eight viewing angles and sixty ticks,
+compares every scaled quad vertex, rejects invalid scales, and retains allocation-
+free bounded frame work. Blueprint tests cover optional/default scale and rotation;
+save smoke covers scaled/default fire roundtrip and omitted-field compatibility.
+No broad generation run or benchmark was needed for this localized correction.
+
+Native exports pass bounds, finite data, metric 256 texels/cell and triangle limits.
+Beds are 0.4025 × 0.275 × 0.95575 cells, including their locker, inside one cell;
+weapon storage is 1.265 cells wide and 0.61 high. Sconce bowl diameter is 0.15 cells
+and flame scale 0.5. Bench legs use symmetric front/rear support positions; its top
+extends 0.02175 cells beyond the front/back leg edges. Round/kite shield backs
+have 0.020/0.0175-cell clearance ahead of the rail face. Bed undersides now follow
+the folded blanket surface instead of a detached flat panel; side folds pass
+outside the mattress. New beds have 1,144 triangles; other counts are unchanged.
+The existing 2048² atlas uses 1,099 rows. All twelve accepted shared models retain
+identical positions/normals and sampled per-triangle paint after atlas repacking.
+
+Production baking, both launcher `--check` commands and all 192 room variants/four
+pair orientations pass. Hidden raylib/OpenGL review produced eleven barracks and
+ten armory views, including both reported side angles, close sconces and oblique
+shields. All 21 captures have zero interior CPU/GPU picking differences, no GL
+errors, successful staged-failure rollback and GPU cleanup. Center/cross aisles,
+doors and reward access pass normal movement; the new close bed poses occupy the
+released former footprint cells. Six superseding captures remain in the quarters
+gallery; accepted kitchen/hall evidence is intact. Interactive re-review is pending.
+
+The background Blender exporter completed its outputs/checks and was then stopped
+by the bounded timeout during the known PulseAudio teardown hang (exit 124).
+Production bake and in-game capture independently consumed those exports. No OS
+input or window focus automation was used. Owned temporary output was cleaned;
+source artwork, models and normal build caches remain. Earlier verification below
+records the initial larger version and is superseded by this correction.
+
+## Barracks and armory implementation
+
+Use the approved v1 mockups as the visual reference. Preserve the 5×7 barracks and
+5×5 armory, existing ceilings, doors and reward/encounter spaces. Adapt furniture
+orientation to match beds facing inward from the two side walls. Four sleeping-bay
+instances occupy two cells each, at (1,1)/(1,5) east-facing and (3,1)/(3,5)
+west-facing. Each grouped bay includes its own footlocker at the foot, within the
+same visual/collision envelope, leaving the center column and cross-aisle clear.
+Alternate burgundy/green blankets. Add a wall peg/coat kit, spare bedding shelf,
+and two nonblocking conditional wall sconces; local fire anchors reuse the bounded
+two-fire system. The default barracks review opens north/south sockets so a real
+far doorway matches the reference.
+
+Armory: a 3×1 rack centered on the back wall holds spears, swords, axes and shields;
+a separate right-wall maintenance bench carries a sword, whetstone, oil jar and
+cloth, plus a shelf of helmets. Reuse the approved nonblocking armor at the left
+wall, add a closed footlocker by the bench and two wall sconces. The rack takes the
+north end of the center lane; the remaining lane starts at row 1. Side entry,
+encounter and reward access remain clear. The bench is at (4,1) west-facing,
+approachable from (3,1); its chest sits in the far corner at (4,0). This avoids
+trapping the bench between the rack and chest. Keep accepted kitchen/hall placements,
+geometry and material appearance unchanged.
+
+Add cohesive native geometry authoring in `tools/blueprint_quarters_models.py`,
+called by the existing Blender exporter. Use retained timber/cloth/metal masters;
+soft bedding is closed modeled geometry with folds, not flat slabs. Continuous
+cloth/metal shading avoids polygon grids. Each kit remains at most 2,000 triangles,
+native scale and 256 texels/cell in the existing 2048² atlas. Twenty concrete kits
+require raising catalog capacity from 16 to 24; fixed storage remains preparation-
+owned, with the existing 16 placements/room and 32 runtime scenery limit unchanged.
+No new render path, runtime entities, frame allocation or save fields. Add blockout
+forms for the new kit families. New source kits remain separately reusable.
+
+Extend `review-rooms --room barracks|armory` (default remains kitchen-hall) so the
+finished rooms are directly runnable. Extend deterministic captures with bed,
+locker, rack, bench and wall-dressing views and normal movement around furniture.
+Verify focused blueprint/render/scenery/fixture tests, all shipped rotation/socket
+variants, production baking, hidden raylib/OpenGL captures and launcher checks.
+Inspect models and game views against the approved concepts. Preserve accepted pair
+evidence and retain at most six new room review captures in a separate feature
+gallery; clean temporary output. In-game acceptance remains pending user review.
+
+## Barracks and armory verification
+
+Implemented 2026-11-09. Eight additional source meshes complete all twenty catalog
+kits. The new meshes contain 178–1,168 triangles each: sleeping bays 1,060 each,
+footlocker 204, weapon rack 1,100, maintenance bench 1,168, bedding shelf 382, coat
+pegs 232 and sconce 178. All exports pass native contract bounds, finiteness and
+per-triangle metric UV singular-value checks at 256 texels/cell. The 2048² atlas
+uses 1,687 rows with four-pixel gutters. Packed Blender/GLB sources are retained.
+All twelve accepted kitchen/hall models retain identical positions/normals and
+identical sampled paint at every triangle centroid after atlas repacking.
+
+Inspected source front/rear/underside views and actual game captures. Corrected
+blanket/mattress intersection, improved the sword and axe silhouettes, and moved
+the armory bench to (4,1) with its locker in the far corner at (4,0): the initial
+capture exposed that the rack/locker left no valid front approach to the bench.
+The final capture approaches the work surface from (3,1) and passes. No unresolved
+capture failures remain. Source Blender export/render completes its files and
+checks, then this installation hangs in PulseAudio teardown; bounded 10–45 second
+timeouts end that process (exit 124). This is not reported as a clean Blender exit.
+The resulting files are independently consumed by the production baker and renderer.
+
+Configured CLion CMake/Ninja Debug build and production asset publication pass,
+using at most two build workers and one heavy process at a time, at low priority.
+Focused checks:
+
+```sh
+/home/bison/clion/bin/cmake/linux/x64/bin/ctest --test-dir cmake-build-debug -R '^(blueprints|blueprint_render|scenery|fixtures)$' -j1 --output-on-failure
+/home/bison/clion/bin/cmake/linux/x64/bin/ctest --test-dir cmake-build-debug -R '^generation$' -j1 --output-on-failure
+./review-rooms --room barracks --check
+./review-rooms --room armory --check
+```
+
+The four affected suites pass in 1.12 seconds; generation regression passes once
+in 1.45 seconds at this finished-kit checkpoint. Owned render fixtures cover all
+new blockout families, contract bounds, finished publication and resource release.
+Both launchers validate all 192 shipped room rotation/socket variants and four pair
+orientations, then their requested finished bindings. The default kitchen/hall
+selection remains unchanged. Campaign generation code, saves and frame processing
+are unchanged; BR03 remains separate.
+
+Hidden application-owned captures pass: barracks at 0° and 90° (ten views each),
+and final armory at 0° (nine views). All 29 successful views report zero interior
+CPU/GPU picking differences, no OpenGL errors, successful injected GPU preparation
+rollback and GPU view cleanup. Final capture code walks the center and cross aisles
+through ordinary movement, checks every declared lane, exercises doorway traversal
+and opens the reward chest. Peak accounted application GPU bytes were 293,989,608 (barracks) and
+293,845,464 (armory), below the existing budget; prepared scene CPU bytes were
+959,192 and 815,032 respectively. Driver/process-wide memory is not included.
+Selected final-publication views are retained in the
+[six-image quarters gallery](screenshots/blueprint-rooms-br02-quarters/README.md).
+Accepted pair evidence remains intact. No desktop input/focus automation was used;
+interactive walkthrough and aesthetic acceptance remain with the user. The source
+mockups are references, not a promise of identical illustrative lighting.
+
+Run either room directly:
+
+```sh
+./review-rooms --room barracks
+./review-rooms --room armory
+```
+
+The owned run is cleaned after selecting evidence; source artwork, prompts,
+reusable authoring scripts, mesh/Blender/GLB exports and normal build caches remain.
+Earlier pair-stage notes below are historical and do not supersede this status.
+
+## Barracks and armory concept checkpoint
+
+Two built-in imagegen mockups were produced and visually inspected, using the
+approved interiors' stone, timber, muted metal and pixel-textured style:
+
+- [Barracks v1](../assets/packs/underkeep/concepts/rooms/barracks-mockup-v1.png):
+  four beds and footlockers, wool blankets, wall pegs and spare bedding storage,
+  with an open central aisle.
+- [Armory v1](../assets/packs/underkeep/concepts/rooms/armory-mockup-v1.png):
+  weapon rack, shields, one armor stand, maintenance bench and equipment storage,
+  with open center circulation.
+- [Exact prompts](../assets/packs/underkeep/concepts/rooms/barracks-armory-mockup-prompts-v1.json).
+
+These are approved visual references, not in-engine captures or implemented content.
+They establish a direction to review, not a claim of exact blueprint scale, bed
+orientation, runtime lighting or final geometry. Reconcile the approved composition
+with actual room bounds and sockets in the later modeling plan. No barracks/armory
+models, layouts, runtime code or asset bindings were changed at this checkpoint.
+No build or gameplay tests were needed for these concept images. Source concepts
+and prompts are retained; owned temporary staging files were cleaned. The user subsequently approved both mockups and explicitly authorized modeling.
 
 ## Design and ownership
 

@@ -1,16 +1,16 @@
 # System design
 
-[BR02 armor finish and kitchen shelving](br02_blueprint_rooms_design.md#armor-finish-table-centered-chandelier-and-kitchen-shelves):
-**implemented and mechanically verified; latest visual review pending**.
-Armor retains its accepted shape with continuous metal finish. The chandelier is
-centered directly over the middle table. Three nonblocking pottery racks fill the
-marked kitchen wall positions. Preparation-only `closedWall` kits are omitted when
-their backing sockets are selected; runtime collision/render/save systems are unchanged.
-The accepted fireplace and prior clear routes/nonblocking displays remain intact.
-Four focused suites, 192 room variants/four pair orientations, production bake,
-launcher validation and 56 hidden views pass. [Six current images](screenshots/blueprint-rooms-br02/README.md).
-Run `./review-rooms`. Barracks/armory rooms remain behind pair review; campaign
-placement remains BR03. Owned temporary output cleaned; sources/caches retained.
+[BR02 finished rooms](br02_blueprint_rooms_design.md#bed-collision-and-br02-acceptance):
+**accepted and closed by the user, 2026-11-09**. Final bed collision
+verification passed: focused blueprint tests, all 144 room variants/four pair
+orientations and a hidden thirteen-view movement/render check. Six barracks beds use existing 1×1 party/NPC blocking
+footprints; other barracks props and all armory furnishings remain nonblocking.
+The center aisle and three-cell middle cross aisle stay open. No artwork, runtime
+collision interface, save format or frame path changes accompany this correction.
+Twenty-one kits fit the existing capacity of 24. The
+[accepted quarters gallery](screenshots/blueprint-rooms-br02-quarters/README.md)
+and [accepted kitchen/hall gallery](screenshots/blueprint-rooms-br02/README.md)
+retain six images each. BR03 campaign integration remains separately proposed.
 
 [BR01 blueprint foundation](br01_blueprint_rooms_design.md): **accepted and closed by
 the user, 2026-11-09**. Four compact authored
@@ -21,7 +21,7 @@ images](screenshots/blueprint-rooms-br01/README.md); disposable output cleaned.
 Campaign generation, persistence and production pack sources remain unchanged.
 
 [Authored blueprint rooms](blueprint_rooms_plan.md): **BR01 accepted and closed;
-BR02 in progress; BR03 proposed**.
+BR02 accepted and closed; BR03 proposed**.
 Three slices cover validated layouts/blockouts, finished room artwork, and procedural
 campaign integration. Initial target: one kitchen, mead hall, barracks and armory per
 generated floor, with authored arrangements and contextual connections.

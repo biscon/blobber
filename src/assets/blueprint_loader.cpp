@@ -102,10 +102,11 @@ BlueprintCatalog decode(std::string_view input) {
             }
             if (v.contains("fire")) {
                 const auto& f = v["fire"];
-                need(f.is_array() && f.size() == 3 && f[0].is_number() && f[1].is_number() &&
-                         f[2].is_number(),
+                need(f.is_array() && (f.size() == 3 || f.size() == 4) && f[0].is_number() &&
+                         f[1].is_number() && f[2].is_number() && (f.size() == 3 || f[3].is_number()),
                      "Expected local fire anchor");
-                k.fire = AmbientFire{f[0].get<float>(), f[1].get<float>(), f[2].get<float>()};
+                k.fire = AmbientFire{f[0].get<float>(), f[1].get<float>(), f[2].get<float>(),
+                                     f.size() == 4 ? f[3].get<float>() : 1.f};
             }
             return k;
         });

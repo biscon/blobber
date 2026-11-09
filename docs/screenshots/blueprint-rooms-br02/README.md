@@ -1,9 +1,10 @@
 # BR02 kitchen/mead hall review
 
-Status: **Armor finish, chandelier alignment and kitchen shelving implemented and
-mechanically verified; awaiting user visual/interactive review**, 2026-11-09.
-The accepted fireplace and armor shape are preserved. BR01 remains accepted;
-barracks/armory rooms and campaign integration remain behind their existing gates.
+Status: **Kitchen/mead hall accepted by the user, 2026-11-09.**
+This gallery records the accepted pair. Barracks and armory now have a separate
+[concept approval checkpoint](../../br02_blueprint_rooms_design.md#barracks-and-armory-concept-checkpoint)
+which the user has since approved. Their implementation/review is tracked separately;
+BR01 acceptance and the BR03 gate are unchanged.
 
 Six unedited native 1920×1080 game-owned captures, seed 5, rotation 0:
 
@@ -26,7 +27,7 @@ validation and 56 hidden views across 0°/90° pass. All captures have zero none
 CPU/GPU picking disagreements and no GL errors. Scripted movement traverses every
 shelf cell and preserves the table loop/armor access. Doors, rewards, preparation
 rollback and resource cleanup pass. No desktop input or focus automation was used.
-User visual/interactive acceptance remains pending. Run `./review-rooms`.
+The user has accepted this kitchen/mead hall revision. Run `./review-rooms`.
 
 Six retained images replace the previous gallery. The accepted
 [BR01 gallery](../blueprint-rooms-br01/README.md) is intact. Owned staging exports,

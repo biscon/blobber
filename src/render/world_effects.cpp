@@ -185,14 +185,14 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         for (unsigned i = 0; i < 24; ++i) {
             const bool ember = i >= 16;
             const float phase = std::fmod(t * (ember ? .48f : .8f) + float(i) * .618034f, 1.f);
-            const float spread = (definition.hearth && fireIndex == 0) ? 1.f : .4f;
+            const float spread = ((definition.hearth && fireIndex == 0) ? 1.f : .4f) * fire->scale;
             const float lane = (float(i % 5) * .065f - .13f) * spread;
             Vec center{fire->x + spread * .035f * std::sin(t * 2.3f + float(i)),
-                       fire->y + (ember ? .08f + phase * .52f : .07f + phase * .20f),
+                       fire->y + fire->scale * (ember ? .08f + phase * .52f : .07f + phase * .20f),
                        fire->z + lane + spread * .025f * std::sin(t * 3.f + float(i) * 2.f)};
-            const float h = ember ? .025f : .22f + .12f * (1.f - phase);
+            const float h = fire->scale * (ember ? .025f : .22f + .12f * (1.f - phase));
             const unsigned before = frame_.count;
-            billboard(center, ember ? .012f : .13f, h, 9, .08f * std::sin(t + float(i)),
+            billboard(center, fire->scale * (ember ? .012f : .13f), h, 9, .08f * std::sin(t + float(i)),
                       {1, 1, 1, (ember ? .75f : .8f) * (1.f - phase * phase)});
             if (frame_.count != before)
                 frame_.packets[before].texture = std::uint16_t(flame_);

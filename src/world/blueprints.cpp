@@ -251,7 +251,7 @@ void validate(const BlueprintCatalog& c) {
             const auto& f = *k.fire;
             require(std::isfinite(f.x) && std::isfinite(f.y) && std::isfinite(f.z) && f.x >= -.5f &&
                         f.x <= k.size.x - .5f && f.z >= -.5f && f.z <= k.size.y - .5f && f.y >= 0 &&
-                        f.y <= k.height,
+                        f.y <= k.height && std::isfinite(f.scale) && f.scale > 0 && f.scale <= 1,
                     Error::Bounds, "Invalid kit fire anchor");
         }
         for (unsigned j = 0; j < i; ++j)
@@ -359,9 +359,9 @@ ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection
                 const auto& fire = *k.fire;
                 const float floor =
                     elevation(world.surfaces[std::size_t(anchor.y * finalSize.x + anchor.x)].floor);
-                world.ambientFires.push_back({anchor.x + .5f + fire.x * rightward.x + fire.z * backward.x,
-                                              floor + fire.y,
-                                              anchor.y + .5f + fire.x * rightward.y + fire.z * backward.y});
+                world.ambientFires.push_back(
+                    {anchor.x + .5f + fire.x * rightward.x + fire.z * backward.x, floor + fire.y,
+                     anchor.y + .5f + fire.x * rightward.y + fire.z * backward.y, fire.scale});
             }
         }
         // All authored reward candidates reserve space; the preview instantiates the first.

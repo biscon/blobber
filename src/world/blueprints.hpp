@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <string_view>
 namespace blobber::blueprints {
-constexpr unsigned maxRooms = 8, maxKits = 16, maxSide = 9, maxCells = 81;
+constexpr unsigned maxRooms = 8, maxKits = 24, maxSide = 9, maxCells = 81;
 constexpr unsigned maxPlacements = 16, maxSockets = 4, maxRegions = 2, maxLanes = 8;
 using Name = std::array<char, 33>;
 using Mask = std::array<bool, maxCells>;

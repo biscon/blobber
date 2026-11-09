@@ -82,7 +82,8 @@ void Map::validateWorld() {
         throw std::invalid_argument("Invalid world asset pack ID");
     const auto validateFire = [&](const AmbientFire& f) {
         if (!std::isfinite(f.x) || !std::isfinite(f.y) || !std::isfinite(f.z) || f.x < 1 ||
-            f.x >= width_ - 1 || f.z < 1 || f.z >= height_ - 1 || f.y < 0 || f.y > 3)
+            f.x >= width_ - 1 || f.z < 1 || f.z >= height_ - 1 || f.y < 0 || f.y > 3 ||
+            !std::isfinite(f.scale) || f.scale <= 0 || f.scale > 1)
             throw std::invalid_argument("Invalid hearth anchor");
     };
     if (world_.ambientFires.size() > ambientFireCapacity)

@@ -110,6 +110,60 @@
       "parts": [
         "packs/underkeep/models/rooms/pottery-shelves.mesh.json"
       ]
+    },
+    {
+      "id": "sleeping-bay",
+      "parts": [
+        "packs/underkeep/models/rooms/sleeping-bay.mesh.json"
+      ]
+    },
+    {
+      "id": "sleeping-bay-red",
+      "parts": [
+        "packs/underkeep/models/rooms/sleeping-bay-red.mesh.json"
+      ]
+    },
+    {
+      "id": "footlocker",
+      "parts": [
+        "packs/underkeep/models/rooms/footlocker.mesh.json"
+      ]
+    },
+    {
+      "id": "weapon-storage",
+      "parts": [
+        "packs/underkeep/models/rooms/weapon-storage.mesh.json"
+      ]
+    },
+    {
+      "id": "armory-workbench",
+      "parts": [
+        "packs/underkeep/models/rooms/armory-workbench.mesh.json"
+      ]
+    },
+    {
+      "id": "coat-pegs",
+      "parts": [
+        "packs/underkeep/models/rooms/coat-pegs.mesh.json"
+      ]
+    },
+    {
+      "id": "bedding-shelf",
+      "parts": [
+        "packs/underkeep/models/rooms/bedding-shelf.mesh.json"
+      ]
+    },
+    {
+      "id": "wall-sconce",
+      "parts": [
+        "packs/underkeep/models/rooms/wall-sconce.mesh.json"
+      ]
+    },
+    {
+      "id": "wall-sconce-near-table",
+      "parts": [
+        "packs/underkeep/models/rooms/wall-sconce-near-table.mesh.json"
+      ]
     }
   ]
 }

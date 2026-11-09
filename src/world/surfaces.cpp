@@ -87,6 +87,10 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         real(hearth->x);
         real(hearth->y);
         real(hearth->z);
+        if (hearth->scale != 1) {
+            add(0x7363616c65ull);
+            real(hearth->scale);
+        }
     }
     if (!ambientFires.empty()) {
         add(0x6669726573ull);
@@ -95,6 +99,10 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
             real(f.x);
             real(f.y);
             real(f.z);
+            if (f.scale != 1) {
+                add(0x7363616c65ull);
+                real(f.scale);
+            }
         }
     }
     return h;
