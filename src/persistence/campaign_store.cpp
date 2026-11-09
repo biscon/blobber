@@ -171,7 +171,10 @@ CampaignIoReply CampaignDisk::exchange(const CampaignIoRequest& request) {
 }
 CampaignStore::CampaignStore(const rules::Catalog& c, const NpcDefinitions& d, CampaignContent content,
                              CampaignFiles& files)
-    : catalog_(c), definitions_(d), content_(std::move(content)), files_(files) {}
+    : catalog_(c), definitions_(d), content_(std::move(content)), files_(files) {
+    if (!content_.blueprints)
+        throw std::invalid_argument("Missing blueprint catalog");
+}
 CampaignIoReply CampaignStore::read() {
     auto reply = files_.exchange({"read", {}, {}});
     if (!reply.error.empty())
@@ -237,7 +240,7 @@ std::unique_ptr<CampaignRun> CampaignStore::load() {
     auto s = decodeCampaign(catalog_, definitions_, content_, r.data);
     if (deniedRun_ == s->runId)
         throw std::invalid_argument("This expedition ended in this process");
-    return std::make_unique<CampaignRun>(catalog_, std::move(*s), definitions_.timings);
+    return std::make_unique<CampaignRun>(*content_.blueprints, catalog_, std::move(*s), definitions_.timings);
 }
 CampaignWrite CampaignStore::save(CampaignRun& run, const std::string& expected, bool replaceDifferent) {
     auto s = run.captureSave();

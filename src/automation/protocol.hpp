@@ -9,8 +9,8 @@ struct Output {
 };
 class Protocol {
   public:
-    Protocol(const rules::Catalog&, const NpcDefinitions&, Mode, VisibilityFactory = nullptr, void* = nullptr,
-             CampaignStore* = nullptr);
+    Protocol(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&, const NpcDefinitions&,
+             Mode, VisibilityFactory = nullptr, void* = nullptr, CampaignStore* = nullptr);
     Json request(const Json&, Output&);
     Json state(); // Diagnostic normalized boundary state, not a player observation.
     bool closed() const noexcept { return closed_; }
@@ -22,6 +22,7 @@ class Protocol {
     void checkIdentity(const Json&) const;
     void emitEvents(const Json& id, const CombatEvents&, Output&);
     Json observation(bool diagnostic);
+    const blueprints::BlueprintCatalog& blueprints_;
     const rules::Catalog& catalog_;
     const NpcDefinitions& definitions_;
     Mode mode_;

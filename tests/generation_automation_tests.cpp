@@ -1,4 +1,5 @@
 #include "support/automation_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 #include <sys/wait.h>
 using namespace blobber;
@@ -114,7 +115,7 @@ void run(const char* executable) {
     check(at != std::string::npos, "trace contains canonical generation fingerprint");
     text[at + field.size()] = text[at + field.size()] == '9' ? '8' : '9';
     std::ofstream(dir.path / "changed.jsonl") << text;
-    Protocol changed(cat, defs, Mode::Diagnostic);
+    Protocol changed(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     bool rejected = false;
     try {
         replay(changed, dir.path / "changed.jsonl", header);
@@ -134,7 +135,7 @@ int main(int argc, char** argv) {
         if (argc == 3 && std::string(argv[1]) == "--replay") {
             const auto cat = catalog();
             const auto defs = definitions();
-            Protocol p(cat, defs, Mode::Diagnostic);
+            Protocol p(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
             replay(p, argv[2], header);
             return 0;
         }

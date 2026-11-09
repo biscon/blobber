@@ -8,6 +8,8 @@ struct DepthBand {
 };
 const DepthBand& encounterBand(unsigned depth) noexcept;
 // Preparation-only planners. Failure leaves the candidate unpublished.
-bool planEncounterSites(FloorLayout&, const DepthBand&, std::array<unsigned, 7>& rooms) noexcept;
-bool placeEncounterFormation(FloorLayout&, unsigned room, EncounterRecipe, EncounterRole, Heading) noexcept;
+bool planEncounterSites(FloorLayout&, const DepthBand&, std::array<unsigned, 7>& rooms,
+                        const BlueprintReservations* = nullptr) noexcept;
+bool placeEncounterFormation(FloorLayout&, unsigned room, EncounterRecipe, EncounterRole, Heading,
+                             const BlueprintReservations* = nullptr, bool dryRun = false) noexcept;
 } // namespace blobber::generation

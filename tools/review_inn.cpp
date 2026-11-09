@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/dialogue.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
@@ -18,10 +19,11 @@ int main(int argc, char** argv) try {
     const std::filesystem::path root(argv[1]), output(argv[2]);
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
-    auto run =
-        std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    auto run = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(), definitions.types,
+                                             definitions.timings, 5);
     Window window(1920, 1080, true);
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
         throw std::runtime_error("Capture window must stay hidden");
@@ -235,12 +237,13 @@ int main(int argc, char** argv) try {
     capture("inn-map", true);
     auto checkpoint = run->checkpoint();
     auto text =
-        encodeCampaign(catalog, definitions, {"inn-review", definitions.definitionFingerprint}, *checkpoint);
+        encodeCampaign(catalog, definitions,
+                       {"inn-review", definitions.definitionFingerprint, &roomBlueprints}, *checkpoint);
     report << "Active inn serialized bytes=" << text.size() << '\n';
-    auto saved =
-        decodeCampaign(catalog, definitions, {"inn-review", definitions.definitionFingerprint}, text);
+    auto saved = decodeCampaign(catalog, definitions,
+                                {"inn-review", definitions.definitionFingerprint, &roomBlueprints}, text);
     view.reset();
-    run = std::make_unique<CampaignRun>(catalog, std::move(*saved), definitions.timings);
+    run = std::make_unique<CampaignRun>(roomBlueprints, catalog, std::move(*saved), definitions.timings);
     view = std::make_unique<GameView>(renderer);
     capture("continue-inn");
     run->game().restorePose(run->location(4).exit, false);

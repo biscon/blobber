@@ -272,6 +272,126 @@ void validate(const BlueprintCatalog& c) {
         }
     }
 }
+std::uint64_t fingerprint(const BlueprintCatalog& c) noexcept {
+    std::uint64_t h = 14695981039346656037ull;
+    auto number = [&](std::uint32_t n) {
+        for (unsigned i = 0; i < 4; ++i) {
+            h = (h ^ (n & 255)) * 1099511628211ull;
+            n >>= 8;
+        }
+    };
+    auto name = [&](const Name& n) {
+        for (char b : n) {
+            number(static_cast<unsigned char>(b));
+            if (!b)
+                break;
+        }
+    };
+    auto cell = [&](Cell v) {
+        number(v.x);
+        number(v.y);
+    };
+    auto real = [&](float v) {
+        std::uint32_t n;
+        std::memcpy(&n, &v, 4);
+        number(n);
+    };
+    number(c.kitCount);
+    number(c.roomCount);
+    for (unsigned i = 0; i < c.kitCount; ++i) {
+        const auto& k = c.kits[i];
+        name(k.id);
+        cell(k.size);
+        real(k.height);
+        number(k.blocking);
+        number(k.closedWall);
+        real(k.clearance);
+        number(bool(k.fire));
+        if (k.fire) {
+            real(k.fire->x);
+            real(k.fire->y);
+            real(k.fire->z);
+            real(k.fire->scale);
+        }
+    }
+    for (unsigned i = 0; i < c.roomCount; ++i) {
+        const auto& r = c.rooms[i];
+        name(r.id);
+        number(unsigned(r.purpose));
+        cell(r.size);
+        number(r.ceiling);
+        number(r.rotations);
+        for (bool v : r.solid)
+            number(v);
+        number(r.placementCount);
+        for (unsigned j = 0; j < r.placementCount; ++j) {
+            const auto& p = r.placements[j];
+            number(p.kit.index);
+            cell(p.anchor);
+            number(unsigned(p.facing));
+        }
+        number(r.socketCount);
+        for (unsigned j = 0; j < r.socketCount; ++j) {
+            const auto& p = r.sockets[j];
+            name(p.id);
+            cell(p.cell);
+            number(unsigned(p.outward));
+        }
+        number(r.laneCount);
+        for (unsigned j = 0; j < r.laneCount; ++j) {
+            cell(r.lanes[j].origin);
+            cell(r.lanes[j].size);
+        }
+        number(r.encounterCount);
+        for (unsigned j = 0; j < r.encounterCount; ++j) {
+            cell(r.encounters[j].origin);
+            cell(r.encounters[j].size);
+        }
+        number(r.rewardCount);
+        for (unsigned j = 0; j < r.rewardCount; ++j) {
+            cell(r.rewards[j].cell);
+            cell(r.rewards[j].access);
+        }
+    }
+    return h;
+}
+void selectSockets(const BlueprintCatalog& c, RoomBlueprint& r, unsigned mask) {
+    require(mask && mask < (1u << r.socketCount), Error::Socket, "Invalid selected socket mask");
+    unsigned retained = 0;
+    for (unsigned i = 0; i < r.placementCount; ++i) {
+        const auto p = r.placements[i];
+        bool omit = false;
+        for (unsigned j = 0; j < r.socketCount; ++j)
+            omit |= (mask & (1u << j)) && backsSocket(c.kits[p.kit.index], p, r.sockets[j]);
+        if (!omit)
+            r.placements[retained++] = p;
+    }
+    r.placementCount = retained;
+}
+void appendFurnishings(const BlueprintCatalog& c, const RoomBlueprint& r, Cell origin, WorldDefinition& w) {
+    for (unsigned i = 0; i < r.placementCount; ++i) {
+        const auto& p = r.placements[i];
+        const auto& k = c.kits[p.kit.index];
+        const auto a = origin + p.anchor;
+        require(w.scenery.size() < sceneryCapacity, Error::Capacity, "Blueprint scenery capacity exceeded");
+        w.scenery.push_back({k.id.data(),
+                             a,
+                             {0, 0},
+                             p.facing,
+                             unsigned(k.size.x),
+                             unsigned(k.size.y),
+                             k.blocking,
+                             k.clearance});
+        if (k.fire) {
+            require(w.ambientFires.size() < ambientFireCapacity, Error::Capacity,
+                    "Blueprint fire capacity exceeded");
+            const auto rightward = right(p.facing), backward = forward(p.facing) * -1;
+            const auto& f = *k.fire;
+            w.ambientFires.push_back({a.x + .5f + f.x * rightward.x + f.z * backward.x, f.y,
+                                      a.y + .5f + f.x * rightward.y + f.z * backward.y, f.scale});
+        }
+    }
+}
 ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection, unsigned turns,
                      unsigned sockets, std::string_view assetPack) {
     validate(catalog);
@@ -323,47 +443,15 @@ ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection
                      : bool(selected & (1u << i)))
                 activeSockets |= 1u << i;
         }
-        // Filter the owned copy so scene metadata and diagrams match the actual solid walls.
-        unsigned retained = 0;
-        for (unsigned i = 0; i < r.placementCount; ++i) {
-            const auto p = r.placements[i];
-            bool omit = false;
-            for (unsigned s = 0; s < r.socketCount; ++s)
-                omit |=
-                    (activeSockets & (1u << s)) && backsSocket(catalog.kits[p.kit.index], p, r.sockets[s]);
-            if (!omit)
-                r.placements[retained++] = p;
-        }
-        r.placementCount = retained;
+        selectSockets(catalog, r, activeSockets);
         for (int y = 0; y < r.size.y; ++y)
             for (int x = 0; x < r.size.x; ++x)
                 if (!r.solid[index({x, y})])
                     carve(rr.origin + Cell{x, y}, r.ceiling);
-        for (unsigned i = 0; i < r.placementCount; ++i) {
-            const auto& p = r.placements[i];
-            const auto& k = catalog.kits[p.kit.index];
-            world.scenery.push_back({k.id.data(),
-                                     global(rr.origin + p.anchor),
-                                     {0, 0},
-                                     rotate(p.facing, turns),
-                                     unsigned(k.size.x),
-                                     unsigned(k.size.y),
-                                     k.blocking,
-                                     k.clearance});
-            if (k.fire) {
-                require(world.ambientFires.size() < ambientFireCapacity, Error::Capacity,
-                        "Too many assembled ambient fires");
-                const auto anchor = global(rr.origin + p.anchor);
-                const auto facing = rotate(p.facing, turns);
-                const auto rightward = right(facing), backward = forward(facing) * -1;
-                const auto& fire = *k.fire;
-                const float floor =
-                    elevation(world.surfaces[std::size_t(anchor.y * finalSize.x + anchor.x)].floor);
-                world.ambientFires.push_back(
-                    {anchor.x + .5f + fire.x * rightward.x + fire.z * backward.x, floor + fire.y,
-                     anchor.y + .5f + fire.x * rightward.y + fire.z * backward.y, fire.scale});
-            }
-        }
+        const auto oriented = transform(r, turns);
+        const auto cornerA = global(rr.origin), cornerB = global(rr.origin + r.size + Cell{-1, -1});
+        appendFurnishings(catalog, oriented, {std::min(cornerA.x, cornerB.x), std::min(cornerA.y, cornerB.y)},
+                          world);
         // All authored reward candidates reserve space; the preview instantiates the first.
         const auto& reward = r.rewards[0];
         Decoration chest;

@@ -1,4 +1,5 @@
 #pragma once
+#include "assets/blueprint_loader.hpp"
 #include "review_residents.hpp"
 #include "ui/dialogue_preparation.hpp"
 
@@ -7,7 +8,8 @@ inline void reviewDialogueBeats(const std::filesystem::path& root, const std::fi
     using namespace blobber;
     const auto rules = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
-    CampaignRun run(rules, *rules.preset(), definitions.types, definitions.timings, 5);
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
+    CampaignRun run(roomBlueprints, rules, *rules.preset(), definitions.types, definitions.timings, 5);
     Window window(1920, 1080, true);
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
         throw std::runtime_error("Capture window must stay hidden");

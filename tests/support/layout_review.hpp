@@ -3,6 +3,7 @@
 #include "assets/rules_loader.hpp"
 #include "generation/architecture.hpp"
 #include "generation/population.hpp"
+#include "generation_blueprints.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "rlgl.h"
@@ -69,7 +70,7 @@ inline void layoutReview(const std::filesystem::path& source, const std::filesys
             };
             std::array<bool, 9> capturedTiers{};
             for (unsigned seed : {0u, 5u}) {
-                const auto floor = generation::generate({seed, 3});
+                const auto floor = generation::generate({seed, 3}, blobber::test::campaignBlueprints());
                 check(bool(floor), "Review floor generated");
                 const auto& f = floor.floor->layout;
                 const auto population =

@@ -1,8 +1,10 @@
 #include "generation/stone_layout.hpp"
+#include "generation/blueprint_rooms.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <limits>
+#include <tuple>
 namespace blobber::generation {
 namespace {
 struct Random {
@@ -30,9 +32,19 @@ struct Sockets {
     std::array<Socket, 160> values{};
     unsigned count = 0;
 };
-Sockets sockets(const FloorLayout& f, unsigned room) noexcept {
+Sockets sockets(const FloorLayout& f, unsigned room, const blueprints::BlueprintCatalog& catalog) {
     Sockets result;
     const auto& r = f.rooms[room];
+    if (const auto* instance = blueprintAt(f, room)) {
+        const auto b =
+            blueprints::transform(catalog.rooms[catalog.room(instance->id.data()).index], instance->rotation);
+        for (unsigned i = 0; i < b.socketCount; ++i) {
+            const auto p = r.origin + b.sockets[i].cell;
+            if (inside(f, p) && !floorCell(f, p) && !(instance->sockets & (1u << i)))
+                result.values[result.count++] = {p, b.sockets[i].outward};
+        }
+        return result;
+    }
     for (int y = r.origin.y; y < r.origin.y + r.size.y; ++y)
         for (int x = r.origin.x; x < r.origin.x + r.size.x; ++x) {
             const Cell c{x, y};
@@ -59,6 +71,7 @@ struct Shape {
     int width = 0, height = 0;
     std::array<std::uint8_t, 81> cells{};
     Room room{};
+    BlueprintInstance blueprint{};
 };
 Shape shape(unsigned index, Role role, Random& rng, Heading port) noexcept {
     Shape s;
@@ -152,6 +165,36 @@ Shape shape(unsigned index, Role role, Random& rng, Heading port) noexcept {
     r.facing = port;
     return s;
 }
+Shape blueprintShape(const blueprints::BlueprintCatalog& c, blueprints::Purpose purpose, unsigned turns) {
+    const blueprints::RoomBlueprint* source = nullptr;
+    for (unsigned i = 0; i < c.roomCount; ++i)
+        if (c.rooms[i].purpose == purpose)
+            source = &c.rooms[i];
+    if (!source || !(source->rotations & (1u << turns)))
+        return {};
+    const auto b = blueprints::transform(*source, turns);
+    Shape s;
+    s.width = b.size.x;
+    s.height = b.size.y;
+    s.room.size = b.size;
+    s.room.role = Role::Junction;
+    s.room.shape = 5;
+    s.room.rotation = std::uint8_t(turns);
+    s.room.clearance = 0;
+    s.blueprint = {b.id, b.purpose, 0, std::uint8_t(turns), 0, std::uint8_t(b.ceiling)};
+    auto blocked = blueprints::occupied(c, b);
+    int best = 999;
+    for (int y = 0; y < s.height; ++y)
+        for (int x = 0; x < s.width; ++x) {
+            s.cells[unsigned(y * 9 + x)] = !b.solid[blueprints::index({x, y})];
+            const int score = std::abs(2 * x - s.width + 1) + std::abs(2 * y - s.height + 1);
+            if (!blocked[blueprints::index({x, y})] && score < best) {
+                best = score;
+                s.room.anchor = {x, y};
+            }
+        }
+    return s;
+}
 bool stamp(FloorLayout& f, Shape& s, Cell origin) noexcept {
     if (origin.x < 1 || origin.y < 1 || origin.x + s.width >= f.width || origin.y + s.height >= f.height)
         return false;
@@ -172,6 +215,12 @@ bool stamp(FloorLayout& f, Shape& s, Cell origin) noexcept {
     if (r.role == Role::Entrance || r.role == Role::Objective)
         r.facing = Heading((2 + r.rotation) % 4);
     f.rooms[f.roomCount] = r;
+    if (r.shape == 5) {
+        if (f.blueprintCount == 4)
+            return false;
+        s.blueprint.room = std::uint8_t(f.roomCount);
+        f.blueprints[f.blueprintCount++] = s.blueprint;
+    }
     for (int y = 0; y < s.height; ++y)
         for (int x = 0; x < s.width; ++x)
             if (s.cells[unsigned(y * 9 + x)]) {
@@ -184,6 +233,8 @@ bool stamp(FloorLayout& f, Shape& s, Cell origin) noexcept {
 }
 void unstamp(FloorLayout& f) noexcept {
     --f.roomCount;
+    if (f.blueprintCount && f.blueprints[f.blueprintCount - 1].room == f.roomCount)
+        f.blueprints[--f.blueprintCount] = {};
     for (unsigned i = 0; i < maxCells; ++i)
         if (f.membership[i] == f.roomCount) {
             f.floor[i] = 0;
@@ -335,7 +386,9 @@ struct Router {
         return false;
     }
 };
-static_assert(sizeof(Router) + sizeof(FloorLayout) * 2 + fixtureScratchBytes + maxCells * 6 < 128 * 1024,
+static_assert(sizeof(Router) + sizeof(FloorLayout) * 2 + fixtureScratchBytes + maxCells * 6 +
+                      sizeof(BlueprintReservations) <
+                  128 * 1024,
               "Bounded preparation scratch");
 unsigned walk(const FloorLayout& f, Cell a, Cell b) noexcept {
     std::array<std::uint16_t, maxCells> q{}, d{};
@@ -363,12 +416,12 @@ unsigned walk(const FloorLayout& f, Cell a, Cell b) noexcept {
     return UINT16_MAX;
 }
 bool connect(FloorLayout& f, unsigned a, unsigned b, Socket sa, Socket sb, Router& router, bool loop = false,
-             unsigned minLength = 1) noexcept {
+             unsigned minLength = 1, unsigned maxLength = 20) noexcept {
     if (f.connectionCount == maxConnections || connectionBetween(f, a, b))
         return false;
     std::array<std::uint16_t, maxCells> path{};
     unsigned length = 0;
-    if (!router.route(f, sa, sb, path, length) || length < minLength || length > 20 ||
+    if (!router.route(f, sa, sb, path, length) || length < minLength || length > maxLength ||
         f.pathCount + length > maxCells)
         return false;
     if (loop && walk(f, sa.cell + forward(sa.facing) * -1, sb.cell + forward(sb.facing) * -1) < length + 9)
@@ -389,8 +442,9 @@ bool connect(FloorLayout& f, unsigned a, unsigned b, Socket sa, Socket sb, Route
     return true;
 }
 bool attach(FloorLayout& f, unsigned parent, Role role, Random& rng, Router& router,
-            GenerationRequest request, unsigned attempt, unsigned limit = 32) noexcept {
-    const auto ports = sockets(f, parent);
+            GenerationRequest request, unsigned attempt, const blueprints::BlueprintCatalog& catalog,
+            unsigned limit = 32) {
+    const auto ports = sockets(f, parent, catalog);
     if (!ports.count)
         return false;
     for (unsigned proposal = 0; proposal < limit; ++proposal) {
@@ -433,26 +487,46 @@ bool attach(FloorLayout& f, unsigned parent, Role role, Random& rng, Router& rou
     }
     return false;
 }
-bool addLoop(FloorLayout& f, Random& rng, Router& router) noexcept {
-    for (unsigned attempt = 0; attempt < 96; ++attempt) {
-        unsigned a = rng.next(f.roomCount), b = rng.next(f.roomCount);
-        if (a == b || connectionBetween(f, a, b))
-            continue;
-        const auto sa = sockets(f, a), sb = sockets(f, b);
-        if (!sa.count || !sb.count)
-            continue;
-        unsigned best = 999;
-        Socket x{}, y{};
-        for (unsigned i = 0; i < sa.count; ++i)
-            for (unsigned j = 0; j < sb.count; ++j) {
-                const unsigned score = unsigned(distance(sa.values[i].cell, sb.values[j].cell));
-                if (score < best) {
-                    best = score;
-                    x = sa.values[i];
-                    y = sb.values[j];
+bool addLoop(FloorLayout& f, Random& rng, Router& router, const blueprints::BlueprintCatalog& catalog) {
+    struct Proposal {
+        unsigned a, b, score, tie;
+        Socket x, y;
+    };
+    std::array<Proposal, 96> candidates{};
+    unsigned count = 0;
+    auto less = [](const Proposal& a, const Proposal& b) {
+        return std::tie(a.score, a.tie) < std::tie(b.score, b.tie);
+    };
+    for (unsigned a = 0; a < f.roomCount; ++a)
+        for (unsigned b = a + 1; b < f.roomCount; ++b) {
+            if (connectionBetween(f, a, b))
+                continue;
+            const auto sa = sockets(f, a, catalog), sb = sockets(f, b, catalog);
+            for (unsigned i = 0; i < sa.count; ++i)
+                for (unsigned j = 0; j < sb.count; ++j) {
+                    const auto d = unsigned(distance(sa.values[i].cell, sb.values[j].cell));
+                    if (d >= 20)
+                        continue;
+                    Proposal p{
+                        a,           b, d + ((a == 3 || b == 3) ? 12u : 0u), rng.next(65536), sa.values[i],
+                        sb.values[j]};
+                    unsigned at = count;
+                    if (at == candidates.size()) {
+                        if (!less(p, candidates[at - 1]))
+                            continue;
+                        --at;
+                    } else
+                        ++count;
+                    while (at && less(p, candidates[at - 1])) {
+                        candidates[at] = candidates[at - 1];
+                        --at;
+                    }
+                    candidates[at] = p;
                 }
-            }
-        if (connect(f, a, b, x, y, router, true))
+        }
+    for (unsigned i = 0; i < count; ++i) {
+        const auto& p = candidates[i];
+        if (connect(f, p.a, p.b, p.x, p.y, router, true))
             return true;
     }
     return false;
@@ -474,26 +548,126 @@ bool upstreamConnected(const FloorLayout& f, unsigned omit) noexcept {
             return false;
     return true;
 }
-bool build(FloorLayout& f, GenerationRequest request, unsigned attempt) noexcept {
+bool attachBlueprint(FloorLayout& f, unsigned parent, blueprints::Purpose purpose, Random& rng,
+                     Router& router, const blueprints::BlueprintCatalog& c, unsigned limit,
+                     bool pair = false) {
+    const auto ports = sockets(f, parent, c);
+    if (!ports.count)
+        return false;
+    Shape bestShape;
+    Cell bestOrigin{};
+    Socket bestA{}, bestB{};
+    unsigned bestLength = 21;
+    const bool rank = purpose == blueprints::Purpose::Armory;
+    for (unsigned trial = 0; trial < limit; ++trial) {
+        const auto a = ports.values[rng.next(ports.count)];
+        auto s = blueprintShape(c, purpose, rng.next(4));
+        if (!s.width)
+            continue;
+        const auto b =
+            blueprints::transform(c.rooms[c.room(s.blueprint.id.data()).index], s.blueprint.rotation);
+        std::array<unsigned, 4> choices{};
+        unsigned count = 0;
+        for (unsigned i = 0; i < b.socketCount; ++i)
+            if (b.sockets[i].outward == opposite(a.facing))
+                choices[count++] = i;
+        if (!count)
+            continue;
+        const auto socket = b.sockets[choices[rng.next(count)]];
+        const unsigned gap =
+            pair ? 1 + rng.next(3)
+                 : (rng.next(100) < (f.profile == LayoutProfile::CompactWings ? 75u : 25u) ? 1u
+                                                                                           : 3 + rng.next(6));
+        const auto target = a.cell + forward(a.facing) * int(gap - 1);
+        const auto origin = target + socket.cell * -1;
+        const auto id = f.roomCount;
+        if (!stamp(f, s, origin))
+            continue;
+        if (connect(f, parent, id, a, {target, socket.outward}, router, false, 1, pair ? 3 : 20)) {
+            const auto& edge = f.connections[f.connectionCount - 1];
+            if (!rank || edge.count == 1)
+                return true;
+            if (edge.count < bestLength) {
+                bestLength = edge.count;
+                bestShape = s;
+                bestOrigin = origin;
+                bestA = a;
+                bestB = {target, socket.outward};
+            }
+            for (unsigned k = 0; k < edge.count; ++k)
+                f.floor[f.paths[edge.first + k]] = 0;
+            f.pathCount = edge.first;
+            f.connections[--f.connectionCount] = {};
+        }
+        unstamp(f);
+    }
+    if (bestLength <= 20) {
+        const auto id = f.roomCount;
+        if (!stamp(f, bestShape, bestOrigin))
+            return false;
+        if (connect(f, parent, id, bestA, bestB, router))
+            return true;
+        unstamp(f);
+    }
+    return false;
+}
+void resolveSockets(FloorLayout& f, const blueprints::BlueprintCatalog& c) {
+    for (unsigned n = 0; n < f.blueprintCount; ++n) {
+        auto& i = f.blueprints[n];
+        i.sockets = 0;
+        const auto b = blueprints::transform(c.rooms[c.room(i.id.data()).index], i.rotation);
+        for (unsigned e = 0; e < f.connectionCount; ++e) {
+            const auto& edge = f.connections[e];
+            if (edge.a != i.room && edge.b != i.room)
+                continue;
+            const auto cell = edge.a == i.room ? edge.socketA : edge.socketB;
+            for (unsigned j = 0; j < b.socketCount; ++j)
+                if (cell == f.rooms[i.room].origin + b.sockets[j].cell)
+                    i.sockets |= std::uint8_t(1u << j);
+        }
+    }
+}
+bool build(FloorLayout& f, GenerationRequest request, unsigned attempt,
+           const blueprints::BlueprintCatalog& catalog) {
     Random rng{seedFor(request, Domain::Topology, 0, attempt)};
     Router router;
-    Random interior{seedFor(request, Domain::Interior, 0, attempt)};
-    auto initial = shape(0, Role::Junction, interior, Heading::East);
-    if (!stamp(f, initial, {13 + int(rng.next(6)), 12 + int(rng.next(5))}))
+    auto initial = blueprintShape(catalog, blueprints::Purpose::MeadHall, rng.next(4));
+    if (!initial.width || !stamp(f, initial, {12 + int(rng.next(5)), 12 + int(rng.next(5))}))
+        return false;
+    if (!attachBlueprint(f, 0, blueprints::Purpose::Kitchen, rng, router, catalog, 32, true))
+        return false;
+    bool placed = false;
+    for (unsigned i = 0; i < 4 && !placed; ++i)
+        placed = attachBlueprint(f, rng.next(2), blueprints::Purpose::Barracks, rng, router, catalog, 8);
+    if (!placed)
+        return false;
+    // Bounded proposals in graph-distance order; passage length breaks feasible ties.
+    std::array<unsigned, 3> parents{{0, 1, 2}};
+    std::sort(parents.begin(), parents.end(), [&](unsigned a, unsigned b) {
+        return std::make_pair(roomDistance(f, 2, a), a) < std::make_pair(roomDistance(f, 2, b), b);
+    });
+    placed = false;
+    for (unsigned i = 0; i < 3 && !placed; ++i)
+        placed = attachBlueprint(f, parents[i], blueprints::Purpose::Armory, rng, router, catalog,
+                                 i == 0 ? 16 : 8);
+    if (!placed)
         return false;
     const unsigned junctions = 6 + rng.next(3);
-    for (unsigned i = 1; i < junctions; ++i) {
-        bool placed = false;
-        for (unsigned parent = 0; parent < 4 && !placed; ++parent)
-            placed = attach(f, i < 3 ? 0 : rng.next(f.roomCount), Role::Junction, rng, router, request,
-                            attempt, 8);
+    for (unsigned i = 4; i < junctions; ++i) {
+        placed = false;
+        for (unsigned trial = 0; trial < 4 && !placed; ++trial) {
+            auto parent = rng.next(f.roomCount);
+            if (parent == 3 && trial < 3)
+                parent = 0;
+            placed = attach(f, parent, Role::Junction, rng, router, request, attempt, catalog, 8);
+        }
         if (!placed)
             return false;
     }
-    if (!addLoop(f, rng, router))
+    if (!addLoop(f, rng, router, catalog))
         return false;
     f.loopConnection = f.connectionCount - 1;
-    if (!addLoop(f, rng, router))
+    if (!addLoop(f, rng, router, catalog))
         return false;
     std::array<unsigned, maxRooms> degree{};
     for (unsigned i = 0; i < f.connectionCount; ++i) {
@@ -503,15 +677,15 @@ bool build(FloorLayout& f, GenerationRequest request, unsigned attempt) noexcept
     std::array<unsigned, maxRooms> sectors{};
     unsigned count = 0;
     for (unsigned i = 0; i < junctions; ++i)
-        if (degree[i] == 2 && upstreamConnected(f, i))
+        if (degree[i] == 2 && sockets(f, i, catalog).count && upstreamConnected(f, i))
             sectors[count++] = i;
     if (!count)
         return false;
     const unsigned sector = sectors[rng.next(count)];
     // Attach terminal safety regions before optional leaves consume their available walls.
     const auto approach = f.roomCount;
-    if (!attach(f, sector, Role::Approach, rng, router, request, attempt) ||
-        !attach(f, approach, Role::Objective, rng, router, request, attempt))
+    if (!attach(f, sector, Role::Approach, rng, router, request, attempt, catalog) ||
+        !attach(f, approach, Role::Objective, rng, router, request, attempt, catalog))
         return false;
     std::array<unsigned, maxRooms> entranceParents{};
     for (unsigned i = 0; i < junctions; ++i)
@@ -531,7 +705,9 @@ bool build(FloorLayout& f, GenerationRequest request, unsigned attempt) noexcept
         for (unsigned i = 0; i < junctions * 2; ++i) {
             const auto parent =
                 role == Role::Entrance && request.depth == 1 ? entranceParents[i / 2] : rng.next(junctions);
-            if (parent != sector && attach(f, parent, role, rng, router, request, attempt, 2))
+            if (parent == 3 && i < junctions)
+                continue;
+            if (parent != sector && attach(f, parent, role, rng, router, request, attempt, catalog, 2))
                 return true;
         }
         return false;
@@ -543,15 +719,18 @@ bool build(FloorLayout& f, GenerationRequest request, unsigned attempt) noexcept
     for (unsigned i = 0; i < f.roomCount; ++i)
         if (f.rooms[i].role == Role::Entrance)
             f.spawn = {f.rooms[i].anchor, f.rooms[i].facing};
+    resolveSockets(f, catalog);
     return true;
 }
 } // namespace
-bool buildStoneLayout(FloorLayout& f, GenerationRequest request, unsigned attempt, bool fallback) noexcept {
+bool buildStoneLayout(FloorLayout& f, GenerationRequest request, unsigned attempt, bool fallback,
+                      const blueprints::BlueprintCatalog& catalog) {
     const auto& profiles = underkeepBiome().profiles;
     f.profile = profiles[unsigned(seedFor(request, Domain::Topology, 77)) % profiles.size()];
     f.family = fallback ? 1u : 0u;
+    f.blueprintFingerprint = blueprints::fingerprint(catalog);
     if (fallback)
         return buildFallback(f);
-    return build(f, request, attempt);
+    return build(f, request, attempt, catalog);
 }
 } // namespace blobber::generation

@@ -1,8 +1,10 @@
 #include "generation/architecture.hpp"
+#include "generation/blueprint_rooms.hpp"
 #include "generation/diagnostic_view.hpp"
 #include "generation/dressing.hpp"
 #include "generation/floor.hpp"
 #include "support/check.hpp"
+#include "support/generation_blueprints.hpp"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -26,6 +28,8 @@ FloorLayout rotated(const FloorLayout& source, unsigned turn) {
                 f.fixtures.npcExcluded.set(b);
         }
     f.rotation = (f.rotation + turn) % 4;
+    for (unsigned i = 0; i < f.blueprintCount; ++i)
+        f.blueprints[i].rotation = std::uint8_t((f.blueprints[i].rotation + turn) % 4);
     for (unsigned i = 0; i < f.roomCount; ++i) {
         auto& r = f.rooms[i];
         const auto p = rotate(r.origin, f.width, turn);
@@ -154,10 +158,14 @@ void checkArchitecture(const GeneratedFloor& floor) {
             check(floor.map.surface(c).floor == 0 && floor.map.surface(c).ceiling == expected,
                   "Published surfaces honor room membership and thresholds");
         }
-    // Recreate pre-architecture dressing through the preserved random stream.
+    // Architecture consumes fresh authored reservations and ordinary dressing.
     auto layout = f;
     WorldDefinition original;
-    check(dressUnderkeep(layout, floor.request, original), "Fresh dressing remains reproducible");
+    BlueprintReservations reservations;
+    check(!prepareBlueprintRooms(layout, test::campaignBlueprints(), reservations, &original),
+          "Authored reservations reconstruct");
+    check(dressUnderkeep(layout, floor.request, original, &reservations),
+          "Fresh dressing remains reproducible");
     const auto& actual = floor.map.definition().decorations;
     check(actual.size() == original.decorations.size(), "Architecture preserves decoration count");
     for (unsigned i = 0; i < actual.size(); ++i) {
@@ -168,14 +176,79 @@ void checkArchitecture(const GeneratedFloor& floor) {
     }
     check(seedFor(floor.request, Domain::Dressing) ==
               seedFor({floor.request.seed, floor.request.depth, 12, 9}, Domain::Dressing),
-          "New generation identity retains accepted dressing stream");
+          "Explicit dressing stream is independent of request identity fields");
+}
+void blueprintContracts() {
+    const auto& catalog = test::campaignBlueprints();
+    const auto result = generate({5, 1}, catalog);
+    check(bool(result), "Blueprint integration fixture generates");
+    const auto& f = result.floor->layout;
+    check(f.blueprintCount == 4 && f.blueprintFingerprint == blueprints::fingerprint(catalog),
+          "Exact roster and canonical catalog identity");
+    BlueprintReservations masks;
+    WorldDefinition expected;
+    check(!prepareBlueprintRooms(f, catalog, masks, &expected), "Combined arrangement prepares");
+    check(expected.scenery.size() <= 36 && expected.ambientFires.size() == 6,
+          "All four kits fit deliberate bounds");
+    check(!validateBlueprintWorld(f, catalog, result.floor->map),
+          "Published world matches authored definitions");
+    for (unsigned turn = 0; turn < 4; ++turn) {
+        auto r = rotated(f, turn);
+        BlueprintReservations rotatedMasks;
+        check(!prepareBlueprintRooms(r, catalog, rotatedMasks),
+              "Metadata, furniture and sockets rotate together");
+    }
+    for (unsigned i = 0; i < f.populationCount; ++i) {
+        auto c = f.population[i].cell;
+        auto n = unsigned(c.y * f.width + c.x);
+        auto r = regionAt(f, c);
+        check(!masks.blocked[n] &&
+                  (!masks.authored[r] || (masks.encounters[n] && !masks.furnished[n] && !masks.rewards[n])),
+              "Population respects authored encounter and reward reservations");
+    }
+    unsigned beds = 0;
+    for (const auto& p : result.floor->map.definition().scenery) {
+        if (p.model == "sleeping-bay" || p.model == "sleeping-bay-red") {
+            ++beds;
+            check(result.floor->map.movementBlocked(p.anchor),
+                  "Each bed retains its accepted one-cell collision");
+        }
+    }
+    check(beds == 6, "Six accepted beds are present");
+    for (const auto& d : result.floor->map.definition().decorations)
+        if (blueprintAt(f, regionAt(f, d.cell)))
+            check(d.kind == DecorationKind::Chest, "Generic dressing never enters authored interiors");
+    auto malformed = f;
+    malformed.blueprints[0].sockets = 0;
+    check(bool(prepareBlueprintRooms(malformed, catalog, masks)), "Unpublished/missing socket mask rejects");
+    malformed = f;
+    malformed.blueprints[1].purpose = malformed.blueprints[0].purpose;
+    check(bool(prepareBlueprintRooms(malformed, catalog, masks)), "Purpose identity tampering rejects");
+    malformed = f;
+    ++malformed.blueprints[0].rotation;
+    check(bool(prepareBlueprintRooms(malformed, catalog, masks)), "Untransformed geometry rejects");
+    auto missing = catalog;
+    --missing.roomCount;
+    auto failure = generate({5}, missing);
+    check(!failure && failure.diagnostics.attempts == 0 &&
+              failure.diagnostics.failure.code == Error::Blueprint,
+          "Missing roster fails before retries");
+    auto duplicate = catalog;
+    duplicate.rooms[1].purpose = duplicate.rooms[0].purpose;
+    check(!generate({5}, duplicate), "Duplicate purposes fail closed");
+    auto incompatible = catalog;
+    ++incompatible.rooms[incompatible.room("kitchen").index].ceiling;
+    failure = generate({5}, incompatible, true);
+    check(!failure && failure.diagnostics.fallback && failure.diagnostics.failure.code == Error::Blueprint,
+          "Incompatible fallback never omits or alters required content");
 }
 void deterministicAndVariety() {
     std::set<LayoutProfile> profiles;
     for (unsigned depth = 1; depth <= 3; ++depth) {
         std::set<std::string> shapes, degrees;
         for (unsigned seed : {0u, 1u, 5u, 8u, 13u, 21u, 34u, 55u}) {
-            const auto a = generate({seed, depth}), b = generate({seed, depth});
+            const auto a = generate({seed, depth}, blobber::test::campaignBlueprints()),
+                       b = generate({seed, depth}, blobber::test::campaignBlueprints());
             check(bool(a) && bool(b) && !a.diagnostics.fallback,
                   "fixed normal sample generates without fallback");
             const auto& f = a.floor->layout;
@@ -225,7 +298,7 @@ void pacing() {
     for (unsigned depth = 1; depth <= 3; ++depth) {
         std::array<unsigned, 4> walks{};
         for (unsigned seed = 0; seed < 4; ++seed) {
-            const auto result = generate({seed, depth});
+            const auto result = generate({seed, depth}, blobber::test::campaignBlueprints());
             check(bool(result) && !result.diagnostics.fallback, "review floor generates normally");
             const auto m = layoutMetrics(result.floor->layout);
             check(m.walkableCells >= 230 && m.walkableCells <= 390 && m.distinctRoomAreas >= 4 &&
@@ -240,12 +313,15 @@ void pacing() {
     }
 }
 void failures() {
-    check(!generate({1, 0}) && !generate({1, 4}) && !generate({1, 1, 999}) && !generate({1, 1, 1, 0}),
+    check(!generate({1, 0}, blobber::test::campaignBlueprints()) &&
+              !generate({1, 4}, blobber::test::campaignBlueprints()) &&
+              !generate({1, 1, 999}, blobber::test::campaignBlueprints()) &&
+              !generate({1, 1, 1, 0}, blobber::test::campaignBlueprints()),
           "unsupported generation requests reject");
-    const auto good = generate({5});
+    const auto good = generate({5}, blobber::test::campaignBlueprints());
     check(bool(good), "owned mutation fixture");
     const auto original = good.floor->layout;
-    const auto extreme = generate({UINT32_MAX, 3});
+    const auto extreme = generate({UINT32_MAX, 3}, blobber::test::campaignBlueprints());
     check(bool(extreme) && !validate(extreme.floor->layout), "maximum seed publishes validated geometry");
     auto bad = [&](auto mutate) {
         auto f = original;
@@ -290,12 +366,15 @@ void failures() {
     changed = original;
     ++changed.paths[0];
     check(fingerprint(changed) != fingerprint(original), "canonical identity includes passage cells");
-    std::set<LayoutProfile> fallbackProfiles;
-    for (unsigned depth = 1; depth <= 3; ++depth)
-        for (unsigned seed : {0u, 5u}) {
-            const auto a = generate({seed, depth}, true), b = generate({seed, depth}, true);
+    constexpr unsigned fallbackSeeds[3][2]{{0, 21}, {0, 13}, {8, 5}};
+    for (unsigned depth = 1; depth <= 3; ++depth) {
+        std::set<LayoutProfile> fallbackProfiles;
+        for (unsigned seed : fallbackSeeds[depth - 1]) {
+            const auto a = generate({seed, depth}, blobber::test::campaignBlueprints(), true),
+                       b = generate({seed, depth}, blobber::test::campaignBlueprints(), true);
             check(bool(a) && bool(b) && a.diagnostics.fallback && a.diagnostics.attempts == maxAttempts &&
-                      a.diagnostics.fallbackId == depth && !validate(a.floor->layout),
+                      a.diagnostics.fallbackId == unsigned(a.floor->layout.profile) + 1 &&
+                      !validate(a.floor->layout),
                   "bounded exhaustion publishes checked authored fallback");
             check(a.floor->fingerprint == b.floor->fingerprint, "fallback reproducible");
             checkArchitecture(*a.floor);
@@ -306,14 +385,15 @@ void failures() {
             broken.floor[unsigned(broken.spawn.cell.y * broken.width + broken.spawn.cell.x)] = 0;
             check(bool(validate(broken)), "broken authored fallback cannot pass validation");
         }
-    check(fallbackProfiles.size() == 2, "both authored fallbacks covered");
+        check(fallbackProfiles.size() == 2, "both authored fallbacks covered at every depth");
+    }
     const auto view = diagnosticView(*good.floor);
     check(view.count >= 4 && view.lines[2][0], "prepared diagnostic identity/markers");
 }
 void progression() {
     for (unsigned depth : {2u, 3u})
         for (bool fallback : {false, true}) {
-            const auto result = generate({5, depth}, fallback);
+            const auto result = generate({5, depth}, blobber::test::campaignBlueprints(), fallback);
             check(bool(result), "sector fixture");
             auto f = result.floor->layout;
             unsigned locks = 0;
@@ -346,6 +426,7 @@ void progression() {
 int main() {
     try {
         architectureRules();
+        blueprintContracts();
         deterministicAndVariety();
         pacing();
         failures();

@@ -2,6 +2,7 @@
 #include "game/campaign.hpp"
 #include "game/commands.hpp"
 #include "support/campaign_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include "ui/interaction.hpp"
 #include "ui/travel_layout.hpp"
 #include <iostream>
@@ -14,7 +15,7 @@ using namespace blobber::campaign_test;
 void cityCampaign() {
     const auto cat = catalog();
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     check(run.game().movement().player == Player{{11, 8}, Heading::North} &&
               run.map().definition().assetPack == "sanctuary-city",
           "New Game uses square arrival");
@@ -33,7 +34,7 @@ void cityCampaign() {
     const auto gatePose = run.game().movement().player;
     auto checkpoint = run.checkpoint();
     const auto discovered = checkpoint->locations[0].state->fixtures.discovered;
-    CampaignRun restored(cat, std::move(*checkpoint), defs.timings);
+    CampaignRun restored(blobber::test::campaignBlueprints(), cat, std::move(*checkpoint), defs.timings);
     check(restored.game().movement().player == gatePose &&
               restored.checkpoint()->locations[0].state->fixtures.discovered == discovered,
           "City pose and partial exploration survive checkpoint restore");
@@ -55,7 +56,7 @@ void cityCampaign() {
         }
         bool rejected = false;
         try {
-            CampaignRun invalid(cat, std::move(*bad), defs.timings);
+            CampaignRun invalid(blobber::test::campaignBlueprints(), cat, std::move(*bad), defs.timings);
         } catch (const std::invalid_argument&) {
             rejected = true;
         }
@@ -107,7 +108,7 @@ void cityCampaign() {
 void campaign() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     entrance(run);
     check(run.activeLocation() == 0 && run.status() == CampaignStatus::Active, "campaign starts in hub");
     walk(run.game(), run.location(0).entry.cell);
@@ -213,7 +214,7 @@ void campaign() {
 void transferFailuresAndEffects() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 8);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 8);
     entrance(run);
     auto enter = [&] {
         entrance(run);
@@ -353,7 +354,7 @@ void transferFailuresAndEffects() {
 void inventoryAndLifecycle() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     entrance(run);
     auto* owner = &run.party();
     const auto id = owner->inventory().identity();
@@ -440,7 +441,7 @@ void allPortableEffects() {
          {EffectKind::Bless, EffectKind::Bane, EffectKind::ShieldOfFaith, EffectKind::MageArmor,
           EffectKind::HoldPerson, EffectKind::Guidance, EffectKind::Resistance, EffectKind::Sanctuary,
           EffectKind::Aid, EffectKind::MirrorImage}) {
-        CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+        CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
         entrance(run);
         EffectRequest e;
         e.kind = kind;
@@ -475,7 +476,7 @@ void allPortableEffects() {
         }
     }
     for (const auto kind : {EffectKind::Sleep, EffectKind::Blind, EffectKind::Slow, EffectKind::Knockdown}) {
-        CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+        CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
         entrance(run);
         CombatEvents notices;
         const_cast<EffectController&>(run.game().effects())
@@ -491,7 +492,7 @@ void allPortableEffects() {
                   "party conditions survive recall and waypoint return");
         }
     }
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     entrance(run);
     auto initial = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(initial), "capacity fixture enters floor");
@@ -544,7 +545,7 @@ void allPortableEffects() {
 void recallAndWaypoints() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     entrance(run);
     auto& party = run.party();
     const auto identity = party.inventory().identity();
@@ -744,7 +745,7 @@ void recallAndWaypoints() {
 void recallSafetyAndRollback() {
     const auto cat = catalog();
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     entrance(run);
     travel(run, FixtureKind::Downstairs);
     auto& game = run.game();
@@ -836,7 +837,7 @@ void recallSafetyAndRollback() {
 void travelUi() {
     const auto cat = catalog();
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     entrance(run);
     UiInput open, confirm, cancel;
     open.pressed[std::size_t(UiKey::Travel)] = true;
@@ -998,7 +999,7 @@ void adapters(const std::filesystem::path& retain) {
     }
     check(unlocks == 1 && recallEvents == 1 && warpEvents == 1,
           "only committed first arrival unlocks; rejected recall emits no transition");
-    Protocol replayed(cat, defs, Mode::Diagnostic);
+    Protocol replayed(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     replay(replayed, tracePath, header);
     check(replayed.state() == state, "strict campaign replay restores active and inactive state");
     if (!retain.empty())
@@ -1019,7 +1020,7 @@ void adapters(const std::filesystem::path& retain) {
         corrupted << record.dump() << '\n';
     }
     corrupted.close();
-    Protocol negative(cat, defs, Mode::Diagnostic);
+    Protocol negative(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     bool rejected = false;
     try {
         replay(negative, corruptedPath, header);
@@ -1071,7 +1072,7 @@ int main(int argc, char** argv) {
         if (argc == 3 && std::string_view(argv[1]) == "--replay") {
             const auto cat = catalog();
             const auto defs = definitions();
-            Protocol protocol(cat, defs, Mode::Diagnostic);
+            Protocol protocol(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
             replay(protocol, argv[2], Json{{"fixture", "pc05"}});
             std::cout << "campaign fresh-process replay passed\n";
             return 0;

@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "generation/report.hpp"
 #include <algorithm>
 #include <charconv>
@@ -18,13 +19,14 @@ unsigned number(std::string_view s) {
 int main(int argc, char** argv) {
     try {
         GenerationRequest request;
+        std::filesystem::path blueprintPath = "assets/blueprints/underkeep.json";
         bool seed = false, fallback = false, json = false;
         unsigned count = 1;
         for (int i = 1; i < argc; ++i) {
             const std::string_view option(argv[i]);
             if (option == "--help") {
                 std::cout << "blobber_generate_floor --seed UINT32 [--depth 1..3] [--format ascii|json] "
-                             "[--force-fallback] [--count 1..100000]\n"
+                             "[--blueprints PATH] [--force-fallback] [--count 1..100000]\n"
                              "Multiple seeds emit streaming JSON lines plus a summary. Sweeps are opt-in.\n";
                 return 0;
             }
@@ -35,7 +37,9 @@ int main(int argc, char** argv) {
             if (++i == argc)
                 throw std::runtime_error("Missing option value");
             const std::string_view value(argv[i]);
-            if (option == "--seed") {
+            if (option == "--blueprints")
+                blueprintPath = value;
+            else if (option == "--seed") {
                 request.seed = number(value);
                 seed = true;
             } else if (option == "--depth")
@@ -49,6 +53,7 @@ int main(int argc, char** argv) {
         }
         if (!seed || !count || count > 100000 || std::uint64_t(request.seed) + count - 1 > UINT32_MAX)
             throw std::runtime_error("Require seed, count 1..100000, and a non-overflowing seed range");
+        const auto blueprints = blobber::blueprints::load(blueprintPath);
         unsigned failures = 0, fallbacks = 0, retries = 0;
         std::uint64_t totalUs = 0, maxUs = 0;
         std::array<unsigned, unsigned(Error::ForcedFallback) + 1> reasons{};
@@ -56,7 +61,7 @@ int main(int argc, char** argv) {
         fingerprints.reserve(count);
         for (unsigned i = 0; i < count; ++i, ++request.seed) {
             const auto start = std::chrono::steady_clock::now();
-            const auto result = generate(request, fallback);
+            const auto result = generate(request, blueprints, fallback);
             const auto us = std::uint64_t(std::chrono::duration_cast<std::chrono::microseconds>(
                                               std::chrono::steady_clock::now() - start)
                                               .count());

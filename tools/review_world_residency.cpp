@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "core/preparation.hpp"
@@ -21,11 +22,12 @@ int main(int argc, char** argv) {
             throw std::runtime_error("Usage: blobber_review_world_residency ASSETS NEW_OUTPUT [--entrance]");
         const std::filesystem::path root(argv[1]), output(argv[2]);
         require(std::filesystem::create_directory(output), "Use a new output directory");
+        const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
         const auto catalog = loadRules(root / "rules/catalog.json");
         const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
         require(catalog.preset(), "Review requires the built-in party preset");
-        auto campaign = std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types,
-                                                      definitions.timings, 5);
+        auto campaign = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(),
+                                                      definitions.types, definitions.timings, 5);
         auto assets =
             std::make_shared<const world_assets::CpuAssets>(world_assets::load(root / "prepared/world"));
         Window window(1920, 1080, true);
@@ -73,7 +75,8 @@ int main(int argc, char** argv) {
                         alphaBytes += assets->publication.textures[id].alphaBytes;
                     }
                 bytes += textureBytes;
-                require(textureBytes <= world_assets::textureBudget && alphaBytes <= world_assets::alphaBudget,
+                require(textureBytes <= world_assets::textureBudget &&
+                            alphaBytes <= world_assets::alphaBudget,
                         "Legal location pair exceeds resident asset budget");
                 report << "projected_locations=" << a << ',' << b << " app_gpu=" << bytes
                        << " textures=" << ids.count() << " mip_bytes=" << textureBytes
@@ -181,7 +184,7 @@ int main(int argc, char** argv) {
         capture("sanctuary-rested");
         // Continue exercises the real disk adapter with an isolated review-owned slot.
         CampaignDisk disk(output / "review-save.json");
-        CampaignStore store(catalog, definitions, {"sc04-review", 0}, disk);
+        CampaignStore store(catalog, definitions, {"sc04-review", 0, &roomBlueprints}, disk);
         const auto slot = store.inspect();
         require(store.save(*campaign, slot.revision).durable, "Review save failed");
         auto loaded = store.load();

@@ -4,6 +4,7 @@
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
 #include "game/smithy_interior.hpp"
+#include "generation/blueprint_rooms.hpp"
 #include <algorithm>
 #include <cstdio>
 #include <random>
@@ -191,10 +192,11 @@ std::unique_ptr<CampaignCheckpoint> CampaignRun::checkpoint() const {
     }
     return out;
 }
-CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
-                         const std::vector<NpcTimings>& timings)
+CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog& catalog,
+                         CampaignCheckpoint&& s, const std::vector<NpcTimings>& timings)
     : dialogue_(s.dialogue), runId_(s.runId), party_(catalog, s.party), timings_(timings),
       location_(s.activeLocation), revision_(s.revision), elapsed_(s.gameplayMs) {
+    generation::validateBlueprintRoster(blueprints);
     dialogue_.validate();
     merchants_.restore(s.merchants, catalog);
     if (runId_.size() != 32 || runId_.find_first_not_of("0123456789abcdef") != std::string::npos ||
@@ -234,7 +236,9 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             if (from.generation.depth != i || from.generation.generator != generation::generatorVersion ||
                 from.generation.templates != generation::templateVersion || from.layout.depth != i ||
                 from.layout.width != map.width() || from.layout.height != map.height() ||
-                generation::validate(from.layout) || generation::fingerprint(from.layout) != from.fingerprint)
+                generation::validate(from.layout) ||
+                generation::validateBlueprintWorld(from.layout, blueprints, map) ||
+                generation::fingerprint(from.layout) != from.fingerprint)
                 throw std::invalid_argument("Invalid saved generated floor");
             for (int y = 0; y < map.height(); ++y)
                 for (int x = 0; x < map.width(); ++x)

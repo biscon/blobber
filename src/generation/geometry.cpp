@@ -111,6 +111,12 @@ const char* errorName(Error e) noexcept {
         return "invalid_population";
     case Error::Landing:
         return "unsafe_landing";
+    case Error::Blueprint:
+        return "blueprint";
+    case Error::Placement:
+        return "placement";
+    case Error::Dressing:
+        return "dressing";
     case Error::ForcedFallback:
         return "forced_fallback";
     }

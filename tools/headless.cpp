@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
 #include "automation/protocol.hpp"
@@ -77,15 +78,18 @@ int main(int argc, char** argv) {
         if (!capture.empty())
             throw std::runtime_error("graphics_unavailable: configure BLOBBER_BUILD_GRAPHICS=ON");
 #endif
+        const auto blueprints = blueprints::load(assets / "blueprints/underkeep.json");
         const auto catalog = loadRules(assets / "rules/catalog.json");
         const auto definitions = loadNpcDefinitions(assets / "npcs/level.json");
         VisibilityFactory factory = nullptr;
         void* context = nullptr;
         Json content = {{"catalog", fingerprintFile(assets / "rules/catalog.json")},
-                        {"npc_definitions", std::to_string(definitions.definitionFingerprint)}};
+                        {"npc_definitions", std::to_string(definitions.definitionFingerprint)},
+                        {"blueprints", std::to_string(blueprints::fingerprint(blueprints))}};
         std::unique_ptr<world_assets::CpuAssets> worldAssets;
         std::unique_ptr<WorldVisualContext> worldVisual;
         if (mode == Mode::Visual) {
+            blueprints::checkPrepared(assets, assets / "prepared/world");
             worldAssets =
                 std::make_unique<world_assets::CpuAssets>(world_assets::load(assets / "prepared/world"));
             if (worldAssets->publication.definitions != definitions.definitionFingerprint)
@@ -121,14 +125,15 @@ int main(int argc, char** argv) {
             saves = std::make_unique<CampaignStore>(
                 catalog, definitions,
                 CampaignContent{fingerprintFile(assets / "rules/catalog.json"),
-                                definitions.definitionFingerprint},
+                                definitions.definitionFingerprint, &blueprints},
                 campaignFiles);
-        Protocol protocol(catalog, definitions, mode, factory, context, saves.get());
+        Protocol protocol(blueprints, catalog, definitions, mode, factory, context, saves.get());
         if (!playback.empty()) {
             replay(protocol, playback, runtimeHeader, nullptr, saves ? &campaignFiles : nullptr);
 #ifdef BLOBBER_HEADLESS_CAPTURE
             if (!capture.empty()) {
-                Protocol captureProtocol(catalog, definitions, mode, factory, context, saves.get());
+                Protocol captureProtocol(blueprints, catalog, definitions, mode, factory, context,
+                                         saves.get());
                 captureReplay(captureProtocol, playback, runtimeHeader, assets, definitions, capture,
                               operations, saves ? &campaignFiles : nullptr);
             }

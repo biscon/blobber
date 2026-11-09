@@ -8,9 +8,10 @@
 #include "persistence/arena_store.hpp"
 #include <stdexcept>
 namespace blobber::automation {
-Protocol::Protocol(const rules::Catalog& c, const NpcDefinitions& d, Mode m, VisibilityFactory f, void* x,
-                   CampaignStore* saves)
-    : catalog_(c), definitions_(d), mode_(m), factory_(f), context_(x), saves_(saves) {}
+Protocol::Protocol(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog& c,
+                   const NpcDefinitions& d, Mode m, VisibilityFactory f, void* x, CampaignStore* saves)
+    : blueprints_(blueprints), catalog_(c), definitions_(d), mode_(m), factory_(f), context_(x),
+      saves_(saves) {}
 void Protocol::checkIdentity(const Json& r) const {
     if (!session_)
         throw std::invalid_argument("No session");
@@ -165,8 +166,8 @@ Json Protocol::perform(const Json& r, Output& output) {
                 throw std::invalid_argument("Confirm replacement of the live session");
         }
         auto run = saves_->load();
-        auto candidate =
-            std::make_unique<Session>(catalog_, definitions_, std::move(run), mode_, factory_, context_);
+        auto candidate = std::make_unique<Session>(blueprints_, catalog_, definitions_, std::move(run), mode_,
+                                                   factory_, context_);
         session_.swap(candidate);
         ++epoch_;
         revision_ = 1;
@@ -199,8 +200,8 @@ Json Protocol::perform(const Json& r, Output& output) {
             }
             if (r.contains("seed"))
                 replaceSeed(scenario, bounded(r.at("seed"), UINT32_MAX));
-            auto candidate =
-                std::make_unique<Session>(catalog_, definitions_, scenario, mode_, factory_, context_);
+            auto candidate = std::make_unique<Session>(blueprints_, catalog_, definitions_, scenario, mode_,
+                                                       factory_, context_);
             if (saves_ && candidate->game().campaign()) {
                 auto* run = candidate->game().campaign();
                 run->preparePersistenceIdentity(saves_->synchronizeIdentity(run->runId()));

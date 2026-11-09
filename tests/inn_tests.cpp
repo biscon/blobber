@@ -3,6 +3,7 @@
 #include "persistence/campaign_codec.hpp"
 #include "support/allocations.hpp"
 #include "support/campaign_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include "world/sanctuary_city.hpp"
 #include <climits>
 #include <iostream>
@@ -12,7 +13,7 @@ int main() {
     try {
         const auto cat = catalog();
         const auto defs = definitions();
-        CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+        CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
         check(run.game().actors().snapshot().count == 3, "City owns exactly three residents");
         const char* residents[]{"sanctuary.mayor", "sanctuary.boric", "sanctuary.balin"};
         const Cell cells[]{{9, 8}, {8, 8}, {8, 9}};
@@ -40,8 +41,12 @@ int main() {
                 residents[1].residentId = residents[0].residentId;
             if (fault == 3)
                 residents[2].animation = NpcAnimation::Laugh;
-            rejects([&] { CampaignRun invalid(cat, std::move(*bad), defs.timings); },
-                    "Canonical city residents reject missing, moved, duplicate or non-idle data");
+            rejects(
+                [&] {
+                    CampaignRun invalid(blobber::test::campaignBlueprints(), cat, std::move(*bad),
+                                        defs.timings);
+                },
+                "Canonical city residents reject missing, moved, duplicate or non-idle data");
         }
         const auto approach = sanctuaryCity().doorway("inn").approach;
         check(!run.previewTravel(run.doorwayRequest()), "No remote inn entry");
@@ -163,9 +168,10 @@ int main() {
                                       dialogueKey("heard_dungeon_advice")),
               "Dialogue history records fact before save");
         auto saved = run.checkpoint();
-        const auto bytes = encodeCampaign(cat, defs, {"fixture", 0}, *saved);
-        saved = decodeCampaign(cat, defs, {"fixture", 0}, bytes);
-        CampaignRun restored(cat, std::move(*saved), defs.timings);
+        const auto bytes =
+            encodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, *saved);
+        saved = decodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, bytes);
+        CampaignRun restored(blobber::test::campaignBlueprints(), cat, std::move(*saved), defs.timings);
         check(restored.activeLocationId() == CampaignLocationId::Inn &&
                   restored.game().movement().player == pose,
               "Continue restores inn and pose");
@@ -195,8 +201,12 @@ int main() {
                 bad->locations[4].state->creditedDeaths[0] = true;
             if (fault == 5)
                 bad->locations[4].placements.clear();
-            rejects([&] { CampaignRun invalid(cat, std::move(*bad), defs.timings); },
-                    "Forged resident role, body, combat state or authored placement rejects");
+            rejects(
+                [&] {
+                    CampaignRun invalid(blobber::test::campaignBlueprints(), cat, std::move(*bad),
+                                        defs.timings);
+                },
+                "Forged resident role, body, combat state or authored placement rejects");
         }
         for (const auto oldCeiling : {6, 8}) {
             auto previous = restored.checkpoint();
@@ -207,9 +217,11 @@ int main() {
                 if (scenery.model == "table-group")
                     scenery.width = scenery.depth = 2;
             inn.worldFingerprint = inn.world.fingerprint();
-            const auto oldBytes = encodeCampaign(cat, defs, {"fixture", 0}, *previous);
-            auto decoded = decodeCampaign(cat, defs, {"fixture", 0}, oldBytes);
-            CampaignRun upgraded(cat, std::move(*decoded), defs.timings);
+            const auto oldBytes =
+                encodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, *previous);
+            auto decoded =
+                decodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, oldBytes);
+            CampaignRun upgraded(blobber::test::campaignBlueprints(), cat, std::move(*decoded), defs.timings);
             check(upgraded.map().surface(pose.cell).ceiling == 6 &&
                       upgraded.game().movement().player == pose && hasDropped(upgraded.game()),
                   "Previous inn layout loads at current height with pose and loot preserved");
@@ -222,7 +234,8 @@ int main() {
             malformed->locations[4].worldFingerprint = malformed->locations[4].world.fingerprint();
             bool mixedRejected = false;
             try {
-                CampaignRun invalid(cat, std::move(*malformed), defs.timings);
+                CampaignRun invalid(blobber::test::campaignBlueprints(), cat, std::move(*malformed),
+                                    defs.timings);
             } catch (const std::invalid_argument&) {
                 mixedRejected = true;
             }
@@ -232,7 +245,8 @@ int main() {
             malformed->locations[4].worldFingerprint = malformed->locations[4].world.fingerprint();
             mixedRejected = false;
             try {
-                CampaignRun invalid(cat, std::move(*malformed), defs.timings);
+                CampaignRun invalid(blobber::test::campaignBlueprints(), cat, std::move(*malformed),
+                                    defs.timings);
             } catch (const std::invalid_argument&) {
                 mixedRejected = true;
             }
@@ -245,7 +259,7 @@ int main() {
         bad->locations[4].recovery.freeRestEverywhere = false;
         bool rejected = false;
         try {
-            CampaignRun invalid(cat, std::move(*bad), defs.timings);
+            CampaignRun invalid(blobber::test::campaignBlueprints(), cat, std::move(*bad), defs.timings);
         } catch (const std::invalid_argument&) {
             rejected = true;
         }

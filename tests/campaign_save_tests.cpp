@@ -5,6 +5,7 @@
 #include "persistence/character_library.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include "ui/interaction.hpp"
 #include "ui/save_layout.hpp"
 #include <chrono>
@@ -46,13 +47,13 @@ void ignoredCampaigns() {
     Directory directory;
     const auto path = directory.path / "campaign.json";
     CampaignDisk disk(path);
-    CampaignStore store(c, d, {"fixture", 0}, disk);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
     for (const auto* bytes : {"{", "{\"schema\":0,\"simulation\":0}"}) {
         std::ofstream(path) << bytes;
         const auto slot = store.inspect();
         check(slot.exists && !slot.active && !slot.error.empty(),
               "incompatible/corrupt campaign disables only Continue");
-        CampaignRun fresh(c, *c.preset(), d.types, d.timings, 5);
+        CampaignRun fresh(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
         rejects([&] { store.save(fresh, slot.revision); }, "old slot still needs replacement confirmation");
         check(store.save(fresh, slot.revision, true).durable,
               "fresh game can replace ignored slot after confirmation");
@@ -95,7 +96,7 @@ rules::Catalog wearableSaveCatalog() {
 void environmentRoundtrip() {
     const auto c = wearableSaveCatalog();
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     check(bool(run.party().acquire(
               {{0}, c.findItem("fixture.bracers"), 1, run.party().inventory().revision()})),
           "Acquire save-owned wrist fixture");
@@ -170,8 +171,8 @@ void environmentRoundtrip() {
     architecture.layout.dressingFingerprint = architecture.worldFingerprint;
     architecture.fingerprint = generation::fingerprint(architecture.layout);
     const auto fingerprint = world.fingerprint();
-    const auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
-    auto decoded = decodeCampaign(c, d, {"fixture", 0}, text);
+    const auto text = encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *state);
+    auto decoded = decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, text);
     Party restoredParty(c, decoded->party);
     check(restoredParty.equipped({0}, EquipmentSlot::Wrists) == c.item(c.findItem("fixture.bracers")) &&
               !restoredParty.inventory().stack(wearable),
@@ -179,16 +180,19 @@ void environmentRoundtrip() {
     auto previous = blobber::automation::Json::parse(text);
     previous["schema"] = 17;
     previous["simulation"] = 21;
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, previous.dump()); },
-            "Pre-paperdoll campaign format rejects under strict save policy");
+    rejects(
+        [&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, previous.dump()); },
+        "Pre-paperdoll campaign format rejects under strict save policy");
     const auto& restoredWorld = decoded->locations[1].world;
     check(restoredWorld.fingerprint() == fingerprint && restoredWorld.buildings.size() == 1 &&
               restoredWorld.buildings[0].model == "owned-house" &&
               restoredWorld.buildings[0].facing == Heading::West,
           "Owned world geometry and architecture survive campaign codec roundtrip");
-    check(restoredWorld.scenery.size() == 1 && restoredWorld.scenery[0].model == "owned-tree" &&
-              restoredWorld.scenery[0].facing == Heading::East && !restoredWorld.scenery[0].blocking &&
-              restoredWorld.scenery[0].clearance == 1.25f && restoredWorld.ambientFires.size() == 2 &&
+    check(restoredWorld.scenery.size() == world.scenery.size() &&
+              restoredWorld.scenery.back().model == "owned-tree" &&
+              restoredWorld.scenery.back().facing == Heading::East &&
+              !restoredWorld.scenery.back().blocking && restoredWorld.scenery.back().clearance == 1.25f &&
+              restoredWorld.ambientFires.size() == 2 &&
               restoredWorld.ambientFires[1].x == world.ambientFires[1].x &&
               restoredWorld.ambientFires[0].scale == .5f && restoredWorld.ambientFires[1].scale == 1.f,
           "Scenery identity, orientation and physical base survive campaign codec roundtrip");
@@ -199,31 +203,33 @@ void environmentRoundtrip() {
     savedEntry(savedLocation(bad, 0)["world"]["surfaces"]["entries"], 20)["floor"] = 99;
     rejects(
         [&] {
-            auto v = decodeCampaign(c, d, {"fixture", 0}, bad.dump());
-            CampaignRun invalid(c, std::move(*v), d.timings);
+            auto v = decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump());
+            CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*v), d.timings);
         },
         "Malformed surface retains prior session");
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 21;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
+            "Pre-architecture schema rejects");
+    bad["schema"] = 22;
     savedLocation(bad, 1)["world"]["buildings"] = {{"size", buildingCapacity + 1},
                                                    {"entries", blobber::automation::Json::array()}};
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Placement decode capacity rejects before resizing");
     bad = blobber::automation::Json::parse(text);
     savedLocation(bad, 0)["world"]["scenery"] = {{"size", sceneryCapacity + 1},
                                                  {"entries", blobber::automation::Json::array()}};
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Scenery decode capacity rejects before resizing");
     bad = blobber::automation::Json::parse(text);
     savedLocation(bad, 0)["world"]["ambientFires"] = {{"size", ambientFireCapacity + 1},
                                                       {"entries", blobber::automation::Json::array()}};
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Fire decode capacity rejects before resize");
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 8;
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-scenery saves reject clearly");
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
+            "Pre-scenery saves reject clearly");
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 9;
     bad["simulation"] = 13;
@@ -233,16 +239,16 @@ void environmentRoundtrip() {
         std::ofstream file(directory.path / "campaign.json");
         file << bad.dump();
     }
-    CampaignStore store(c, d, {"fixture", 0}, disk);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
     check(!store.inspect().active, "Pre-inn campaign is incompatible");
     std::ifstream unchanged(directory.path / "campaign.json");
     const std::string original((std::istreambuf_iterator<char>(unchanged)), {});
     check(original == bad.dump(), "Rejecting old simulation never rewrites its file");
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Previous schema/simulation 9/13 rejects explicitly");
     bad = blobber::automation::Json::parse(text);
     bad["simulation"] = 19;
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Pre-Speed simulation 19 rejects without implicit migration");
     bad = blobber::automation::Json::parse(text);
     bad["generator"] = 12;
@@ -256,20 +262,21 @@ void environmentRoundtrip() {
         const std::string bytes((std::istreambuf_iterator<char>(file)), {});
         check(bytes == bad.dump(), "Rejecting old ceiling generation never rewrites the save");
     }
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Generator 12 campaign rejects explicitly");
     bad = blobber::automation::Json::parse(text);
     bad["simulation"] = 3;
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Pre-B01 simulation rejects explicitly");
 }
 void roundtrip() {
     const auto c = catalog();
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     walk(run.game(), {12, 20});
     face(run.game(), Heading::South);
-    const CampaignContent content{"owned-fixture", 0};
+    const CampaignContent content{"owned-fixture", 0, &blobber::test::campaignBlueprints()};
+
     ShopDefinition shop;
     shop.id = dialogueKey("fixture.shop");
     shop.stock.push_back({{0}, 4});
@@ -280,7 +287,7 @@ void roundtrip() {
     before->party.gold = UINT64_MAX;
     const auto text = encodeCampaign(c, d, content, *before);
     auto decoded = decodeCampaign(c, d, content, text);
-    CampaignRun loaded(c, std::move(*decoded), d.timings);
+    CampaignRun loaded(blobber::test::campaignBlueprints(), c, std::move(*decoded), d.timings);
     auto after = loaded.checkpoint();
     check(encodeCampaign(c, d, content, *after) == text, "hub exact canonical round trip");
     check(loaded.party().inventory().identity() != run.party().inventory().identity(),
@@ -289,7 +296,7 @@ void roundtrip() {
     check(restoredMerchant && restoredMerchant->stock[0] == 2 && restoredMerchant->buyback[0].price == 13 &&
               restoredMerchant->buyback[0].expiresMs == gameDuration::day,
           "Visited merchant stock, marked-up buyback and deadlines survive campaign codec/restore");
-    for (int schema : {12, 13, 14}) {
+    for (int schema : {12, 13, 14, 21}) {
         auto legacy = blobber::automation::Json::parse(text);
         legacy["schema"] = schema;
         rejects([&] { decodeCampaign(c, d, content, legacy.dump()); },
@@ -307,12 +314,20 @@ void roundtrip() {
     rejects(
         [&] {
             auto state = decodeCampaign(c, d, content, badMerchant.dump());
-            CampaignRun invalid(c, std::move(*state), d.timings);
+            CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*state), d.timings);
         },
         "Invalid persisted merchant quantity rejects before publication");
     entrance(run);
     auto travel = run.prepareTravel(run.request(run.game().nearbyFixture()));
     check(run.commitTravel(travel), "enter dungeon");
+    for (unsigned floor : {1u, 3u}) {
+        auto changed = run.checkpoint();
+        auto& definition = changed->locations[floor];
+        definition.layout.blueprints[0].sockets = 0;
+        definition.fingerprint = generation::fingerprint(definition.layout);
+        rejects([&] { CampaignRun invalid(test::campaignBlueprints(), c, std::move(*changed), d.timings); },
+                "Active and inactive authored socket tampering rejects even with refreshed floor hash");
+    }
     run.party().damage({0}, 2);
     auto floor = run.checkpoint();
     auto duplicate = run.checkpoint();
@@ -320,11 +335,14 @@ void roundtrip() {
     check(actors.count >= 2, "owned generated floor contains a pair");
     actors.actors[1].npc.cell = actors.actors[0].npc.cell;
     actors.actors[1].npc.subcell = actors.actors[0].npc.subcell;
-    rejects([&] { CampaignRun invalid(c, std::move(*duplicate), d.timings); },
-            "campaign restoration rejects duplicate living actor subcells");
+    rejects(
+        [&] {
+            CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*duplicate), d.timings);
+        },
+        "campaign restoration rejects duplicate living actor subcells");
     auto floorText = encodeCampaign(c, d, content, *floor);
     auto floorDecoded = decodeCampaign(c, d, content, floorText);
-    CampaignRun resumed(c, std::move(*floorDecoded), d.timings);
+    CampaignRun resumed(blobber::test::campaignBlueprints(), c, std::move(*floorDecoded), d.timings);
     check(resumed.activeLocation() == 1 &&
               resumed.party().character({0})->hitPoints == run.party().character({0})->hitPoints,
           "floor and resource restore");
@@ -342,7 +360,7 @@ void roundtrip() {
     rejects(
         [&] {
             auto v = decodeCampaign(c, d, content, bad.dump());
-            CampaignRun invalid(c, std::move(*v), d.timings);
+            CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*v), d.timings);
         },
         "bad location rejected");
     Directory directory;
@@ -356,7 +374,7 @@ void roundtrip() {
     check(save.active && save.depth == 1, "validated slot summary");
     auto restored = store.load();
     check(restored->runId() == run.runId(), "run identity preserved");
-    CampaignRun other(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun other(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     rejects([&] { store.save(other, save.revision); }, "different run requires confirmation");
     for (unsigned i = 0; i < 4; ++i)
         run.party().damage({std::uint16_t(i)}, 10000);
@@ -370,17 +388,19 @@ void roundtrip() {
 }
 std::unique_ptr<CampaignRun> copy(const rules::Catalog& c, const NpcDefinitions& d, CampaignRun& run) {
     auto s = run.checkpoint();
-    auto text = encodeCampaign(c, d, {"fixture", 0}, *s);
-    auto restored = decodeCampaign(c, d, {"fixture", 0}, text);
-    auto result = std::make_unique<CampaignRun>(c, std::move(*restored), d.timings);
+    auto text = encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *s);
+    auto restored = decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, text);
+    auto result = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, std::move(*restored),
+                                                d.timings);
     auto after = result->checkpoint();
-    check(encodeCampaign(c, d, {"fixture", 0}, *after) == text, "exact logical campaign round trip");
+    check(encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *after) == text,
+          "exact logical campaign round trip");
     return result;
 }
 void magicRewardPersistence() {
     const auto c = blobber::test::withMagicItems(catalog());
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     std::array<std::array<rules::ItemId, 2>, 3> rewards{};
     std::array<rules::ItemId, 2> weapons{};
     for (unsigned depth = 1; depth <= 3; ++depth) {
@@ -410,16 +430,16 @@ void magicRewardPersistence() {
         }
     }
     auto state = restored->checkpoint();
-    auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
+    auto text = encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *state);
     auto bad = blobber::automation::Json::parse(text);
     bad["reward_profile"][0] = UINT32_MAX;
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Invalid reward training mask rejects");
 }
 void spellPresentationLifecycle() {
     const auto c = catalog();
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     const auto emptyJournals = [](const GameSession& game) {
         for (const auto& cue : game.supportVisuals().records)
             check(!cue.id.serial, "Campaign entry never replays support application bursts");
@@ -478,7 +498,8 @@ void spellPresentationLifecycle() {
 void chestRoundtrip() {
     const auto c = catalog(false, 50, 7);
     const auto d = definitions();
-    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    auto run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, *c.preset(), d.types,
+                                             d.timings, 5);
     travel(*run, FixtureKind::Downstairs);
     auto& game = run->game();
     const auto& layout = run->location(1).generated->layout;
@@ -518,7 +539,8 @@ void chestRoundtrip() {
 void progressionAndFloors() {
     const auto c = catalog(false, 50, 7);
     const auto d = definitions();
-    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    auto run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, *c.preset(), d.types,
+                                             d.timings, 5);
     run->party().grantNextLevelExperience();
     check(bool(run->game().advance(run->game().advancementRequest({0}))), "level-two warrior fixture");
     run = copy(c, d, *run);
@@ -570,7 +592,7 @@ void effects() {
          {EffectKind::Bless, EffectKind::Bane, EffectKind::ShieldOfFaith, EffectKind::MageArmor,
           EffectKind::HoldPerson, EffectKind::Guidance, EffectKind::Resistance, EffectKind::Sanctuary,
           EffectKind::Aid, EffectKind::MirrorImage, EffectKind::SpiritualWeapon, EffectKind::Web}) {
-        CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+        CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
         EffectRequest e;
         e.world = run.game().actors().snapshot().world;
         e.kind = kind;
@@ -600,14 +622,14 @@ void effects() {
         check(before->digest() == after->digest(), "effect continuation including fractional clocks");
     }
     for (const auto kind : {EffectKind::Sleep, EffectKind::Blind, EffectKind::Slow, EffectKind::Knockdown}) {
-        CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+        CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
         CombatEvents events;
         const_cast<EffectController&>(run.game().effects())
             .condition(rules::CharacterId{1}, kind, {0}, 0, events);
         auto restored = copy(c, d, run);
         check(restored->game().effects().has(rules::CharacterId{1}, kind), "condition retained");
     }
-    CampaignRun local(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun local(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     travel(local, FixtureKind::Downstairs);
     EffectRequest e;
     e.world = local.game().actors().snapshot().world;
@@ -629,12 +651,12 @@ bool fail(CampaignIoStage stage) {
 void failures() {
     const auto c = catalog();
     const auto d = definitions();
-    const CampaignContent content{"fixture", 0};
+    const CampaignContent content{"fixture", 0, &blobber::test::campaignBlueprints()};
     Directory root;
     const auto file = root.path / "campaign.json";
     CampaignDisk disk(file);
     CampaignStore store(c, d, content, disk);
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     check(store.save(run, "missing").durable, "establish previous good file");
     const auto initial = store.inspect();
     for (const auto stage : {CampaignIoStage::Write, CampaignIoStage::Flush, CampaignIoStage::Close,
@@ -662,7 +684,7 @@ void failures() {
     CampaignStore broken(c, d, content, failed);
     check(!broken.terminal(run).durable, "terminal marker failure reported");
     check(broken.inspect().terminal, "failed marker still denies in-process Continue");
-    CampaignRun unsaved(c, *c.preset(), d.types, d.timings, 9);
+    CampaignRun unsaved(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 9);
     for (unsigned i = 0; i < 4; ++i)
         unsaved.party().damage({std::uint16_t(i)}, 100000);
     check(broken.terminal(unsaved).durable && broken.inspect().terminal,
@@ -674,17 +696,17 @@ void failures() {
 void malformed() {
     const auto c = catalog();
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     auto state = run.checkpoint();
-    const auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
+    const auto text = encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *state);
     const auto original = blobber::automation::Json::parse(text);
     const auto bad = [&](auto mutate) {
         auto j = original;
         mutate(j);
         rejects(
             [&] {
-                auto s = decodeCampaign(c, d, {"fixture", 0}, j.dump());
-                CampaignRun candidate(c, std::move(*s), d.timings);
+                auto s = decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, j.dump());
+                CampaignRun candidate(blobber::test::campaignBlueprints(), c, std::move(*s), d.timings);
             },
             "malformed state rejected transactionally");
     };
@@ -713,17 +735,29 @@ void malformed() {
     bad([](auto& j) { savedEntry(savedLocation(j, 1)["recovery"]["ground"], 0)["quantity"] = 19; });
     bad([](auto& j) { j["simulation"] = 7; });
     bad([](auto& j) { savedLocation(j, 1)["fixtures"]["npcExcluded"] = std::string(1600, '0'); });
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, std::string(campaignMaxBytes + 1, 'x')); },
-            "oversized input rejected");
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, "{\"schema\":1,\"schema\":1}"); },
-            "duplicate JSON rejected");
-    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, std::string(40, '[') + std::string(40, ']')); },
-            "excess nesting rejected");
+    rejects(
+        [&] {
+            decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()},
+                           std::string(campaignMaxBytes + 1, 'x'));
+        },
+        "oversized input rejected");
+    rejects(
+        [&] {
+            decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()},
+                           "{\"schema\":1,\"schema\":1}");
+        },
+        "duplicate JSON rejected");
+    rejects(
+        [&] {
+            decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()},
+                           std::string(40, '[') + std::string(40, ']'));
+        },
+        "excess nesting rejected");
 }
 void saveUi() {
     const auto c = catalog();
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     CommandController ui(run.game(), d.timings);
     ui.saveMenu().enabled = true;
     ui.refresh({}, false, false, true);
@@ -784,8 +818,8 @@ void pausePolling() {
     const auto d = definitions();
     Directory directory;
     CountedCampaignDisk disk(directory.path / "campaign.json");
-    CampaignStore store(c, d, {"fixture", 0}, disk);
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     const auto initial = store.save(run, "missing");
     check(initial.durable, "pause fixture owns an existing valid campaign save");
     CommandController commands(run.game(), d.timings);
@@ -821,7 +855,7 @@ void pausePolling() {
     check(!left && disk.reads > reads && disk.writes == writes + 1 &&
               std::string_view(commands.saveMenu().message.data()) == "Campaign saved.",
           "explicit Save still inspects and publishes the current run");
-    CampaignRun other(c, *c.preset(), d.types, d.timings, 7);
+    CampaignRun other(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 7);
     CommandController otherUi(other.game(), d.timings);
     otherUi.saveMenu().enabled = true;
     otherUi.refresh({}, false, false, true);
@@ -849,8 +883,8 @@ void applicationFlow() {
     const auto d = definitions();
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
-    CampaignStore store(c, d, {"fixture", 0}, disk);
-    CampaignRun original(c, *c.preset(), d.types, d.timings, 5);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
+    CampaignRun original(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     CommandController commands(original.game(), d.timings);
     commands.saveMenu().enabled = true;
     commands.refresh({}, false, false, true);
@@ -861,7 +895,7 @@ void applicationFlow() {
     check(flow.poll(original, commands) && store.inspect().active,
           "Save and Menu leaves only after durable publication");
     const auto oldRevision = store.inspect().revision;
-    CampaignRun next(c, *c.preset(), d.types, d.timings, 7);
+    CampaignRun next(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 7);
     CommandController nextUi(next.game(), d.timings);
     nextUi.saveMenu().enabled = true;
     nextUi.refresh({}, false, false, true);
@@ -910,16 +944,17 @@ void unsavedTerminal() {
     Directory directory;
     const auto path = directory.path / "campaign.json";
     CampaignDisk disk(path);
-    CampaignStore store(c, d, {"fixture", 0}, disk);
-    CampaignRun unsaved(c, *c.preset(), d.types, d.timings, 7);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
+    CampaignRun unsaved(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 7);
     for (unsigned i = 0; i < 4; ++i)
         unsaved.party().damage({std::uint16_t(i)}, 100000);
     const auto missing = store.terminal(unsaved);
     check(missing.durable && !missing.published && !std::filesystem::exists(path),
           "unsaved ending needs no marker when no slot exists");
-    CampaignRun previous(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun previous(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     auto state = previous.checkpoint();
-    auto old = blobber::automation::Json::parse(encodeCampaign(c, d, {"fixture", 0}, *state));
+    auto old = blobber::automation::Json::parse(
+        encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *state));
     // Exactly the pre-refresh versions: identity is readable but restore is forbidden.
     old["schema"] = 1;
     old["simulation"] = 1;
@@ -968,9 +1003,9 @@ void libraryIndependence() {
     for (unsigned i = 0; i < 4; ++i)
         ids[i] = library.snapshot().records[i].id;
     const auto starting = library.startingParty(ids, {{{0}, {1}, {2}, {3}}});
-    CampaignRun run(c, starting, d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, starting, d.types, d.timings, 5);
     CampaignDisk disk(directory.path / "campaign.json");
-    CampaignStore store(c, d, {"fixture", 0}, disk);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
     check(store.save(run, "missing").durable, "library-derived party saved");
     for (auto id : ids)
         check(bool(library.erase(id, library.snapshot().revision)),
@@ -979,7 +1014,7 @@ void libraryIndependence() {
     check(loaded->party().character({0})->build.id == starting.characters[0].id &&
               loaded->party().character({0})->build.name == starting.characters[0].name,
           "save restores identities after library deletion");
-    CampaignRun abandoned(c, *c.preset(), d.types, d.timings, 7);
+    CampaignRun abandoned(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 7);
     for (unsigned i = 0; i < 4; ++i)
         abandoned.party().damage({std::uint16_t(i)}, 100000);
     const auto revision = store.inspect().revision;
@@ -991,7 +1026,7 @@ void libraryIndependence() {
 void postCombatSave() {
     const auto c = catalog(false, 50, 5);
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     travel(run, FixtureKind::Downstairs);
     auto& g = run.game();
     const auto enemy = g.actors().snapshot().actors[0].npc.cell;
@@ -1045,7 +1080,8 @@ void postCombatSave() {
 void groundAndInactive() {
     const auto c = catalog(false, 50, 7);
     const auto d = definitions();
-    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    auto run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, *c.preset(), d.types,
+                                             d.timings, 5);
     travel(*run, FixtureKind::Downstairs);
     auto& game = run->game();
     auto& effects = const_cast<EffectController&>(game.effects());
@@ -1090,7 +1126,8 @@ void groundAndInactive() {
 void npcSourceTravel() {
     const auto c = catalog(false, 50, 7, false, true);
     const auto d = definitions();
-    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    auto run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, *c.preset(), d.types,
+                                             d.timings, 5);
     travel(*run, FixtureKind::Downstairs);
     const auto caster = run->game().actors().id(0);
     EffectRequest request;
@@ -1151,11 +1188,12 @@ void protocolLoadRollback() {
     const auto d = definitions();
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
-    CampaignStore store(c, d, {"fixture", 0}, disk);
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     check(store.save(run, "missing").durable, "protocol rollback establishes slot");
     bool fail = false;
-    blobber::automation::Protocol protocol(c, d, blobber::automation::Mode::Visual, prepareVisibility, &fail,
+    blobber::automation::Protocol protocol(blobber::test::campaignBlueprints(), c, d,
+                                           blobber::automation::Mode::Visual, prepareVisibility, &fail,
                                            &store);
     Sink sink;
     auto loaded = protocol.request({{"version", 1}, {"id", "first"}, {"op", "load"}}, sink);
@@ -1197,11 +1235,11 @@ void navigationContinuation() {
     check(checkpoint.work == Navigation::nodeBudget && checkpoint.owner < 8 &&
               checkpoint.head < checkpoint.tail,
           "fixture retains a partially processed navigation search");
-    CampaignRun transport(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun transport(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     auto payload = transport.checkpoint();
     payload->navigation = checkpoint;
-    const auto text = encodeCampaign(c, d, {"fixture", 0}, *payload);
-    auto decoded = decodeCampaign(c, d, {"fixture", 0}, text);
+    const auto text = encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *payload);
+    auto decoded = decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, text);
     // Validate transported navigation against the 40x40 fixture that owns it.
     resumed.restore(decoded->navigation);
     for (unsigned tick = 0; tick < 10; ++tick) {
@@ -1224,9 +1262,9 @@ void sparsePersistence() {
     using Json = blobber::automation::Json;
     const auto c = catalog();
     const auto d = definitions();
-    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
     auto capture = run.captureSave();
-    const auto text = encodeCampaign(c, d, {"fixture", 0}, *capture);
+    const auto text = encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *capture);
     auto json = Json::parse(text);
     check(text.size() < 64 * 1024, "Fresh campaign is small without compression");
     check(json["campaign"]["locations"].size() == 1,
@@ -1281,7 +1319,8 @@ void sparsePersistence() {
     merchant.stock[item.index] = 1;
     merchant.buyback.back() = {item, 1, 10, 1000};
     checkpoint->merchants.push_back(merchant);
-    auto sparse = Json::parse(encodeCampaign(c, d, {"fixture", 0}, *checkpoint));
+    auto sparse =
+        Json::parse(encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *checkpoint));
     auto& saved = savedLocation(sparse, 0)["state"]["value"];
     check(saved["effects"]["instances"].size() == 1 && !saved["effects"].contains("conditions") &&
               !saved["effects"].contains("ground"),
@@ -1295,8 +1334,8 @@ void sparsePersistence() {
           "Dialogue record and nested topic capacities are omitted");
     check(savedEntry(sparse["campaign"]["merchants"]["entries"], 0)["buyback"].size() == 1,
           "Merchant buyback saves only its occupied slot");
-    auto decoded = decodeCampaign(c, d, {"fixture", 0}, sparse.dump());
-    CampaignRun restored(c, std::move(*decoded), d.timings);
+    auto decoded = decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, sparse.dump());
+    CampaignRun restored(blobber::test::campaignBlueprints(), c, std::move(*decoded), d.timings);
     auto after = restored.checkpoint();
     check(after->party.inventory.stacks[last].generation == 7 &&
               after->party.inventory.stacks[0].generation == UINT64_MAX &&
@@ -1305,14 +1344,17 @@ void sparsePersistence() {
               after->locations[0].state->effects.instances.back().active &&
               !after->locations[0].state->effects.instances[0].active,
           "Sparse restore preserves high slots, recycled generations and retired slots");
-    check(encodeCampaign(c, d, {"fixture", 0}, *after) == sparse.dump() + "\n",
+    check(encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *after) ==
+              sparse.dump() + "\n",
           "Discarding dormant payloads preserves the canonical save");
 
     const auto reject = [&](Json invalidJson) {
         rejects(
             [&] {
-                auto decodedBad = decodeCampaign(c, d, {"fixture", 0}, invalidJson.dump());
-                CampaignRun invalid(c, std::move(*decodedBad), d.timings);
+                auto decodedBad = decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()},
+                                                 invalidJson.dump());
+                CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*decodedBad),
+                                    d.timings);
             },
             "Malformed sparse values reject before publication");
     };
@@ -1339,7 +1381,7 @@ void sparsePersistence() {
 
     Directory directory;
     CampaignDisk disk(directory.path / "campaign.json");
-    CampaignStore store(c, d, {"fixture", 0}, disk);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
     unsigned constructionPoints = 0;
     PreparationScope scope({[](void* owner, const char* phase) {
                                 const std::string_view label(phase);
@@ -1364,12 +1406,14 @@ void sparsePersistence() {
 }
 
 std::unique_ptr<CampaignRun> representativeCampaign(const rules::Catalog& c, const NpcDefinitions& d) {
-    auto run = std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+    auto run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, *c.preset(), d.types,
+                                             d.timings, 5);
     const auto position = [&](Player pose) {
         auto checkpoint = run->checkpoint();
         checkpoint->pose = pose;
         checkpoint->animated = false;
-        run = std::make_unique<CampaignRun>(c, std::move(*checkpoint), d.timings);
+        run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, std::move(*checkpoint),
+                                            d.timings);
         run->game().discover();
     };
     for (const auto* name : {"inn", "smithy", "emporium"}) {
@@ -1397,9 +1441,10 @@ void terminalWorker() {
     for (bool victory : {false, true}) {
         Directory directory;
         CountedCampaignDisk disk(directory.path / "campaign.json");
-        CampaignStore store(c, d, {"fixture", 0}, disk);
+        CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
         auto run = victory ? representativeCampaign(c, d)
-                           : std::make_unique<CampaignRun>(c, *c.preset(), d.types, d.timings, 5);
+                           : std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c,
+                                                           *c.preset(), d.types, d.timings, 5);
         check(store.save(*run, "missing").durable, "Terminal fixture owns a saved run");
         if (victory)
             kill(run->game());
@@ -1459,13 +1504,13 @@ void measureSave(const std::filesystem::path& path) {
     const auto start = Clock::now();
     auto snapshot = run->captureSave();
     const auto captured = Clock::now();
-    auto text = encodeCampaign(c, d, {"fixture", 0}, *snapshot);
+    auto text = encodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, *snapshot);
     const auto encoded = Clock::now();
     // The same fixture encoded by schema 19 occupied 5,831,821 bytes.
     check(text.size() < 583182 && text.size() < 256 * 1024,
           "Representative save is at least 90% smaller and below 256 KiB");
     CampaignDisk disk(path);
-    CampaignStore store(c, d, {"fixture", 0}, disk);
+    CampaignStore store(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, disk);
     const auto before = store.inspect();
     const auto writing = Clock::now();
     check(disk.exchange({"replace", text, before.revision}).durable, "Measurement writes atomically");

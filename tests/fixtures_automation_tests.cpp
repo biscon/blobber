@@ -1,5 +1,6 @@
 #include "game/perception.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 #include <sys/wait.h>
 using namespace blobber;
@@ -104,8 +105,10 @@ void walk(Client& c, Cell target) {
             ++direction;
         check(direction < 4, "Fixture route uses cardinal steps");
         face(c, Heading(direction));
-        for (unsigned settle = 0; settle < 150 && !g.combat().settledActions(g.timeMs()); ++settle)
-            c.advance(1, false);
+        // Settling is not a per-tick protocol contract. Batch ten ticks so the
+        // route does not serialize hundreds of redundant full-state snapshots.
+        for (unsigned settle = 0; settle < 150 && !g.combat().settledActions(g.timeMs()); settle += 10)
+            c.advance(10, false);
         if (!(g.movement().player == Player{start, Heading(direction)}) ||
             !realTime(g.combat().snapshot().phase))
             continue;
@@ -211,14 +214,14 @@ void run(const char* exe, const char* retain = nullptr) {
     check(at != std::string::npos, "Trace records acquired key state");
     text[at + 13] = '0';
     std::ofstream(dir.path / "bad.jsonl") << text;
-    Protocol bad(cat, defs, Mode::Diagnostic);
+    Protocol bad(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     rejects([&] { replay(bad, dir.path / "bad.jsonl", header); }, "Corrupt quest state fails strict replay");
     text[at + 13] = '4';
     const auto reward = text.find("\"reward_issued\":true");
     check(reward != std::string::npos, "Trace records guardian reward commitment");
     text.replace(reward, 20, "\"reward_issued\":false");
     std::ofstream(dir.path / "bad-objective.jsonl") << text;
-    Protocol badObjective(cat, defs, Mode::Diagnostic);
+    Protocol badObjective(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     rejects([&] { replay(badObjective, dir.path / "bad-objective.jsonl", header); },
             "Corrupt guardian reward ledger fails strict replay");
     if (retain)
@@ -230,7 +233,7 @@ int main(int argc, char** argv) {
         if (argc == 3 && std::string_view(argv[1]) == "--replay") {
             const auto cat = catalog(false, 50, 1, false, false, false, false);
             const auto defs = definitions();
-            Protocol p(cat, defs, Mode::Diagnostic);
+            Protocol p(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
             replay(p, argv[2], header);
             return 0;
         }

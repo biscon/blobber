@@ -4,6 +4,7 @@
 #include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include "support/recovery_fixtures.hpp"
 #include <iostream>
 #include <memory>
@@ -85,29 +86,42 @@ void placementRules() {
 }
 void collisionProgression() {
     using namespace generation;
-    const auto result = generate({5, 2});
+    const auto result = generate({5, 2}, blobber::test::campaignBlueprints());
     check(bool(result), "Owned keyed progression fixture generated");
     const auto& f = result.floor->layout;
     CellMask blocked{};
     check(!validateFixtures(f, &blocked), "Empty collision mask preserves progression");
     // Both entry-side approaches reach the key room. With all doors open,
     // the sector branch is a detour; before finding the key, that branch is locked.
-    auto world = result.floor->map.definition();
-    for (unsigned neighbor : {1u, 2u}) {
-        const auto* keyRoute = connectionBetween(f, 0, neighbor);
-        check(keyRoute != nullptr, "Owned seed has both entry-side key connections");
-        const auto obstruction = pathCell(f, *keyRoute, keyRoute->count / 2);
-        world.decorations.push_back({obstruction, Heading::North, DecorationKind::Cage});
-        blocked[unsigned(obstruction.y * f.width + obstruction.x)] = true;
-    }
     std::vector<std::string> rows(std::size_t(f.height), std::string(std::size_t(f.width), '#'));
     for (int y = 0; y < f.height; ++y)
         for (int x = 0; x < f.width; ++x)
             if (floorCell(f, {x, y}))
                 rows[unsigned(y)][unsigned(x)] = '.';
-    check(Map(rows, world).connected(f.spawn.cell), "Open-door geometry still has an alternate route");
-    check(validateFixtures(f, &blocked).code == Error::Progression,
-          "Geometric detour through locked doors cannot substitute for access to the key");
+    bool found = false;
+    // Find a small cut of the actual upstream cycle; never assume room IDs or edges.
+    for (unsigned i = 0; i < f.connectionCount && !found; ++i)
+        for (unsigned j = i; j < f.connectionCount && !found; ++j) {
+            blocked.fill(false);
+            auto world = result.floor->map.definition();
+            bool eligible = true;
+            for (unsigned edge : {i, j}) {
+                const auto& e = f.connections[edge];
+                if (f.rooms[e.a].role != Role::Junction || f.rooms[e.b].role != Role::Junction) {
+                    eligible = false;
+                    break;
+                }
+                const auto c = pathCell(f, e, e.count / 2);
+                if (!blocked[unsigned(c.y * f.width + c.x)])
+                    world.decorations.push_back({c, Heading::North, DecorationKind::Cage});
+                blocked[unsigned(c.y * f.width + c.x)] = true;
+            }
+            if (eligible && validateFixtures(f, &blocked).code == Error::Progression &&
+                Map(rows, world).connected(f.spawn.cell))
+                found = true;
+        }
+    check(found,
+          "An open-door detour cannot substitute for pre-key progression through a blocked upstream cycle");
     blocked.fill(false);
     blocked[unsigned(f.guardianApproach.y * f.width + f.guardianApproach.x)] = true;
     check(validateFixtures(f, &blocked).code == Error::Progression,
@@ -120,7 +134,8 @@ void collisionProgression() {
 void generated() {
     for (unsigned seed : {0u, 1u, 5u, 13u})
         for (unsigned depth = 1; depth <= 3; ++depth) {
-            const auto a = generation::generate({seed, depth}), b = generation::generate({seed, depth});
+            const auto a = generation::generate({seed, depth}, blobber::test::campaignBlueprints()),
+                       b = generation::generate({seed, depth}, blobber::test::campaignBlueprints());
             check(bool(a) && bool(b), "Dressed floor generated");
             const auto& f = *a.floor;
             check(f.map.definition().assetPack == "underkeep" && f.layout.cacheCount == 3u,
@@ -172,7 +187,7 @@ void generated() {
         }
     for (unsigned seed : {0u, 5u})
         for (unsigned depth = 1; depth <= 3; ++depth) {
-            const auto f = generation::generate({seed, depth}, true);
+            const auto f = generation::generate({seed, depth}, blobber::test::campaignBlueprints(), true);
             check(bool(f) && f.diagnostics.fallback && f.floor->map.connected(f.floor->layout.spawn.cell),
                   "Frozen fallback dresses safely");
         }

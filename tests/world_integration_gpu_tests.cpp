@@ -18,6 +18,7 @@
 #include "support/dungeon_art_review.hpp"
 #include "support/enemy_melee_review.hpp"
 #include "support/fixture_world.hpp"
+#include "support/generation_blueprints.hpp"
 #include "support/interaction_prompt_review.hpp"
 #include "support/layout_review.hpp"
 #include "support/map_review.hpp"
@@ -459,8 +460,9 @@ int main(int argc, char** argv) {
                       "Swipe draw target is exactly the clipped dungeon art viewport");
                 renderer.clear();
             }
-            auto campaign = std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types,
-                                                          fixture.timings, 5);
+            auto campaign =
+                std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), catalog, *catalog.preset(),
+                                              definitions.types, fixture.timings, 5);
             campaign_test::entrance(*campaign);
             auto current = std::make_unique<GameView>(renderer);
             NpcAnimator animator(campaign->game().actors(), fixture.timings);

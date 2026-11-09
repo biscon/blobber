@@ -2,6 +2,7 @@
 #include "app/audio_settings.hpp"
 #include "app/loading.hpp"
 #include "app/menu_model.hpp"
+#include "assets/blueprint_loader.hpp"
 #include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
 #include "persistence/campaign_store.hpp"
@@ -37,11 +38,13 @@ int runMenus(const Options& options) try {
         preparationPoint("Reading creature definitions");
         return loadNpcDefinitions(options.assets / "npcs/level.json");
     });
+    const auto blueprints =
+        prepareCpu([&] { return blueprints::load(options.assets / "blueprints/underkeep.json"); });
     CampaignDisk saveDisk(campaignSavePath(options.campaignSave));
-    CampaignStore saves(
-        catalog, saveDefinitions,
-        {fingerprintFile(options.assets / "rules/catalog.json"), saveDefinitions.definitionFingerprint},
-        saveDisk);
+    CampaignStore saves(catalog, saveDefinitions,
+                        {fingerprintFile(options.assets / "rules/catalog.json"),
+                         saveDefinitions.definitionFingerprint, &blueprints},
+                        saveDisk);
     const auto refreshContinue = [&] {
         const auto slot = prepareCpu([&] {
             preparationPoint("Reading saved campaign");

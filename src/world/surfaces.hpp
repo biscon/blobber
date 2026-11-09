@@ -78,7 +78,7 @@ struct BuildingPlacement {
         return anchor + r * (footprint.x + int(x)) + f * -(footprint.y + int(z));
     }
 };
-constexpr unsigned sceneryCapacity = 32;
+constexpr unsigned sceneryCapacity = 36;
 // Open-terrain physical base; visual overhangs do not reserve extra cells.
 struct SceneryPlacement {
     std::string model;
@@ -95,7 +95,7 @@ struct AmbientFire {
     float x = 0, y = 0, z = 0;
     float scale = 1; // Immutable native size multiplier in (0,1]; legacy fires retain size 1.
 };
-constexpr unsigned ambientFireCapacity = 2;
+constexpr unsigned ambientFireCapacity = 6;
 struct WorldDefinition {
     std::optional<AmbientFire> hearth;     // At most one decorative hearth per authored map.
     std::vector<AmbientFire> ambientFires; // Bounded during preparation, immutable during frames.

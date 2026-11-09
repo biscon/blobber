@@ -5,4 +5,5 @@ namespace blobber::blueprints {
 constexpr std::size_t maxJsonBytes = 256 * 1024;
 BlueprintCatalog decode(std::string_view json);
 BlueprintCatalog load(const std::filesystem::path&);
+void checkPrepared(const std::filesystem::path& sourceRoot, const std::filesystem::path& preparedWorld);
 } // namespace blobber::blueprints

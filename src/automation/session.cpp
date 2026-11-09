@@ -3,11 +3,12 @@
 #include <stdexcept>
 namespace blobber::automation {
 namespace {
-std::optional<generation::GeneratedFloor> prepare(const Scenario& s, Mode mode) {
+std::optional<generation::GeneratedFloor> prepare(const Scenario& s, Mode mode,
+                                                  const blueprints::BlueprintCatalog& blueprints) {
     if (const auto* generated = std::get_if<GeneratedScenario>(&s)) {
         if (generated->forceFallback && mode != Mode::Diagnostic)
             throw std::runtime_error("Forced fallback requires diagnostic mode");
-        auto result = generation::generate(generated->generation, generated->forceFallback);
+        auto result = generation::generate(generated->generation, blueprints, generated->forceFallback);
         if (!result)
             throw std::runtime_error(std::string("Generation failed: ") +
                                      generation::errorName(result.diagnostics.failure.code));
@@ -16,14 +17,16 @@ std::optional<generation::GeneratedFloor> prepare(const Scenario& s, Mode mode) 
     return std::nullopt;
 }
 } // namespace
-Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definitions, const Scenario& scenario,
-                 Mode mode, VisibilityFactory factory, void* context)
+Session::Session(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog& catalog,
+                 const NpcDefinitions& definitions, const Scenario& scenario, Mode mode,
+                 VisibilityFactory factory, void* context)
     : scenario_(scenario), factory_(factory), factoryContext_(context), mode_(mode) {
     if (const auto* campaign = std::get_if<CampaignScenario>(&scenario_)) {
-        campaign_ = std::make_unique<CampaignRun>(catalog, startingParty(catalog, campaign->party),
-                                                  definitions.types, definitions.timings, campaign->seed);
+        campaign_ =
+            std::make_unique<CampaignRun>(blueprints, catalog, startingParty(catalog, campaign->party),
+                                          definitions.types, definitions.timings, campaign->seed);
     } else {
-        generated_ = prepare(scenario_, mode);
+        generated_ = prepare(scenario_, mode, blueprints);
         if (!generated_)
             arenaMap_.emplace(arenaMap());
         map_ = generated_ ? &generated_->map : &*arenaMap_;
@@ -51,8 +54,8 @@ Session::Session(const rules::Catalog& catalog, const NpcDefinitions& definition
             throw std::runtime_error("Visual backend construction failed");
     }
 }
-Session::Session(const rules::Catalog&, const NpcDefinitions&, std::unique_ptr<CampaignRun> run, Mode mode,
-                 VisibilityFactory factory, void* context)
+Session::Session(const blueprints::BlueprintCatalog&, const rules::Catalog&, const NpcDefinitions&,
+                 std::unique_ptr<CampaignRun> run, Mode mode, VisibilityFactory factory, void* context)
     : resumed_(true), scenario_(CampaignScenario{}), campaign_(std::move(run)), factory_(factory),
       factoryContext_(context), mode_(mode) {
     if (!campaign_)

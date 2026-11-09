@@ -6,6 +6,7 @@ constexpr std::size_t campaignMaxBytes = 16u * 1024u * 1024u;
 struct CampaignContent {
     std::string catalog;
     std::uint64_t npcs = 0;
+    const blueprints::BlueprintCatalog* blueprints = nullptr; // Caller-owned immutable preparation content.
 };
 // Read association without requiring current save/content versions. Never restores state.
 std::string savedCampaignRunId(const std::string&);

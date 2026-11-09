@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/dialogue.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
@@ -22,13 +23,14 @@ int main(int argc, char** argv) try {
     const auto prepared = argc == 4 ? std::filesystem::path(argv[2]) : root / "prepared";
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     auto catalog = loadRules(root / "rules/catalog.json");
     auto definitions = loadNpcDefinitions(root / "npcs/level.json");
     auto dialogue = loadDialogue(root / "dialogue");
     auto shops = loadShops(root / "shops", catalog);
     validateShops(dialogue, shops);
-    auto run =
-        std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    auto run = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(), definitions.types,
+                                             definitions.timings, 5);
     run->game().restorePose(sanctuaryCity().doorway("smithy").approach, false);
     {
         auto ticket = run->prepareTravel(run->doorwayRequest());

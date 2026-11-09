@@ -1,5 +1,6 @@
 #include "generation/encounter_planning.hpp"
 #include "game/perception.hpp"
+#include "generation/blueprint_rooms.hpp"
 #include <algorithm>
 #include <tuple>
 namespace blobber::generation {
@@ -17,7 +18,7 @@ struct Planner {
     std::array<std::array<std::uint16_t, maxRooms>, maxRooms> edge{};
     std::array<std::uint16_t, states> distance{}, parent{}, heap{}, position{};
     unsigned count = 0, entry = maxRooms, approach = maxRooms, key = maxRooms, sector = maxRooms;
-    explicit Planner(const FloorLayout& source) : f(source) {
+    explicit Planner(const FloorLayout& source, const BlueprintReservations* reservations) : f(source) {
         for (auto& row : edge)
             row.fill(none);
         sector = sectorJunction(f);
@@ -46,7 +47,8 @@ struct Planner {
                 const Cell here{int(n) % f.width, int(n) / f.width};
                 for (unsigned h = 0; h < 4; ++h) {
                     const auto p = here + forward(Heading(h));
-                    if (!floorCell(f, p))
+                    if (!floorCell(f, p) ||
+                        (reservations && reservations->blocked[unsigned(p.y * f.width + p.x)]))
                         continue;
                     const auto region = regionAt(f, p);
                     bool allowed = region == c.a || region == c.b;
@@ -179,8 +181,9 @@ struct Planner {
     }
 };
 } // namespace
-bool planEncounterSites(FloorLayout& f, const DepthBand& band, std::array<unsigned, 7>& rooms) noexcept {
-    Planner p(f);
+bool planEncounterSites(FloorLayout& f, const DepthBand& band, std::array<unsigned, 7>& rooms,
+                        const BlueprintReservations* reservations) noexcept {
+    Planner p(f, reservations);
     if (p.entry == maxRooms || p.approach == maxRooms)
         return false;
     unsigned junctions = 0;
@@ -213,6 +216,33 @@ bool planEncounterSites(FloorLayout& f, const DepthBand& band, std::array<unsign
                 unsigned length, walk, first, gap;
                 if (!p.route(selected, excluded, route, length, walk, first, gap))
                     continue;
+                unsigned recipeIndex = 0, tested = 0;
+                bool feasible = true;
+                for (unsigned j = 1; j < length && feasible; ++j) {
+                    const auto r = route[j];
+                    if ((selected & (1u << r)) && !(tested & (1u << r))) {
+                        const auto* edge = connectionBetween(f, r, route[j - 1]);
+                        feasible = edge && placeEncounterFormation(
+                                               f, r, band.ordinary[recipeIndex++], EncounterRole::Direct,
+                                               incomingFacing(*edge, r), reservations, true);
+                        tested |= 1u << r;
+                    }
+                }
+                for (unsigned r : {leaf, band.optionalCount == 2 ? second : maxRooms}) {
+                    if (r == maxRooms)
+                        continue;
+                    unsigned previous = maxRooms;
+                    for (unsigned e = 0; e < f.connectionCount; ++e) {
+                        const auto& edge = f.connections[e];
+                        const auto n = edge.a == r ? edge.b : edge.b == r ? edge.a : maxRooms;
+                        previous = std::min(previous, n);
+                    }
+                    const auto* edge = connectionBetween(f, r, previous);
+                    feasible &= edge && placeEncounterFormation(f, r, band.optional, EncounterRole::Optional,
+                                                                incomingFacing(*edge, r), reservations, true);
+                }
+                if (!feasible)
+                    continue;
                 const auto score = std::make_tuple(first, gap, walk, selected, leaf, second);
                 if (found && !(score < best))
                     continue;
@@ -238,7 +268,8 @@ bool planEncounterSites(FloorLayout& f, const DepthBand& band, std::array<unsign
 }
 
 bool placeEncounterFormation(FloorLayout& f, unsigned room, EncounterRecipe recipe, EncounterRole role,
-                             Heading facing) noexcept {
+                             Heading facing, const BlueprintReservations* reservations,
+                             bool dryRun) noexcept {
     const auto& r = encounterRecipe(recipe);
     if (f.encounterCount == f.encounters.size() || f.populationCount + r.count > f.population.size())
         return false;
@@ -249,6 +280,12 @@ bool placeEncounterFormation(FloorLayout& f, unsigned room, EncounterRecipe reci
         if (!floorCell(f, c) || regionAt(f, c) != room ||
             f.fixtures.npcExcluded[unsigned(c.y * f.width + c.x)])
             return false;
+        if (reservations) {
+            const auto n = unsigned(c.y * f.width + c.x);
+            if (reservations->furnished[n] || reservations->rewards[n] ||
+                (reservations->authored[room] && !reservations->encounters[n]))
+                return false;
+        }
         for (unsigned i = 0; i < f.fixtures.count; ++i)
             if (c == f.fixtures.entries[i].cell)
                 return false;
@@ -266,13 +303,18 @@ bool placeEncounterFormation(FloorLayout& f, unsigned room, EncounterRecipe reci
             return false;
         return true;
     };
+    const bool authored = reservations && reservations->authored[room];
+    const auto origin = f.rooms[room].origin, size = f.rooms[room].size;
     for (unsigned n = 0; n < r.count; ++n) {
         const bool ranged = r.members[n] == ActorRecipe::Archer || r.members[n] == ActorRecipe::Shaman;
         bool placed = false;
         std::tuple<int, int, int, int> best{};
-        for (int depth = 0; depth <= 1; ++depth)
-            for (int lateral = -1; lateral <= 1; ++lateral) {
-                const auto c = anchor + front * depth + side * lateral;
+        for (int y = 0; y < (authored ? size.y : 2); ++y)
+            for (int x = 0; x < (authored ? size.x : 3); ++x) {
+                const auto c = authored ? origin + Cell{x, y} : anchor + front * y + side * (x - 1);
+                const auto delta = c + anchor * -1;
+                const int depth = delta.x * front.x + delta.y * front.y,
+                          lateral = delta.x * side.x + delta.y * side.y;
                 if (!legal(c))
                     continue;
                 unsigned occupancy = 0;
@@ -297,6 +339,8 @@ bool placeEncounterFormation(FloorLayout& f, unsigned room, EncounterRecipe reci
         if (!placed)
             return false;
     }
+    if (dryRun)
+        return true;
     f.encounters[f.encounterCount++] = {recipe, role, std::uint8_t(room), std::uint8_t(f.populationCount),
                                         std::uint8_t(r.count)};
     for (unsigned n = 0; n < r.count; ++n) {

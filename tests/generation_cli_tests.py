@@ -72,7 +72,7 @@ def open_door(request, state):
 
 def main(generator, runner):
     def generate(*args, okay=True):
-        p = subprocess.run([generator, *args], capture_output=True, text=True, timeout=10)
+        p = subprocess.run([generator, "--blueprints", str(Path(__file__).parent / "fixtures/blueprint_rooms.json"), *args], capture_output=True, text=True, timeout=10)
         assert (p.returncode == 0) == okay, (p.stdout, p.stderr)
         return p
     a = json.loads(generate('--seed', '5', '--format', 'json').stdout)
@@ -112,8 +112,8 @@ def main(generator, runner):
             (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name, role='resident')))
         definitions = ['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')], *[n+'.json' for n in residents]]
         (root/'npcs/level.json').write_text(json.dumps(dict(definitions=definitions, instances=[])))
-        setup = dict(kind='generated_floor', schema_version=1, generator_version=13,
-                     template_version=9, seed=5, depth=1, party=arena['party'])
+        setup = dict(kind='generated_floor', schema_version=1, generator_version=14,
+                     template_version=10, seed=5, depth=1, party=arena['party'])
         trace = root / 'direct.jsonl'
         with Client(runner, root, record=trace) as client:
             start = client.request('start', scenario=setup)

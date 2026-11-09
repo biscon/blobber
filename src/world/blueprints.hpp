@@ -78,6 +78,9 @@ Cell footprint(const Kit&, const Placement&, unsigned x, unsigned y) noexcept;
 RoomBlueprint transform(const RoomBlueprint&, unsigned turns);
 void validate(const BlueprintCatalog&);
 void validateRoom(const BlueprintCatalog&, const RoomBlueprint&);
+std::uint64_t fingerprint(const BlueprintCatalog&) noexcept;
+void selectSockets(const BlueprintCatalog&, RoomBlueprint&, unsigned mask);
+void appendFurnishings(const BlueprintCatalog&, const RoomBlueprint&, Cell origin, WorldDefinition&);
 Mask occupied(const BlueprintCatalog&, const RoomBlueprint&);
 struct ReviewRoom {
     RoomBlueprint blueprint;

@@ -23,6 +23,8 @@ DiagnosticView diagnosticView(const GeneratedFloor& f) noexcept {
     line(6, "K key / U up / D down / O objective / + door / G gate");
     line(7, "Defeat guardians to open their gate. Use stairs from their landing.");
     line(8, "Full map is diagnostic, not discovered knowledge.");
+    line(9, "Authored rooms %u / catalog %llu", f.layout.blueprintCount,
+         static_cast<unsigned long long>(f.layout.blueprintFingerprint));
     return v;
 }
 } // namespace blobber::generation

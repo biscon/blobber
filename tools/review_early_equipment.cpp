@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/dialogue.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
@@ -31,13 +32,14 @@ int main(int argc, char** argv) try {
         throw std::runtime_error("Usage: blobber_review_early_equipment ASSETS PREPARED NEW_OUTPUT");
     const std::filesystem::path root(argv[1]), prepared(argv[2]), output(argv[3]);
     require(std::filesystem::create_directory(output), "Use new output directory");
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
     auto dialogue = loadDialogue(root / "dialogue");
     const auto shops = loadShops(root / "shops", catalog);
     validateShops(dialogue, shops);
-    auto run =
-        std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    auto run = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(), definitions.types,
+                                             definitions.timings, 5);
     SetTraceLogLevel(LOG_WARNING);
     Window window(1920, 1080, true, true);
     require(IsWindowState(FLAG_WINDOW_HIDDEN), "Capture window must remain hidden");

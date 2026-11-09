@@ -1,11 +1,12 @@
 #pragma once
 #include "game/movement.hpp"
+#include "world/blueprints.hpp"
 #include "world/map.hpp"
 #include <array>
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 13, templateVersion = 9;
+constexpr unsigned generatorVersion = 14, templateVersion = 10;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 using CellMask = std::array<bool, maxCells>;
 constexpr int floorDimension = 36;
@@ -95,7 +96,17 @@ struct CacheSite {
     Cell cell{};
     Heading facing = Heading::North;
 };
+struct BlueprintInstance {
+    blueprints::Name id{};
+    blueprints::Purpose purpose = blueprints::Purpose::Kitchen;
+    std::uint8_t room = noRegion, rotation = 0, sockets = 0;
+    std::uint8_t ceiling = 0; // Canonical authored value, checked against catalog on restore.
+};
+struct BlueprintReservations;
 struct FloorLayout {
+    std::array<BlueprintInstance, 4> blueprints{};
+    unsigned blueprintCount = 0;
+    std::uint64_t blueprintFingerprint = 0;
     std::array<CacheSite, 3> caches{};
     unsigned cacheCount = 0;
     std::uint64_t dressingFingerprint = 0;
@@ -141,6 +152,9 @@ enum class Error : std::uint8_t {
     Progression,
     Population,
     Landing,
+    Blueprint,
+    Placement,
+    Dressing,
     ForcedFallback
 };
 struct Failure {
@@ -169,11 +183,12 @@ struct GenerationResult {
     explicit operator bool() const noexcept { return floor.has_value(); }
 };
 // All generation/Map construction is a preparation phase. No runtime borrowing.
-GenerationResult generate(GenerationRequest, bool forceFallback = false);
+GenerationResult generate(GenerationRequest, const blueprints::BlueprintCatalog&, bool forceFallback = false);
 Failure validate(const FloorLayout&) noexcept;
 Failure validateFixtures(const FloorLayout&, const CellMask* blocked = nullptr) noexcept;
 void placeFixtures(FloorLayout&) noexcept;
-void placePopulation(FloorLayout&, GenerationRequest, unsigned attempt, bool fallback) noexcept;
+void placePopulation(FloorLayout&, GenerationRequest, unsigned attempt, bool fallback,
+                     const BlueprintReservations* = nullptr) noexcept;
 Failure validatePopulation(const FloorLayout&) noexcept;
 bool inside(const FloorLayout&, Cell) noexcept;
 bool floorCell(const FloorLayout&, Cell) noexcept;

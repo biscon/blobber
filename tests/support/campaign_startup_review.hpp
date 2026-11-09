@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #pragma once
 #include "app/gameplay.hpp"
 #include "assets/fingerprint.hpp"
@@ -16,12 +17,14 @@ inline void campaignStartupReview(const std::filesystem::path& assets, const std
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Choose a new startup-review output directory");
     const auto before = fingerprintFile(copiedSave);
+    const auto roomBlueprints = blueprints::load(assets / "blueprints/underkeep.json");
     const auto catalog = loadRules(assets / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(assets / "npcs/level.json");
     CampaignDisk disk(copiedSave);
-    CampaignStore store(catalog, definitions,
-                        {fingerprintFile(assets / "rules/catalog.json"), definitions.definitionFingerprint},
-                        disk);
+    CampaignStore store(
+        catalog, definitions,
+        {fingerprintFile(assets / "rules/catalog.json"), definitions.definitionFingerprint, &roomBlueprints},
+        disk);
     auto campaign = store.load();
     const auto& location = campaign->location(campaign->activeLocation());
     const auto pose = campaign->game().movement().player;

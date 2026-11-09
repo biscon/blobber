@@ -47,6 +47,7 @@ std::filesystem::path campaignSavePath(const std::filesystem::path& overridePath
 class CampaignStore {
   public:
     CampaignStore(const rules::Catalog&, const NpcDefinitions&, CampaignContent, CampaignFiles&);
+    const blueprints::BlueprintCatalog& blueprints() const noexcept { return *content_.blueprints; }
     CampaignSlot inspect();
     std::unique_ptr<CampaignRun> load();
     CampaignWrite save(CampaignRun&, const std::string& expected, bool replaceDifferent = false);

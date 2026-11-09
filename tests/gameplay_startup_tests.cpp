@@ -1,14 +1,16 @@
 #include "app/gameplay.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "support/combat_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 using namespace blobber;
 namespace {
 void restoredCampaignAtOriginalSpawn() {
     const auto catalog = automation::test::catalog();
     const auto definitions = automation::test::definitions();
-    const CampaignContent content{"owned-startup", 0};
-    CampaignRun original(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    const CampaignContent content{"owned-startup", 0, &blobber::test::campaignBlueprints()};
+    CampaignRun original(blobber::test::campaignBlueprints(), catalog, *catalog.preset(), definitions.types,
+                         definitions.timings, 5);
     campaign_test::entrance(original);
     auto travel = original.prepareTravel(original.request(original.game().nearbyFixture()));
     check(original.commitTravel(travel), "Startup fixture enters dungeon");
@@ -25,7 +27,8 @@ void restoredCampaignAtOriginalSpawn() {
         throw std::runtime_error(std::string("Old NPC spawn is not save-safe: ") + error);
     const auto bytes = encodeCampaign(catalog, definitions, content, *original.checkpoint());
     auto checkpoint = decodeCampaign(catalog, definitions, content, bytes);
-    CampaignRun restored(catalog, std::move(*checkpoint), definitions.timings);
+    CampaignRun restored(blobber::test::campaignBlueprints(), catalog, std::move(*checkpoint),
+                         definitions.timings);
     const auto& current = restored.location(restored.activeLocation());
     const auto pose = restored.game().movement().player;
     check(pose.cell == oldSpawn && current.placements->occupied(pose.cell) &&

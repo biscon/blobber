@@ -145,7 +145,7 @@ void multipleFires() {
     ++world.revision;
     effects.update(oneInput, world);
     check(effects.frame().count == 24, "Each fire is culled independently");
-    definition.ambientFires.push_back({3, .2f, 3});
+    definition.ambientFires.resize(ambientFireCapacity + 1, {3, .2f, 3});
     rejects([&] { Map invalid(rows, definition); }, "Excess ambient fires reject at preparation");
     definition.ambientFires.resize(2);
     definition.ambientFires[0].x = 0;
@@ -465,11 +465,15 @@ void captureBuilds() {
               "Every current spell has a legal capture build");
     }
 }
-void stressEffects() {
+void combinedEffects(bool stress) {
     test::VisibilityFixture fixture;
     world_assets::CpuAssets assets(fixture.publication());
     const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
-    auto map = fixtureMap();
+    WorldDefinition definition;
+    definition.hearth = AmbientFire{6.5f, .1f, 3.5f};
+    definition.ambientFires.assign(ambientFireCapacity, AmbientFire{6.5f, .1f, 3.5f});
+    Map map({"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#", "#########"},
+            definition);
     const auto cat = fixtureCatalog();
     NpcWorld empty(map, {3, 3}, {"goblin"}, {});
     GameSession game(map, cat, empty, 5, {{3, 3}, Heading::East}, false, fixture.timings);
@@ -511,8 +515,18 @@ void stressEffects() {
     FrameInput input{game.geometry(), game.movement(), &game.actors(), nullptr, nullptr,
                      nullptr,         &attacks,        &area,          200};
     effects.update(input, world);
-    check(effects.frame().count == effectCapacity - 24,
-          "Maximum ground/weapon/projectile capacity retains every packet");
+    const auto withoutFires = fixtureMap();
+    auto baselineInput = input;
+    baselineInput.geometry = withoutFires;
+    EffectsPipeline baseline(assets);
+    baseline.update(baselineInput, world);
+    check(baseline.frame().count > 0 &&
+              effects.frame().count == baseline.frame().count + 24 * (ambientFireCapacity + 1) &&
+              effects.frame().count <= effectCapacity,
+          "Combined ground/weapon/projectile workload retains all seven fire sources without dropping other "
+          "packets");
+    if (!stress)
+        return;
     for (unsigned i = 0; i < 120; ++i) {
         input.now = 200 + i;
         effects.update(input, world);
@@ -548,8 +562,7 @@ int main(int argc, char**) {
         captureBuilds();
         spellVisuals();
         authoredFixtureKnowledge();
-        if (argc > 1)
-            stressEffects();
+        combinedEffects(argc > 1);
         std::cout << "R04 barriers, shared geometry and effect invariants passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

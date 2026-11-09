@@ -1,4 +1,5 @@
 #include "game/perception.hpp"
+#include "generation/blueprint_rooms.hpp"
 #include "generation/encounter_planning.hpp"
 #include <algorithm>
 namespace blobber::generation {
@@ -43,11 +44,12 @@ const DepthBand& encounterBand(unsigned depth) noexcept {
     const auto spec = floorSpec(depth);
     return bands[spec ? spec->populationBand - 1 : 0];
 }
-void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept {
+void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool,
+                     const BlueprintReservations* reservations) noexcept {
     f.populationCount = f.encounterCount = f.routeCount = 0;
     const auto& depth = encounterBand(f.depth);
     std::array<unsigned, 7> sites{};
-    if (!planEncounterSites(f, depth, sites))
+    if (!planEncounterSites(f, depth, sites, reservations))
         return;
     for (unsigned i = 0; i < depth.count + depth.optionalCount; ++i) {
         const auto room = sites[i];
@@ -70,7 +72,7 @@ void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept
         if (!edge ||
             !placeEncounterFormation(f, room, i < depth.count ? depth.ordinary[i] : depth.optional,
                                      i < depth.count ? EncounterRole::Direct : EncounterRole::Optional,
-                                     incomingFacing(*edge, room)))
+                                     incomingFacing(*edge, room), reservations))
             return;
     }
     f.optionalSupply = f.rooms[sites[depth.count]].anchor;
@@ -79,7 +81,7 @@ void placePopulation(FloorLayout& f, GenerationRequest, unsigned, bool) noexcept
     const auto room = f.route[f.routeCount - 1];
     const auto* edge = connectionBetween(f, sectorJunction(f), room);
     if (!edge || !placeEncounterFormation(f, room, depth.guardian, EncounterRole::Guardian,
-                                          incomingFacing(*edge, room)))
+                                          incomingFacing(*edge, room), reservations))
         return;
     for (unsigned i = 0; i < f.connectionCount; ++i) {
         const auto e = f.connections[i];
@@ -174,8 +176,8 @@ Failure validatePopulation(const FloorLayout& f) noexcept {
             const auto& p = f.population[member++];
             if (p.recipe != encounterRecipe(e.recipe).members[n] || regionAt(f, p.cell) != e.room ||
                 unsigned(p.facing) > 3 || p.facing != f.population[e.first].facing ||
-                std::abs(p.cell.x - f.rooms[e.room].anchor.x) > 1 ||
-                std::abs(p.cell.y - f.rooms[e.room].anchor.y) > 1 ||
+                (!blueprintAt(f, e.room) && (std::abs(p.cell.x - f.rooms[e.room].anchor.x) > 1 ||
+                                             std::abs(p.cell.y - f.rooms[e.room].anchor.y) > 1)) ||
                 p.guardian != (e.role == EncounterRole::Guardian))
                 return {Error::Population};
             for (unsigned k = 0; k < e.count; ++k) {

@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #pragma once
 #include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
@@ -15,6 +16,7 @@ inline void mapReview(const std::filesystem::path& assets, const std::filesystem
                       const std::filesystem::path& copiedSave = {}) {
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Choose a new map-review output directory");
+    const auto roomBlueprints = blueprints::load(assets / "blueprints/underkeep.json");
     const auto catalog = loadRules(assets / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(assets / "npcs/level.json");
     Window window(1920, 1080, true);
@@ -145,9 +147,10 @@ inline void mapReview(const std::filesystem::path& assets, const std::filesystem
         if (!copiedSave.empty()) {
             const auto before = fingerprintFile(copiedSave);
             CampaignDisk disk(copiedSave);
-            CampaignStore store(
-                catalog, definitions,
-                {fingerprintFile(assets / "rules/catalog.json"), definitions.definitionFingerprint}, disk);
+            CampaignStore store(catalog, definitions,
+                                {fingerprintFile(assets / "rules/catalog.json"),
+                                 definitions.definitionFingerprint, &roomBlueprints},
+                                disk);
             auto campaign = store.load();
             auto state = std::make_unique<FloorState>();
             campaign->game().exportFloor(*state);

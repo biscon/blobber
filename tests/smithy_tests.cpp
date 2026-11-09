@@ -3,6 +3,7 @@
 #include "persistence/campaign_codec.hpp"
 #include "support/allocations.hpp"
 #include "support/campaign_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 using namespace blobber;
 using namespace blobber::campaign_test;
@@ -58,7 +59,7 @@ void layout() {
 void campaign() {
     const auto cat = catalog();
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     const auto approach = sanctuaryCity().doorway("smithy").approach;
     check(!run.previewTravel(run.doorwayRequest()), "No remote doorway entry");
     doorway(run, "smithy");
@@ -176,9 +177,11 @@ void campaign() {
     run.game().discover();
     auto checkpoint = run.checkpoint();
     const auto discovered = checkpoint->locations[5].state->fixtures.discovered;
-    const auto text = encodeCampaign(cat, defs, {"fixture", 0}, *checkpoint);
-    auto decoded = decodeCampaign(cat, defs, {"fixture", 0}, text);
-    auto restored = std::make_unique<CampaignRun>(cat, std::move(*decoded), defs.timings);
+    const auto text =
+        encodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, *checkpoint);
+    auto decoded = decodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, text);
+    auto restored = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), cat,
+                                                  std::move(*decoded), defs.timings);
     check(restored->activeLocationId() == CampaignLocationId::Smithy &&
               restored->game().movement().player == pose,
           "Continue restores smithy and pose");
@@ -236,13 +239,19 @@ void campaign() {
             location.placements[0].role = NpcRole::Hostile;
         if (fault == 13)
             location.state->actors.actors[0].npc.cell.x = 7;
-        rejects([&] { CampaignRun rejected(cat, std::move(*invalid), defs.timings); },
-                "Noncanonical smithy state rejects");
+        rejects(
+            [&] {
+                CampaignRun rejected(blobber::test::campaignBlueprints(), cat, std::move(*invalid),
+                                     defs.timings);
+            },
+            "Noncanonical smithy state rejects");
     }
     auto old = blobber::automation::Json::parse(text);
     old["schema"] = 14;
     old["simulation"] = 17;
-    rejects([&] { decodeCampaign(cat, defs, {"fixture", 0}, old.dump()); }, "Old saves reject unchanged");
+    rejects(
+        [&] { decodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, old.dump()); },
+        "Old saves reject unchanged");
     const auto exit = restored->location(5).exit;
     walk(restored->game(), exit.cell);
     face(restored->game(), exit.heading);

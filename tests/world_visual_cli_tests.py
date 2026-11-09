@@ -43,7 +43,7 @@ def main(runner, writer):
                     os.environ[key] = value
         header = json.loads(trace.read_text().splitlines()[0])["data"]
         assert header["visibility_backend"] == "world"
-        assert header["visibility_version"] == "world-visibility-v16"
+        assert header["visibility_version"] == "world-visibility-v18"
         assert "world_publication" in header["content"]
         command = [runner, "--assets", str(root), "--mode", "visual"]
         result = subprocess.run(command + ["--replay", str(trace)], env=env, capture_output=True, text=True)
@@ -65,6 +65,13 @@ def main(runner, writer):
             retired = client.request("start", scenario=dict(kind="renderer_fixture"))
             assert not retired["ok"], retired
             assert client.request("close")["ok"]
+        # Catalog edits require a matching prepared publication before any session starts.
+        blueprint = root / "blueprints/underkeep.json"
+        blueprint_source = blueprint.read_text()
+        blueprint.write_text(blueprint_source + "\n")
+        result = subprocess.run(command, input="", env=env, capture_output=True, text=True)
+        assert result.returncode and "rebuild world assets" in result.stderr, result.stderr
+        blueprint.write_text(blueprint_source)
         legacy = json.loads(records[0])
         legacy["data"]["visibility_backend"] = "legacy"
         records[0] = json.dumps(legacy)

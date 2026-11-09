@@ -2,6 +2,7 @@
 #include "generation/floor.hpp"
 #include "support/check.hpp"
 #include "support/fixture_world.hpp"
+#include "support/generation_blueprints.hpp"
 #include "support/spell_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include <iostream>
@@ -370,7 +371,7 @@ void generationContracts() {
     for (unsigned depth = 1; depth <= 3; ++depth)
         for (unsigned seed : {1u, 5u, 8u})
             for (bool fallback : {false, true}) {
-                const auto result = generate({seed, depth}, fallback);
+                const auto result = generate({seed, depth}, blobber::test::campaignBlueprints(), fallback);
                 check(bool(result) && !validateFixtures(result.floor->layout),
                       "Normal and fallback fixture progression validated at each depth");
                 auto f = result.floor->layout;

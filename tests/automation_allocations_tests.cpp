@@ -5,6 +5,7 @@
 #include "support/campaign_fixtures.hpp"
 #include "support/cpu_view.hpp"
 #include "support/fixture_world.hpp"
+#include "support/generation_blueprints.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -85,7 +86,7 @@ using namespace blobber::automation::test;
 int main(int argc, char**) {
     try {
         tracking = true;
-        const auto preparedFloor = generation::generate({5});
+        const auto preparedFloor = generation::generate({5}, blobber::test::campaignBlueprints());
         tracking = false;
         check(bool(preparedFloor), "allocation measurement generates fixture");
         std::cout << "Generation preparation: " << allocations << " allocations / " << requestedBytes
@@ -94,19 +95,21 @@ int main(int argc, char**) {
         const auto cat = catalog();
         auto defs = definitions();
         auto setup = scenario(cat, argc > 1 ? 256 : 1);
-        Session session(cat, defs, setup, Mode::Diagnostic);
+        Session session(blobber::test::campaignBlueprints(), cat, defs, setup, Mode::Diagnostic);
         auto preparedSetup = setup;
         arenaLevel(cat, preparedSetup, 2);
-        Session prepared(cat, defs, preparedSetup, Mode::Diagnostic);
+        Session prepared(blobber::test::campaignBlueprints(), cat, defs, preparedSetup, Mode::Diagnostic);
         blobber::test::VisibilityFixture fixture(unsigned(defs.types.size()));
         const world_assets::CpuAssets assets(fixture.publication());
         const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         defs.timings = fixture.timings;
         WorldVisualContext context{assets, defs.timings};
-        Session visual(cat, defs, setup, Mode::Visual, makeWorldVisual, &context);
+        Session visual(blobber::test::campaignBlueprints(), cat, defs, setup, Mode::Visual, makeWorldVisual,
+                       &context);
         const GeneratedScenario generatedSetup{setup.party, {5}};
-        Session generated(cat, defs, generatedSetup, Mode::Diagnostic);
-        Session generatedVisual(cat, defs, generatedSetup, Mode::Visual, makeWorldVisual, &context);
+        Session generated(blobber::test::campaignBlueprints(), cat, defs, generatedSetup, Mode::Diagnostic);
+        Session generatedVisual(blobber::test::campaignBlueprints(), cat, defs, generatedSetup, Mode::Visual,
+                                makeWorldVisual, &context);
         Observation observation;
         unsigned events = 0, accepted = 0;
         bool okay = true;
@@ -172,13 +175,15 @@ int main(int argc, char**) {
         const auto fixtureFrame = [&] { fixtureFrames.update(*fixtureGame); };
         CommandController guardianUi(generated.replayGame());
         blobber::test::CpuView guardianFrames(generated.replayGame(), assets, defs.timings);
-        auto campaign = std::make_unique<CampaignRun>(cat, *cat.preset(), defs.types, defs.timings, 5);
+        auto campaign = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), cat, *cat.preset(),
+                                                      defs.types, defs.timings, 5);
         for (unsigned visit = 0; visit < 3; ++visit) {
             campaign_test::travel(*campaign, visit % 2 ? FixtureKind::Upstairs : FixtureKind::Downstairs);
         }
         // Inject each preparation allocation failure in turn, before touching the live owner.
         for (const auto kind : {TravelKind::Stairs, TravelKind::Recall, TravelKind::Waypoint}) {
-            auto rollback = std::make_unique<CampaignRun>(cat, *cat.preset(), defs.types, defs.timings, 5);
+            auto rollback = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), cat,
+                                                          *cat.preset(), defs.types, defs.timings, 5);
             if (kind != TravelKind::Stairs) {
                 campaign_test::travel(*rollback, FixtureKind::Downstairs);
                 if (kind == TravelKind::Waypoint) {
@@ -233,13 +238,16 @@ int main(int argc, char**) {
         }
         // Restore and optional view preparation are explicit allocation boundaries.
         auto checkpoint = campaign->checkpoint();
-        const auto saveText = encodeCampaign(cat, defs, {"owned", 0}, *checkpoint);
+        const auto saveText =
+            encodeCampaign(cat, defs, {"owned", 0, &blobber::test::campaignBlueprints()}, *checkpoint);
         const auto restoreStage = [&](std::unique_ptr<CampaignCheckpoint> state) {
-            auto restored = std::make_unique<CampaignRun>(cat, std::move(*state), defs.timings);
+            auto restored = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), cat,
+                                                          std::move(*state), defs.timings);
             blobber::test::CpuView frames(restored->game(), assets, defs.timings);
             frames.update(restored->game());
         };
-        auto stagedState = decodeCampaign(cat, defs, {"owned", 0}, saveText);
+        auto stagedState =
+            decodeCampaign(cat, defs, {"owned", 0, &blobber::test::campaignBlueprints()}, saveText);
         allocations = 0;
         tracking = true;
         restoreStage(std::move(stagedState));
@@ -263,8 +271,10 @@ int main(int argc, char**) {
                   "every restore/view allocation failure preserves current owner");
         }
         std::cout << "restore rollback: " << restoreAllocations << " allocation failure points checked\n";
-        auto resumedState = decodeCampaign(cat, defs, {"owned", 0}, saveText);
-        campaign = std::make_unique<CampaignRun>(cat, std::move(*resumedState), defs.timings);
+        auto resumedState =
+            decodeCampaign(cat, defs, {"owned", 0, &blobber::test::campaignBlueprints()}, saveText);
+        campaign = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), cat,
+                                                 std::move(*resumedState), defs.timings);
         allocations = requestedBytes = 0;
         CommandController campaignUi(campaign->game(), defs.timings);
         campaignUi.saveMenu().enabled = true;

@@ -2,6 +2,7 @@
 #include "app/loading.hpp"
 #include "app/menu.hpp"
 #include "app/options.hpp"
+#include "assets/blueprint_loader.hpp"
 #include "assets/npc_metadata.hpp"
 #include "game/campaign.hpp"
 #include "game/party.hpp"
@@ -46,6 +47,10 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         preparationPoint("Reading creature definitions");
         return loadNpcDefinitions(options.assets / "npcs/level.json");
     });
+    std::optional<blueprints::BlueprintCatalog> roomCatalog;
+    if (!arena && !saves)
+        roomCatalog =
+            prepareCpu([&] { return blueprints::load(options.assets / "blueprints/underkeep.json"); });
     std::unique_ptr<CampaignRun> campaign = std::move(restored);
     std::optional<Map> arenaFloor;
     if (arena)
@@ -53,8 +58,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
     else if (!campaign)
         campaign = prepareCpu([&] {
             preparationPoint("Building campaign");
-            return std::make_unique<CampaignRun>(rules, *starting, definitions.types, definitions.timings,
-                                                 seed);
+            return std::make_unique<CampaignRun>(saves ? saves->blueprints() : *roomCatalog, rules, *starting,
+                                                 definitions.types, definitions.timings, seed);
         });
     const Map& map = arena ? *arenaFloor : campaign->map();
     const Player spawn = arena ? arenaSpawn() : campaign->game().movement().player;
@@ -69,6 +74,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
     const auto& timings = loadedNpcs.timings;
     auto publication = prepareCpu([&] {
         preparationPoint("Validating prepared world assets");
+        if (!arena)
+            blueprints::checkPrepared(options.assets, options.preparedAssets / "world");
         return world_assets::load(options.preparedAssets / "world");
     });
     if (publication.definitions != loadedNpcs.definitionFingerprint)

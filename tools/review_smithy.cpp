@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/campaign.hpp"
@@ -22,10 +23,11 @@ int main(int argc, char** argv) try {
         reviewBlacksmith(root, output);
         return 0;
     }
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
-    auto run =
-        std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    auto run = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(), definitions.types,
+                                             definitions.timings, 5);
     Window window(1920, 1080, true);
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
         throw std::runtime_error("Capture window must stay hidden");
@@ -140,13 +142,14 @@ int main(int argc, char** argv) try {
     capture("smithy-map", true);
     run->game().restorePose(run->location(unsigned(CampaignLocationId::Smithy)).exit, false);
     auto checkpoint = run->checkpoint();
-    const auto text = encodeCampaign(catalog, definitions,
-                                     {"smithy-review", definitions.definitionFingerprint}, *checkpoint);
+    const auto text =
+        encodeCampaign(catalog, definitions,
+                       {"smithy-review", definitions.definitionFingerprint, &roomBlueprints}, *checkpoint);
     report << "Active smithy serialized bytes=" << text.size() << '\n';
-    auto saved =
-        decodeCampaign(catalog, definitions, {"smithy-review", definitions.definitionFingerprint}, text);
+    auto saved = decodeCampaign(catalog, definitions,
+                                {"smithy-review", definitions.definitionFingerprint, &roomBlueprints}, text);
     view.reset();
-    run = std::make_unique<CampaignRun>(catalog, std::move(*saved), definitions.timings);
+    run = std::make_unique<CampaignRun>(roomBlueprints, catalog, std::move(*saved), definitions.timings);
     view = std::make_unique<GameView>(renderer);
     capture("exit-continue");
     travel(false);

@@ -4,6 +4,7 @@
 #include "support/allocations.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "support/combat_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include "support/recovery_fixtures.hpp"
 #include <cmath>
 #include <fstream>
@@ -76,8 +77,7 @@ void simulation() {
     game.update(std::numeric_limits<double>::quiet_NaN(), false);
     game.update(-1, false);
     check(game.gameTime().elapsedMs == 1, "Invalid deltas add no time");
-    check(!game.rest(restRequest(game)) && game.gameTime().elapsedMs == 1,
-          "Rejected rest adds no time");
+    check(!game.rest(restRequest(game)) && game.gameTime().elapsedMs == 1, "Rejected rest adds no time");
     game.party().damage({0}, 2);
     auto shortRest = restRequest(game, RestKind::Short);
     shortRest.dice[0] = 1;
@@ -91,8 +91,7 @@ void simulation() {
           "Repeated rest adds no time");
     CommandController commands(game);
     commands.refresh({}, false, true, true);
-    check(commands.snapshot().gameTime.elapsedMs == game.gameTime().elapsedMs,
-          "Map HUD snapshots game time");
+    check(commands.snapshot().gameTime.elapsedMs == game.gameTime().elapsedMs, "Map HUD snapshots game time");
 
     // A durable enemy and harmless attacks allow one full round without a kill.
     const auto combatCat = combatCatalog(10000, -100, {1, 4, -100});
@@ -119,16 +118,18 @@ void campaign(const char* legacy) {
     using namespace blobber::campaign_test;
     const auto cat = catalog();
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     run.update(37.25, false);
     if (legacy) {
         std::ifstream in(legacy);
         const std::string bytes((std::istreambuf_iterator<char>(in)), {});
-        auto state = decodeCampaign(cat, defs, {"time-legacy", 0}, bytes);
-        CampaignRun loaded(cat, std::move(*state), defs.timings);
+        auto state =
+            decodeCampaign(cat, defs, {"time-legacy", 0, &blobber::test::campaignBlueprints()}, bytes);
+        CampaignRun loaded(blobber::test::campaignBlueprints(), cat, std::move(*state), defs.timings);
         check(loaded.gameTime().elapsedMs == 37250 && loaded.gameTime().elapsedMs == run.gameTime().elapsedMs,
               "Pre-change codec save restores identical elapsed time");
-        check(encodeCampaign(cat, defs, {"time-legacy", 0}, *loaded.checkpoint()) == bytes,
+        check(encodeCampaign(cat, defs, {"time-legacy", 0, &blobber::test::campaignBlueprints()},
+                             *loaded.checkpoint()) == bytes,
               "Pre-change save remains byte-identical after restore and re-encode");
     }
     const auto before = run.gameTime();
@@ -142,17 +143,18 @@ void campaign(const char* legacy) {
               run.gameTime().elapsedMs == before.elapsedMs + gameDuration::longRest,
           "Campaign clock includes rests in another location");
     auto state = run.checkpoint();
-    const auto bytes = encodeCampaign(cat, defs, {"time", 0}, *state);
-    auto decoded = decodeCampaign(cat, defs, {"time", 0}, bytes);
-    CampaignRun loaded(cat, std::move(*decoded), defs.timings);
-    check(loaded.gameTime().elapsedMs == run.gameTime().elapsedMs &&
-              loaded.gameTime().calendar().hour == 16,
+    const auto bytes = encodeCampaign(cat, defs, {"time", 0, &blobber::test::campaignBlueprints()}, *state);
+    auto decoded = decodeCampaign(cat, defs, {"time", 0, &blobber::test::campaignBlueprints()}, bytes);
+    CampaignRun loaded(blobber::test::campaignBlueprints(), cat, std::move(*decoded), defs.timings);
+    check(loaded.gameTime().elapsedMs == run.gameTime().elapsedMs && loaded.gameTime().calendar().hour == 16,
           "Save/load retains accumulated calendar without wall-clock progression");
     leaveInn(run);
     const auto clock = run.gameTime().elapsedMs;
     entrance(run);
     const auto afterWalk = run.gameTime().elapsedMs;
-    { const auto cancelled = run.prepareTravel(run.request(run.game().nearbyFixture())); }
+    {
+        const auto cancelled = run.prepareTravel(run.request(run.game().nearbyFixture()));
+    }
     check(run.gameTime().elapsedMs == afterWalk && afterWalk >= clock && run.activeLocation() == 0,
           "Cancelled preparation adds no time and never commits a location");
     travel(run, FixtureKind::Downstairs);

@@ -1,6 +1,7 @@
 #include "generation/floor.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include <algorithm>
 #include <chrono>
@@ -12,7 +13,7 @@ int main(int argc, char**) {
         world_assets::CpuAssets assets(fixture.publication());
         const auto assetsLease = assets.acquire(world_assets::allAssets(assets.publication));
         const auto catalog = creationCatalog(true);
-        const auto generated = generation::generate({5, 1});
+        const auto generated = generation::generate({5, 1}, blobber::test::campaignBlueprints());
         check(bool(generated), "Benchmark generation");
         const auto& map = generated.floor->map;
         const auto spawn = generated.floor->layout.spawn;

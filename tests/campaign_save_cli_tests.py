@@ -32,7 +32,7 @@ def setup(root):
         (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name, role='resident')))
     definitions = ['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')], *[n+'.json' for n in residents]]
     (root/'npcs/level.json').write_text(json.dumps(dict(definitions=definitions,instances=[])))
-    return dict(kind='campaign',schema_version=1,generator_version=13,template_version=9,seed=5,party=arena['party'])
+    return dict(kind='campaign',schema_version=1,generator_version=14,template_version=10,seed=5,party=arena['party'])
 
 
 def main(runner):

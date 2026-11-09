@@ -1,4 +1,5 @@
 #pragma once
+#include "assets/blueprint_loader.hpp"
 #include "assets/dialogue.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
@@ -19,7 +20,8 @@ inline void reviewResidents(const std::filesystem::path& root, const std::filesy
     using namespace blobber;
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
-    CampaignRun run(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
+    CampaignRun run(roomBlueprints, catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
     Window window(1920, 1080, true);
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
         throw std::runtime_error("Capture window must stay hidden");
@@ -108,7 +110,7 @@ inline void reviewResidents(const std::filesystem::path& root, const std::filesy
         throw std::runtime_error("Mayor introduction repeated");
     commands.finishDialogue();
     auto checkpoint = run.checkpoint();
-    const CampaignContent content{"residents-review", definitions.definitionFingerprint};
+    const CampaignContent content{"residents-review", definitions.definitionFingerprint, &roomBlueprints};
     const auto encoded = encodeCampaign(catalog, definitions, content, *checkpoint);
     const auto decoded = decodeCampaign(catalog, definitions, content, encoded);
     const auto* history = decoded->dialogue.get(dialogueKey("sanctuary.mayor"));

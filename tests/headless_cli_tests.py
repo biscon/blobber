@@ -8,6 +8,8 @@ import tempfile
 
 
 def fixture(root):
+    (root / "blueprints").mkdir()
+    (root / "blueprints/underkeep.json").write_bytes((Path(__file__).parent / "fixtures/blueprint_rooms.json").read_bytes())
     (root / "rules").mkdir()
     (root / "npcs").mkdir()
     abilities = dict(zip(("strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"), (15,14,13,12,10,8)))

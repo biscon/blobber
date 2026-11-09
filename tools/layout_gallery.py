@@ -74,9 +74,9 @@ def main():
                             max_walkable_cells=max(r['metrics']['walkable_cells'] for r in reports)))
     sheet.save(args.output / 'all-floors.png')
     fallbacks = Image.new('RGB', (TILE_W * 2, TILE_H), BACKGROUND)
-    for column, seed in enumerate((0, 5)):
-        report = generate(seed, 3, True)
-        panel(fallbacks, (TILE_W * column, 0), report, 'Authored fallback · Depth 3')
+    for column, depth in enumerate((1, 3)):
+        report = generate(5, depth, True)
+        panel(fallbacks, (TILE_W * column, 0), report, f'Authored fallback · Depth {depth}')
     fallbacks.save(args.output / 'fallbacks.png')
     (args.output / 'metrics.json').write_text(json.dumps(summary, indent=2) + '\n')
     print(json.dumps(summary))

@@ -1,4 +1,5 @@
 #pragma once
+#include "assets/blueprint_loader.hpp"
 #include "assets/dialogue.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
@@ -25,6 +26,7 @@ inline void reviewShadowtart(const std::filesystem::path& root, const std::files
     };
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     auto dialogue = loadDialogue(root / "dialogue");
     const auto shops = loadShops(root / "shops", catalog);
     validateShops(dialogue, shops);
@@ -44,8 +46,8 @@ inline void reviewShadowtart(const std::filesystem::path& root, const std::files
     const auto* inn = shops.find(dialogueKey("sanctuary_inn"));
     require(inn && inn->stock.size() == 1 && inn->stock[0].item.index == catalog.findItem("camp_kit").index,
             "Inn should retain provisions after potion stock moves");
-    auto run =
-        std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    auto run = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(), definitions.types,
+                                             definitions.timings, 5);
     run->game().restorePose(sanctuaryCity().doorway("emporium").approach, false);
     {
         auto ticket = run->prepareTravel(run->doorwayRequest());
@@ -206,11 +208,11 @@ inline void reviewShadowtart(const std::filesystem::path& root, const std::files
                   "verified\n";
     }
     const auto checkpoint = run->checkpoint();
-    const CampaignContent content{"shadowtart-review", definitions.definitionFingerprint};
+    const CampaignContent content{"shadowtart-review", definitions.definitionFingerprint, &roomBlueprints};
     const auto encoded = encodeCampaign(catalog, definitions, content, *checkpoint);
     auto decoded = decodeCampaign(catalog, definitions, content, encoded);
     view.reset();
-    run = std::make_unique<CampaignRun>(catalog, std::move(*decoded), definitions.timings);
+    run = std::make_unique<CampaignRun>(roomBlueprints, catalog, std::move(*decoded), definitions.timings);
     require(run->game().actors().snapshot().count == 1 && run->dialogue().get(host)->introduced &&
                 run->dialogue().get(host)->completedCount == 3 &&
                 run->merchants().find(host)->stock[catalog.findItem("healing_potion").index] == 5 &&

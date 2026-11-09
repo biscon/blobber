@@ -53,6 +53,8 @@ template <class T> constexpr unsigned enumMaximum() {
         return 0;
     else if constexpr (std::is_same_v<T, generation::LayoutProfile>)
         return 1;
+    else if constexpr (std::is_same_v<T, blueprints::Purpose>)
+        return 3;
     else if constexpr (std::is_same_v<T, generation::Role>)
         return unsigned(generation::Role::Optional);
     else if constexpr (std::is_same_v<T, generation::ActorRecipe>)
@@ -289,13 +291,14 @@ Json parse(const std::string& text) {
     });
 }
 void envelope(const Json& j, const CampaignContent& content) {
-    if (!j.is_object() || j.size() != 11 || !j.at("schema").is_number_integer() ||
+    if (!content.blueprints || !j.is_object() || j.size() != 12 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 21 || j.at("simulation") != 24 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 22 || j.at("simulation") != 24 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
-        j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign") ||
-        !j.at("campaign").is_object() || !j.at("seed").is_number_unsigned() ||
+        j.at("npcs") != std::to_string(content.npcs) ||
+        j.at("blueprints") != std::to_string(blueprints::fingerprint(*content.blueprints)) ||
+        !j.contains("campaign") || !j.at("campaign").is_object() || !j.at("seed").is_number_unsigned() ||
         j.at("seed").get<std::uint64_t>() > UINT32_MAX || !j.at("baseline").is_array() ||
         j.at("baseline").size() != campaignLocationCount)
         invalid("Incompatible campaign schema, simulation or content");
@@ -377,7 +380,10 @@ std::string encode(const rules::Catalog& catalog, const NpcDefinitions& definiti
     Json summary = {{"location", value.activeLocation}, {"party", Json::array()}};
     for (const auto& member : value.party.state.characters)
         summary["party"].push_back(member.build.name);
-    Json j = {{"schema", 21},
+    if (!content.blueprints)
+        invalid("Missing blueprint catalog");
+    Json j = {{"schema", 22},
+              {"blueprints", std::to_string(blueprints::fingerprint(*content.blueprints))},
               {"simulation", 24},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
@@ -452,10 +458,10 @@ std::unique_ptr<CampaignCheckpoint> decodeCampaign(const rules::Catalog& catalog
         invalid("Invalid campaign seed");
     auto out = std::make_unique<CampaignCheckpoint>();
     const auto& profile = j.at("reward_profile");
-    out->baseline =
-        prepareCampaignDefinitions(catalog, definitions.types, j["seed"].get<std::uint32_t>(),
-                                   {profile[0].get<rules::WeaponTraining>(), profile[1].get<bool>(),
-                                    profile[2].get<bool>(), profile[3].get<bool>()});
+    out->baseline = prepareCampaignDefinitions(
+        *content.blueprints, catalog, definitions.types, j["seed"].get<std::uint32_t>(),
+        {profile[0].get<rules::WeaponTraining>(), profile[1].get<bool>(), profile[2].get<bool>(),
+         profile[3].get<bool>()});
     if (j.at("baseline") != signatures(*out->baseline))
         invalid("Campaign definition baseline differs");
     auto baseline = std::make_unique<CampaignCheckpoint>();

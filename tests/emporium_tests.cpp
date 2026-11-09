@@ -3,6 +3,7 @@
 #include "persistence/campaign_codec.hpp"
 #include "support/allocations.hpp"
 #include "support/campaign_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 using namespace blobber;
 using namespace blobber::campaign_test;
@@ -58,7 +59,7 @@ void layout() {
 void campaign() {
     const auto cat = catalog();
     const auto defs = definitions();
-    CampaignRun run(cat, *cat.preset(), defs.types, defs.timings, 5);
+    CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
     const auto approach = sanctuaryCity().doorway("emporium").approach;
     check(run.location(0).doorwayCount == 3 && run.location(4).doorwayCount == 1 &&
               run.location(5).doorwayCount == 1 && run.location(6).doorwayCount == 1,
@@ -172,9 +173,11 @@ void campaign() {
     const auto pose = run.game().movement().player;
     const auto checkpoint = run.checkpoint();
     const auto discovery = checkpoint->locations[6].state->fixtures.discovered;
-    const auto text = encodeCampaign(cat, defs, {"fixture", 0}, *checkpoint);
-    auto decoded = decodeCampaign(cat, defs, {"fixture", 0}, text);
-    auto restored = std::make_unique<CampaignRun>(cat, std::move(*decoded), defs.timings);
+    const auto text =
+        encodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, *checkpoint);
+    auto decoded = decodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, text);
+    auto restored = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), cat,
+                                                  std::move(*decoded), defs.timings);
     const auto drops = [&](const GameSession& game) {
         for (unsigned i = 0; i < loot.stacks.size(); ++i) {
             const auto& a = loot.stacks[i];
@@ -233,13 +236,19 @@ void campaign() {
             location.state->actors.actors[0].npc.cell.x = 7;
         if (fault == 15)
             location.placements[0].type.index = 7;
-        rejects([&] { CampaignRun rejected(cat, std::move(*invalid), defs.timings); },
-                "Noncanonical emporium state rejects");
+        rejects(
+            [&] {
+                CampaignRun rejected(blobber::test::campaignBlueprints(), cat, std::move(*invalid),
+                                     defs.timings);
+            },
+            "Noncanonical emporium state rejects");
     }
     auto old = blobber::automation::Json::parse(text);
     old["schema"] = 15;
     old["simulation"] = 18;
-    rejects([&] { decodeCampaign(cat, defs, {"fixture", 0}, old.dump()); }, "Six-location saves reject");
+    rejects(
+        [&] { decodeCampaign(cat, defs, {"fixture", 0, &blobber::test::campaignBlueprints()}, old.dump()); },
+        "Six-location saves reject");
     const auto exit = restored->location(6).exit;
     walk(restored->game(), exit.cell);
     face(restored->game(), exit.heading);

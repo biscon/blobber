@@ -1,5 +1,6 @@
 #include "generation/report.hpp"
 #include "generation/architecture.hpp"
+#include "generation/blueprint_rooms.hpp"
 namespace blobber::generation {
 namespace {
 nlohmann::json failure(Failure f) {
@@ -35,7 +36,34 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                                  {"cell", {d.cell.x, d.cell.y}},
                                  {"facing", unsigned(d.face)},
                                  {"blocking", d.blocks()}});
+    j["blocked_cells"] = nlohmann::json::array();
+    for (int y = 0; y < f.map.height(); ++y)
+        for (int x = 0; x < f.map.width(); ++x)
+            if (!f.map.solid({x, y}) && f.map.movementBlocked({x, y}))
+                j["blocked_cells"].push_back({x, y});
     const auto& l = f.layout;
+    j["blueprint_catalog"] = std::to_string(l.blueprintFingerprint);
+    j["blueprints"] = nlohmann::json::array();
+    std::array<unsigned, 4> purposes{};
+    purposes.fill(maxRooms);
+    constexpr const char* names[]{"kitchen", "mead-hall", "barracks", "armory"};
+    for (unsigned i = 0; i < l.blueprintCount; ++i) {
+        const auto& b = l.blueprints[i];
+        purposes[unsigned(b.purpose)] = b.room;
+        j["blueprints"].push_back({{"id", b.id.data()},
+                                   {"purpose", names[unsigned(b.purpose)]},
+                                   {"room", b.room},
+                                   {"rotation", b.rotation},
+                                   {"sockets", b.sockets},
+                                   {"ceiling_ticks", b.ceiling}});
+    }
+    const auto* pair = connectionBetween(l, purposes[0], purposes[1]);
+    unsigned degree = 0;
+    for (unsigned i = 0; i < l.connectionCount; ++i)
+        degree += l.connections[i].a == purposes[3] || l.connections[i].b == purposes[3];
+    j["blueprint_relationships"] = {{"kitchen_hall_cells", pair ? pair->count : 0},
+                                    {"barracks_armory_distance", roomDistance(l, purposes[2], purposes[3])},
+                                    {"armory_degree", degree}};
     j["biome"] = "underkeep";
     j["algorithm"] = "stone_rooms";
     j["profile"] = profileName(l.profile);

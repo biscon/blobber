@@ -1,4 +1,5 @@
 #include "generation/dressing.hpp"
+#include "generation/blueprint_rooms.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdlib>
@@ -87,6 +88,7 @@ struct Dressing {
     WorldDefinition& world;
     CellMask protectedCells{}, occupied{}, blocked{};
     std::uint64_t rng;
+    const BlueprintReservations* reservations = nullptr;
     unsigned next(unsigned n) {
         rng ^= rng >> 12;
         rng ^= rng << 25;
@@ -109,7 +111,7 @@ struct Dressing {
             const auto c = queue[head++];
             for (unsigned h = 0; h < 4; ++h) {
                 const auto n = c + forward(Heading(h));
-                if (free(n) && !seen[index(n)]) {
+                if (floorCell(f, n) && !blocked[index(n)] && !seen[index(n)]) {
                     seen[index(n)] = true;
                     queue[tail++] = n;
                 }
@@ -117,7 +119,7 @@ struct Dressing {
         }
         for (int y = 0; y < f.height; ++y)
             for (int x = 0; x < f.width; ++x)
-                if (free({x, y}) && !seen[index({x, y})])
+                if (floorCell(f, {x, y}) && !blocked[index({x, y})] && !seen[index({x, y})])
                     return false;
         return true;
     }
@@ -147,6 +149,26 @@ struct Dressing {
             region = regionAt(f, f.guardianApproach);
         if (region == noRegion)
             return false;
+        if (reservations && reservations->authored[region]) {
+            const auto site = reservations->reward[region];
+            Heading face = Heading::North;
+            for (unsigned h = 0; h < 4; ++h)
+                if (site.cell + forward(Heading(h)) * -1 == site.access)
+                    face = Heading(h);
+            Decoration d{site.cell, face, DecorationKind::Chest, 0, .5f, 0, .76f, .36f, .58f};
+            d.container = std::uint8_t(id);
+            d.sealed = sealed;
+            if (!free(site.cell) || !free(site.access))
+                return false;
+            for (unsigned i = 0; i < f.populationCount; ++i)
+                if (f.population[i].cell == site.cell || f.population[i].cell == site.access)
+                    return false;
+            occupied[index(site.cell)] = true;
+            protect(site.access);
+            f.caches[id] = {site.cell, face};
+            world.decorations.push_back(d);
+            return true;
+        }
         std::array<Candidate, maxCells> candidates{};
         unsigned count = 0;
         for (int y = 1; y < f.height - 1; ++y)
@@ -192,13 +214,24 @@ static_assert(sizeof(Dressing) + maxCells * (sizeof(Candidate) + sizeof(bool) + 
                   128 * 1024,
               "Bounded dressing workspace");
 } // namespace
-bool dressUnderkeep(FloorLayout& f, GenerationRequest request, WorldDefinition& world) {
+bool dressUnderkeep(FloorLayout& f, GenerationRequest request, WorldDefinition& world,
+                    const BlueprintReservations* reservations) {
     if (validate(f))
         return false;
     world.assetPack = "underkeep";
     world.decorations.clear();
     world.decorations.reserve(192);
-    Dressing d{f, world, {}, {}, {}, seedFor(request, Domain::Dressing)};
+    Dressing d{f, world, {}, {}, {}, seedFor(request, Domain::Dressing), reservations};
+    if (reservations) {
+        d.blocked = reservations->blocked;
+        d.occupied = reservations->furnished;
+        for (int y = 0; y < f.height; ++y)
+            for (int x = 0; x < f.width; ++x) {
+                const auto r = regionAt(f, {x, y});
+                if (r < maxRooms && reservations->authored[r])
+                    d.protect({x, y});
+            }
+    }
     // Preserve doors, passage lanes, stairs, anchors, actors and existing rewards.
     for (unsigned i = 0; i < f.pathCount; ++i)
         d.protect({int(f.paths[i] % f.width), int(f.paths[i] / f.width)});
@@ -230,7 +263,7 @@ bool dressUnderkeep(FloorLayout& f, GenerationRequest request, WorldDefinition& 
     bool furnished = false;
     for (unsigned trial = 0; trial < 32 && !furnished; ++trial) {
         const auto& room = f.rooms[d.next(f.roomCount)];
-        if (room.role == Role::Entrance || room.role == Role::Objective)
+        if (room.role == Role::Entrance || room.role == Role::Objective || blueprintAt(f, room.id))
             continue;
         const Cell c{room.origin.x + int(d.next(unsigned(room.size.x))),
                      room.origin.y + int(d.next(unsigned(room.size.y)))};
@@ -286,7 +319,7 @@ bool dressUnderkeep(FloorLayout& f, GenerationRequest request, WorldDefinition& 
     for (int y = 1; y < f.height - 1; ++y)
         for (int x = 1; x < f.width - 1; ++x) {
             const Cell c{x, y};
-            if (!d.free(c) || f.fixtures.npcExcluded[d.index(c)])
+            if (!d.free(c) || blueprintAt(f, regionAt(f, c)) || f.fixtures.npcExcluded[d.index(c)])
                 continue;
             bool fixture = false;
             for (unsigned i = 0; i < f.fixtures.count; ++i) {

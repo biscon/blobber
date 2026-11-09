@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #pragma once
 #include "assets/fingerprint.hpp"
 #include "assets/rules_loader.hpp"
@@ -13,10 +14,11 @@ inline void campaignTravelReview(const std::filesystem::path& root, const std::f
                                  const std::filesystem::path& copiedSave) {
     check(std::filesystem::create_directory(output), "Choose a new travel-review output directory");
     const auto savedHash = fingerprintFile(copiedSave);
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
     const CampaignContent content{fingerprintFile(root / "rules/catalog.json"),
-                                  definitions.definitionFingerprint};
+                                  definitions.definitionFingerprint, &roomBlueprints};
     CampaignDisk disk(copiedSave);
     CampaignStore store(catalog, definitions, content, disk);
     auto campaign = store.load();

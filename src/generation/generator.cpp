@@ -1,4 +1,5 @@
 #include "generation/architecture.hpp"
+#include "generation/blueprint_rooms.hpp"
 #include "generation/dressing.hpp"
 #include "generation/floor.hpp"
 #include "generation/stone_layout.hpp"
@@ -10,7 +11,8 @@ std::uint64_t mix(std::uint64_t z) noexcept {
     z = (z ^ (z >> 27)) * 0x94d049bb133111ebull;
     return z ^ (z >> 31);
 }
-FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback) {
+FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback,
+                      const blueprints::BlueprintCatalog& catalog) {
     FloorLayout f;
     const auto spec = floorSpec(request.depth);
     if (!spec)
@@ -22,20 +24,20 @@ FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback
     f.algorithm = underkeepBiome().algorithm;
     switch (f.algorithm) {
     case AlgorithmId::StoneRooms:
-        if (!buildStoneLayout(f, request, attempt, fallback))
+        if (!buildStoneLayout(f, request, attempt, fallback, catalog)) {
+            f.roomCount = 0;
             return f;
+        }
         break;
     }
-    placeFixtures(f);
-    placePopulation(f, request, attempt, fallback);
     return f;
 }
 } // namespace
 std::uint64_t seedFor(GenerationRequest r, Domain domain, unsigned id, unsigned attempt) noexcept {
     auto h = mix(0x424c4f4242455255ull ^ r.seed);
     // Preserve accepted placement streams independently of generation identity.
-    const unsigned randomGenerator = domain == Domain::Dressing ? 12 : 8;
-    const unsigned randomCatalog = domain == Domain::Dressing ? 9 : 6;
+    const unsigned randomGenerator = domain == Domain::Runtime || domain == Domain::Reward ? 8 : 14;
+    const unsigned randomCatalog = domain == Domain::Runtime || domain == Domain::Reward ? 6 : 10;
     for (const auto value : {r.depth, randomGenerator, randomCatalog, unsigned(domain), id, attempt})
         h = mix(h ^ (std::uint64_t(value) + 0x9e3779b97f4a7c15ull));
     return h;
@@ -48,6 +50,19 @@ std::uint64_t fingerprint(const FloorLayout& f) noexcept {
             n >>= 8;
         }
     };
+    number(f.blueprintCount);
+    number(std::uint32_t(f.blueprintFingerprint));
+    number(std::uint32_t(f.blueprintFingerprint >> 32));
+    for (unsigned i = 0; i < std::min(f.blueprintCount, 4u); ++i) {
+        const auto& b = f.blueprints[i];
+        for (char c : b.id)
+            number(static_cast<unsigned char>(c));
+        number(unsigned(b.purpose));
+        number(b.room);
+        number(b.rotation);
+        number(b.sockets);
+        number(b.ceiling);
+    }
     number(generatorVersion);
     number(templateVersion);
     number(unsigned(f.width));
@@ -157,43 +172,61 @@ std::uint64_t fingerprint(const FloorLayout& f) noexcept {
     number(unsigned(f.spawn.heading));
     return h;
 }
-GenerationResult generate(GenerationRequest request, bool forceFallback) {
+GenerationResult generate(GenerationRequest request, const blueprints::BlueprintCatalog& catalog,
+                          bool forceFallback) {
     GenerationResult out;
     if (request.depth < 1 || request.depth > 3 || request.generator != generatorVersion ||
         request.templates != templateVersion) {
         out.diagnostics.failure = {Error::Request};
         return out;
     }
+    try {
+        validateBlueprintRoster(catalog);
+    } catch (const blueprints::Failure&) {
+        out.diagnostics.failure = {Error::Blueprint};
+        return out;
+    }
     FloorLayout layout;
     bool valid = false;
     WorldDefinition dressing;
-    for (unsigned i = 0; i < maxAttempts; ++i) {
-        ++out.diagnostics.attempts;
-        if (forceFallback) {
-            out.diagnostics.rejected[i] = {Error::ForcedFallback};
-            continue;
+    BlueprintReservations reservations;
+    auto prepare = [&](unsigned attempt, bool fallback) -> Failure {
+        dressing = {};
+        layout = candidate(request, attempt, fallback, catalog);
+        if (!layout.roomCount || layout.blueprintCount != 4)
+            return {Error::Placement};
+        if (auto failure = prepareBlueprintRooms(layout, catalog, reservations, &dressing))
+            return failure;
+        placeFixtures(layout);
+        placePopulation(layout, request, attempt, fallback, &reservations);
+        if (auto failure = validate(layout))
+            return failure;
+        if (auto failure = validateFixtures(layout, &reservations.blocked))
+            return failure;
+        if (!dressUnderkeep(layout, request, dressing, &reservations))
+            return {Error::Dressing};
+        return {};
+    };
+    try {
+        for (unsigned i = 0; i < maxAttempts; ++i) {
+            ++out.diagnostics.attempts;
+            const auto failure = forceFallback ? Failure{Error::ForcedFallback} : prepare(i, false);
+            if (!failure) {
+                valid = true;
+                break;
+            }
+            out.diagnostics.rejected[i] = failure;
         }
-        layout = candidate(request, i, false);
-        const auto failure = validate(layout);
-        if (!failure) {
-            if (!dressUnderkeep(layout, request, dressing))
-                continue;
-            valid = true;
-            break;
+        if (!valid) {
+            out.diagnostics.fallback = true;
+            if (auto failure = prepare(0, true)) {
+                out.diagnostics.failure = failure;
+                return out;
+            }
+            out.diagnostics.fallbackId = unsigned(layout.profile) + 1;
         }
-        out.diagnostics.rejected[i] = failure;
-    }
-    if (!valid) {
-        out.diagnostics.fallback = true;
-        out.diagnostics.fallbackId = request.depth;
-        layout = candidate(request, 0, true);
-        if (const auto failure = validate(layout)) {
-            out.diagnostics.failure = failure;
-            return out;
-        }
-    }
-    if (!valid && !dressUnderkeep(layout, request, dressing)) {
-        out.diagnostics.failure = {Error::Fixture};
+    } catch (const blueprints::Failure&) {
+        out.diagnostics.failure = {Error::Blueprint};
         return out;
     }
     std::vector<std::string> rows(std::size_t(layout.height), std::string(std::size_t(layout.width), '#'));
@@ -203,6 +236,10 @@ GenerationResult generate(GenerationRequest request, bool forceFallback) {
                 rows[y][x] = '.';
     prepareArchitecture(layout, dressing);
     Map map(rows, std::move(dressing));
+    if (auto failure = validateBlueprintWorld(layout, catalog, map)) {
+        out.diagnostics.failure = failure;
+        return out;
+    }
     layout.dressingFingerprint = map.definition().fingerprint();
     out.floor.emplace(GeneratedFloor{request, layout, std::move(map), out.diagnostics, fingerprint(layout),
                                      std::uint32_t(seedFor(request, Domain::Runtime))});

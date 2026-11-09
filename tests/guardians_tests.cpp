@@ -2,6 +2,7 @@
 #include "game/perception.hpp"
 #include "generation/population.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 using namespace blobber;
 using namespace blobber::generation;
@@ -16,7 +17,7 @@ unsigned active(const GameSession& g) {
 void objective() {
     const auto cat = catalog(false, 50, 7);
     const auto defs = definitions();
-    const auto floor = generate({5, 2});
+    const auto floor = generate({5, 2}, blobber::test::campaignBlueprints());
     check(bool(floor), "generated guardian fixture");
     const auto& f = *floor.floor;
     const auto p = preparePopulation(f, cat, defs.types);
@@ -167,7 +168,7 @@ void landings() {
     const auto defs = definitions();
     for (unsigned depth = 1; depth <= 3; ++depth)
         for (bool fallback : {false, true}) {
-            const auto result = generate({13, depth}, fallback);
+            const auto result = generate({13, depth}, blobber::test::campaignBlueprints(), fallback);
             check(bool(result), "valid landing fixture and fallback");
             const auto& f = *result.floor;
             const auto p = preparePopulation(f, cat, defs.types);
@@ -201,21 +202,26 @@ void landings() {
             check(g.combat().snapshot().phase == CombatPhase::Exploration && g.landingSafety(0).safe,
                   "initial arrival remains out of contact under real AI");
             unsigned doorIndex = fixtures.count;
-            int nearest = 10000;
-            for (unsigned i = 0; i < fixtures.count; ++i) {
-                const auto& d = fixtures.entries[i];
-                const auto landing = fixtures.landings[0];
-                const int distance = std::abs(d.cell.x - landing.x) + std::abs(d.cell.y - landing.y);
-                if (d.kind == FixtureKind::Door && !d.key && distance < nearest) {
-                    nearest = distance;
-                    doorIndex = i;
-                }
+            Player exitPose{};
+            // Select the entrance's graph edge, not a geometrically nearby door
+            // belonging to a different room on the other side of a wall.
+            for (unsigned e = 0; e < f.layout.connectionCount; ++e) {
+                const auto& edge = f.layout.connections[e];
+                if (f.layout.rooms[edge.b].role != Role::Entrance)
+                    continue;
+                for (unsigned i = 0; i < fixtures.count; ++i)
+                    if (fixtures.entries[i].kind == FixtureKind::Door &&
+                        fixtures.entries[i].cell == threshold(edge) && !fixtures.entries[i].key)
+                        doorIndex = i;
+                exitPose.cell =
+                    edge.count > 1 ? pathCell(f.layout, edge, 1) : edge.socketB + forward(edge.facingB) * -1;
+                for (unsigned h = 0; h < 4; ++h)
+                    if (exitPose.cell + forward(Heading(h)) == threshold(edge))
+                        exitPose.heading = Heading(h);
             }
             check(doorIndex < fixtures.count, "arrival has an ordinary exit door");
-            const auto door = fixtures.entries[doorIndex];
-            GameSession opened(f.map, cat, p.placements, 5,
-                               {door.cell + forward(door.facing) * -1, door.facing}, false, defs.timings,
-                               p.recovery, fixtures, p.objective);
+            GameSession opened(f.map, cat, p.placements, 5, exitPose, false, defs.timings, p.recovery,
+                               fixtures, p.objective);
             check(opened.interact({opened.fixtures().id(doorIndex), opened.fixtures().revision()}).changed,
                   "stairs room opens with no key");
             NpcAiController ai(opened.geometry(), opened.actors(), 5);

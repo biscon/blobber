@@ -2,6 +2,7 @@
 #include "game/commands.hpp"
 #include "support/arena_preparation_fixtures.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 #include <sstream>
 #include <sys/wait.h>
@@ -25,7 +26,7 @@ class CoveredCandidates final : public Visibility {
 void preciseAimProtocol() {
     const auto cat = catalog();
     const auto defs = definitions();
-    Session runner(cat, defs, scenario(cat), Mode::Diagnostic);
+    Session runner(blobber::test::campaignBlueprints(), cat, defs, scenario(cat), Mode::Diagnostic);
     Json request = {{"kind", "combat"},
                     {"action", "spell"},
                     {"character", 3},
@@ -50,7 +51,7 @@ void preciseAimProtocol() {
 void coveredObservations() {
     const auto c = catalog();
     const auto d = definitions();
-    Session session(c, d, scenario(c), Mode::Visual,
+    Session session(blobber::test::campaignBlueprints(), c, d, scenario(c), Mode::Visual,
                     [](void*, const Map&, const GameSession&) -> std::unique_ptr<Visibility> {
                         return std::make_unique<CoveredCandidates>();
                     });
@@ -424,7 +425,7 @@ void timingParity() {
     const auto cat = catalog();
     const auto defs = definitions();
     const auto s = scenario(cat);
-    Session runner(cat, defs, s, Mode::Diagnostic);
+    Session runner(blobber::test::campaignBlueprints(), cat, defs, s, Mode::Diagnostic);
     const auto map = arenaMap();
     const auto placements = arenaPlacements(map, cat, s, defs.types);
     GameSession normal(map, cat, arenaParty(cat, s), placements, s.seed, arenaSpawn(), true, defs.timings);
@@ -507,7 +508,7 @@ void recordings(const char* executable) {
         check(c.request("close").at("ok"), "recorded close succeeds");
         writer.finish();
     }
-    Protocol p(cat, defs, Mode::Diagnostic);
+    Protocol p(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     replay(p, path, header);
     struct Observer final : ReplayObserver {
         std::size_t calls = 0;
@@ -522,12 +523,12 @@ void recordings(const char* executable) {
                 session->replayGame().move(Action::TurnLeft);
         }
     } observer;
-    Protocol observed(cat, defs, Mode::Diagnostic);
+    Protocol observed(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     replay(observed, path, header, &observer);
     check(observer.calls > 4 && observer.reset, "observer covers reset across a complete recording");
     Observer mutation;
     mutation.mutate = true;
-    Protocol guarded(cat, defs, Mode::Diagnostic);
+    Protocol guarded(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
     bool mutated = false;
     try {
         replay(guarded, path, header, &mutation);
@@ -553,7 +554,7 @@ void recordings(const char* executable) {
     check(rejected, "recording never overwrites");
     rejected = false;
     try {
-        Protocol q(cat, defs, Mode::Diagnostic);
+        Protocol q(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
         replay(q, path, {{"protocol", 2}});
     } catch (...) {
         rejected = true;
@@ -569,7 +570,7 @@ void recordings(const char* executable) {
     }
     rejected = false;
     try {
-        Protocol q(cat, defs, Mode::Diagnostic);
+        Protocol q(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
         replay(q, dir.path / "truncated", header);
     } catch (...) {
         rejected = true;
@@ -585,7 +586,7 @@ void recordings(const char* executable) {
     }
     rejected = false;
     try {
-        Protocol q(cat, defs, Mode::Diagnostic);
+        Protocol q(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
         replay(q, dir.path / "changed", header);
     } catch (...) {
         rejected = true;
@@ -606,7 +607,7 @@ int main(int argc, char** argv) {
         if (argc == 3 && std::string(argv[1]) == "--replay-fixture") {
             const auto c = catalog();
             const auto d = definitions();
-            Protocol p(c, d, Mode::Diagnostic);
+            Protocol p(blobber::test::campaignBlueprints(), c, d, Mode::Diagnostic);
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }

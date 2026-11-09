@@ -1,3 +1,4 @@
+#include "generation/blueprint_rooms.hpp"
 #include "generation/floor.hpp"
 #include <algorithm>
 #include <cstdlib>
@@ -39,7 +40,7 @@ int manhattan(Cell a, Cell b) noexcept {
 std::size_t scratchBytes() noexcept {
     // Includes the routing heap, two candidate values, progression queue and connection scratch.
     return maxCells * 4 * (sizeof(std::uint32_t) + 3 * sizeof(std::uint16_t)) + maxCells +
-           sizeof(FloorLayout) * 2 + fixtureScratchBytes + maxCells * 6;
+           sizeof(FloorLayout) * 2 + fixtureScratchBytes + maxCells * 6 + sizeof(BlueprintReservations);
 }
 Failure validateStone(const FloorLayout& f) noexcept {
     if (f.width != floorDimension || f.height != floorDimension || f.roomCount < 10 || f.roomCount > 12 ||
@@ -53,7 +54,7 @@ Failure validateStone(const FloorLayout& f) noexcept {
         for (unsigned i = 0; i < unsigned(f.width * f.height); ++i)
             area += f.membership[i] == r;
         const auto& room = f.rooms[r];
-        if (room.shape > 4 || room.rotation > 3)
+        if (room.shape > 5 || room.rotation > 3)
             return {Error::Room, int(r)};
         if (room.role == Role::Junction || room.role == Role::Optional) {
             if (room.size.x < 3 || room.size.y < 3 || room.size.x > 9 || room.size.y > 9 || area < 12 ||
@@ -62,7 +63,7 @@ Failure validateStone(const FloorLayout& f) noexcept {
             areas[count++] = area;
             small = std::min(small, area);
             large = std::max(large, area);
-            landmark |= room.shape == 2 || room.shape == 1 ||
+            landmark |= room.shape == 5 || room.shape == 2 || room.shape == 1 ||
                         std::max(room.size.x, room.size.y) >= 2 * std::min(room.size.x, room.size.y);
         }
     }
@@ -279,6 +280,8 @@ Failure validate(const FloorLayout& f) noexcept {
         return failure;
     return validateFixtures(f);
 }
-static_assert(sizeof(Scratch) + 2 * sizeof(FloorLayout) + fixtureScratchBytes < 128 * 1024,
+static_assert(sizeof(Scratch) + 2 * sizeof(FloorLayout) + fixtureScratchBytes +
+                      sizeof(BlueprintReservations) <
+                  128 * 1024,
               "Validation scratch budget");
 } // namespace blobber::generation

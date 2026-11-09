@@ -3,6 +3,7 @@
 #include "generation/population.hpp"
 #include "support/automation_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 #include <queue>
 using namespace blobber;
@@ -56,7 +57,7 @@ void budgets() {
     unsigned beforeFinal = 0, optional = 0;
     for (unsigned depth = 1; depth <= 3; ++depth) {
         for (bool fallback : {false, true}) {
-            const auto floor = generate({5, depth}, fallback);
+            const auto floor = generate({5, depth}, blobber::test::campaignBlueprints(), fallback);
             check(bool(floor), "population and fallback generate");
             const auto& f = floor.floor->layout;
             const auto p = resolvePopulation(f, floor.floor->request, c, d.types);
@@ -130,7 +131,7 @@ void approaches() {
     const auto c = catalog(false, 50, 7, true);
     const auto d = definitions();
     for (unsigned depth = 1; depth <= 3; ++depth) {
-        const auto result = generate({8, depth});
+        const auto result = generate({8, depth}, blobber::test::campaignBlueprints());
         const auto& f = *result.floor;
         const auto p = preparePopulation(f, c, d.types);
         for (unsigned i = 0; i < f.layout.encounterCount; ++i) {
@@ -277,7 +278,7 @@ void magicRewards() {
             rules::ItemId previous;
             unsigned count = 0;
             for (unsigned depth = 1; depth <= 3; ++depth) {
-                const auto generated = generate({seed, depth});
+                const auto generated = generate({seed, depth}, blobber::test::campaignBlueprints());
                 check(bool(generated), "Owned reward floor generated");
                 const auto first = resolvePopulation(generated.floor->layout, generated.floor->request, cat,
                                                      defs.types, profile);

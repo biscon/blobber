@@ -1,4 +1,5 @@
 #include "generation/architecture.hpp"
+#include "generation/blueprint_rooms.hpp"
 namespace blobber::generation {
 RoomCeilings roomCeilings(const FloorLayout& f) noexcept {
     std::array<unsigned, maxRooms> areas{};
@@ -11,6 +12,10 @@ RoomCeilings roomCeilings(const FloorLayout& f) noexcept {
         const auto& r = f.rooms[i];
         if (r.role == Role::Entrance || r.role == Role::Objective)
             continue;
+        if (const auto* b = blueprintAt(f, i)) {
+            heights[i] = b->ceiling;
+            continue;
+        }
         heights[i] = areas[i] < 20 ? 5 : 6;
         // Stone shape IDs: 1 = pillar chamber, 2 = L room.
         if (areas[i] >= 30 && r.size.x >= 5 && r.size.y >= 5 && r.shape != 2)

@@ -535,7 +535,19 @@ template <class A> void visit(A& a, generation::CacheSite& v, const generation::
     a("cell", v.cell, base.cell);
     a("facing", v.facing, base.facing);
 }
+template <class A>
+void visit(A& a, generation::BlueprintInstance& v, const generation::BlueprintInstance& base) {
+    a("id", v.id, base.id);
+    a("purpose", v.purpose, base.purpose);
+    a("room", v.room, base.room);
+    a("rotation", v.rotation, base.rotation);
+    a("sockets", v.sockets, base.sockets);
+    a("ceiling", v.ceiling, base.ceiling);
+}
 template <class A> void visit(A& a, generation::FloorLayout& v, const generation::FloorLayout& base) {
+    a("blueprintCount", v.blueprintCount, base.blueprintCount);
+    a.counted("blueprints", v.blueprints, v.blueprintCount, base.blueprints);
+    a("blueprintFingerprint", v.blueprintFingerprint, base.blueprintFingerprint);
     a("routeCount", v.routeCount, base.routeCount);
     a("encounterCount", v.encounterCount, base.encounterCount);
     a("populationCount", v.populationCount, base.populationCount);

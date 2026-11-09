@@ -2,6 +2,7 @@
 #include "assets/image.hpp"
 #include "assets/rules_loader.hpp"
 #include "generation/population.hpp"
+#include "generation_blueprints.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "rlgl.h"
@@ -194,7 +195,8 @@ inline void underkeepReview(const std::filesystem::path& source, const std::file
             } else
                 for (unsigned depth : {1u, 3u}) {
                     const unsigned seed = 0;
-                    const auto generated = generation::generate({seed, depth});
+                    const auto generated =
+                        generation::generate({seed, depth}, blobber::test::campaignBlueprints());
                     check(bool(generated), "Underkeep review generation");
                     const auto& floor = *generated.floor;
                     const auto& f = floor.layout;

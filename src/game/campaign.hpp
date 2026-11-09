@@ -84,16 +84,17 @@ struct CampaignSaveData {
     std::string runId;
 };
 std::array<CampaignLocation, campaignLocationCount>
-prepareCampaignLocations(const rules::Catalog&, const std::vector<std::string>&, std::uint32_t seed,
+prepareCampaignLocations(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&,
+                         const std::vector<std::string>&, std::uint32_t seed,
                          generation::RewardProfile profile = {});
 std::shared_ptr<const CampaignDefinitions>
 campaignDefinitions(const std::array<CampaignLocation, campaignLocationCount>&, std::uint32_t seed,
                     const rules::Catalog&, const CampaignDefinitions* canonical = nullptr,
                     generation::RewardProfile profile = {});
-std::shared_ptr<const CampaignDefinitions> prepareCampaignDefinitions(const rules::Catalog&,
-                                                                      const std::vector<std::string>&,
-                                                                      std::uint32_t seed,
-                                                                      generation::RewardProfile profile = {});
+std::shared_ptr<const CampaignDefinitions>
+prepareCampaignDefinitions(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&,
+                           const std::vector<std::string>&, std::uint32_t seed,
+                           generation::RewardProfile profile = {});
 class CampaignRun {
   public:
     class PreparedTravel {
@@ -119,9 +120,11 @@ class CampaignRun {
         std::array<std::uint64_t, 100> partyStamp{};
         std::array<std::uint64_t, 4> temporaryUntil{};
     };
-    CampaignRun(const rules::Catalog&, const rules::PresetParty&, const std::vector<std::string>& types,
+    CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&,
+                const rules::PresetParty&, const std::vector<std::string>& types,
                 const std::vector<NpcTimings>& timings, std::uint32_t seed);
-    CampaignRun(const rules::Catalog&, CampaignCheckpoint&&, const std::vector<NpcTimings>&);
+    CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&, CampaignCheckpoint&&,
+                const std::vector<NpcTimings>&);
     std::unique_ptr<CampaignCheckpoint> checkpoint() const;
     std::unique_ptr<CampaignSaveData> captureSave() const;
     const char* saveSafety() const noexcept { return game().saveSafety(); }

@@ -1,7 +1,9 @@
+#include "assets/fingerprint.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/world_assets.hpp"
 #include "support/underkeep_assets.hpp"
 #include <iostream>
+#include <nlohmann/json.hpp>
 int main(int argc, char** argv) {
     try {
         if (argc != 2)
@@ -42,6 +44,10 @@ int main(int argc, char** argv) {
         const auto vine = writer.add("decoration/vine", 8, 12, true, pixels);
         blobber::test::finishWithUnderkeep(writer, appearances, defs.definitionFingerprint, door, locked,
                                            crest, vine);
+        std::ofstream(root / "prepared/world/sources.json") << nlohmann::json{
+            {"blueprints/underkeep.json",
+             blobber::fingerprintFile(
+                 root / "blueprints/underkeep.json")}}.dump();
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';
         return 1;

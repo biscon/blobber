@@ -1,5 +1,11 @@
 # System design
 
+[BR03 campaign blueprint integration](br03_blueprint_rooms_design.md): implemented and mechanically verified;
+user visual/play acceptance pending. Every generated floor includes a kitchen, mead hall, barracks
+and armory; authored reservations precede population. New campaigns use generator/
+templates 14/10 and schema/simulation 22/24.
+[Verification and six selected images](br03_blueprint_rooms_design.md#verification-commands-and-outcomes).
+
 [BR02 finished rooms](br02_blueprint_rooms_design.md#bed-collision-and-br02-acceptance):
 **accepted and closed by the user, 2026-11-09**. Final bed collision
 verification passed: focused blueprint tests, all 144 room variants/four pair
@@ -10,7 +16,7 @@ collision interface, save format or frame path changes accompany this correction
 Twenty-one kits fit the existing capacity of 24. The
 [accepted quarters gallery](screenshots/blueprint-rooms-br02-quarters/README.md)
 and [accepted kitchen/hall gallery](screenshots/blueprint-rooms-br02/README.md)
-retain six images each. BR03 campaign integration remains separately proposed.
+retain six images each. BR03 campaign integration has its own implementation and acceptance record above.
 
 [BR01 blueprint foundation](br01_blueprint_rooms_design.md): **accepted and closed by
 the user, 2026-11-09**. Four compact authored
@@ -21,7 +27,7 @@ images](screenshots/blueprint-rooms-br01/README.md); disposable output cleaned.
 Campaign generation, persistence and production pack sources remain unchanged.
 
 [Authored blueprint rooms](blueprint_rooms_plan.md): **BR01 accepted and closed;
-BR02 accepted and closed; BR03 proposed**.
+BR02 accepted and closed; BR03 implemented; user review pending**.
 Three slices cover validated layouts/blockouts, finished room artwork, and procedural
 campaign integration. Initial target: one kitchen, mead hall, barracks and armory per
 generated floor, with authored arrangements and contextual connections.
@@ -1163,7 +1169,8 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 15/18 and generator/templates 9/7. Older saves reject
+Campaign schema/simulation are 22/24 and generator/templates 14/10. Blueprint content
+fingerprints join save/replay compatibility. Older saves reject
 without being modified; no migration. World publication is format 13, appearance 5,
 visibility world-visibility-v18, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is
 shared-door-motion-300ms-v2. Strict trace replay

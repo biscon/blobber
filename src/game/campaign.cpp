@@ -31,8 +31,9 @@ bool portable(const EffectInstance& e) noexcept {
 }
 } // namespace
 std::array<CampaignLocation, campaignLocationCount>
-prepareCampaignLocations(const rules::Catalog& catalog, const std::vector<std::string>& types,
-                         std::uint32_t seed, generation::RewardProfile profile) {
+prepareCampaignLocations(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog& catalog,
+                         const std::vector<std::string>& types, std::uint32_t seed,
+                         generation::RewardProfile profile) {
     std::array<CampaignLocation, campaignLocationCount> locations;
     auto& hub = locations[0];
     auto definition = sanctuaryHub();
@@ -46,7 +47,7 @@ prepareCampaignLocations(const rules::Catalog& catalog, const std::vector<std::s
     hub.visited = true;
     for (unsigned depth = 1; depth <= 3; ++depth) {
         preparationPoint("Generating dungeon floors");
-        auto result = generation::generate({seed, depth});
+        auto result = generation::generate({seed, depth}, blueprints);
         if (!result)
             throw std::runtime_error("Campaign generation failed");
         auto& floor = locations[depth];
@@ -98,19 +99,19 @@ prepareCampaignLocations(const rules::Catalog& catalog, const std::vector<std::s
     emporium.seed = seed;
     return locations;
 }
-std::shared_ptr<const CampaignDefinitions> prepareCampaignDefinitions(const rules::Catalog& catalog,
-                                                                      const std::vector<std::string>& types,
-                                                                      std::uint32_t seed,
-                                                                      generation::RewardProfile profile) {
-    return campaignDefinitions(prepareCampaignLocations(catalog, types, seed, profile), seed, catalog,
-                               nullptr, profile);
+std::shared_ptr<const CampaignDefinitions>
+prepareCampaignDefinitions(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog& catalog,
+                           const std::vector<std::string>& types, std::uint32_t seed,
+                           generation::RewardProfile profile) {
+    return campaignDefinitions(prepareCampaignLocations(blueprints, catalog, types, seed, profile), seed,
+                               catalog, nullptr, profile);
 }
-CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty& starting,
-                         const std::vector<std::string>& types, const std::vector<NpcTimings>& timings,
-                         std::uint32_t seed)
+CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog& catalog,
+                         const rules::PresetParty& starting, const std::vector<std::string>& types,
+                         const std::vector<NpcTimings>& timings, std::uint32_t seed)
     : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
     const auto profile = generation::rewardProfile(catalog, starting);
-    locations_ = prepareCampaignLocations(catalog, types, seed, profile);
+    locations_ = prepareCampaignLocations(blueprints, catalog, types, seed, profile);
     definitions_ = baseline_ = campaignDefinitions(locations_, seed, catalog, nullptr, profile);
     const auto spawn = sanctuaryHub().spawn;
     configureDoorways();

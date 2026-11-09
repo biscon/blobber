@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/inn_interior.hpp"
@@ -100,7 +101,7 @@ int main(int argc, char** argv) try {
                << " camera=" << camera.position.x << ',' << camera.position.y << ',' << camera.position.z
                << '\n';
     };
-    const auto generated = generation::generate({5, 1});
+    const auto generated = generation::generate({5, 1}, blueprints::load(root / "blueprints/underkeep.json"));
     if (!generated)
         throw std::runtime_error("Review floor generation failed");
     const auto& floor = *generated.floor;

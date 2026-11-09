@@ -1,4 +1,5 @@
 #include "assets/blueprint_loader.hpp"
+#include "assets/fingerprint.hpp"
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <set>
@@ -175,5 +176,15 @@ BlueprintCatalog load(const std::filesystem::path& path) {
         throw Failure(Error::Content, "Cannot read blueprint catalog");
     text.resize(std::size_t(file.gcount()));
     return decode(text);
+}
+void checkPrepared(const std::filesystem::path& sourceRoot, const std::filesystem::path& preparedWorld) {
+    const auto provenance = preparedWorld / "sources.json";
+    if (std::filesystem::file_size(provenance) > 16u * 1024u * 1024u)
+        throw Failure(Error::Capacity, "World provenance exceeds bound");
+    std::ifstream stream(provenance);
+    const auto j = nlohmann::json::parse(stream);
+    if (!j.is_object() || !j.contains("blueprints/underkeep.json") ||
+        j.at("blueprints/underkeep.json") != fingerprintFile(sourceRoot / "blueprints/underkeep.json"))
+        throw Failure(Error::Content, "Prepared blueprint content differs; rebuild world assets");
 }
 } // namespace blobber::blueprints

@@ -1,6 +1,7 @@
 #pragma once
 #include "assets/world_assets.hpp"
 #include "support/elemental_assets.hpp"
+#include "support/generation_blueprints.hpp"
 namespace blobber::test {
 // Tiny owned geometry for integration/allocation fixtures. No production art dependency.
 inline void finishWithUnderkeep(world_assets::Writer& writer,
@@ -46,6 +47,14 @@ inline void finishWithUnderkeep(world_assets::Writer& writer,
           "tall-house-ivy", "low-house-hip", "tall-house", "city-gate", "boundary-wall", "courtyard-garden",
           "lane-garden", "east-garden", "market-produce", "market-grain", "fountain"})
         city.buildings.push_back({name, {1}});
-    writer.finish(actors, definitions, {dungeon, underkeep, city}, {mesh, shell});
+    auto overhead = shell;
+    overhead.name = "owned-overhead";
+    for (auto& vertex : overhead.vertices)
+        vertex[1] += 1.6f;
+    const auto& catalog = campaignBlueprints();
+    for (unsigned i = 0; i < catalog.kitCount; ++i)
+        underkeep.buildings.push_back(
+            {catalog.kits[i].id.data(), {std::uint16_t(catalog.kits[i].clearance > 0 ? 2 : 1)}});
+    writer.finish(actors, definitions, {dungeon, underkeep, city}, {mesh, shell, overhead});
 }
 } // namespace blobber::test

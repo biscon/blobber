@@ -1,4 +1,5 @@
 #include "support/automation_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include <iostream>
 using namespace blobber;
 using namespace blobber::automation;
@@ -24,7 +25,7 @@ int main(int argc, char** argv) {
             trace->append("header", {{"fixture", "pc072-owned-route"}});
         }
         RecordedOutput output(std::cout, trace.get());
-        Protocol protocol(cat, defs, Mode::Diagnostic);
+        Protocol protocol(blobber::test::campaignBlueprints(), cat, defs, Mode::Diagnostic);
         std::string line;
         while (!protocol.closed() && readLine(std::cin, line)) {
             const auto request = parseRequest(line);

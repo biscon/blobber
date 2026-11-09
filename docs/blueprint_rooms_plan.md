@@ -3,7 +3,7 @@
 Created: 2026-11-09.
 Status: **BR01 accepted and closed by the user on 2026-11-09.
 BR02 accepted and closed, including the final bed collision correction.
-BR03 remains proposed.**
+BR03 implemented and mechanically verified; user visual/play acceptance pending.**
 
 The user wants recognizable kitchen, armory, mead hall and barracks blueprints,
 placed by rules within randomized dungeons. The proposed first playable version
@@ -43,8 +43,8 @@ in BR03's detailed plan. Requiring every relationship would make layouts repetit
 and increase rejection rates. One blueprint per purpose is enough initially; rotations
 and authored doorway alternatives provide variation without arbitrary stretching.
 Additional layouts, ruin/occupation variants and floor-specific room rosters are later
-work. Unrelated random torture furniture should not intrude into these rooms; whether
-it survives in ordinary rooms is an explicit BR03 dressing-policy decision.
+work. Unrelated random torture furniture should not intrude into these rooms; BR03 retains
+it in ordinary rooms.
 
 ## Delivery slices
 
@@ -52,7 +52,7 @@ it survives in ordinary rooms is an explicit BR03 dressing-policy decision.
 | --- | --- | --- | --- |
 | BR01 | Blueprint layouts, contracts and playable blockouts | Existing generation/rendering | Accepted and closed — 2026-11-09 |
 | BR02 | Finished room kit and isolated in-engine room review | Reviewed BR01 layouts/contracts | Accepted and closed — 2026-11-09 |
-| BR03 | Procedural placement, population, persistence and campaign integration | Reviewed BR02 rooms | Proposed |
+| BR03 | Procedural placement, population, persistence and campaign integration | Reviewed BR02 rooms | Implemented and mechanically verified; user review pending |
 
 ### BR01 — Layouts and blueprint foundation
 
@@ -111,6 +111,11 @@ budgets. Focused generated-asset tests check export/loading/lifetime behavior; p
 captures check appearance. Concept art or Blender-only views do not establish readiness.
 
 ### BR03 — Generation and playable campaign integration
+
+Detailed implementation: [BR03 design and handoff](br03_blueprint_rooms_design.md).
+Implementation authorized 2026-11-09; implemented and mechanically verified 2026-11-10.
+Ordinary rooms retain cages/racks/torture dressing; authored interiors exclude generic
+dressing. Final acceptance remains with the user.
 
 Select required blueprint rooms early, place their geometry and legal sockets, then
 connect them and the ordinary rooms through bounded procedural layout generation.

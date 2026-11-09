@@ -16,7 +16,7 @@ struct EffectPacket {
 };
 // NPC attacks/pulses own one glyph; four party casters can each contribute two
 // additional Magic Missile glyphs beyond the retained record count.
-constexpr unsigned effectCapacity = 1536;
+constexpr unsigned effectCapacity = 1680;
 Vec spiritualWeaponPosition(GeometryView, Cell, std::uint64_t now) noexcept;
 std::optional<Vec> spiritualWeaponPosition(const FrameInput&, Cell) noexcept;
 struct EffectFrame {

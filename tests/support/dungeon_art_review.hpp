@@ -2,6 +2,7 @@
 #include "app/loading.hpp"
 #include "assets/image.hpp"
 #include "game/campaign.hpp"
+#include "generation_blueprints.hpp"
 #include "platform/game_view.hpp"
 #include "rlgl.h"
 #include "support/check.hpp"
@@ -92,7 +93,8 @@ inline void dungeonArtReview(const std::filesystem::path& source, const std::fil
         loot.ground[0] = {{4, 4}, rules.findItem("healing_potion"), 1};
         GameSession bags(room, rules, none, 5, {{4, 5}, Heading::North}, false, definitions.timings, loot);
         capture(bags, room, "loot-bag-shadow");
-        CampaignRun campaign(rules, *rules.preset(), definitions.types, definitions.timings, 5);
+        CampaignRun campaign(blobber::test::campaignBlueprints(), rules, *rules.preset(), definitions.types,
+                             definitions.timings, 5);
         capture(campaign.game(), campaign.map(), "single-destination-hub");
         auto ticket = campaign.prepareTravel(campaign.request(campaign.game().nearbyFixture()));
         check(campaign.commitTravel(ticket), "Review enters dungeon for idle HUD");
@@ -137,7 +139,8 @@ inline void dungeonArtReview(const std::filesystem::path& source, const std::fil
                 : pose.heading == Heading::West ? "hub-crest"
                                                 : "hub-vine");
     }
-    CampaignRun campaign(rules, *rules.preset(), definitions.types, definitions.timings, 5);
+    CampaignRun campaign(blobber::test::campaignBlueprints(), rules, *rules.preset(), definitions.types,
+                         definitions.timings, 5);
     capture(campaign.game(), campaign.map(), "campaign-stairs-down");
     auto ticket =
         prepareCpu([&] { return campaign.prepareTravel(campaign.request(campaign.game().nearbyFixture())); });

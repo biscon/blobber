@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/campaign.hpp"
@@ -24,10 +25,11 @@ int main(int argc, char** argv) try {
         reviewShadowtart(root, output);
         return 0;
     }
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
-    auto run =
-        std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    auto run = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(), definitions.types,
+                                             definitions.timings, 5);
     Window window(1920, 1080, true);
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
         throw std::runtime_error("Capture window must stay hidden");
@@ -132,13 +134,13 @@ int main(int argc, char** argv) try {
     }
     run->game().restorePose(run->location(unsigned(CampaignLocationId::Emporium)).exit, false);
     const auto checkpoint = run->checkpoint();
-    const CampaignContent content{"emporium-review", definitions.definitionFingerprint};
+    const CampaignContent content{"emporium-review", definitions.definitionFingerprint, &roomBlueprints};
     const auto text = encodeCampaign(catalog, definitions, content, *checkpoint);
     report << "Seven-location snapshot bytes=" << run->snapshotBytes() << " active save bytes=" << text.size()
            << '\n';
     auto decoded = decodeCampaign(catalog, definitions, content, text);
     view.reset();
-    run = std::make_unique<CampaignRun>(catalog, std::move(*decoded), definitions.timings);
+    run = std::make_unique<CampaignRun>(roomBlueprints, catalog, std::move(*decoded), definitions.timings);
     view = std::make_unique<GameView>(renderer);
     capture("exit-continue");
     travel(false);

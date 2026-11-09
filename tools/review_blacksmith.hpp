@@ -1,4 +1,5 @@
 #pragma once
+#include "assets/blueprint_loader.hpp"
 #include "assets/dialogue.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
@@ -25,6 +26,7 @@ inline void reviewBlacksmith(const std::filesystem::path& root, const std::files
     };
     const auto catalog = loadRules(root / "rules/catalog.json");
     const auto definitions = loadNpcDefinitions(root / "npcs/level.json");
+    const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
     auto dialogue = loadDialogue(root / "dialogue");
     const auto shops = loadShops(root / "shops", catalog);
     validateShops(dialogue, shops);
@@ -47,8 +49,8 @@ inline void reviewBlacksmith(const std::filesystem::path& root, const std::files
                 "Current equipment absent from Duncan's stock");
     }
     require(equipment == shop->stock.size(), "Unexpected smithy merchandise");
-    auto run =
-        std::make_unique<CampaignRun>(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+    auto run = std::make_unique<CampaignRun>(roomBlueprints, catalog, *catalog.preset(), definitions.types,
+                                             definitions.timings, 5);
     run->game().restorePose(sanctuaryCity().doorway("smithy").approach, false);
     {
         auto ticket = run->prepareTravel(run->doorwayRequest());
@@ -96,8 +98,9 @@ inline void reviewBlacksmith(const std::filesystem::path& root, const std::files
             presenter.capture(output / (std::string(name) + ".png"));
             const auto m = renderer.memory();
             report << name << " clip=" << unsigned(animation.snapshot().frames[0].clip)
-                   << " frame=" << unsigned(animation.snapshot().frames[0].active) << " world_gpu=" << m.worldGpu
-                   << " world_cpu=" << renderer.cpuBytes() << " game_ms=" << game.timeMs() << '\n';
+                   << " frame=" << unsigned(animation.snapshot().frames[0].active)
+                   << " world_gpu=" << m.worldGpu << " world_cpu=" << renderer.cpuBytes()
+                   << " game_ms=" << game.timeMs() << '\n';
         };
         const auto key = [&](UiKey k) {
             UiInput input;
@@ -186,11 +189,11 @@ inline void reviewBlacksmith(const std::filesystem::path& root, const std::files
                   "buyback and frozen simulation verified\n";
     }
     const auto checkpoint = run->checkpoint();
-    const CampaignContent content{"blacksmith-review", definitions.definitionFingerprint};
+    const CampaignContent content{"blacksmith-review", definitions.definitionFingerprint, &roomBlueprints};
     const auto encoded = encodeCampaign(catalog, definitions, content, *checkpoint);
     auto decoded = decodeCampaign(catalog, definitions, content, encoded);
     view.reset();
-    run = std::make_unique<CampaignRun>(catalog, std::move(*decoded), definitions.timings);
+    run = std::make_unique<CampaignRun>(roomBlueprints, catalog, std::move(*decoded), definitions.timings);
     require(run->game().actors().snapshot().count == 1 && run->dialogue().get(host)->introduced &&
                 run->dialogue().get(host)->completedCount == 3 &&
                 run->merchants().find(host)->stock[catalog.findItem("longsword").index] == 1 &&

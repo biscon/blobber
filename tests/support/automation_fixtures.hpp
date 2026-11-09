@@ -3,6 +3,7 @@
 #include "automation/trace.hpp"
 #include "check.hpp"
 #include "creation_fixtures.hpp"
+#include "generation_blueprints.hpp"
 #include "persistence/arena_store.hpp"
 #include <fstream>
 #include <sstream>
@@ -144,7 +145,7 @@ struct Client {
     std::ostringstream recordedOutput;
     Client(const rules::Catalog& c, const NpcDefinitions& d, Mode m = Mode::Diagnostic,
            VisibilityFactory f = nullptr, void* context = nullptr)
-        : protocol(c, d, m, f, context) {}
+        : protocol(blobber::test::campaignBlueprints(), c, d, m, f, context) {}
     Json request(const char* op, Json data = Json::object()) {
         data["version"] = 1;
         data["id"] = std::to_string(next++);

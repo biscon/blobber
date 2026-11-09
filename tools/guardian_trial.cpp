@@ -1,3 +1,4 @@
+#include "assets/blueprint_loader.hpp"
 // Dedicated diagnostic runner: generated guardian geometry with fresh L1/L2 parties.
 // Setup is deliberately absent from the normal headless protocol/game application.
 #include "assets/rules_loader.hpp"
@@ -63,9 +64,10 @@ int main(int argc, char** argv) {
             else if (key != "--mode" || value != "diagnostic")
                 throw std::runtime_error("Diagnostic only");
         }
+        const auto blueprints = blueprints::load(assets / "blueprints/underkeep.json");
         const auto catalog = loadRules(assets / "rules/catalog.json");
         const auto definitions = loadNpcDefinitions(assets / "npcs/level.json");
-        Protocol protocol(catalog, definitions, Mode::Diagnostic);
+        Protocol protocol(blueprints, catalog, definitions, Mode::Diagnostic);
         std::unique_ptr<TraceWriter> trace;
         if (!record.empty()) {
             trace = std::make_unique<TraceWriter>(record);

@@ -157,10 +157,10 @@ void transforms() {
                       "Fire anchors rotate and translate with their models");
             }
         }
-        auto excessive = decorative;
-        excessive.rooms[0].placements[1] = {{0}, {4, 0}, Heading::North};
-        excessive.rooms[0].placementCount = 2;
-        rejects([&] { bp::assemble(excessive, "kitchen-hall"); }, "Assembled fire capacity rejects");
+        WorldDefinition excessive;
+        excessive.ambientFires.resize(ambientFireCapacity);
+        rejects([&] { bp::appendFurnishings(decorative, decorative.rooms[0], {0, 0}, excessive); },
+                "Assembled fire capacity rejects");
         auto overlap = json;
         overlap["rooms"][0]["placements"].push_back(overlap["rooms"][0]["placements"][0]);
         rejects([&] { bp::decode(overlap.dump()); }, "Decorative blueprint visual overlap rejects");

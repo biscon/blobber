@@ -2,6 +2,7 @@
 #include "assets/image.hpp"
 #include "assets/rules_loader.hpp"
 #include "game/campaign.hpp"
+#include "generation_blueprints.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "rlgl.h"
@@ -80,7 +81,8 @@ inline void interactionPromptReview(const std::filesystem::path& assets,
                       << ", changed pixels=" << changed << '\n';
         };
         {
-            CampaignRun campaign(catalog, *catalog.preset(), definitions.types, definitions.timings, 5);
+            CampaignRun campaign(blobber::test::campaignBlueprints(), catalog, *catalog.preset(),
+                                 definitions.types, definitions.timings, 5);
             campaign.game().setAnimated(false);
             campaign.game().restorePose(sanctuaryCity().doorway("inn").approach, false);
             capture(campaign.game(), "city-enter-inn", "[F] Enter inn");
