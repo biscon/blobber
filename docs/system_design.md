@@ -1,5 +1,10 @@
 # System design
 
+[Authored blueprint rooms](blueprint_rooms_plan.md): **proposed roadmap, not implemented**.
+Three slices cover validated layouts/blockouts, finished room artwork, and procedural
+campaign integration. Initial target: one kitchen, mead hall, barracks and armory per
+generated floor, with authored arrangements and contextual connections.
+
 [Architectural dungeon ceilings](procedural_layout_design.md#architectural-ceilings--2026-11-09):
 implemented and mechanically verified; user visual acceptance pending. Deterministic room-size/shape tiers, low
 thresholds and ceiling-attached dressing; level floors and existing RNG placements.
