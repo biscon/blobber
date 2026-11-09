@@ -306,6 +306,26 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
                     shot("kitchen-work-surface");
                     place({1, 3}, Heading::West);
                     shot("kitchen-provisions");
+                    place({3, 1}, Heading::North);
+                    shot("kitchen-barrel");
+                    place({1, 1}, Heading::North);
+                    game.move(Action::Forward);
+                    game.update(.2, false);
+                    const auto storageCell =
+                        room.origin +
+                        bp::rotate({1, 0}, bp::rotatedSize(room.blueprint.size, a.turns), a.turns);
+                    require(game.movement().player.cell == storageCell && !scene.map.npcBlocked(storageCell),
+                            "Decorative storage must allow party traversal and NPC placement");
+                    shot("storage-walkthrough");
+                } else if (hall) {
+                    place({0, 3}, Heading::North);
+                    shot("table-end");
+                    place({1, 2}, Heading::North);
+                    shot("tapestry-detail");
+                    place({1, 0}, Heading::West);
+                    shot("brazier-detail");
+                    game.update(.15, false);
+                    shot("brazier-animated");
                 }
             }
         }

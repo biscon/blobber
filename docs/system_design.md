@@ -1,17 +1,16 @@
 # System design
 
-[BR02 scale/material correction](br02_blueprint_rooms_design.md#scale-and-hearth-correction):
+[BR02 furniture proportions and room dressing](br02_blueprint_rooms_design.md#furniture-proportions-and-room-dressing):
 **implemented and mechanically verified; revised pair awaiting user review**.
-The four kitchen/mead hall furnishings are half size with smaller whole-cell
-occupancy. The rebuilt hearth uses wall-matched masonry, an arch, lined firebox,
-rounded cookware and supported grate. Initial BR02 art was rejected; these four
-kit dimensions supersede the initial contracts. Room dimensions, doors, ceilings
-and campaign placement retain their existing behavior.
-Four affected CPU suites, 192 room variants/four pair orientations, the production
-bake and 30 hidden views pass; [six refreshed review images](screenshots/blueprint-rooms-br02/README.md).
-Run `./review-rooms` for the updated walkthrough. Pair review precedes
-barracks/armory; campaign integration remains BR03. Disposable output cleaned;
-source art and the normal prepared build cache retained.
+The accepted fireplace is preserved. Dining benches/table and kitchen worktop have
+properly raised supports; five separate enlarged storage pieces are nonblocking.
+Two matched heraldic tapestries and two animated braziers dress the hall. Optional
+scenery blocking and two bounded additional ambient fires reuse existing preparation,
+rendering, persistence and residency; absent extensions retain existing identities.
+Seven focused suites, 192 room variants/four pair orientations, production preparation
+and 42 hidden views pass. [Six refreshed images](screenshots/blueprint-rooms-br02/README.md).
+Run `./review-rooms`. Barracks/armory remain behind pair review; campaign placement
+remains BR03. Owned disposable output cleaned; durable sources and caches retained.
 
 [BR01 blueprint foundation](br01_blueprint_rooms_design.md): **accepted and closed by
 the user, 2026-11-09**. Four compact authored

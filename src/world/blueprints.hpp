@@ -29,6 +29,8 @@ struct Kit {
     Name id{};
     Cell size{};
     float height = 0;
+    bool blocking = true;
+    std::optional<AmbientFire> fire; // Mesh-local position; authored in native cell units.
 };
 struct Placement {
     KitId kit;

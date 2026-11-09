@@ -16,6 +16,9 @@ sys.path.insert(0, str(ROOT / 'tools'))
 from city_mesh_export import export_collection
 
 DENSITY, ATLAS, GUTTER = 256, 2048, 4
+TAPESTRY_X = np.linspace(-.325,.325,17)
+TAPESTRY_Z = .475 + .008*np.cos(np.arange(17)*math.pi/2)
+TAPESTRY_U = np.concatenate(([0],np.cumsum(np.hypot(np.diff(TAPESTRY_X),np.diff(TAPESTRY_Z)))))
 
 
 class Model:
@@ -162,70 +165,114 @@ def author():
     for x,z in ((.38,-.10),(.62,-.10),(.50,.12)):
         m.plain_box((x,.177,z),(.035,.03,.035),'iron')
 
+    # Everything below is authored directly in final native cell units.
     m = Model('work-surface'); models.append(m)
-    # A lower shelf occupies the full footprint; legs finish at the shelf/top.
-    for z in (-.36,-.12,.12,.36):
-        m.box((.5,.245,z),(1.94,.045,.23))
-        m.box((.5,.065,z),(1.94,.035,.23),'darkwood')
-    for x in (-.37,1.37):
-        for z in (-.36,.36):
-            m.box((x,.1275,z),(.11,.185,.11))
-            m.box((x,.025,z),(.14,.05,.14),'darkwood')
-    for z in (-.39,.39):
-        m.box((.5,.20,z),(1.62,.05,.065))
-    m.box((.02,.279,-.08),(.45,.023,.39),'endwood')
-    m.box((.18,.296,-.06),(.28,.012,.045),'iron')
-    m.vessel((.85,.27,.1),.16,.075)
-    m.vessel((1.20,.27,-.12),.10,.075,'wood')
-    m.box((.55,.279,-.24),(.29,.025,.28),'cloth')
-    for x in (.03,.42,.82,1.15):
-        m.vessel((x,.085,.1),.13,.12)
+    for z in (.07,.19,.31,.43):
+        m.box((0,.30875,z),(.97,.0225,.115)) # Top surface .32.
+        m.box((0,.0725,z),(.97,.0175,.115),'darkwood')
+    for x in (-.435,.435):
+        for z in (.07,.43):
+            m.box((x,.1525,z),(.055,.255,.055))
+            m.box((x,.0125,z),(.07,.025,.07),'darkwood')
+    for z in (.055,.445):
+        m.box((0,.28,z),(.81,.035,.0325))
+    m.box((-.24,.3275,.21),(.225,.0115,.195),'endwood')
+    m.box((-.16,.336,.22),(.14,.006,.0225),'iron')
+    m.vessel((.175,.321,.30),.08,.0375)
+    m.vessel((.35,.321,.19),.05,.0375,'wood')
+    m.box((.025,.3275,.13),(.145,.0125,.14),'cloth')
+    for x in (-.235,-.04,.16,.325):
+        m.vessel((x,.082,.30),.065,.06)
 
-    m = Model('provisions'); models.append(m)
-    for z in (-.36,-.12,.12,.36):
-        m.box((.5,.025,z),(1.98,.05,.23),'darkwood')
-    # Two closed staved barrels, with raised hoops that have no coplanar faces.
-    for x,z,h in ((-.18,-.12,.37),(.32,.14,.32)):
-        m.lathe((x,.05,z),[(.19,0),(.23,h*.25),(.24,h*.6),(.20,h)],'wood')
-        m.disk((x,.05+h,z),.20,'endwood')
-        for level,radius in ((.07,.227),(h*.70,.238)):
-            m.lathe((x,.05,z),[(radius,level),(radius,level+.025)],'iron')
-    # Crates fill the right end with inset panels and distinct fitted corner rails.
-    for x,z,w,d,h in ((1.00,.20,.87,.51,.37),(1.08,-.29,.66,.34,.22)):
-        m.box((x,.05+h*.5,z),(w-.03,h,d-.03),'darkwood')
-        for xx in (x-w*.5+.03,x+w*.5-.03):
-            for zz in (z-d*.5+.03,z+d*.5-.03):
-                m.box((xx,.05+h*.5,zz),(.06,h,.06))
-        for level in (.08,.05+h-.035):
-            for zz in (z-d*.5,z+d*.5):
-                m.box((x,level,zz),(w-.12,.06,.025))
+    m = Model('barrel'); models.append(m)
+    radius=.24*.57; h=radius*3; z=.495-radius
+    profile=[(radius*.80,0),(radius*.96,h*.20),(radius,h*.50),
+             (radius*.96,h*.80),(radius*.80,h)]
+    m.lathe((0,0,z),profile,'wood',sides=20)
+    m.disk((0,h,z),radius*.80,'endwood',sides=20)
+    # Closed underside, outward-facing.
+    m.face([(radius*.80*math.cos(math.tau*i/20),0,z+radius*.80*math.sin(math.tau*i/20))
+            for i in range(20)],'darkwood')
+    for level in (.055,h-.075):
+        r0=np.interp(level,[p[1] for p in profile],[p[0] for p in profile])
+        r1=np.interp(level+.02,[p[1] for p in profile],[p[0] for p in profile])
+        m.lathe((0,0,z),[(r0,level),(r0+.003,level),(r1+.003,level+.02),(r1,level+.02)],'iron',sides=20)
+
+    for name,w,d,h in [('crate-large',.87*.57,.51*.57,.37*.57),
+                        ('crate-small',.66*.57,.34*.57,.22*.57)]:
+        m=Model(name);models.append(m);z=.49-d/2
+        m.box((0,h/2,z),(w-.017,h,d-.017),'darkwood')
+        for x in (-w/2+.017,w/2-.017):
+            for zz in (z-d/2+.017,z+d/2-.017):
+                m.box((x,h/2,zz),(.034,h,.034))
+        for y in (.017,h-.020):
+            for zz in (z-d/2,z+d/2):
+                m.box((0,y,zz),(w-.068,.034,.014))
         for j in range(3):
-            m.box((x-w*.5+(j+.5)*w/3,.05+h+.008,z),(w/3-.008,.016,d))
-    # Tied grain sack in the remaining front space.
-    m.lathe((.40,.05,-.29),[(.14,0),(.18,.08),(.14,.19),(.055,.25),(.075,.28)],'cloth')
-    m.disk((.4,.33,-.29),.075,'cloth')
-    m.lathe((.4,.05,-.29),[(.06,.23),(.06,.255)],'rope')
+            m.box((-w/2+(j+.5)*w/3,h+.00456,z),(w/3-.00456,.00912,d))
+
+    m=Model('grain-sack');models.append(m);scale=.57;z=.49-.18*scale
+    m.lathe((0,0,z),[(r*scale,h*scale) for r,h in
+            [(.14,0),(.18,.08),(.14,.19),(.055,.25),(.075,.28)]],'cloth',sides=16)
+    m.disk((0,.28*scale,z),.075*scale,'cloth',sides=16)
+    m.lathe((0,0,z),[(.06*scale,.23*scale),(.06*scale,.255*scale)],'rope',sides=16)
 
     m = Model('table-and-benches'); models.append(m)
-    # Three-cell long table. Benches and end cross-feet explain grouped occupancy.
-    for x in (.17,.50,.83):
-        m.box((x,.32,1.0),(.32,.055,2.94))
-    for z in (-.18,2.18):
-        m.box((.5,.035,z),(1.94,.07,.19),'darkwood')
-        m.box((.5,.17,z),(.22,.20,.23))
-        m.box((.5,.275,z),(.98,.035,.28))
-        for x in (-.30,1.30):
-            m.box((x,.115,z),(.12,.09,.14))
-    m.box((.5,.12,1),(.08,.08,2.25),'darkwood')
-    for x in (-.30,1.30):
-        m.box((x,.18,1),(.32,.055,2.94))
-    for z in (-.05,1.85):
-        for x in (.21,.79):
-            m.box((x,.35,z),(.018,.005,.018),'iron')
-    for z in (.2,1.4):
-        m.vessel((.50,.348,z),.12,.048,'wood')
-    for x,z in ((.23,.6),(.77,1.9)):
-        m.vessel((x,.348,z),.045,.05,'wood')
+    for x in (-.165,0,.165):
+        m.box((x,.26625,.5),(.16,.0275,1.47)) # Top surface .28.
+    for z in (-.09,1.09):
+        m.box((0,.0175,z),(.97,.035,.095),'darkwood')
+        m.box((0,.1325,z),(.11,.195,.115))
+        m.box((0,.24,z),(.49,.025,.14))
+        for x in (-.4,.4):
+            m.box((x,.0956,z),(.06,.12125,.07))
+    m.box((0,.1,.5),(.04,.04,1.125),'darkwood')
+    for x in (-.4,.4):
+        m.box((x,.15625,.5),(.16,.0275,1.47)) # Seat surface .17.
+    for z in (-.025,.925):
+        for x in (-.145,.145):
+            m.box((x,.28125,z),(.009,.0025,.009),'iron')
+    for z in (.1,.7):
+        m.vessel((0,.2805,z),.06,.024,'wood')
+    for x,z in ((-.135,.3),(.135,.95)):
+        m.vessel((x,.2805,z),.0225,.025,'wood')
+
+    m=Model('tapestry');models.append(m)
+    # Continuous UVs follow the cloth's unfolded arc length across shallow folds.
+    for i in range(len(TAPESTRY_X)-1):
+        x0,x1=TAPESTRY_X[i:i+2];z0,z1=TAPESTRY_Z[i:i+2]
+        front=[(x0,.65,z0),(x0,1.55,z0),(x1,1.55,z1),(x1,.65,z1)]
+        m.face(front,'heraldry')
+        back=[(x,y,z+.004) for x,y,z in front]
+        m.face(back[::-1],'cloth')
+        for j in range(4):
+            k=(j+1)%4
+            m.face([front[j],back[j],back[k],front[k]],'cloth')
+    m.bevel_box((0,1.58,.465),(.75,.018,.022),'iron',.004)
+    for x in (-.28,.28):
+        m.box((x,1.557,.463),(.027,.04,.025),'rope')
+
+    m=Model('brazier');models.append(m);z=.25
+    # Turned bowl with visible inner wall, rolled rim and a coal bed.
+    m.lathe((0,0,z),[(.055,.265),(.11,.29),(.15,.34),(.15,.36),(.135,.36),
+                    (.132,.34),(.095,.30),(.05,.285)],'iron',sides=24)
+    m.disk((0,.285,z),.05,'ash',sides=24)
+    m.face([(.055*math.cos(math.tau*i/24),.265,z+.055*math.sin(math.tau*i/24))
+            for i in range(24)],'iron')
+    # Three splayed, fitted legs and feet; each strut is a closed eight-sided prism.
+    for i in range(3):
+        angle=math.tau*i/3
+        a=np.array([.12*math.cos(angle),.018,z+.12*math.sin(angle)])
+        b=np.array([.06*math.cos(angle),.273,z+.06*math.sin(angle)])
+        axis=(b-a)/np.linalg.norm(b-a)
+        u=np.cross(axis,[0,1,0]);u/=np.linalg.norm(u);v=np.cross(axis,u)
+        lo=[a+.012*(math.cos(math.tau*j/8)*u+math.sin(math.tau*j/8)*v) for j in range(8)]
+        hi=[p+(b-a) for p in lo]
+        m.oriented(lo,'iron',-axis);m.oriented(hi,'iron',axis)
+        for j in range(8):
+            k=(j+1)%8
+            m.oriented([lo[j],lo[k],hi[k],hi[j]],'iron',lo[j]-a)
+        m.bevel_box((a[0],.012,a[2]),(.06,.024,.06),'iron',.004)
     return models
 
 
@@ -250,8 +297,9 @@ def main():
     pack = output/'packs/underkeep'; (pack/'models/rooms').mkdir(parents=True)
     (pack/'source/rooms').mkdir(parents=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    def load(path):
+    def load(path, size=None):
         image = bpy.data.images.load(str(path))
+        if size: image.scale(*size)
         data = np.empty(len(image.pixels),dtype=np.float32); image.pixels.foreach_get(data)
         data = data.reshape(image.size[1],image.size[0],4)[::-1].copy()
         bpy.data.images.remove(image)
@@ -262,6 +310,8 @@ def main():
     fields = {'cloth':fresh[24:h//2-24,w//2+24:w-24],
               'clay':fresh[h//2+24:h-24,24:w//2-24], 'iron':fresh[h//2+24:h-24,w//2+24:w-24],
               'wood':old[40:145,40:580], 'endwood':old[40:570,680:1200]}
+    fields['heraldry'] = load(ROOT/'assets/packs/underkeep/source/rooms/heraldic-tapestry-master.png',
+                              (math.ceil(TAPESTRY_U[-1]*DENSITY),math.ceil(.9*DENSITY)))
     fields['darkwood'] = fields['wood'].copy(); fields['darkwood'][:,:,:3] *= .55
     wall = load(ROOT/'assets/textures/wall.png')
     # Actual dungeon-wall paint, sampled at native density, not a different stone style.
@@ -279,16 +329,17 @@ def main():
         rgb=fields[key][:,:,:3]; mean=rgb.mean(axis=2,keepdims=True)
         fields[key][:,:,:3]=(rgb*.72+mean*.28)*.78
     models = author()
-    # User-requested half-size geometry. Recenter in the smaller occupied cells;
-    # back wall pieces also move to the cell's rear boundary rather than floating.
-    for model in models:
-        offset = np.array([-.25,0,.25 if model.name != 'table-and-benches' else 0])
-        model.faces = [(p*.5+offset,n,mat) for p,n,mat in model.faces]
+    # The accepted hearth remains exactly as exported in the preceding review.
+    models[0].faces = [(p*.5+np.array([-.25,0,.25]),n,mat) for p,n,mat in models[0].faces]
     entries = {}; faces = {}
     for m in models:
         faces[m.name] = []
         for points,normal,material in m.faces:
-            uv,size = mapping(points,normal)
+            if material == 'heraldry':
+                uv=np.column_stack((np.interp(points[:,0],TAPESTRY_X,TAPESTRY_U),1.55-points[:,1]))*DENSITY
+                size=np.array([math.ceil(TAPESTRY_U[-1]*DENSITY),math.ceil(.9*DENSITY)])
+            else:
+                uv,size = mapping(points,normal)
             shade = .54 if normal[1]<-.5 else 1.0 if normal[1]>.5 else .83
             key = (int(size[0]),int(size[1]),material,shade)
             entries[key] = None

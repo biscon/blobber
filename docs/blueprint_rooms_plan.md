@@ -2,8 +2,8 @@
 
 Created: 2026-11-09.
 Status: **BR01 accepted and closed by the user on 2026-11-09.
-BR02 scale/hearth correction implemented and mechanically verified after initial
-pair artwork rejection; revised user review pending before barracks/armory.
+BR02 furniture proportions/storage/hall dressing implemented and mechanically verified;
+fireplace accepted, remaining revised pair awaiting user review before barracks/armory.
 BR03 remains proposed.**
 
 The user wants recognizable kitchen, armory, mead hall and barracks blueprints,
@@ -189,18 +189,18 @@ owned disposable runs after selecting evidence and preserve source art and test 
 - [Five plans and five native blockout views](screenshots/blueprint-rooms-br01/README.md)
   record the accepted BR01 layouts and circulation contracts. Campaign generation and
   save versions are unchanged.
-- BR02 implementation was subsequently authorized with a **pair-first user review**
-  checkpoint. The user rejected the first delivery's scale and hearth treatment.
-  The four furnishings are now half size with smaller collision footprints; the
-  hearth has wall-matched stone, an arch and detailed interior/cookware. This
-  explicitly supersedes those four initial BR01 kit dimensions while retaining
-  the room/socket/ceiling contracts and historical BR01 acceptance.
-- The revision passes four affected CPU suites, 192 room variants/four pair
-  orientations, the production bake and 30 hidden views. [Six refreshed images](screenshots/blueprint-rooms-br02/README.md)
-  and the [BR02 handoff](br02_blueprint_rooms_design.md) record the current result.
-  Run `./review-rooms` to walk it. Barracks/armory follow revised user review;
-  BR03 remains separately proposed. Owned disposable output is cleaned;
-  durable art and the Debug publication remain.
+- BR02 implementation was authorized with a **pair-first user review** checkpoint.
+  After scale feedback, the fireplace was accepted; flattened benches/worktop and
+  grouped provisions were rejected. The approved follow-up is implemented: taller
+  supports, five separate nonblocking storage pieces, 14% larger crates/sack/barrel
+  diameter, upright barrel bodies, two heraldic tapestries and two animated braziers.
+  Room/socket/ceiling contracts and historical BR01 acceptance are preserved.
+- Seven affected CPU suites, 192 room variants/four pair orientations, production
+  preparation and 42 hidden views pass. [Six current images](screenshots/blueprint-rooms-br02/README.md)
+  and the [BR02 handoff](br02_blueprint_rooms_design.md) record the result.
+  Run `./review-rooms`. Revised pair visual/interactive review precedes barracks/armory;
+  BR03 remains separately proposed. Owned disposable output is cleaned; durable
+  sources and normal Debug caches remain.
 
 Related foundations: [variable layouts and ceilings](procedural_layout_design.md),
 [Underkeep dressing](underkeep_dressing_design.md),

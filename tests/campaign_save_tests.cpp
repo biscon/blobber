@@ -144,7 +144,9 @@ void environmentRoundtrip() {
         }
     check(found, "Owned scenery fixture has an unoccupied open cell");
     world.surfaces[index].ceiling = noCeiling;
-    world.scenery.push_back({"owned-tree", sceneryCell, {0, 0}, Heading::East, 1, 1});
+    world.scenery.push_back({"owned-tree", sceneryCell, {0, 0}, Heading::East, 1, 1, false});
+    world.ambientFires = {{sceneryCell.x + .3f, .3f, sceneryCell.y + .5f},
+                          {sceneryCell.x + .7f, .3f, sceneryCell.y + .5f}};
     // Own a one-cell static shell on an existing generated wall, away from dressing.
     auto& architecture = state->locations[1];
     bool placed = false;
@@ -183,7 +185,9 @@ void environmentRoundtrip() {
               restoredWorld.buildings[0].facing == Heading::West,
           "Owned world geometry and architecture survive campaign codec roundtrip");
     check(restoredWorld.scenery.size() == 1 && restoredWorld.scenery[0].model == "owned-tree" &&
-              restoredWorld.scenery[0].facing == Heading::East,
+              restoredWorld.scenery[0].facing == Heading::East && !restoredWorld.scenery[0].blocking &&
+              restoredWorld.ambientFires.size() == 2 &&
+              restoredWorld.ambientFires[1].x == world.ambientFires[1].x,
           "Scenery identity, orientation and physical base survive campaign codec roundtrip");
     auto bad = blobber::automation::Json::parse(text);
     savedEntry(savedLocation(bad, 0)["world"]["surfaces"]["entries"], 20)["floor"] = 99;
@@ -206,6 +210,11 @@ void environmentRoundtrip() {
                                                  {"entries", blobber::automation::Json::array()}};
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
             "Scenery decode capacity rejects before resizing");
+    bad = blobber::automation::Json::parse(text);
+    savedLocation(bad, 0)["world"]["ambientFires"] = {{"size", ambientFireCapacity + 1},
+                                                      {"entries", blobber::automation::Json::array()}};
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Fire decode capacity rejects before resize");
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 8;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-scenery saves reject clearly");

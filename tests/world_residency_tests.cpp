@@ -93,6 +93,8 @@ int main() {
         const auto fire = interiors.named("effect/hearth-flame");
         check(!smallAssets.requirements("first").textures[fire],
               "Ordinary locations do not retain unused hearth artwork");
+        check(smallAssets.requirements("first", nullptr, false, true).textures[fire],
+              "A map with ambient fires explicitly acquires shared flame artwork");
         for (const auto* name : {"sanctuary-smithy", "sanctuary-inn"}) {
             const auto required = interiors.requirements(name);
             check(required.textures[fire], "Both authored fire interiors require their shared flame");

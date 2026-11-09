@@ -309,7 +309,8 @@ Scene prepare(GeometryView m, Surfaces defaults, const std::vector<Surfaces>& ov
     limits.ranges = std::min(limits.ranges, std::size_t(65536));
     limits.cpuBytes = std::min(limits.cpuBytes, std::size_t(64u * 1024 * 1024));
     // Bounded preparation lease; transformed geometry owns its vertices after return.
-    const auto lease = assets ? assets->acquire(assets->requirements(m.base().definition().assetPack))
+    const auto lease = assets ? assets->acquire(assets->requirements(m.base().definition().assetPack, nullptr,
+                                                                     false, m.base().definition().hasFire()))
                               : world_assets::AssetLease{};
     Scene s;
     if (!m.base().definition().buildings.empty() || !m.base().definition().scenery.empty())

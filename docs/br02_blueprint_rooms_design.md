@@ -1,13 +1,53 @@
 # BR02: finished room kit and assembled review
 
-Status: **Scale/hearth revision implemented and mechanically verified; awaiting
-user review**, 2026-11-09. Initial pair artwork was rejected. Historical verification
-below is explicitly separated from the current correction.
+Status: **Furniture proportions and room dressing implemented and mechanically verified;
+awaiting user review**, 2026-11-09.
+The user accepted the revised fireplace, rejected the remaining flattened furniture,
+and approved the implementation plan below. Earlier verification is historical.
 The user requested implementation of the detailed plan and chose pair-first review.
 Stop after delivering the finished kitchen/mead hall in-engine review; complete
 barracks/armory only after that checkpoint. BR03 remains separately proposed.
 
 ## Design and ownership
+
+### Furniture proportions and room dressing
+
+Approved implementation: preserve the fireplace, floor areas and camera; rebuild
+supports to put dining tabletop/bench seats/kitchen worktop at .28/.17/.32 cells.
+Translate tabletop objects without stretching them. Remove the provisions pallet;
+independent crates/sack grow 14%, barrels grow 14% in diameter and become 1.5 diameters
+tall. Five nonblocking storage placements: large crate (1,0) and barrel (3,0) north;
+small crate (0,3) and barrel (0,4) west; sack (1,4) south. Two .65×.9 heraldic
+hangings begin .65 above the north hall floor at (1,0)/(5,0). Two blocking 1×1
+braziers occupy (0,0)/(6,0), .30-wide bowls with .36-high rims, animated with existing
+flame artwork. Woven burgundy/ochre heraldry uses retained imagegen masters.
+
+Kit and SceneryPlacement gain default-true `blocking`. Visual validation bounds
+remain independent of movement/NPC/reservation occupancy; all placed geometry is
+still checked for bounds/terrain/other placements. Kit gains optional local fire
+anchor, transformed with room/model and floor elevation. Runtime WorldDefinition
+retains legacy hearth plus a preparation-owned vector of at most two additional
+AmbientFire records. Map rejects excess/nonfinite/out-of-map anchors; frames read
+the stable collection with per-fire visibility and at most 24 particles per fire.
+No per-frame allocation, spawning, new lighting or interactions. Residency requests
+include flame artwork when the map has fires. Persistence/defaults and hash extension
+tags preserve old content identity when these optional additions are absent.
+
+Keep existing bounded kit/placement/scenery/mesh/atlas/effect capacities; no generic
+entity framework or runtime scaling. Recompute metric UVs on final geometry. Keep
+all sources/editable models reproducible and fireplace geometry/material appearance
+unchanged. Update blockouts for new forms. Room, lane, socket and reward contracts
+remain; barracks/armory and campaign integration stay deferred.
+
+Verification uses owned fixtures for decorative collision in four rotations, visual
+bounds/overlap/attachment, two-fire visibility/caching/pause/invalid capacity, asset
+residency, persistence compatibility and allocation-free frames. Build affected
+Debug suites with configured CMake/Ninja, <=2 workers and one intensive job. Inspect
+front/side/underside model views and hidden in-game close/overview/turn captures;
+explicitly assess proportions, barrel silhouettes, separate storage and hall art.
+Passing technical checks do not establish visual acceptance. Confirm traversal of
+storage cells, doors/rewards, GL/picking/lease cleanup; retain six refreshed images,
+clean owned temporary output, and deliver `./review-rooms` directly to the user.
 
 ### Scale and hearth correction
 
@@ -117,9 +157,10 @@ Launcher `--check` passed against the configured Debug build and finished catalo
 no interactive window was opened by the agent. Builds use one worker so asset
 preparation jobs stay sequential. The launcher-change artifact run was cleaned.
 
-Four pair-stage kits are registered as Underkeep named models. Their source meshes
-contain 1,794 hearth, 1,496 work-surface, 1,622 provisions and 1,176 table-group triangles.
-The revised shared 2048² atlas uses 497 packed rows; its full mip chain costs
+Nine pair-stage kits are registered as Underkeep named models: hearth 1,794 triangles,
+work-surface 1,496, table-and-benches 1,176, barrel 436, each crate 528, sack 174,
+tapestry 260 and brazier 596. The obsolete grouped provisions model is removed.
+The shared 2048² atlas uses 649 packed rows; its full mip chain costs
 22,369,620 bytes (21.33 MiB). One atlas remains reserved for the later kits.
 No production map, generation, save identity, resource ceiling or renderer format
 changed. Adding unused pack bindings does increase the prepared Underkeep palette;
@@ -190,7 +231,71 @@ published geometry checks. Only task-owned Blender processes were stopped. Sandb
 thumbnail/config cache writes also fail harmlessly; all retained assets are in the
 workspace and all textures are packed in the editable/interchange models.
 
-## Scale/hearth revision verification
+## Furniture and room dressing verification
+
+Implementation uses one matched heraldic tapestry design for both hangings. Its
+[built-in imagegen master](../assets/packs/underkeep/source/rooms/heraldic-tapestry-master.png)
+and [exact prompt](../assets/packs/underkeep/source/rooms/tapestry-prompt.json) are retained.
+All nine models, the packed Blender/GLB and the atlas are reproduced by the exporter.
+The accepted hearth's vertex positions and normals compare exactly with the preceding
+revision; only atlas UV placement changes. No atlas or mesh capacity was raised.
+
+Model review exported 27 front/rear/underside views. Inspected work surface, table,
+barrel, tapestry and brazier fronts, table rear, and work/table/barrel/brazier undersides.
+The brazier underside revealed an open outer bottom; added its cap, regenerated sources
+and inspected the corrected underside. As documented below, Blender completed every
+export/render but stalled during audio shutdown; bounded timeouts closed owned processes.
+
+Configured Debug targets built with at most two workers. Seven affected suites pass
+serially in 3.64 seconds: blueprints, blueprint_render, scenery, fixtures,
+world_integration, world_residency and campaign_save_smoke. Tests cover decorative
+footprints and local fire transforms in every orientation, visual-overlap rejection,
+malformed/capacity rejection, two-fire animation/pause/independent culling and
+allocation-free frames, explicit flame residency, and persistence of decorative scenery
+and multiple fires. Existing legacy hearth behavior and ordinary save round trips pass.
+The full slow campaign suite, second configuration and benchmarks were not run.
+
+```sh
+nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest \
+  --test-dir cmake-build-debug \
+  -R '^(blueprints|blueprint_render|scenery|fixtures|world_integration|world_residency|campaign_save_smoke)$' \
+  -j 1 --output-on-failure
+```
+
+The default `blocking=true` and absent additional fire collection do not append hash
+extensions. Sparse persistence inherits these defaults for missing fields, and fire
+collections reject sizes above two before resizing. No save version or generated-world
+identity changed, and no user saves were read or written. Current catalog geometry
+passes 192 room variants and four pair orientations.
+
+Final serialized UV density is 255.9911–256.0113 texels/cell. Sampled triangle-centroid
+colors on the hearth match the accepted atlas exactly after repacking. Final production
+bake succeeded: 556 textures, 883,633,616 mip bytes and 64,967,422 alpha bytes;
+publication fingerprint `12382331285521188286`. Finished catalog bindings pass.
+
+Two hidden runs (0°/90°, 21 views each) pass all 42 nonedge CPU/GPU ID comparisons,
+GL checks, door traversal, reward access, explicit movement into decorative storage,
+injected GPU acquisition rollback and complete view/renderer lease cleanup. Both
+flame frame pairs change visibly (32,814/18,837 viewport pixels after .15 seconds).
+Inspected kitchen overview/work/storage/barrel, table front/end/turn, tapestry,
+brazier close-up, and hall composition in both orientations. Taller supports now
+read clearly at the unchanged game camera height; barrel bodies are upright.
+
+Each pair holds 51 textures: 114,800,228 mip bytes, 12,613,249 alpha bytes and
+797,184 source-mesh bytes. Renderer CPU accounting is 23,617,772 bytes; world GPU
+141,388,604, peak application GPU 294,785,928. Scene CPU/upload are
+1,755,704/1,754,928 bytes in both orientations. No limits were raised; counts exclude
+process-wide/driver memory. Fire uses existing artwork, with no new dynamic lighting.
+
+`./review-rooms --check` passes with the final Debug executable, production assets,
+portrait and creator caches ready. Interactive desktop input/play remains unverified;
+no user window was controlled. The [six refreshed review images](screenshots/blueprint-rooms-br02/README.md)
+retain current evidence while explicitly preserving fireplace and historical BR01
+acceptance. Barracks/armory remain deferred. All owned runners are closed; the owned
+run was preview-cleaned and removed after promotion, with no diagnostic exception.
+Source artwork/editable models and normal build caches remain.
+
+## Previous scale/hearth revision verification (fireplace accepted; furniture superseded)
 
 All four source meshes now bake in the 50% linear-size correction. The hearth
 has nine arch stones, fitted masonry courses, a lined firebox, ash floor, a

@@ -80,12 +80,17 @@ void Map::validateWorld() {
             return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_';
         }))
         throw std::invalid_argument("Invalid world asset pack ID");
-    if (world_.hearth) {
-        const auto& f = *world_.hearth;
+    const auto validateFire = [&](const AmbientFire& f) {
         if (!std::isfinite(f.x) || !std::isfinite(f.y) || !std::isfinite(f.z) || f.x < 1 ||
             f.x >= width_ - 1 || f.z < 1 || f.z >= height_ - 1 || f.y < 0 || f.y > 3)
             throw std::invalid_argument("Invalid hearth anchor");
-    }
+    };
+    if (world_.ambientFires.size() > ambientFireCapacity)
+        throw std::invalid_argument("Too many ambient fires");
+    if (world_.hearth)
+        validateFire(*world_.hearth);
+    for (const auto& fire : world_.ambientFires)
+        validateFire(fire);
     const auto count = std::size_t(width_) * height_;
     if (world_.surfaces.empty())
         world_.surfaces.resize(count);
@@ -140,6 +145,7 @@ void Map::validateWorld() {
     }
     unsigned decals = 0, props = 0, containers = 0;
     occupied_.assign(count, 0);
+    std::vector<bool> visualScenery(count, false); // Preparation-only overlap validation.
     for (const auto& s : world_.scenery) {
         if (s.model.empty() || s.model.size() > 32 ||
             !std::all_of(s.model.begin(), s.model.end(),
@@ -156,9 +162,12 @@ void Map::validateWorld() {
             for (unsigned x = 0; x < s.width; ++x) {
                 const auto c = s.cell(x, z);
                 if (c.x < 1 || c.y < 1 || c.x >= width_ - 1 || c.y >= height_ - 1 || solid(c) ||
-                    surface(c).floor != surface(s.anchor).floor || occupied_[std::size_t(c.y * width_ + c.x)])
+                    surface(c).floor != surface(s.anchor).floor ||
+                    visualScenery[std::size_t(c.y * width_ + c.x)])
                     throw std::invalid_argument("Scenery base overlaps or is unlevel/outside map");
-                occupied_[std::size_t(c.y * width_ + c.x)] = 3;
+                visualScenery[std::size_t(c.y * width_ + c.x)] = true;
+                if (s.blocking)
+                    occupied_[std::size_t(c.y * width_ + c.x)] = 3;
             }
     }
     std::array<bool, containerCapacity> containerIds{};
@@ -177,7 +186,8 @@ void Map::validateWorld() {
                 throw std::invalid_argument("Invalid furniture dimensions");
             for (unsigned n = 0; n < d.footprintCount(); ++n) {
                 const auto c = d.footprint(n);
-                if (solid(c) || occupied_[std::size_t(c.y * width_ + c.x)])
+                if (solid(c) || occupied_[std::size_t(c.y * width_ + c.x)] ||
+                    visualScenery[std::size_t(c.y * width_ + c.x)])
                     throw std::invalid_argument("Furniture overlaps wall or furniture");
                 occupied_[std::size_t(c.y * width_ + c.x)] = 2 | unsigned(d.blocks());
             }

@@ -175,7 +175,8 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
 void WorldRenderer::stage(GeometryView geometry, const MovementState& state, world_render::Surfaces surfaces,
                           const std::vector<world_render::Surfaces>& overrides, world_render::Limits limits) {
     stagePrepared(geometry, state, surfaces, overrides, limits,
-                  assets_->requirements(geometry.base().definition().assetPack));
+                  assets_->requirements(geometry.base().definition().assetPack, nullptr, false,
+                                        geometry.base().definition().hasFire()));
 }
 void WorldRenderer::stagePrepared(GeometryView geometry, const MovementState& state,
                                   world_render::Surfaces surfaces,
@@ -280,13 +281,15 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
         prepareBillboards();
         stagePrepared(in.geometry, in.movement, {}, {}, {},
                       assets_->requirements(in.geometry.base().definition().assetPack,
-                                            in.actors ? &in.actors->snapshot() : nullptr, true));
+                                            in.actors ? &in.actors->snapshot() : nullptr, true,
+                                            in.geometry.base().definition().hasFire()));
         staged_->visibility = prepareCpu([&] {
             preparationPoint("Preparing dungeon");
             return std::make_unique<world_render::VisibilityPipeline>(staged_->cpu, *assets_);
         });
         prepareCpu([&] { staged_->visibility->update(in, false); });
-        if (in.attacks || in.area || in.spells || in.conditions) {
+        if (in.attacks || in.area || in.spells || in.conditions ||
+            in.geometry.base().definition().hasFire()) {
             staged_->effects = std::make_unique<world_render::EffectsPipeline>(*assets_);
             staged_->effects->update(in, staged_->visibility->frame());
             if (staged_->visibility->bytes() + sizeof(world_render::EffectsPipeline) >
@@ -326,7 +329,8 @@ WorldImage WorldRenderer::renderInput(View& v, const world_render::FrameInput& i
     v.waterFrame = unsigned((in.now / 125) % 8);
     v.visibility->update(in, false);
     const auto prepared = measure_ ? Clock::now() : Clock::time_point{};
-    if ((in.attacks || in.area || in.spells || in.conditions) && !v.effects)
+    if ((in.attacks || in.area || in.spells || in.conditions || in.geometry.base().definition().hasFire()) &&
+        !v.effects)
         throw std::logic_error("Effects require preparation before frame processing");
     if (v.effects)
         v.effects->update(in, v.visibility->frame());

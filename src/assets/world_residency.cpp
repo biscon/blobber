@@ -15,7 +15,7 @@ AssetRequirements allAssets(const Publication& p) {
     return r;
 }
 AssetRequirements CpuAssets::requirements(const std::string& id, const ActorSnapshot* actors,
-                                          bool interactive) const {
+                                          bool interactive, bool ambientFire) const {
     AssetRequirements r;
     const auto p = pack(id);
     const auto texture = [&](unsigned i) {
@@ -45,7 +45,7 @@ AssetRequirements CpuAssets::requirements(const std::string& id, const ActorSnap
             r.meshes.set(i);
             texture(publication.meshes[i].texture);
         }
-    if (id == "sanctuary-inn" || id == "sanctuary-smithy")
+    if (ambientFire || id == "sanctuary-inn" || id == "sanctuary-smithy")
         texture(named("effect/hearth-flame"));
     if (actors) {
         if (actors->count > NpcWorld::maxInstances || actors->typeCount != publication.appearances.size())

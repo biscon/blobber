@@ -96,6 +96,22 @@ int main() try {
     const auto definition = test::sceneryWorld();
     const auto rows = test::sceneryRows();
     const Map map(rows, definition);
+    for (unsigned turn = 0; turn < 4; ++turn) {
+        auto decorative = definition;
+        decorative.scenery[0].blocking = false;
+        decorative.scenery[0].facing = Heading(turn);
+        const Map loose(rows, decorative);
+        const auto cell = decorative.scenery[0].anchor;
+        check(!loose.movementBlocked(cell) && !loose.npcBlocked(cell) &&
+                  loose.canStep(cell + forward(Heading(turn)), cell),
+              "Decorative scenery has no movement or NPC reservation in any orientation");
+        check(loose.definition().fingerprint() != map.definition().fingerprint(),
+              "Blocking behavior participates in world identity");
+        const auto visible = world_render::prepare(loose, {}, {}, {}, &assets);
+        check(visible.meshBytes() > 0, "Nonblocking model still prepares visible geometry");
+        decorative.scenery.push_back(decorative.scenery[0]);
+        rejects([&] { Map overlap(rows, decorative); }, "Decorative visual bases still reject overlap");
+    }
     check(map.movementBlocked({7, 6}) && map.npcBlocked({7, 6}) && !map.solid({7, 6}) &&
               !map.buildingOwned({7, 6}),
           "Scenery blocks movement without becoming terrain");

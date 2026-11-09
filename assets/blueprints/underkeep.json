@@ -15,15 +15,7 @@
         1,
         1
       ],
-      "height": 0.175
-    },
-    {
-      "id": "provisions",
-      "size": [
-        1,
-        1
-      ],
-      "height": 0.225
+      "height": 0.38
     },
     {
       "id": "table-and-benches",
@@ -31,7 +23,7 @@
         1,
         2
       ],
-      "height": 0.2
+      "height": 0.34
     },
     {
       "id": "sleeping-bay",
@@ -64,6 +56,65 @@
         1
       ],
       "height": 0.8
+    },
+    {
+      "id": "barrel",
+      "size": [
+        1,
+        1
+      ],
+      "height": 0.411,
+      "blocking": false
+    },
+    {
+      "id": "crate-large",
+      "size": [
+        1,
+        1
+      ],
+      "height": 0.23,
+      "blocking": false
+    },
+    {
+      "id": "crate-small",
+      "size": [
+        1,
+        1
+      ],
+      "height": 0.14,
+      "blocking": false
+    },
+    {
+      "id": "grain-sack",
+      "size": [
+        1,
+        1
+      ],
+      "height": 0.17,
+      "blocking": false
+    },
+    {
+      "id": "tapestry",
+      "size": [
+        1,
+        1
+      ],
+      "height": 1.62,
+      "blocking": false
+    },
+    {
+      "id": "brazier",
+      "size": [
+        1,
+        1
+      ],
+      "height": 0.38,
+      "blocking": true,
+      "fire": [
+        0,
+        0.36,
+        0.25
+      ]
     }
   ],
   "rooms": [
@@ -100,12 +151,44 @@
           "facing": "west"
         },
         {
-          "kit": "provisions",
+          "kit": "crate-large",
+          "anchor": [
+            1,
+            0
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "barrel",
+          "anchor": [
+            3,
+            0
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "crate-small",
           "anchor": [
             0,
             3
           ],
           "facing": "east"
+        },
+        {
+          "kit": "barrel",
+          "anchor": [
+            0,
+            4
+          ],
+          "facing": "east"
+        },
+        {
+          "kit": "grain-sack",
+          "anchor": [
+            1,
+            4
+          ],
+          "facing": "north"
         }
       ],
       "sockets": [
@@ -229,6 +312,38 @@
             1
           ],
           "facing": "north"
+        },
+        {
+          "kit": "tapestry",
+          "anchor": [
+            1,
+            0
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "tapestry",
+          "anchor": [
+            5,
+            0
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "brazier",
+          "anchor": [
+            0,
+            0
+          ],
+          "facing": "south"
+        },
+        {
+          "kit": "brazier",
+          "anchor": [
+            6,
+            0
+          ],
+          "facing": "south"
         }
       ],
       "sockets": [

@@ -21,6 +21,9 @@ void malformed() {
     bad([](auto& j) { j["rooms"][0]["size"][0] = 10; });
     bad([](auto& j) { j["rooms"][0]["size"][0] = 5.5; });
     bad([](auto& j) { j["kits"][0]["height"] = -1; });
+    bad([](auto& j) { j["kits"][0]["blocking"] = 0; });
+    bad([](auto& j) { j["kits"][0]["fire"] = {0, .2}; });
+    bad([](auto& j) { j["kits"][0]["fire"] = {0, .8, 0}; });
     bad([](auto& j) { j["kits"].push_back(j["kits"][0]); });
     bad([](auto& j) { j["rooms"][0]["placements"][0]["kit"] = "absent"; });
     bad([](auto& j) { j["rooms"][0]["placements"][0]["facing"] = "mirror"; });
@@ -52,6 +55,34 @@ void malformed() {
     rejects([&] { bp::validate(c); }, "In-memory catalog capacity rejects before indexing");
 }
 void transforms() {
+    {
+        auto json = test::blueprintJson();
+        json["kits"][0]["blocking"] = false;
+        json["kits"][0]["fire"] = {.12, .2, .25};
+        const auto decorative = bp::decode(json.dump());
+        for (unsigned turn = 0; turn < 4; ++turn) {
+            const auto scene = bp::assemble(decorative, "kitchen-hall", turn);
+            check(scene.map.definition().ambientFires.size() == 2, "Pair assembles both local fire anchors");
+            unsigned i = 0;
+            for (const auto& s : scene.map.definition().scenery) {
+                check(!s.blocking && !scene.map.movementBlocked(s.anchor) && !scene.map.npcBlocked(s.anchor),
+                      "Decorative blueprint footprint does not reserve movement");
+                const auto& fire = scene.map.definition().ambientFires[i++];
+                const auto r = right(s.facing), f = forward(s.facing);
+                check(std::abs(fire.x - (s.anchor.x + .5f + .12f * r.x - .25f * f.x)) < .0001f &&
+                          std::abs(fire.z - (s.anchor.y + .5f + .12f * r.y - .25f * f.y)) < .0001f &&
+                          fire.y == .2f,
+                      "Fire anchors rotate and translate with their models");
+            }
+        }
+        auto excessive = decorative;
+        excessive.rooms[0].placements[1] = {{0}, {4, 0}, Heading::North};
+        excessive.rooms[0].placementCount = 2;
+        rejects([&] { bp::assemble(excessive, "kitchen-hall"); }, "Assembled fire capacity rejects");
+        auto overlap = json;
+        overlap["rooms"][0]["placements"].push_back(overlap["rooms"][0]["placements"][0]);
+        rejects([&] { bp::decode(overlap.dump()); }, "Decorative blueprint visual overlap rejects");
+    }
     const auto c = test::blueprintCatalog();
     const auto& r = c.rooms[c.room("barracks").index];
     const auto t = bp::transform(r, 1);

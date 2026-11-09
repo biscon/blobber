@@ -74,6 +74,8 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         add(s.footprint.y);
         add(s.width);
         add(s.depth);
+        if (!s.blocking)
+            add(0x6465636f72617465ull); // Default true preserves established fingerprints.
     }
     // Absent extension retains established dungeon generation fingerprints.
     if (hearth) {
@@ -81,6 +83,15 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         real(hearth->x);
         real(hearth->y);
         real(hearth->z);
+    }
+    if (!ambientFires.empty()) {
+        add(0x6669726573ull);
+        add(ambientFires.size());
+        for (const auto& f : ambientFires) {
+            real(f.x);
+            real(f.y);
+            real(f.z);
+        }
     }
     return h;
 }

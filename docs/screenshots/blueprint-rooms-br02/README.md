@@ -1,34 +1,35 @@
 # BR02 kitchen/mead hall review
 
-Status: **Scale/hearth revision implemented and mechanically verified; awaiting
-user visual/interactive review**, 2026-11-09. Initial pair artwork was rejected.
-BR02 is not complete: barracks/armory follow this requested checkpoint. BR01
-acceptance is preserved as history; this user-requested revision supersedes the
-four pair furniture footprints and heights.
+Status: **Furniture proportions and room dressing implemented and mechanically
+verified; awaiting user visual/interactive review**, 2026-11-09. The user accepted
+the fireplace in the preceding revision; its geometry and material appearance
+are preserved. The remaining flattened furniture was rejected and is superseded
+by this revision. BR01 acceptance remains historical; barracks/armory follow pair review.
 
-Six selected native 1920×1080 application-owned images, seed 5, rotation 0:
+Six native 1920×1080 application-owned captures, seed 5, rotation 0:
 
 | View | Review focus |
 | --- | --- |
-| [Kitchen](kitchen.png) | Half-size furnishings in the existing room |
-| [Hearth](hearth.png) | Wall-matched arch, lined firebox, rounded pot and supported grate |
-| [Work surface](work-surface.png) | Smaller footprint, chamfered timber and shelf |
-| [Provisions](provisions.png) | Smaller barrels/crates/sack and occupied base |
-| [Mead hall](mead-hall.png) | Both reduced table groups and the resulting open floor |
-| [Table during turn](table-turn.png) | Bench supports, texture density and side clearance |
+| [Kitchen](kitchen.png) | Separate storage distributed along the walls; accepted fireplace |
+| [Work surface](work-surface.png) | Taller supports and worktop; preserved board/utensil proportions |
+| [Loose storage](provisions.png) | Upright enlarged barrel, separate crate, no pallet or movement footprint |
+| [Table and benches](table-turn.png) | End view shows increased seat/table heights and fitted supports |
+| [Mead hall](mead-hall.png) | Matched heraldic tapestries and two burning braziers |
+| [Brazier](brazier.png) | Detailed bowl/stand with existing animated flame artwork |
 
-These game-renderer captures replace all superseded initial pair evidence.
-Source concepts, material masters and packed Blender/GLB sources remain under the
-Underkeep pack. No screenshot edits, OS input or desktop focus control were used.
+These replace earlier evidence; fireplace acceptance is unchanged by gallery cleanup.
+All images are unedited game-renderer captures. No desktop input/focus automation
+was used. Packed sources, material masters and imagegen prompts remain durable.
 
-[Design and verification](../../br02_blueprint_rooms_design.md#scalehearth-revision-verification)
-record four passing affected CPU suites, 192 room variants/four pair orientations,
-production bake and 30 hidden views across 0°/90°. All views have zero nonedge
-CPU/GPU picking disagreements and no GL errors. Door traversal, reward access,
-preparation rollback and resource cleanup pass. Interactive play and visual
-acceptance remain user-owned. The root `./review-rooms` launcher is ready.
+[Current design and verification](../../br02_blueprint_rooms_design.md#furniture-and-room-dressing-verification)
+record seven passing focused suites, 192 room variants/four pair orientations,
+production preparation and 42 hidden views across 0°/90°. All views have zero
+nonedge CPU/GPU picking disagreements and no GL errors. Storage traversal, doors,
+reward access, injected preparation rollback and resource cleanup pass. Paired
+flame frames visibly change; rotated placement and attachment are inspected.
+Interactive play and new visual acceptance remain user-owned. Run `./review-rooms`.
 
-The six images are within the retention limit. The accepted
-[BR01 reference gallery](../blueprint-rooms-br01/README.md) remains intact.
-Owned disposable exports, model renders, extra game captures and logs were cleaned;
-source artwork and the normal prepared build cache remain.
+Six retained images meet the closeout limit. The accepted
+[BR01 reference gallery](../blueprint-rooms-br01/README.md) remains intact. Owned
+exports, model renders, extra captures and logs were cleaned after promotion;
+durable sources and normal prepared caches remain.

@@ -58,16 +58,32 @@ int main() try {
     test::WorldFixture storage;
     auto c = test::blueprintCatalog();
     // Own kit fixtures cover every blockout primitive without loading game content.
-    const std::array<const char*, 8> names{
-        "hearth",       "work-surface", "provisions",     "table-and-benches",
-        "sleeping-bay", "footlocker",   "weapon-storage", "armor-display"};
-    const std::array<Cell, 8> sizes{{{1, 1}, {1, 1}, {1, 1}, {1, 2}, {1, 2}, {1, 1}, {2, 1}, {1, 1}}};
-    const std::array<float, 8> heights{.5f, .175f, .225f, .2f, .6f, .2f, .8f, .8f};
+    const std::array<const char*, 14> names{
+        "hearth",         "work-surface",  "provisions", "table-and-benches", "sleeping-bay", "footlocker",
+        "weapon-storage", "armor-display", "barrel",     "crate-large",       "crate-small",  "grain-sack",
+        "tapestry",       "brazier"};
+    const std::array<Cell, 14> sizes{{{1, 1},
+                                      {1, 1},
+                                      {1, 1},
+                                      {1, 2},
+                                      {1, 2},
+                                      {1, 1},
+                                      {2, 1},
+                                      {1, 1},
+                                      {1, 1},
+                                      {1, 1},
+                                      {1, 1},
+                                      {1, 1},
+                                      {1, 1},
+                                      {1, 1}}};
+    const std::array<float, 14> heights{.5f, .38f,  .225f, .34f, .6f,  .2f,   .8f,
+                                        .8f, .411f, .23f,  .14f, .17f, 1.62f, .38f};
     for (unsigned i = 0; i < names.size(); ++i) {
         bp::Kit k;
         std::copy_n(names[i], std::strlen(names[i]), k.id.begin());
         k.size = sizes[i];
         k.height = heights[i];
+        k.blocking = i < 8 || i == 13;
         c.kits[c.kitCount++] = k;
     }
     world_assets::Writer writer(storage.directory);

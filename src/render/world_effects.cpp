@@ -73,15 +73,24 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         area.eligible.fill(false);
     if (world.moving)
         area.footprint.mask = 0;
-    const auto& fire = in.geometry.base().definition().hearth;
+    const auto& definition = in.geometry.base().definition();
+    std::array<const AmbientFire*, ambientFireCapacity + 1> fires{};
+    std::array<bool, ambientFireCapacity + 1> visibleFires{};
+    unsigned fireCount = 0;
+    if (definition.hearth)
+        fires[fireCount++] = &*definition.hearth;
+    for (const auto& fire : definition.ambientFires)
+        fires[fireCount++] = &fire;
     bool visibleFire = false;
-    if (fire) {
-        const Vec anchor{fire->x, fire->y, fire->z};
+    for (unsigned i = 0; i < fireCount; ++i) {
+        const auto& fire = *fires[i];
+        const Vec anchor{fire.x, fire.y, fire.z};
         const float d = depth(world.camera, anchor);
         const float side = (anchor.x - world.camera.position.x) * world.camera.right.x +
                            (anchor.z - world.camera.position.z) * world.camera.right.z;
-        visibleFire = d > nearPlane - .6f && d < world.camera.farClip + .6f &&
-                      std::abs(side) <= std::max(0.f, d) * (viewWidth * .5f / focal()) + .6f;
+        visibleFires[i] = d > nearPlane - .6f && d < world.camera.farClip + .6f &&
+                          std::abs(side) <= std::max(0.f, d) * (viewWidth * .5f / focal()) + .6f;
+        visibleFire |= visibleFires[i];
     }
     const auto tick = visibleFire ? in.now / 50 + 1 : 0;
     bool visibleWeapon = false, attackingWeapon = false;
@@ -103,7 +112,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     }
     const auto weaponTick =
         visibleWeapon ? (in.now / (attackingWeapon ? 20 : 40) + 1) * 2 + attackingWeapon : 0;
-    if (fire && flame_ == UINT16_MAX)
+    if (fireCount && flame_ == UINT16_MAX)
         throw std::invalid_argument("Hearth flame artwork missing");
     if (fireTick_ == tick && weaponTick_ == weaponTick && !changed && visibility_ == world.revision &&
         area.footprint == area_.footprint && area.cells == area_.cells && area.kind == area_.kind &&
@@ -167,9 +176,12 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         }
         add(p);
     };
-    if (visibleFire) {
+    for (unsigned fireIndex = 0; fireIndex < fireCount; ++fireIndex) {
+        if (!visibleFires[fireIndex])
+            continue;
+        const auto* fire = fires[fireIndex];
         // Fixed analytic particles need no spawning, RNG state, allocation or save data.
-        const float t = float((in.now / 50) % 24000) * .05f;
+        const float t = float((in.now / 50) % 24000) * .05f + float(fireIndex) * .73f;
         for (unsigned i = 0; i < 24; ++i) {
             const bool ember = i >= 16;
             const float phase = std::fmod(t * (ember ? .48f : .8f) + float(i) * .618034f, 1.f);

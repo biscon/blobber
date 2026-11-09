@@ -5,8 +5,8 @@ namespace {
 class WorldVisual final : public Visibility {
   public:
     WorldVisual(WorldVisualContext& c, const Map& map, const GameSession& game)
-        : lease_(c.assets.acquire(
-              c.assets.requirements(map.definition().assetPack, &game.actors().snapshot(), true))),
+        : lease_(c.assets.acquire(c.assets.requirements(map.definition().assetPack, &game.actors().snapshot(),
+                                                        true, map.definition().hasFire()))),
           scene_(world_render::prepare(game.geometry(), {}, {}, {}, &c.assets)), pipeline_(scene_, c.assets),
           animator_(game.actors(), c.timings) {
         sample(map, game);

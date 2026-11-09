@@ -7,6 +7,7 @@
 #include "support/world_visibility_fixtures.hpp"
 #include <chrono>
 #include <iostream>
+#include <limits>
 using namespace blobber;
 using namespace blobber::world_render;
 namespace {
@@ -46,6 +47,61 @@ void hearthEffects() {
     check(!effects.frame().count, "Offscreen fire submits no particles");
     input.now += 200;
     check(!effects.update(input, world), "Offscreen hearth retains cached image");
+}
+void multipleFires() {
+    test::VisibilityFixture fixture(1, 0, false, false, true);
+    world_assets::CpuAssets assets(fixture.publication());
+    auto lease = assets.acquire(world_assets::allAssets(assets.publication));
+    const std::vector<std::string> rows{"#######", "#.....#", "#.....#", "#.....#",
+                                        "#.....#", "#.....#", "#######"};
+    WorldDefinition definition;
+    definition.ambientFires = {{3.2f, .2f, 2.5f}, {3.8f, .2f, 2.5f}};
+    const Map map(rows, definition);
+    MovementState movement;
+    movement.player = {{3, 4}, Heading::North};
+    WorldFrame world;
+    world.camera = camera(movement, map);
+    world.revision = 1;
+    EffectsPipeline effects(assets);
+    FrameInput input{map, movement};
+    check(effects.update(input, world) && effects.frame().count == 48,
+          "Two braziers submit independent flames");
+    check(!effects.update(input, world), "Paused braziers reuse their frame");
+    const auto first = effects.frame().packets[0].points;
+    input.now = 200;
+    check(effects.update(input, world) && first[0].y != effects.frame().packets[0].points[0].y,
+          "Brazier animation advances with presentation time");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 60; ++i) {
+        input.now += 50;
+        effects.update(input, world);
+    }
+    watching = false;
+    check(!allocations && effects.frame().count == 48,
+          "Two-fire frame work remains bounded and allocation-free");
+    movement.player.heading = Heading::South;
+    world.camera = camera(movement, map);
+    ++world.revision;
+    effects.update(input, world);
+    input.now += 200;
+    check(!effects.frame().count && !effects.update(input, world),
+          "Both offscreen fires retain cached frame");
+    definition.ambientFires[1].z = 5.8f;
+    const Map oneVisible(rows, definition);
+    movement.player.heading = Heading::North;
+    FrameInput oneInput{oneVisible, movement};
+    world.camera = camera(movement, oneVisible);
+    ++world.revision;
+    effects.update(oneInput, world);
+    check(effects.frame().count == 24, "Each fire is culled independently");
+    definition.ambientFires.push_back({3, .2f, 3});
+    rejects([&] { Map invalid(rows, definition); }, "Excess ambient fires reject at preparation");
+    definition.ambientFires.resize(2);
+    definition.ambientFires[0].x = 0;
+    rejects([&] { Map invalid(rows, definition); }, "Out-of-map fire rejects");
+    definition.ambientFires[0].x = std::numeric_limits<float>::quiet_NaN();
+    rejects([&] { Map invalid(rows, definition); }, "Nonfinite fire rejects");
 }
 void barriers() {
     auto map = fixtureMap();
@@ -434,6 +490,7 @@ void stressEffects() {
 int main(int argc, char**) {
     try {
         hearthEffects();
+        multipleFires();
         barriers();
         doorsAndEffects();
         acceptedImpacts();

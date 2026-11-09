@@ -163,6 +163,8 @@ struct DeltaArchive {
                         capacity = buildingCapacity;
                     if constexpr (std::is_same_v<typename T::value_type, SceneryPlacement>)
                         capacity = sceneryCapacity;
+                    if constexpr (std::is_same_v<typename T::value_type, AmbientFire>)
+                        capacity = ambientFireCapacity;
                     if (n > capacity)
                         invalid("Campaign vector capacity exceeded");
                     entries = &j["entries"];

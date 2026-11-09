@@ -9,8 +9,13 @@ void need(bool ok, const char* message) {
     if (!ok)
         throw Failure(Error::Content, message);
 }
-void fields(const Json& j, std::initializer_list<const char*> names) {
-    need(j.is_object() && j.size() == names.size(), "Unexpected or missing blueprint field");
+void fields(const Json& j, std::initializer_list<const char*> names,
+            std::initializer_list<const char*> optional = {}) {
+    need(j.is_object(), "Expected blueprint object");
+    for (const auto& item : j.items())
+        need(std::find(names.begin(), names.end(), item.key()) != names.end() ||
+                 std::find(optional.begin(), optional.end(), item.key()) != optional.end(),
+             "Unexpected blueprint field");
     for (const auto* name : names)
         need(j.contains(name), "Missing blueprint field");
 }
@@ -77,9 +82,24 @@ BlueprintCatalog decode(std::string_view input) {
         need(number(j.at("schema_version"), 1, 1) == 1, "Unsupported blueprint schema");
         BlueprintCatalog c;
         c.kitCount = records(j.at("kits"), c.kits, [](const Json& v) {
-            fields(v, {"id", "size", "height"});
+            fields(v, {"id", "size", "height"}, {"blocking", "fire"});
             need(v.at("height").is_number(), "Expected kit height");
-            return Kit{name(v.at("id")), cell(v.at("size"), 1, 4), v.at("height").get<float>()};
+            Kit k;
+            k.id = name(v.at("id"));
+            k.size = cell(v.at("size"), 1, 4);
+            k.height = v.at("height").get<float>();
+            if (v.contains("blocking")) {
+                need(v["blocking"].is_boolean(), "Expected blocking boolean");
+                k.blocking = v["blocking"].get<bool>();
+            }
+            if (v.contains("fire")) {
+                const auto& f = v["fire"];
+                need(f.is_array() && f.size() == 3 && f[0].is_number() && f[1].is_number() &&
+                         f[2].is_number(),
+                     "Expected local fire anchor");
+                k.fire = AmbientFire{f[0].get<float>(), f[1].get<float>(), f[2].get<float>()};
+            }
+            return k;
         });
         c.roomCount = records(j.at("rooms"), c.rooms, [&](const Json& v) {
             fields(v, {"id", "purpose", "size", "ceiling", "rotations", "solid", "placements", "sockets",

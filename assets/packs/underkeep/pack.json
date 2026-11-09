@@ -52,15 +52,45 @@
       ]
     },
     {
-      "id": "provisions",
-      "parts": [
-        "packs/underkeep/models/rooms/provisions.mesh.json"
-      ]
-    },
-    {
       "id": "table-and-benches",
       "parts": [
         "packs/underkeep/models/rooms/table-and-benches.mesh.json"
+      ]
+    },
+    {
+      "id": "barrel",
+      "parts": [
+        "packs/underkeep/models/rooms/barrel.mesh.json"
+      ]
+    },
+    {
+      "id": "crate-large",
+      "parts": [
+        "packs/underkeep/models/rooms/crate-large.mesh.json"
+      ]
+    },
+    {
+      "id": "crate-small",
+      "parts": [
+        "packs/underkeep/models/rooms/crate-small.mesh.json"
+      ]
+    },
+    {
+      "id": "grain-sack",
+      "parts": [
+        "packs/underkeep/models/rooms/grain-sack.mesh.json"
+      ]
+    },
+    {
+      "id": "tapestry",
+      "parts": [
+        "packs/underkeep/models/rooms/tapestry.mesh.json"
+      ]
+    },
+    {
+      "id": "brazier",
+      "parts": [
+        "packs/underkeep/models/rooms/brazier.mesh.json"
       ]
     }
   ]

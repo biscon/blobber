@@ -10,7 +10,7 @@ void validateKitArt(const Kit& kit, const world_assets::PropMesh& mesh) {
     if (!mesh.architecture || mesh.cutout || mesh.water || mesh.vertices.empty() ||
         mesh.vertices.size() > 6000 || mesh.vertices.size() % 3)
         fail("expected opaque static kit mesh, at most 2000 triangles");
-    // Export coordinates are rounded to six decimal places. Permit rounding only.
+    // Permit serialized-coordinate rounding only, never visual overhangs.
     constexpr float epsilon = .00001f;
     for (const auto& v : mesh.vertices) {
         for (float f : v)

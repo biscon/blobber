@@ -151,7 +151,7 @@ class CpuAssets {
     Pack pack(const std::string&) const;
     std::size_t bytes() const noexcept;
     AssetRequirements requirements(const std::string& pack, const ActorSnapshot* actors = nullptr,
-                                   bool interactive = false) const;
+                                   bool interactive = false, bool ambientFire = false) const;
     AssetLease acquire(const AssetRequirements&) const;
     const PropMesh& mesh(unsigned) const;
     struct Residency {

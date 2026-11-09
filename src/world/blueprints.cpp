@@ -100,8 +100,8 @@ RoomBlueprint transform(const RoomBlueprint& r, unsigned turns) {
     }
     return out;
 }
-Mask occupied(const BlueprintCatalog& c, const RoomBlueprint& r) {
-    Mask out = r.solid;
+static Mask placementMask(const BlueprintCatalog& c, const RoomBlueprint& r, bool blockingOnly) {
+    Mask out = r.solid, visual = r.solid;
     require(r.placementCount <= maxPlacements, Error::Capacity, "Too many placements");
     for (unsigned i = 0; i < r.placementCount; ++i) {
         const auto& p = r.placements[i];
@@ -112,12 +112,17 @@ Mask occupied(const BlueprintCatalog& c, const RoomBlueprint& r) {
             for (unsigned x = 0; x < unsigned(k.size.x); ++x) {
                 const auto cell = footprint(k, p, x, y);
                 require(inside(cell, r.size), Error::Bounds, "Furniture footprint outside room");
-                require(!out[index(cell)], Error::Overlap,
+                require(!visual[index(cell)], Error::Overlap,
                         "Furniture footprints overlap terrain or furniture");
-                out[index(cell)] = true;
+                visual[index(cell)] = true;
+                if (!blockingOnly || k.blocking)
+                    out[index(cell)] = true;
             }
     }
     return out;
+}
+Mask occupied(const BlueprintCatalog& c, const RoomBlueprint& r) {
+    return placementMask(c, r, true);
 }
 void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
     require(validName(r.id) && unsigned(r.purpose) <= unsigned(Purpose::Armory), Error::Content,
@@ -135,6 +140,7 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
             require(!r.solid[y * maxSide + x] || inside({int(x), int(y)}, r.size), Error::Bounds,
                     "Solid cell outside room");
     const auto blocked = occupied(c, r);
+    const auto visual = placementMask(c, r, false);
     Mask reserved{};
     for (unsigned i = 0; i < r.placementCount; ++i) {
         const auto& p = r.placements[i];
@@ -143,7 +149,8 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
         // Concrete wall-backed kit contracts; tables, beds and lockers are free-standing.
         const std::string_view id = k.id.data();
         if (id == "hearth" || id == "work-surface" || id == "provisions" || id == "weapon-storage" ||
-            id == "armor-display")
+            id == "armor-display" || id == "barrel" || id == "crate-large" || id == "crate-small" ||
+            id == "grain-sack" || id == "tapestry")
             for (unsigned x = 0; x < unsigned(k.size.x); ++x) {
                 const auto back = footprint(k, p, x, unsigned(k.size.y - 1)) + forward(p.facing) * -1;
                 require(!inside(back, r.size) || r.solid[index(back)], Error::Clearance,
@@ -153,7 +160,7 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
     for (unsigned i = 0; i < r.laneCount; ++i) {
         rect(r.lanes[i], r.size);
         each(r.lanes[i], [&](Cell p) {
-            require(!blocked[index(p)], Error::Clearance, "Blocked reserved lane");
+            require(!visual[index(p)], Error::Clearance, "Obstructed reserved lane");
             reserved[index(p)] = true;
         });
     }
@@ -163,7 +170,7 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
         require(r.encounters[i].size.x >= 2 && r.encounters[i].size.y >= 2, Error::Clearance,
                 "Encounter requires a 2x2 area");
         each(r.encounters[i], [&](Cell p) {
-            require(!blocked[index(p)] && !encounters[index(p)], Error::Clearance,
+            require(!visual[index(p)] && !encounters[index(p)], Error::Clearance,
                     "Blocked or overlapping encounter region");
             encounters[index(p)] = true;
         });
@@ -173,7 +180,7 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
         const auto& a = r.rewards[i];
         require(inside(a.cell, r.size) && inside(a.access, r.size), Error::Bounds, "Reward outside room");
         require(std::abs(a.cell.x - a.access.x) + std::abs(a.cell.y - a.access.y) == 1 &&
-                    !blocked[index(a.cell)] && !blocked[index(a.access)] && !rewards[index(a.cell)] &&
+                    !visual[index(a.cell)] && !visual[index(a.access)] && !rewards[index(a.cell)] &&
                     !reserved[index(a.cell)] && !encounters[index(a.cell)],
                 Error::Clearance, "Reward or access is obstructed");
         rewards[index(a.cell)] = true;
@@ -185,7 +192,7 @@ void validateRoom(const BlueprintCatalog& c, const RoomBlueprint& r) {
         require(s.cell.x >= -1 && s.cell.y >= -1 && s.cell.x <= r.size.x && s.cell.y <= r.size.y,
                 Error::Socket, "Socket outside wall ring");
         const auto a = s.cell + forward(s.outward) * -1;
-        require(!inside(s.cell, r.size) && inside(a, r.size) && !blocked[index(a)] && !rewards[index(a)],
+        require(!inside(s.cell, r.size) && inside(a, r.size) && !visual[index(a)] && !rewards[index(a)],
                 Error::Socket, "Socket must face out through an unblocked room boundary");
         for (unsigned j = 0; j < i; ++j)
             require(s.id != r.sockets[j].id && !(s.cell == r.sockets[j].cell), Error::Socket,
@@ -220,6 +227,13 @@ void validate(const BlueprintCatalog& c) {
         require(validName(k.id) && k.size.x > 0 && k.size.y > 0 && k.size.x <= 4 && k.size.y <= 4 &&
                     std::isfinite(k.height) && k.height > 0 && k.height <= 2,
                 Error::Content, "Invalid kit contract");
+        if (k.fire) {
+            const auto& f = *k.fire;
+            require(std::isfinite(f.x) && std::isfinite(f.y) && std::isfinite(f.z) && f.x >= -.5f &&
+                        f.x <= k.size.x - .5f && f.z >= -.5f && f.z <= k.size.y - .5f && f.y >= 0 &&
+                        f.y <= k.height,
+                    Error::Bounds, "Invalid kit fire anchor");
+        }
         for (unsigned j = 0; j < i; ++j)
             require(k.id != c.kits[j].id, Error::Content, "Duplicate kit ID");
     }
@@ -292,7 +306,21 @@ ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection
                                      {0, 0},
                                      rotate(p.facing, turns),
                                      unsigned(k.size.x),
-                                     unsigned(k.size.y)});
+                                     unsigned(k.size.y),
+                                     k.blocking});
+            if (k.fire) {
+                require(world.ambientFires.size() < ambientFireCapacity, Error::Capacity,
+                        "Too many assembled ambient fires");
+                const auto anchor = global(rr.origin + p.anchor);
+                const auto facing = rotate(p.facing, turns);
+                const auto rightward = right(facing), backward = forward(facing) * -1;
+                const auto& fire = *k.fire;
+                const float floor =
+                    elevation(world.surfaces[std::size_t(anchor.y * finalSize.x + anchor.x)].floor);
+                world.ambientFires.push_back({anchor.x + .5f + fire.x * rightward.x + fire.z * backward.x,
+                                              floor + fire.y,
+                                              anchor.y + .5f + fire.x * rightward.y + fire.z * backward.y});
+            }
         }
         // All authored reward candidates reserve space; the preview instantiates the first.
         const auto& reward = r.rewards[0];

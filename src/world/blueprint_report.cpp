@@ -43,7 +43,7 @@ void writePlan(std::ostream& out, const BlueprintCatalog& catalog, const ReviewS
             const auto& k = catalog.kits[p.kit.index];
             for (unsigned y = 0; y < unsigned(k.size.y); ++y)
                 for (unsigned x = 0; x < unsigned(k.size.x); ++x)
-                    cell(rr.origin + footprint(k, p, x, y), "#ac8260");
+                    cell(rr.origin + footprint(k, p, x, y), k.blocking ? "#ac8260" : "#68758c");
             const auto a = rr.origin + p.anchor;
             text(left + a.x * tile + 8, top + a.y * tile + 21, p.kit.index + 1, 14, "#ffffff");
         }
@@ -79,7 +79,7 @@ void writePlan(std::ostream& out, const BlueprintCatalog& catalog, const ReviewS
                  std::to_string(r.ceiling) + " ticks");
         y += 30;
     }
-    text(lx, y, "KIT / blocked footprints", 16);
+    text(lx, y, "KIT / visual placement bounds", 16);
     y += 28;
     for (unsigned i = 0; i < catalog.kitCount; ++i) {
         const auto& k = catalog.kits[i];
@@ -90,7 +90,7 @@ void writePlan(std::ostream& out, const BlueprintCatalog& catalog, const ReviewS
     for (const char* label :
          {"Green: reserved walking lane", "Blue: usable encounter area", "R: empty chest reservation",
           "A: chest access (walkable)", "D: active door / P: start", "Dashed: alternative socket",
-          "Brown: whole-cell movement block"}) {
+          "Brown: movement block / gray-blue: decor"}) {
         text(lx, y, label, 13, "#b5c7ce");
         y += 23;
     }

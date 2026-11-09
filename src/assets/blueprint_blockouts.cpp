@@ -58,7 +58,8 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
         const auto add = [&](float x, float y, float z, float bw, float bh, float bd) {
             box(mesh, x, y, z, bw, bh, bd, u);
         };
-        add(-.5f, 0, -.5f, w, .035f, d); // Exact visible collision extent, including grouped furniture.
+        if (k.blocking)
+            add(-.5f, 0, -.5f, w, .035f, d); // Exact visible collision extent.
         if (id == "hearth") {
             add(-.45f, .035f, .18f, w - .1f, h - .035f, .27f);
             add(-.45f, .035f, -.4f, .25f, h * .65f, .58f);
@@ -78,6 +79,13 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
                     for (float z : {-.3f, d - .75f})
                         add(x, .035f, z, .12f, h * .5f - .035f, .16f);
             }
+        } else if (id == "tapestry") {
+            add(-.325f, .65f, .46f, .65f, h - .65f, .025f);
+        } else if (id == "brazier") {
+            add(-.10f, .035f, .15f, .20f, .25f, .20f);
+            add(-.15f, .285f, .10f, .30f, h - .285f, .30f);
+        } else if (!k.blocking) {
+            add(-.15f, 0, .19f, .30f, h, .30f);
         } else if (id == "sleeping-bay") {
             add(-.4f, .08f, -.4f, .8f, .18f, d - .2f);
             add(-.4f, .26f, d - .95f, .8f, .07f, .3f);

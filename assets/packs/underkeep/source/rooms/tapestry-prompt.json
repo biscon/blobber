@@ -1,0 +1,5 @@
+{
+  "tool": "built-in image_gen",
+  "output": "heraldic-tapestry-master.png",
+  "prompt": "Use case: stylized-concept. Asset type: flat albedo texture master for a medieval dungeon wall tapestry in a pixel-art game. Create ONE rectangular woven heraldic tapestry design filling the whole portrait image edge to edge, viewed perfectly straight on, flat with no perspective or folds (folds will be modelled). Faded deep burgundy wool ground, muted antique ochre thread, dark charcoal outlines, a restrained central heraldic rampant lion within a simple shield, bordered by an interlaced medieval geometric vine border. Aged and slightly threadbare but readable, rich fine woven detail and hand-painted old dungeon game treatment. No glossy metal, no modern symbols, no writing, no text, no fringe outside the rectangle, no wall, no rods, no environment, no cast shadow, no lighting gradient. Entire canvas opaque fabric, no blank margins. Composition portrait approximately 0.65 wide by 0.9 high. This is a texture for a small in-game tapestry, keep the large heraldic silhouette clear."
+}

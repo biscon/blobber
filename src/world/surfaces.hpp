@@ -85,6 +85,7 @@ struct SceneryPlacement {
     Cell anchor, footprint;
     Heading facing = Heading::North;
     unsigned width = 1, depth = 1;
+    bool blocking = true; // False: visual bounds only; no movement/NPC reservation.
     Cell cell(unsigned x, unsigned z) const noexcept {
         return anchor + right(facing) * (footprint.x + int(x)) + forward(facing) * -(footprint.y + int(z));
     }
@@ -92,18 +93,20 @@ struct SceneryPlacement {
 struct AmbientFire {
     float x = 0, y = 0, z = 0;
 };
+constexpr unsigned ambientFireCapacity = 2;
 struct WorldDefinition {
-    std::optional<AmbientFire> hearth; // At most one decorative hearth per authored map.
+    std::optional<AmbientFire> hearth;     // At most one decorative hearth per authored map.
+    std::vector<AmbientFire> ambientFires; // Bounded during preparation, immutable during frames.
     std::string assetPack = "dungeon";
     std::vector<CellSurface> surfaces;
     std::vector<Decoration> decorations;
     std::vector<BuildingPlacement> buildings;
     std::vector<SceneryPlacement> scenery;
     std::size_t bytes() const noexcept {
-        std::size_t n = sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
-                        decorations.capacity() * sizeof(Decoration) +
-                        buildings.capacity() * sizeof(BuildingPlacement) +
-                        scenery.capacity() * sizeof(SceneryPlacement);
+        std::size_t n =
+            sizeof(*this) + assetPack.capacity() + surfaces.capacity() * sizeof(CellSurface) +
+            decorations.capacity() * sizeof(Decoration) + buildings.capacity() * sizeof(BuildingPlacement) +
+            scenery.capacity() * sizeof(SceneryPlacement) + ambientFires.capacity() * sizeof(AmbientFire);
         for (const auto& b : buildings)
             n += b.model.capacity();
         for (const auto& s : scenery)
@@ -111,6 +114,7 @@ struct WorldDefinition {
         return n;
     }
     std::uint64_t fingerprint() const noexcept;
+    bool hasFire() const noexcept { return hearth.has_value() || !ambientFires.empty(); }
 };
 inline float elevation(std::int16_t q) noexcept {
     return float(q) * .25f;

@@ -99,6 +99,7 @@ template <class A> void visit(A& a, AmbientFire& v, const AmbientFire& base) {
 }
 template <class A> void visit(A& a, WorldDefinition& v, const WorldDefinition& base) {
     a("hearth", v.hearth, base.hearth);
+    a("ambientFires", v.ambientFires, base.ambientFires);
     a("assetPack", v.assetPack, base.assetPack);
     a("surfaces", v.surfaces, base.surfaces);
     a("decorations", v.decorations, base.decorations);
@@ -106,6 +107,7 @@ template <class A> void visit(A& a, WorldDefinition& v, const WorldDefinition& b
     a("scenery", v.scenery, base.scenery);
 }
 template <class A> void visit(A& a, SceneryPlacement& v, const SceneryPlacement& base) {
+    a("blocking", v.blocking, base.blocking);
     a("model", v.model, base.model);
     a("anchor", v.anchor, base.anchor);
     a("footprint", v.footprint, base.footprint);
