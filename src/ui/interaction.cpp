@@ -40,6 +40,7 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
         return;
     }
     if (!input.focused) {
+        commands.tickInventory(0, false);
         commands.hover(HoverKind::None);
         return;
     }

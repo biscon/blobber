@@ -93,7 +93,11 @@ void identities() {
         s.enableDevelopment(true);
         for (int level = 2; level <= 3; ++level) {
             check(s.grantNextLevelExperience(), "development grant earns threshold");
+            check(s.audioEvents().count == 1 &&
+                      std::strcmp(s.audioEvents().entries[0].cue, "advancement") == 0,
+                  "Shared development threshold grant emits exactly one bell");
             check(!s.grantNextLevelExperience(), "repeated grant before advancement is no-op");
+            check(s.audioEvents().count == 1, "Repeated grant cannot replay the earned-level bell");
             for (std::uint16_t i = 0; i < 4; ++i) {
                 s.audioEvents().clear();
                 const auto before = s.restToken();
@@ -107,11 +111,10 @@ void identities() {
                 check(s.audioEvents().count == 0, "Preview and rejected advancement are silent");
                 const auto result = s.advance(r);
                 check(bool(result), advancementMessage(result.error));
-                check(s.audioEvents().count == 1 &&
-                          std::strcmp(s.audioEvents().entries[0].cue, "advancement") == 0,
-                      "Successful advancement emits one bell; preview and rejection stay silent");
+                check(s.audioEvents().count == 0,
+                      "Completing advancement is silent because the bell played when XP was earned");
                 check(!s.advance(r), "repeat request cannot level twice");
-                check(s.audioEvents().count == 1, "Rejected repeated request cannot replay the bell");
+                check(s.audioEvents().count == 0, "Rejected repeated request cannot replay the bell");
                 const auto& c = *p.character({i});
                 check(c.build.id == start.characters[i].id && c.build.name == start.characters[i].name &&
                           c.build.portrait.index == start.characters[i].portrait.index &&
@@ -135,6 +138,7 @@ void identities() {
             }
         }
         check(!s.grantNextLevelExperience(), "supported level cap");
+        check(s.audioEvents().count == 0, "Level-cap grants stay silent");
         check(!s.advance(chosen(s, {0})), "cannot level beyond three");
         check(cat.preset()->characters[0].level == 1 && start.characters[0].level == 1,
               "launch and catalog never mutate");
@@ -323,6 +327,73 @@ void earnedLevelReminders() {
           "Classes without supported progression do not show a misleading reminder");
 }
 
+void earnedLevelAudio() {
+    const auto cat = creationCatalog(true);
+    const auto map = hybridRoom();
+    const auto npcs = spellPlacements(map, 3);
+    auto s = std::make_unique<GameSession>(map, cat, npcs, 5, spellSpawn, false);
+    s->audioEvents().enabled = true;
+    const auto bells = [](GameSession& game) {
+        const auto& journal = game.audioEvents();
+        unsigned count = 0;
+        for (unsigned n = 0; n < journal.count; ++n)
+            count += std::strcmp(journal.entries[n].cue, "advancement") == 0;
+        return count;
+    };
+    s->party().awardExperience(1050); // 262.5 each; three 50-XP kills reach exactly 300.
+    s->actors().damage(s->actors().id(0), 10000, 0);
+    s->update(0, true);
+    check(bells(*s) == 0, "XP below next threshold stays silent");
+    s->actors().damage(s->actors().id(1), 10000, 0);
+    s->actors().damage(s->actors().id(2), 10000, 0);
+    s->update(0, true);
+    check(bells(*s) == 1, "Multiple deaths and four newly eligible members emit one immediate bell");
+    for (std::uint16_t id = 0; id < 4; ++id)
+        check(s->party().character({id})->experience == 300, "Reward batch crosses exact XP threshold");
+    s->audioEvents().clear();
+    for (unsigned n = 0; n < 4; ++n)
+        s->update(0, true);
+    check(bells(*s) == 0, "Already credited deaths and eligible party never replay the bell");
+    check(bool(s->advance(chosen(*s, {0}))) && bells(*s) == 0, "Completing an XP-earned level is silent");
+    auto savedFloor = std::make_unique<FloorState>();
+    s->exportFloor(*savedFloor);
+    auto restoredParty = std::make_unique<Party>(cat, s->party().checkpoint());
+    auto restored = std::make_unique<GameSession>(map, std::move(restoredParty), npcs, 5, spellSpawn, false,
+                                                  std::vector<NpcTimings>{}, RecoveryLevel{}, FloorFixtures{},
+                                                  FloorObjectiveDefinition{});
+    restored->importFloor(*savedFloor);
+    restored->audioEvents().enabled = true;
+    restored->update(0, true);
+    check(bells(*restored) == 0, "Loading an already-eligible party and credited deaths stays silent");
+
+    auto danger =
+        std::make_unique<GameSession>(map, cat, spellPlacements(map, 2, true), 5, spellSpawn, false);
+    danger->audioEvents().enabled = true;
+    danger->party().awardExperience(1160); // 290 each before one member dies.
+    danger->party().damage({0}, 10000);
+    danger->party().damage({1}, danger->party().character({1})->hitPoints);
+    danger->update(0, false);
+    danger->audioEvents().clear();
+    danger->actors().damage(danger->actors().id(0), 10000, 0);
+    danger->update(0, true);
+    check(bells(*danger) == 1 && danger->party().character({0})->experience == 290 &&
+              danger->party().character({1})->experience > 300 &&
+              danger->advancementEligibility(chosen(*danger, {2})) != AdvancementError::None,
+          "Unsafe combat rewards unconscious recipients, excludes dead members and rings immediately");
+    danger->audioEvents().clear();
+    danger->actors().damage(danger->actors().id(1), 10000, 0);
+    danger->update(0, true);
+    check(bells(*danger) == 0, "More XP while already eligible stays silent");
+
+    const auto unsupported = creationCatalog(false);
+    const NpcWorld empty(map, spellSpawn.cell, {"goblin"}, {});
+    auto unsupportedGame = std::make_unique<GameSession>(map, unsupported, empty, 5, spellSpawn, false);
+    unsupportedGame->audioEvents().enabled = true;
+    unsupportedGame->enableDevelopment(true);
+    unsupportedGame->grantNextLevelExperience();
+    check(bells(*unsupportedGame) == 0, "Unsupported classes cannot produce earned-level audio");
+}
+
 } // namespace
 int main() {
     try {
@@ -331,6 +402,7 @@ int main() {
         rewards();
         advancementUi();
         earnedLevelReminders();
+        earnedLevelAudio();
         std::cout << "Progression checks passed\n";
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

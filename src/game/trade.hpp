@@ -2,6 +2,7 @@
 #include "game/dialogue.hpp"
 #include "game/game_time.hpp"
 #include "game/inventory.hpp"
+#include "game/item_comparison.hpp"
 
 namespace blobber {
 inline constexpr unsigned merchantCapacity = 16, shopStockCapacity = 48, buybackCapacity = 48;
@@ -79,14 +80,4 @@ const char* tradeMessage(TradeError) noexcept;
 class Party;
 TradeResult trade(Party&, MerchantLedger&, const ShopCatalog&, const TradeRequest&, GameTime,
                   bool preview = false) noexcept;
-std::optional<EquipmentSlot> itemEquipmentSlot(const rules::ItemDefinition&) noexcept;
-struct ItemComparison {
-    const rules::ItemDefinition* equipped = nullptr;
-    rules::WeaponPreview offeredWeapon, equippedWeapon;
-    int offeredArmorClass = 0, equippedArmorClass = 0;
-    rules::CharacterStats currentStats{}, offeredStats{};
-    bool equippable = false;
-    const char* restriction = "";
-};
-ItemComparison compareItem(const Party&, rules::CharacterId, const rules::ItemDefinition&) noexcept;
 } // namespace blobber

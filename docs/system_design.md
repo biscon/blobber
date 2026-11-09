@@ -1,5 +1,16 @@
 # System design
 
+**Inventory comparisons and earned-level audio — 2026-11-09 (implemented and mechanically verified; user review pending).**
+[Bag hover comparisons](inventory_design.md#bag-comparison-tooltips--2026-11-09)
+reuse trade's bounded comparison presentation after 350 ms of presentation time.
+[Earned-level audio](progression_design.md#earned-level-audio--2026-11-09) moves the
+existing bell from advancement completion to XP threshold crossings, once per
+reward batch. No save formats, artwork or advancement admission rules change.
+The Debug game and hidden OpenGL review pass, along with six focused CPU suites
+including allocation checks. [Three native review captures](screenshots/inventory-comparisons/README.md)
+are retained; interactive/listening review remains unverified. Disposable output
+was cleaned; [commands and limitations](inventory_design.md#bag-comparison-tooltips--2026-11-09).
+
 **Playthrough corrections — 2026-11-09 (implemented and mechanically verified; user review pending).**
 [Room-revealed fixture icons](map_revision.md#room-revealed-fixtures--2026-11-09),
 [session-only buyback](merchant_design.md#session-only-buyback--2026-11-09),

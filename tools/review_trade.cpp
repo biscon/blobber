@@ -8,6 +8,7 @@
 #include "render/dialogue_camera.hpp"
 #include "ui/dialogue_preparation.hpp"
 #include "ui/interaction.hpp"
+#include "ui/inventory_layout.hpp"
 #include "ui/trade_layout.hpp"
 #include "world/sanctuary_city.hpp"
 #include <fstream>
@@ -89,7 +90,7 @@ int main(int argc, char** argv) try {
         presenter.capture(output / (std::string(file) + ".png"));
         const auto& t = hud.trade;
         report << file << " trade=" << t.open << " character=" << t.characterName
-               << " tooltip=" << t.tooltipVisible
+               << " tooltip=" << t.tooltipVisible << " inventory_tooltip=" << hud.inventory.tooltipVisible
                << " gold=" << (hud.inventory.open ? hud.inventory.gold : t.gold)
                << " maximum_balance_fixture=" << maximumBalance << " stock_revision=" << t.merchantRevision
                << " game_ms=" << game.gameTime().elapsedMs << '\n';
@@ -191,6 +192,35 @@ int main(int argc, char** argv) try {
     controls.openInventory();
     shot("inventory-purse");
     shot("inventory-large-purse", true);
+    grant("longsword_plus1", 1);
+    grant("belt_of_vigor", 1);
+    grant("chain_mail", 1, 3);
+    const auto inventoryComparison = [&](unsigned who, const char* item, const char* file) {
+        controls.inventoryCharacter({std::uint16_t(who)});
+        controls.refresh(view->picking()->targets(), false, false, true);
+        unsigned cell = bagCells;
+        for (unsigned n = 0; n < bagCells; ++n) {
+            const auto* definition = controls.snapshot().inventory.cells[n].definition;
+            if (definition && definition->id == item)
+                cell = n;
+        }
+        if (cell == bagCells)
+            throw std::runtime_error("Inventory review item missing");
+        const auto r = inventoryLayout::cell(cell);
+        UiInput input;
+        input.pointer = ArtPoint{float(r.x + 8), float(r.y + 8)};
+        routeHudInput(controls, input);
+        controls.tickInventory(.349, true);
+        if (controls.snapshot().inventory.tooltipVisible)
+            throw std::runtime_error("Inventory tooltip opened before 350 ms");
+        controls.tickInventory(.001, true);
+        if (!controls.snapshot().inventory.tooltipVisible)
+            throw std::runtime_error("Inventory tooltip did not open at 350 ms");
+        shot(file);
+    };
+    inventoryComparison(0, "longsword_plus1", "inventory-weapon-comparison");
+    inventoryComparison(0, "belt_of_vigor", "inventory-wearable-comparison");
+    inventoryComparison(3, "chain_mail", "inventory-restricted-comparison");
     auto lootHud = controls.snapshot();
     lootHud.inventory.open = false;
     lootHud.loot = {};

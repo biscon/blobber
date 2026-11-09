@@ -1,5 +1,50 @@
 # Inventory and equipment — slice 11
 
+## Bag comparison tooltips — 2026-11-09
+
+Implemented and mechanically verified; interactive user review pending. Inventory bag hover reuses trade's item
+comparison calculations and bounded two-panel rendering. After 350 ms of focused
+presentation time, equipment compares with the viewed character's current slot;
+other items show one details panel. Equipped cards do not acquire hover tooltips.
+CommandController owns fixed hover identity, elapsed time and cached comparison;
+immutable definitions remain catalog-owned. A dedicated inventory presentation
+tick runs while simulation is paused and independently of dialogue. Hover resets
+on item/character/page/revision changes, pointer leave, focus loss and close;
+gestures, transfers and quantity dialogs suppress it. Comparison derivation occurs
+on hover identity changes, not every frame. Shared tooltip rendering preserves
+trade metadata and restrictions, uses fixed buffers and existing native fonts/art,
+and clamps inventory panels to its overlay. No persistent state or frame heap
+allocation is added.
+
+Verify 349/350 ms, paused dwell, selected-character stats, empty/restricted slots,
+reset/suppression paths, ordinary-item details and first/repeated allocation guards.
+Retain trade tests and inspect hidden application-owned weapon/wearable captures;
+interactive desktop review and listening remain user-owned.
+
+Verification (Debug, 2026-11-09): configured CLion CMake built `blobber`,
+`blobber_review_trade` and the six affected test executables with at most two
+workers and low CPU/I/O priority. The focused command passed all six suites in
+0.11 s (inventory 0.03 s, trade 0.01 s, progression 0.02 s,
+progression_allocations 0.03 s, audio/audio_runtime 0.01 s each):
+
+```sh
+/home/bison/clion/bin/cmake/linux/x64/bin/ctest --test-dir cmake-build-debug -R '^(inventory|trade|progression|progression_allocations|audio|audio_runtime)$' -j 1 --output-on-failure
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 LP_NUM_THREADS=2 nice -n 15 ionice -c 3 cmake-build-debug/blobber_review_trade assets cmake-build-debug/assets/prepared RUN_DIRECTORY/captures
+```
+
+The hidden runner passes on NVIDIA RTX 3060 / OpenGL 3.3 with frozen time/pose,
+349/350 ms checks, trade regression gestures and zero released world texture/alpha
+residency. The first sandboxed launch could not open X11; the authorized local
+display retry succeeded. Visually inspected weapon/wearable/restricted inventory
+panels and the trade weapon comparison. [Three selected native captures](screenshots/inventory-comparisons/README.md)
+await user review. First and repeated inventory comparison processing and audible
+progression operations allocate no engine-owned C++ memory in their guards;
+this makes no claim about graphics drivers or C allocations. No benchmark,
+stress or additional configuration matrix was run. Interactive/listening review
+remains unverified. No user saves or desktop input/focus were touched. Task-owned
+build logs, failed-launch logs and unselected captures were cleaned after recording
+results. `git diff --check` and selected evidence dimensions/links pass.
+
 ## Equipment pointer routing — 2026-11-09
 
 Implemented and mechanically verified; interactive user review pending. Register all thirteen equipment cards in the

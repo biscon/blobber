@@ -129,8 +129,8 @@ bool routeInventoryInput(CommandController& commands, const UiInput& in, bool al
     if (in.pointer)
         commands.inventoryPointer(in.pointer->x, in.pointer->y, click, in.pointerHeld, in.pointerReleased,
                                   in.shift);
-    else if (in.pointerReleased)
-        commands.inventoryPointer(-100, -100, false, false, true, false);
+    else
+        commands.inventoryPointer(-100, -100, false, false, in.pointerReleased, false);
     return true;
 }
 } // namespace blobber

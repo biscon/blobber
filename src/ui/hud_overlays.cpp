@@ -334,5 +334,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
         p.buttonFeedback(h->camp.controls.buttons.feedback);
     if (h->trade.open)
         p.tradeTooltip(*h);
+    if (h->inventory.open)
+        p.inventoryTooltip(*h);
 }
 } // namespace blobber

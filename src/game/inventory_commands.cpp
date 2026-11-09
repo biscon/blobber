@@ -1,6 +1,7 @@
 #include "game/commands.hpp"
 #include "ui/inventory_layout.hpp"
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 namespace blobber {
 namespace {
@@ -95,6 +96,25 @@ void CommandController::refreshInventoryActions() noexcept {
     drop.reason = dropResult.reason;
 }
 
+void CommandController::clearInventoryHover() noexcept {
+    auto& i = state_.inventory;
+    i.hovered = -1;
+    i.hoverElapsedMs = 0;
+    i.tooltipVisible = false;
+    i.comparison = {};
+}
+void CommandController::tickInventory(double seconds, bool focused) noexcept {
+    auto& i = state_.inventory;
+    if (!focused || !i.open || i.page != CharacterPage::Inventory || i.mode != InventoryMode::Browse ||
+        i.pointerDown || i.dragging || state_.suspended || i.revision != party_.inventory().revision()) {
+        clearInventoryHover();
+        return;
+    }
+    if (i.hovered < 0 || !std::isfinite(seconds) || seconds <= 0)
+        return;
+    i.hoverElapsedMs = std::min(350., i.hoverElapsedMs + std::min(seconds, 1.) * 1000);
+    i.tooltipVisible = i.hoverElapsedMs >= 350;
+}
 void CommandController::inventoryFeedback(const char* s) noexcept {
     std::snprintf(state_.inventory.feedback.data(), state_.inventory.feedback.size(), "%s", s);
 }
@@ -118,6 +138,7 @@ void CommandController::inventoryPage(CharacterPage page) noexcept {
     auto& i = state_.inventory;
     if (!i.open || i.page == page)
         return;
+    clearInventoryHover();
     i.page = page;
     if (page == CharacterPage::Inventory && state_.magic.casting())
         cancel();
@@ -136,6 +157,7 @@ void CommandController::inventoryCharacter(rules::CharacterId c) noexcept {
         inventoryDrop({c, UINT16_MAX});
         return;
     }
+    clearInventoryHover();
     i.character = c;
     i.descriptionPage = 0;
     i.cursor = 0;
@@ -150,7 +172,8 @@ void CommandController::refreshInventory() noexcept {
     auto& i = state_.inventory;
     const auto& inv = party_.inventory();
     if (i.open) {
-        if (i.revision && i.revision != inv.revision()) {
+        if (i.revision != inv.revision()) {
+            clearInventoryHover();
             i.pointerDown = i.dragging = false;
             i.mode = InventoryMode::Browse;
             i.source = {};
@@ -257,6 +280,7 @@ void CommandController::inventoryDrop(ItemLocation dest, bool split) noexcept {
         inventoryExecute(r);
 }
 void CommandController::inventoryAction(InventoryAction action) noexcept {
+    clearInventoryHover();
     auto& i = state_.inventory;
     if (!i.open || i.page != CharacterPage::Inventory)
         return;
@@ -327,6 +351,7 @@ void CommandController::inventoryConfirm() noexcept {
         inventorySelect(i.cursor);
 }
 void CommandController::inventoryCancel() noexcept {
+    clearInventoryHover();
     auto& i = state_.inventory;
     if (i.mode != InventoryMode::Browse || i.pointerDown || i.dragging) {
         i.mode = InventoryMode::Browse;
@@ -350,6 +375,16 @@ void CommandController::inventoryPointer(float x, float y, bool press, bool held
                 return 48 + k;
         return UINT16_MAX;
     };
+    const auto hovered = hit();
+    if (!i.open || i.page != CharacterPage::Inventory || i.mode != InventoryMode::Browse ||
+        state_.suspended || press || held || release || i.pointerDown || i.dragging || hovered >= bagCells ||
+        !i.cells[hovered].definition || i.revision != party_.inventory().revision()) {
+        clearInventoryHover();
+    } else if (i.hovered != int(hovered)) {
+        clearInventoryHover();
+        i.hovered = int(hovered);
+        i.comparison = compareItem(party_, i.character, *i.cells[hovered].definition);
+    }
     if (press) {
         const auto k = hit();
         if (k >= inventoryCells)

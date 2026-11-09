@@ -1,5 +1,6 @@
 #pragma once
 #include "game/command_types.hpp"
+#include "game/item_comparison.hpp"
 namespace blobber {
 enum class CharacterPage : std::uint8_t { Inventory, Character };
 struct CharacterFeatureRow {
@@ -43,6 +44,10 @@ struct InventoryHud {
     rules::CharacterId character{0};
     std::uint16_t cursor = 0;
     std::array<InventoryCell, inventoryCells> cells{};
+    int hovered = -1;
+    double hoverElapsedMs = 0;
+    bool tooltipVisible = false;
+    ItemComparison comparison;
     ItemHandle selected{}, source{};
     InventoryMode mode = InventoryMode::Browse;
     std::array<InventoryActionState, static_cast<unsigned>(InventoryAction::Count)> actions{};

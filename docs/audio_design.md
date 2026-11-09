@@ -59,6 +59,26 @@ allocation guards. Generated-file validation and bounded real-device integration
 are separate from subjective listening. Build with <=2 workers, tests serial,
 lengthy work nice 15/ionice idle. Do not automate desktop input.
 
+
+## Earned-level cue timing — 2026-11-09
+
+Implemented and mechanically verified; listening review pending. The existing advancement bell originates
+from session XP threshold transitions, once for a credited reward batch or a
+successful development grant newly earning a level. Completing advancement no
+longer emits it. Existing Journal ownership, interface playback policy, sound asset
+and sequence/consumption semantics remain unchanged. See
+[progression design](progression_design.md#earned-level-audio--2026-11-09).
+
+
+The single focused Debug checkpoint passes progression, progression_allocations,
+audio and audio_runtime plus inventory/trade. The audible progression guard covers
+threshold emission without engine-owned C++ allocation. Natural/development reward
+batches ring once, with duplicate/reload/completion silence checked. Commands and
+limits are recorded in [inventory verification](inventory_design.md#bag-comparison-tooltips--2026-11-09).
+No sound asset/device policy changed. Listening remains user-owned; disposable
+logs and failed sandbox capture output were cleaned.
+
+
 ## Delivery evidence
 
 Implemented delivery and executed validation are recorded below.
@@ -68,7 +88,7 @@ Implemented delivery and executed validation are recorded below.
 `audio::Journal` is embedded in GameSession but disabled until a graphical audio
 observer attaches. This avoids maintaining an unconsumed journal in headless runs.
 CombatEvents forwards observations at append, not at HUD record/render; fixture,
-loot, inventory, advancement and effect commits publish additional cues. Preview
+loot, inventory, earned-level XP and effect commits publish additional cues. Preview
 calls remain silent. Consuming clears the journal, so repeated updates cannot replay
 it; monotonically increasing sequence numbers survive clears. Sequence exhaustion
 rejects new observations. Import clears pending observations and movement markers.
@@ -158,7 +178,7 @@ loops. The [bank and replacement guide](../assets/audio/README.md) and
 
 - Party: six stone steps, hurt, newly downed, actual death and recovery.
 - Fixtures/items: timber/iron door open/close, lock attempt, key pickup, guardian gate,
-  chest opening, pickup, inventory move/drop/equip/unequip, potion use and advancement.
+  chest opening, pickup, inventory move/drop/equip/unequip, potion use and newly earned level eligibility.
 - Combat: ordinary/heavy swing, blunt/slash/pierce, miss, bow release and arrow impact;
   goblin/shaman/rat/skeleton/bugbear/zombie step, attack, hurt and death families.
   Goblin archer and placeholder guardian reuse goblin reactions and weapon-specific release.

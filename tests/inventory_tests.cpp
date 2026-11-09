@@ -5,8 +5,8 @@
 #include "support/combat_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
 #include "support/inventory_fixtures.hpp"
-#include "ui/interaction.hpp"
 #include "ui/button_targets.hpp"
+#include "ui/interaction.hpp"
 #include "ui/inventory_layout.hpp"
 #include <chrono>
 #include <cstring>
@@ -1033,8 +1033,8 @@ void physicalEquipmentInput() {
     check(bool(danger->party().acquire({{0}, beltId, 1, danger->party().inventory().revision()})),
           "Acquire unsafe-removal fixture");
     const auto worn = findInventoryItem(danger->party(), 0, beltId.index);
-    check(bool(danger->party().inventoryChange(inventoryRequest(danger->party(), worn, 0,
-                                                               unsigned(EquipmentSlot::Belt)))),
+    check(bool(danger->party().inventoryChange(
+              inventoryRequest(danger->party(), worn, 0, unsigned(EquipmentSlot::Belt)))),
           "Prepare equipped belt before testing session safety");
     CommandController locked(*danger);
     locked.refresh({}, false, false, true);
@@ -1181,6 +1181,150 @@ void magicEquipment() {
     check(heavyParty.character({2})->stats.weapons[unsigned(EquipmentSlot::MainHand)].heavyDisadvantage,
           "Heavy weapon records Small wielder disadvantage without rejecting equipment");
 }
+void comparisonHover() {
+    const auto cat = blobber::test::withMagicItems(inventoryCatalog());
+    const auto map = hybridRoom();
+    const NpcWorld empty(map, {6, 8}, {"goblin"}, {});
+    auto session = std::make_unique<GameSession>(map, cat, empty, 5, Player{{6, 8}, Heading::North}, false);
+    auto& party = session->party();
+    const auto acquire = [&](rules::CharacterId who, rules::ItemId item) {
+        check(bool(party.acquire({who, item, 1, party.inventory().revision()})), "Acquire hover fixture");
+        return party.inventory().locate(findInventoryItem(party, who.index, item.index)).cell;
+    };
+    const auto sword = acquire({0}, {4});
+    const auto bow = acquire({0}, {3});
+    const auto belt = acquire({0}, cat.findItem("belt_of_vigor"));
+    const auto armor = acquire({3}, {5});
+    const auto dagger = acquire({3}, {4});
+    CommandController ui(*session);
+    ui.refresh({}, false, false, true);
+    ui.openInventory(rules::CharacterId{0});
+    const auto& i = ui.snapshot().inventory;
+    const auto hover = [&](UiRect r) {
+        UiInput input;
+        input.pointer = ArtPoint{float(r.x + 4), float(r.y + 4)};
+        routeHudInput(ui, input);
+    };
+    const auto bag = [&](unsigned cell) { hover(inventoryLayout::cell(cell)); };
+    const auto dwell = [&] { ui.tickInventory(.35, true); };
+    const auto selected = i.selected;
+    allocations = 0;
+    watching = true;
+    bag(sword);
+    ui.tickInventory(.349, true);
+    watching = false;
+    check(allocations == 0, "First inventory hover derivation allocates no C++ memory");
+    check(!i.tooltipVisible && i.selected == selected, "Hover does not select and stays hidden at 349 ms");
+    ui.tickInventory(.001, true);
+    check(i.tooltipVisible && i.comparison.equipped == party.equipped({0}, EquipmentSlot::MainHand) &&
+              i.comparison.offeredWeapon.damage.sides == 4,
+          "Paused inventory opens weapon comparison at 350 ms without dialogue");
+    const auto time = session->timeMs();
+    session->update(1, true);
+    bag(sword);
+    check(i.tooltipVisible && session->timeMs() == time, "Same bag cell preserves paused hover");
+    bag(bow);
+    check(!i.tooltipVisible, "Changing cells restarts dwell");
+    dwell();
+    check(i.tooltipVisible && !i.comparison.equipped && i.comparison.restriction[0],
+          "Empty ranged slot retains shield conflict warning");
+    bag(belt);
+    dwell();
+    check(i.tooltipVisible &&
+              i.comparison.offeredStats.maxHitPoints == i.comparison.currentStats.maxHitPoints + 3,
+          "Wearable hover uses the shared hypothetical bonus derivation");
+    hover(inventoryLayout::equipmentFrame(0));
+    dwell();
+    check(!i.tooltipVisible && i.hovered == -1, "Equipped slots do not gain bag comparisons");
+    bag(sword);
+    dwell();
+    routeHudInput(ui, {});
+    check(!i.tooltipVisible && i.hovered == -1, "Missing pointer clears hover");
+    bag(sword);
+    dwell();
+    hover({0, 0, 1, 1});
+    check(!i.tooltipVisible, "Leaving bag clears hover");
+    bag(sword);
+    dwell();
+    UiInput unfocused;
+    unfocused.focused = false;
+    routeHudInput(ui, unfocused);
+    check(!i.tooltipVisible, "Focus loss immediately clears hover in production router");
+    bag(sword);
+    ui.tickInventory(.349, true);
+    check(!i.tooltipVisible, "Refocus starts a fresh dwell");
+    ui.tickInventory(.001, true);
+    acquire({0}, {4});
+    ui.refresh({}, false, false, true);
+    check(!i.tooltipVisible && i.hovered == -1, "Inventory revision invalidates cached comparison");
+    bag(sword);
+    dwell();
+    UiInput press;
+    const auto r = inventoryLayout::cell(sword);
+    press.pointer = ArtPoint{float(r.x + 4), float(r.y + 4)};
+    press.pointerHeld = true;
+    press.pressed[unsigned(UiKey::Click)] = true;
+    routeHudInput(ui, press);
+    dwell();
+    check(!i.tooltipVisible && i.pointerDown, "Pointer press suppresses comparison");
+    press.pressed.fill(false);
+    press.pointer = ArtPoint{float(r.x + 10), float(r.y + 10)};
+    routeHudInput(ui, press);
+    dwell();
+    check(i.dragging && !i.tooltipVisible, "Dragging suppresses comparison");
+    ui.inventoryCancel();
+    bag(sword);
+    dwell();
+    ui.inventoryAction(InventoryAction::Transfer);
+    bag(sword);
+    dwell();
+    check(i.mode == InventoryMode::Transfer && !i.tooltipVisible, "Transfer suppresses comparison");
+    ui.inventoryCancel();
+    bag(sword);
+    dwell();
+    ui.inventoryPage(CharacterPage::Character);
+    check(!i.tooltipVisible, "Character page clears hover");
+    ui.inventoryPage(CharacterPage::Inventory);
+    ui.inventoryCharacter({3});
+    bag(armor);
+    dwell();
+    check(i.tooltipVisible && !i.comparison.equipped && i.comparison.restriction[0],
+          "Viewed wizard sees empty armor slot and missing-training warning");
+    bag(dagger);
+    dwell();
+    const auto expected = compareItem(party, {3}, *cat.item({4}));
+    check(i.comparison.equipped == expected.equipped &&
+              i.comparison.offeredWeapon.attackBonus == expected.offeredWeapon.attackBonus,
+          "Inventory comparison uses viewed character instead of combat selection");
+    ui.inventoryCharacter({0});
+    check(!i.tooltipVisible, "Character switch clears hover");
+    const auto potion = party.inventory().locate(findInventoryItem(party, 0, 10)).cell;
+    bag(potion);
+    dwell();
+    check(i.tooltipVisible && !i.comparison.equippable, "Ordinary items retain a single details tooltip");
+    ui.inventorySelect(potion);
+    ui.inventoryDrop({{0}, 47}, true);
+    bag(sword);
+    dwell();
+    check(i.mode == InventoryMode::Quantity && !i.tooltipVisible,
+          "Quantity dialogs suppress hover without moving items");
+    ui.inventoryCancel();
+    ui.closeOverlay();
+    check(!i.tooltipVisible && i.hovered == -1, "Closing clears comparison");
+    ui.openInventory(rules::CharacterId{0});
+    allocations = 0;
+    watching = true;
+    for (unsigned n = 0; n < 8; ++n) {
+        bag(sword);
+        dwell();
+        ui.refresh({}, false, false, true);
+        bag(belt);
+        dwell();
+        ui.refresh({}, false, false, true);
+    }
+    watching = false;
+    check(allocations == 0, "First and repeated inventory hover comparisons allocate no C++ memory");
+}
 } // namespace
 int main(int argc, char** argv) {
     try {
@@ -1202,6 +1346,7 @@ int main(int argc, char** argv) {
         paperdollGeometry();
         wearableInput();
         physicalEquipmentInput();
+        comparisonHover();
         std::cout << "Inventory transactions, costs, effects and input passed ("
                   << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() -
                                                                            start)

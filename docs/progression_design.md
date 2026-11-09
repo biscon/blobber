@@ -1,5 +1,32 @@
 # Slice 13: levels 2 and 3
 
+## Earned-level audio — 2026-11-09
+
+Implemented and mechanically verified; listening review pending. GameSession compares a fixed four-bit
+supported earned-level mask before and after each credited-death reward batch,
+and before/after development XP grants. Any newly earned next-level threshold
+emits one existing interface advancement cue for the whole batch, independent
+of combat, safety or unconsciousness. The mask is transient: it follows current
+level and XP and adds no save state. Additional XP while already eligible,
+duplicate reward reconciliation, previews, rejected requests and advancement
+completion are silent. Loading an already-eligible party does not replay a cue.
+Dead characters remain excluded from rewards; capped/unsupported classes cannot
+newly qualify. Reward distribution and actual advancement admission are unchanged.
+
+Verify below/exact thresholds, simultaneous members/multiple deaths, duplicates,
+unconscious/dead recipients, development no-ops, cap and silent completion. Keep
+progression allocation checks and existing resource/choice regressions.
+
+Debug progression (0.02 s), audible progression_allocations (0.03 s) and the two
+audio suites (0.01 s each) pass in the single focused six-suite checkpoint.
+Regression coverage includes exact natural reward thresholds, multiple deaths
+and simultaneous party eligibility, duplicate reconciliation, silent completion,
+restored eligible party/credited deaths, unsafe combat, unconscious/dead members,
+unsupported classes, both supported development thresholds and level-cap no-ops.
+The progression allocation workload enables its audio journal so the new emission
+path is exercised under the guard. See [commands and limitations](inventory_design.md#bag-comparison-tooltips--2026-11-09).
+No physical listening review was run; disposable output was cleaned.
+
 ## Earned-level reminders — 2026-11-09
 
 Implemented and mechanically verified; interactive user review pending. HudCard adds levelEarned (supported progression

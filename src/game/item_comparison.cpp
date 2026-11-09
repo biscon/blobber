@@ -1,5 +1,5 @@
+#include "game/item_comparison.hpp"
 #include "game/party.hpp"
-#include "game/trade.hpp"
 #include <algorithm>
 
 namespace blobber {

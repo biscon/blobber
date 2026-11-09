@@ -620,6 +620,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     if (state_.travel.open)
         refreshTravel();
     if (!focused) {
+        clearInventoryHover();
         state_.inventory.pointerDown = false;
         state_.inventory.dragging = false;
     }

@@ -155,6 +155,10 @@ class HudPainter {
     void itemTargets(const HudSnapshot& h) const;
     void trade(const HudSnapshot&) const;
     void tradeTooltip(const HudSnapshot&) const;
+    void inventoryTooltip(const HudSnapshot&) const;
+    void itemTooltip(const rules::ItemDefinition&, const ItemComparison&, const char* heading,
+                     const char* characterName, ArtPoint pointer, UiRect bounds,
+                     const char* summary = nullptr, const char* detail = nullptr) const;
     void spellbook(const HudSnapshot& h) const;
     void spellTargets(const HudSnapshot& h) const;
     void enemyTargets(const HudSnapshot&, bool popover) const;

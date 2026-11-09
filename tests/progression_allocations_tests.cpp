@@ -78,6 +78,7 @@ int main() {
         const auto map = hybridRoom();
         const auto empty = spellPlacements(map, 0), places = spellPlacements(map, 3);
         GameSession progression(map, catalog, empty, 5, spellSpawn, false);
+        progression.audioEvents().enabled = true;
         CommandController ui(progression);
         const auto promptCatalog = fixtureCatalog();
         const auto promptMap = fixtureMap();

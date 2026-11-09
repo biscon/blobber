@@ -214,6 +214,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             }
             const bool campWasOpen = view.commands.snapshot().camp.open;
             view.commands.tickCamp(dt, sample.ui.focused);
+            view.commands.tickInventory(dt, sample.ui.focused);
             const bool paused =
                 campWasOpen || !sample.ui.focused || debug || view.commands.snapshot().modal();
             const bool presentedCampaignTerminal = view.commands.snapshot().campaignTerminal;

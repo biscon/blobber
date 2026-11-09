@@ -243,6 +243,7 @@ class CommandController {
     CommandController(GameSession&&) = delete;
     void openInventory(std::optional<rules::CharacterId> = {},
                        CharacterPage = CharacterPage::Inventory) noexcept;
+    void tickInventory(double seconds, bool focused) noexcept;
     void inventoryPage(CharacterPage) noexcept;
     void inventoryCharacter(rules::CharacterId) noexcept;
     void inventoryCursor(std::uint16_t cell) noexcept {
@@ -404,6 +405,7 @@ class CommandController {
     bool pickerRecipients() const noexcept;
     bool sameTargetContext(const PartyCommand&, const PartyCommand&) const noexcept;
     PartyCommand targetContext_;
+    void clearInventoryHover() noexcept;
     void refreshInventory() noexcept;
     void refreshCharacterSheet() noexcept;
     void refreshInventoryActions() noexcept;
