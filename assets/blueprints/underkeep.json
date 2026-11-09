@@ -4,34 +4,34 @@
     {
       "id": "hearth",
       "size": [
-        2,
+        1,
         1
       ],
-      "height": 1
+      "height": 0.5
     },
     {
       "id": "work-surface",
       "size": [
-        2,
+        1,
         1
       ],
-      "height": 0.35
+      "height": 0.175
     },
     {
       "id": "provisions",
       "size": [
-        2,
+        1,
         1
       ],
-      "height": 0.45
+      "height": 0.225
     },
     {
       "id": "table-and-benches",
       "size": [
-        2,
-        3
+        1,
+        2
       ],
-      "height": 0.4
+      "height": 0.2
     },
     {
       "id": "sleeping-bay",
@@ -86,7 +86,7 @@
         {
           "kit": "hearth",
           "anchor": [
-            1,
+            0,
             0
           ],
           "facing": "south"
@@ -95,7 +95,7 @@
           "kit": "work-surface",
           "anchor": [
             4,
-            1
+            0
           ],
           "facing": "west"
         },
@@ -225,7 +225,7 @@
         {
           "kit": "table-and-benches",
           "anchor": [
-            5,
+            6,
             1
           ],
           "facing": "north"
@@ -502,7 +502,7 @@
           "kit": "work-surface",
           "anchor": [
             4,
-            1
+            0
           ],
           "facing": "west"
         },

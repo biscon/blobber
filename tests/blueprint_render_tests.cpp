@@ -1,3 +1,4 @@
+#include "assets/blueprint_art.hpp"
 #include "assets/blueprint_blockouts.hpp"
 #include "render/world_doors.hpp"
 #include "render/world_visibility.hpp"
@@ -7,6 +8,7 @@
 #include "support/fixture_world.hpp"
 #include "support/world_fixtures.hpp"
 #include <iostream>
+#include <limits>
 using namespace blobber;
 namespace bp = blueprints;
 namespace {
@@ -40,14 +42,27 @@ void doorSweeps() {
 } // namespace
 int main() try {
     doorSweeps();
+    // Resizing a furnishing must release its old cells, including after rotation.
+    const auto original = test::blueprintCatalog();
+    auto compact = original;
+    compact.kits[0].size = {1, 1};
+    compact.kits[0].height = .15f;
+    for (unsigned turn = 0; turn < 4; ++turn) {
+        const auto before = bp::assemble(original, "kitchen", turn);
+        const auto after = bp::assemble(compact, "kitchen", turn);
+        const auto released = before.map.definition().scenery.front().cell(0, 1);
+        check(before.map.movementBlocked(released) && !after.map.movementBlocked(released) &&
+                  !after.map.npcBlocked(released),
+              "Compact furniture releases the former footprint for party and NPC movement");
+    }
     test::WorldFixture storage;
     auto c = test::blueprintCatalog();
     // Own kit fixtures cover every blockout primitive without loading game content.
     const std::array<const char*, 8> names{
         "hearth",       "work-surface", "provisions",     "table-and-benches",
         "sleeping-bay", "footlocker",   "weapon-storage", "armor-display"};
-    const std::array<Cell, 8> sizes{{{2, 1}, {2, 1}, {2, 1}, {2, 3}, {1, 2}, {1, 1}, {2, 1}, {1, 1}}};
-    const std::array<float, 8> heights{1, .35f, .45f, .4f, .6f, .2f, .8f, .8f};
+    const std::array<Cell, 8> sizes{{{1, 1}, {1, 1}, {1, 1}, {1, 2}, {1, 2}, {1, 1}, {2, 1}, {1, 1}}};
+    const std::array<float, 8> heights{.5f, .175f, .225f, .2f, .6f, .2f, .8f, .8f};
     for (unsigned i = 0; i < names.size(); ++i) {
         bp::Kit k;
         std::copy_n(names[i], std::strlen(names[i]), k.id.begin());
@@ -76,9 +91,54 @@ int main() try {
           "Review pack leaves source binding unchanged");
     rejects([&] { bp::appendBlockouts(c, writer, packs, meshes); },
             "Duplicate review pack rejects before adding assets");
+    // A generated named-model publication exercises the finished path without game artwork.
+    packs[0].buildings = packs[1].buildings;
+    packs[0].materials = packs[1].materials;
+    packs[0].materialCount = packs[1].materialCount;
+    for (unsigned i = 0; i < c.kitCount; ++i) {
+        bp::validateKitArt(c.kits[i], meshes[i]);
+        for (unsigned axis = 0; axis < 3; ++axis) {
+            auto bad = meshes[i];
+            bad.vertices[0][axis] = axis == 1 ? c.kits[i].height + .01f : 4;
+            rejects([&] { bp::validateKitArt(c.kits[i], bad); }, "Kit overflow rejects on each axis");
+        }
+    }
+    auto bad = meshes[0];
+    bad.vertices[0][0] = std::numeric_limits<float>::quiet_NaN();
+    rejects([&] { bp::validateKitArt(c.kits[0], bad); }, "Nonfinite kit data rejects");
+    bad = meshes[0];
+    bad.vertices[0][1] = -.01f;
+    rejects([&] { bp::validateKitArt(c.kits[0], bad); }, "Below-floor geometry rejects");
+    bad = meshes[0];
+    bad.vertices.resize(6003, bad.vertices[0]);
+    rejects([&] { bp::validateKitArt(c.kits[0], bad); }, "Kit triangle budget rejects");
+    for (unsigned field : {3u, 6u}) {
+        auto invalid = meshes;
+        invalid[0].vertices[0][field] = 2;
+        rejects([&] { writer.finish({}, 0, packs, invalid); }, "Publication rejects invalid normal/UV");
+    }
     writer.finish({}, 0, packs, meshes);
     auto publication = world_assets::load(storage.directory);
     publication.verify();
+    for (unsigned turn = 0; turn < 4; ++turn) {
+        const auto finished = bp::assemble(c, "kitchen-hall", turn, 0, "underkeep");
+        const auto blockout = bp::assemble(c, "kitchen-hall", turn);
+        check(finished.map.definition().assetPack == "underkeep", "Finished assembly selects requested pack");
+        for (int y = 0; y < finished.map.height(); ++y)
+            for (int x = 0; x < finished.map.width(); ++x)
+                check(finished.map.movementBlocked({x, y}) == blockout.map.movementBlocked({x, y}),
+                      "Art selection preserves collision");
+        bp::validatePublishedArt(c, finished, publication);
+    }
+    const auto finished = bp::assemble(c, "kitchen", 0, 0, "underkeep");
+    auto missing = publication;
+    missing.packs[0].buildings.clear();
+    rejects([&] { bp::validatePublishedArt(c, finished, missing); }, "Missing finished kit never falls back");
+    missing.packs.clear();
+    rejects([&] { bp::validatePublishedArt(c, finished, missing); }, "Missing art pack rejects");
+    auto split = publication;
+    split.packs[0].buildings[0].parts.push_back(split.packs[0].buildings[0].parts[0]);
+    rejects([&] { bp::validatePublishedArt(c, finished, split); }, "Unexpected multipart kit rejects");
     world_assets::CpuAssets assets(publication);
     {
         const auto lease = assets.acquire(world_assets::allAssets(publication));
@@ -88,7 +148,7 @@ int main() try {
                 for (int n = 0; n < 13; ++n)
                     rows[0][n] = rows[12][n] = rows[n][0] = rows[n][12] = '#';
                 WorldDefinition world;
-                world.assetPack = "blueprint-blockouts";
+                world.assetPack = "underkeep";
                 world.surfaces.resize(169);
                 for (auto& surface : world.surfaces) {
                     surface.floor = 1;

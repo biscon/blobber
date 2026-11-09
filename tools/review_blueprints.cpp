@@ -1,4 +1,5 @@
 #include "app/gameplay.hpp"
+#include "assets/blueprint_art.hpp"
 #include "assets/blueprint_loader.hpp"
 #include "assets/image.hpp"
 #include "assets/npc_metadata.hpp"
@@ -20,7 +21,7 @@ void require(bool ok, const char* message) {
         throw std::runtime_error(message);
 }
 struct Arguments {
-    std::string mode, room = "kitchen-hall", sockets;
+    std::string mode, room = "kitchen-hall", sockets, art = "blockout";
     std::filesystem::path catalog = "assets/blueprints/underkeep.json", assets, prepared, uiPrepared, output;
     unsigned turns = 0;
     bool combat = false;
@@ -28,7 +29,7 @@ struct Arguments {
 Arguments arguments(int argc, char** argv) {
     require(argc >= 2, "Usage: blobber_review_blueprints validate|plans|walk|capture --catalog FILE --room "
                        "ID --assets ASSETS --prepared REVIEW_PREPARED --output NEW_OUTPUT [--rotation "
-                       "0|90|180|270] [--sockets south,west] [--combat]");
+                       "0|90|180|270] [--sockets south,west] [--art blockout|finished] [--combat]");
     Arguments a;
     a.mode = argv[1];
     require(a.mode == "validate" || a.mode == "plans" || a.mode == "walk" || a.mode == "capture",
@@ -55,7 +56,10 @@ Arguments arguments(int argc, char** argv) {
             a.output = value;
         else if (key == "--sockets")
             a.sockets = value;
-        else if (key == "--rotation") {
+        else if (key == "--art") {
+            require(value == "blockout" || value == "finished", "Expected blockout or finished art");
+            a.art = value;
+        } else if (key == "--rotation") {
             unsigned degrees = 0;
             const auto r = std::from_chars(value.data(), value.data() + value.size(), degrees);
             require(r.ec == std::errc{} && r.ptr == value.data() + value.size() && degrees <= 270 &&
@@ -172,8 +176,9 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
     NpcAnimator animator(game.actors(), definitions.timings);
     const auto before = resources.counts();
     std::ofstream report(a.output / "review.txt");
-    report << "BR01 blockouts; seed=5; rotation=" << a.turns * 90 << "; combat=" << a.combat
-           << "; 1920x1080\n";
+    report << "Blueprint art=" << a.art << "; room=" << a.room << "; seed=5; rotation=" << a.turns * 90
+           << "; combat=" << a.combat << "; 1920x1080\n";
+    report << "Publication fingerprint=" << renderer.assets().publication.fingerprint << '\n';
     {
         GameView view(renderer);
         CommandController commands(game, definitions.timings);
@@ -190,6 +195,16 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
             report << name << " pose=" << game.movement().player.cell.x << ','
                    << game.movement().player.cell.y << ' ' << headingName(game.movement().player.heading)
                    << " interior_id_differences=" << parity(resources, renderer) << '\n';
+            const auto memory = renderer.memory();
+            report << "resident_textures=" << memory.textureCount
+                   << " texture_bytes=" << memory.residentTextures << " alpha_bytes=" << memory.residentAlpha
+                   << " mesh_bytes=" << memory.residentMeshes << " world_gpu=" << memory.worldGpu
+                   << " application_gpu=" << memory.applicationGpu
+                   << " peak_application_gpu=" << memory.peakApplicationGpu << " cpu=" << renderer.cpuBytes()
+                   << '\n';
+            if (const auto* prepared = renderer.scene())
+                report << "scene_cpu=" << prepared->bytes() << " scene_mesh=" << prepared->meshBytes()
+                       << '\n';
             using Error = unsigned (*)();
             const auto get = reinterpret_cast<Error>(rlGetProcAddress("glGetError"));
             require(get && get() == 0, "Blockout capture OpenGL error");
@@ -260,6 +275,40 @@ void capture(const Arguments& a, const bp::ReviewScene& scene, const rules::Cata
             game.restorePose({f.cell + forward(f.facing) * -1, f.facing}, true);
             shot("connected-pair");
         }
+        if (a.art == "finished" && !a.combat) {
+            // Room-local poses rotate with the accepted assembly, never OS input.
+            for (unsigned i = 0; i < scene.roomCount; ++i) {
+                const auto& room = scene.rooms[i];
+                const bool kitchen = room.blueprint.purpose == bp::Purpose::Kitchen;
+                const bool hall = room.blueprint.purpose == bp::Purpose::MeadHall;
+                if (!kitchen && !hall)
+                    continue;
+                const auto place = [&](Cell cell, Heading facing) {
+                    game.restorePose(
+                        {room.origin +
+                             bp::rotate(cell, bp::rotatedSize(room.blueprint.size, a.turns), a.turns),
+                         bp::rotate(facing, a.turns)},
+                        true);
+                };
+                const std::string name = kitchen ? "kitchen" : "hall";
+                place(kitchen ? Cell{2, 4} : Cell{3, 4}, Heading::North);
+                shot(name + "-composition");
+                place({1, 2}, kitchen ? Heading::North : Heading::West);
+                shot(name + "-close");
+                game.move(Action::TurnRight);
+                game.update(.08, false);
+                shot(name + "-turn");
+                game.update(.09, false);
+                if (kitchen) {
+                    place({0, 1}, Heading::North);
+                    shot("hearth-detail");
+                    place({3, 0}, Heading::East);
+                    shot("kitchen-work-surface");
+                    place({1, 3}, Heading::West);
+                    shot("kitchen-provisions");
+                }
+            }
+        }
     }
     require(!renderer.memory().textureCount && !renderer.assets().residency().meshes,
             "Review retained scene asset leases");
@@ -287,9 +336,16 @@ int main(int argc, char** argv) try {
         for (unsigned t = 0; t < 4; ++t)
             (void)bp::assemble(catalog, "kitchen-hall", t);
         std::cout << count << " room variants and four pair orientations validated\n";
+        if (a.art == "finished") {
+            require(!a.prepared.empty(), "Finished validation requires --prepared");
+            const auto scene = bp::assemble(catalog, a.room, a.turns, sockets(catalog, a), "underkeep");
+            bp::validatePublishedArt(catalog, scene, world_assets::load(a.prepared / "world"));
+            std::cout << "Finished bindings validated: " << a.room << '\n';
+        }
         return 0;
     }
-    const auto scene = bp::assemble(catalog, a.room, a.turns, sockets(catalog, a));
+    const auto scene = bp::assemble(catalog, a.room, a.turns, sockets(catalog, a),
+                                    a.art == "finished" ? "underkeep" : "blueprint-blockouts");
     require(!a.output.empty() && std::filesystem::create_directory(a.output),
             "Use a new review output directory");
     {
@@ -303,6 +359,8 @@ int main(int argc, char** argv) try {
     const auto definitions = loadNpcDefinitions(a.assets / "npcs/level.json");
     const auto placements = actors(scene, definitions, rules, a.combat);
     auto publication = world_assets::load(a.prepared / "world");
+    if (a.art == "finished")
+        bp::validatePublishedArt(catalog, scene, publication);
     require(publication.definitions == definitions.definitionFingerprint, "Review asset definitions differ");
     const bool hidden = a.mode == "capture";
     SetTraceLogLevel(LOG_WARNING);
@@ -339,7 +397,7 @@ int main(int argc, char** argv) try {
     // Presenter atlases/targets are registry-owned, not Presenter leases. The
     // registry destroys them before Window; fonts are separate external owners.
     require(!resources.counts().externalBytes, "Review retained font atlas ownership");
-    std::cout << "BR01 " << a.mode << " complete: " << a.output << '\n';
+    std::cout << "Blueprint " << a.art << ' ' << a.mode << " complete: " << a.output << '\n';
     return 0;
 } catch (const std::exception& e) {
     std::cerr << e.what() << '\n';

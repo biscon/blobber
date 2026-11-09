@@ -239,7 +239,7 @@ void validate(const BlueprintCatalog& c) {
     }
 }
 ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection, unsigned turns,
-                     unsigned sockets) {
+                     unsigned sockets, std::string_view assetPack) {
     validate(catalog);
     require(turns < 4, Error::Content, "Invalid assembly rotation");
     const bool pair = selection == "kitchen-hall";
@@ -258,7 +258,7 @@ ReviewScene assemble(const BlueprintCatalog& catalog, std::string_view selection
     const Cell canvas = baseSize + Cell{6, 6}, finalSize = rotatedSize(canvas, turns);
     std::vector<std::string> rows(std::size_t(finalSize.y), std::string(std::size_t(finalSize.x), '#'));
     WorldDefinition world;
-    world.assetPack = "blueprint-blockouts";
+    world.assetPack = assetPack;
     world.surfaces.resize(std::size_t(finalSize.x * finalSize.y));
     FloorFixtures fixtures;
     fixtures.discovery = true;

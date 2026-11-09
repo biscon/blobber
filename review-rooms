@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""Open the finished kitchen/mead hall walkthrough."""
+import argparse
+from pathlib import Path
+import subprocess
+import sys
+
+sys.dont_write_bytecode = True
+from tools.agent_artifacts import create, clean
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check', action='store_true', help='Validate without opening a window')
+    parser.add_argument('--combat', action='store_true', help='Include the fixed preview encounter')
+    args = parser.parse_args()
+    root = Path(__file__).resolve().parent
+    build = root / 'cmake-build-debug'
+    cache = build / 'CMakeCache.txt'
+    if not cache.is_file():
+        raise RuntimeError('Open this project in CLion and configure the Debug preset first.')
+    configured = {}
+    for line in cache.read_text().splitlines():
+        if line.startswith(('CMAKE_COMMAND:', 'CMAKE_MAKE_PROGRAM:')):
+            key, value = line.split('=', 1)
+            configured[key.split(':')[0]] = value
+    for key in ('CMAKE_COMMAND', 'CMAKE_MAKE_PROGRAM'):
+        if not Path(configured.get(key, '')).is_file():
+            raise RuntimeError(f'The configured {key} is unavailable; reload the Debug project in CLion.')
+    print('Preparing the kitchen/mead hall walkthrough…', flush=True)
+    subprocess.run(['nice', '-n', '15', 'ionice', '-c', '3', configured['CMAKE_COMMAND'],
+                    '--build', str(build), '--parallel', '1', '--target',
+                    'blobber_review_blueprints', 'blobber_bake_world_assets',
+                    'blobber_portraits', 'blobber_creator_art'], cwd=root, check=True)
+    executable = str(build / 'blobber_review_blueprints')
+    prepared = str(build / 'assets/prepared')
+    common = ['--art', 'finished', '--room', 'kitchen-hall',
+              '--catalog', str(root / 'assets/blueprints/underkeep.json'),
+              '--prepared', prepared]
+    subprocess.run([executable, 'validate', *common], cwd=root, check=True)
+    if args.check:
+        print('Ready. Run ./review-rooms to walk around.')
+        return
+    print('W/S: forward/back · A/D: strafe · Q/E: turn · F: open door · Esc: pause/quit', flush=True)
+    run = create(root)
+    try:
+        command = [executable, 'walk', *common, '--assets', str(root / 'assets'),
+                   '--ui-prepared', prepared, '--output', str(run / 'walk')]
+        if args.combat:
+            command.append('--combat')
+        subprocess.run(command, cwd=root, check=True)
+    finally:
+        clean(root, run)
+        clean(root, run, apply=True)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, RuntimeError, subprocess.CalledProcessError) as error:
+        sys.exit(str(error))

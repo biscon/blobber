@@ -63,10 +63,10 @@ void appendBlockouts(const BlueprintCatalog& c, world_assets::Writer& writer,
             add(-.45f, .035f, .18f, w - .1f, h - .035f, .27f);
             add(-.45f, .035f, -.4f, .25f, h * .65f, .58f);
             add(w - .8f, .035f, -.4f, .25f, h * .65f, .58f);
-            add(-.45f, h * .65f, -.4f, w - .1f, .18f, .58f);
+            add(-.45f, h * .65f, -.4f, w - .1f, h * .18f, .58f);
         } else if (id == "work-surface" || id == "table-and-benches") {
-            const float left = id == "work-surface" ? -.4f : -.08f,
-                        width = id == "work-surface" ? w - .2f : .95f;
+            const float width = id == "work-surface" ? w - .2f : std::min(.95f, w * .48f),
+                        left = id == "work-surface" ? -.4f : (w - 1.f - width) * .5f;
             add(left, h - .07f, -.35f, width, .07f, d - .3f);
             for (float x : {left, left + width - .1f})
                 for (float z : {-.3f, d - .65f})

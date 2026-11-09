@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-09",
+  "tool": "image_gen built-in",
+  "concept": {
+    "output": "concepts/rooms/kitchen-hall.png",
+    "prompt": "Create a production concept sheet for FOUR reusable 3D furnishings in Underkeep, a worn medieval fortress dungeon. Four separate three-quarter isometric views on a neutral dark gray background, no text, no floor scene. 1 masonry kitchen hearth, broad squat width twice its height, cold black recessed firebox, thick fitted stone jambs and lintel, low tapering stone hood, iron grate and black cauldron. 2 long low heavy timber preparation bench, tenoned legs and a full lower shelf laden with clay bowls and a folded cloth, small cutting board on top. 3 compact grouped wooden crates, two squat staved barrels and tied burlap sacks on a low timber pallet. 4 long rectangular mead-hall table with paired long benches, stout trestles, joinery and iron pegs, a few wooden cups and bowls. Material style: painterly pixel-detail dark fantasy RPG, warm desaturated oak, dull iron, gray ochre stone, pale coarse linen, real thickness and quiet grain. No flame, glow, modern items, people, text or logos. Match the attached material style and dungeon palette; treat them only as style references. Forms must read in a low resolution first person game with unlit painted textures, no dramatic directional lighting. Clearly separated coherent objects, not a whole-room monolith.",
+    "references": [
+      "source/material-master.png",
+      "docs/screenshots/blueprint-rooms-br01/view-kitchen.png"
+    ]
+  },
+  "materials": {
+    "output": "source/rooms/material-master.png",
+    "prompt": "Production texture material master for painted medieval dungeon 3D furniture. A square image divided into EXACTLY four equal square material fields in a 2 by 2 grid, no margins or text. Upper left: warm gray-ochre aged limestone, quiet mottled natural stone surface with tiny pits, NO blocks or mortar lines. Upper right: pale desaturated flax burlap coarse weave, subtle natural variation, NO folds. Lower left: dark reddish-brown unglazed earthenware clay surface, matte, subdued. Lower right: charcoal gray sooty iron, restrained oxidation, dark matte. Each quadrant is a flat orthographic closeup material texture filling its entire quadrant uniformly, with no scene, no cast shadows, no frame, no highlights, no objects, no vignette. Fine hand-painted pixel-detail fantasy RPG texture style matching the worn Underkeep prop art. Readable restrained detail, no noisy white specks. These are surface samples for metric UV mapping onto real geometry, not an image of props."
+  }
+}

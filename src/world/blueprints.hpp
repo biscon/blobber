@@ -91,5 +91,5 @@ struct ReviewScene {
 // sockets=0 selects south (or first socket); pair uses shared and south doors.
 // Returned Map/metadata own all data; no catalog borrowing reaches runtime.
 ReviewScene assemble(const BlueprintCatalog&, std::string_view selection, unsigned turns = 0,
-                     unsigned sockets = 0);
+                     unsigned sockets = 0, std::string_view assetPack = "blueprint-blockouts");
 } // namespace blobber::blueprints

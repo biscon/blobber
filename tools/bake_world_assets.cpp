@@ -1,3 +1,4 @@
+#include "assets/blueprint_art.hpp"
 #include "assets/blueprint_blockouts.hpp"
 #include "assets/blueprint_loader.hpp"
 #include "assets/fingerprint.hpp"
@@ -50,6 +51,11 @@ std::map<std::string, std::string> sourceFingerprints(const fs::path& source, bo
                 result.emplace(fs::relative(entry.path(), source).generic_string(),
                                fingerprintFile(entry.path()));
     result.emplace("ui/items/loot-bag.png", fingerprintFile(source / "ui/items/loot-bag.png"));
+    if (fs::exists(source / "blueprints"))
+        for (const auto& entry : fs::directory_iterator(source / "blueprints"))
+            if (entry.is_regular_file() && entry.path().extension() == ".json")
+                result.emplace(fs::relative(entry.path(), source).generic_string(),
+                               fingerprintFile(entry.path()));
     if (blockouts)
         result.emplace("blueprints/underkeep.json", fingerprintFile(source / "blueprints/underkeep.json"));
     return result;
@@ -268,6 +274,18 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool bloc
                     meshes.push_back(std::move(mesh));
                 }
                 pack.buildings.push_back(std::move(building));
+            }
+        }
+        if (manifest.contains("blueprintCatalog")) {
+            const auto path = relative(manifest.at("blueprintCatalog").get<std::string>());
+            if (path.parent_path() != "blueprints" || path.extension() != ".json")
+                throw std::runtime_error("Blueprint catalog must be blueprints/NAME.json");
+            const auto catalog = blueprints::load(source / path);
+            for (const auto& binding : pack.buildings) {
+                const auto& kit = catalog.kits[catalog.kit(binding.id).index];
+                if (binding.parts.size() != 1)
+                    throw std::runtime_error(binding.id + ": expected one grouped kit mesh");
+                blueprints::validateKitArt(kit, meshes[binding.parts.front()]);
             }
         }
         packs.push_back(std::move(pack));

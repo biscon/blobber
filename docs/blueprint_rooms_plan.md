@@ -2,7 +2,9 @@
 
 Created: 2026-11-09.
 Status: **BR01 accepted and closed by the user on 2026-11-09.
-BR02 and BR03 remain proposed.**
+BR02 scale/hearth correction implemented and mechanically verified after initial
+pair artwork rejection; revised user review pending before barracks/armory.
+BR03 remains proposed.**
 
 The user wants recognizable kitchen, armory, mead hall and barracks blueprints,
 placed by rules within randomized dungeons. The proposed first playable version
@@ -50,7 +52,7 @@ it survives in ordinary rooms is an explicit BR03 dressing-policy decision.
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
 | BR01 | Blueprint layouts, contracts and playable blockouts | Existing generation/rendering | Accepted and closed — 2026-11-09 |
-| BR02 | Finished room kit and isolated in-engine room review | Reviewed BR01 layouts/contracts | Proposed |
+| BR02 | Finished room kit and isolated in-engine room review | Reviewed BR01 layouts/contracts | Revised pair ready — awaiting user review |
 | BR03 | Procedural placement, population, persistence and campaign integration | Reviewed BR02 rooms | Proposed |
 
 ### BR01 — Layouts and blueprint foundation
@@ -83,6 +85,10 @@ are settled in this slice's detailed design before coding; they are deliberately
 not guessed by this roadmap. User review settles layout and circulation before art.
 
 ### BR02 — Artwork and assembled-room review
+
+Detailed implementation: [BR02 design and handoff](br02_blueprint_rooms_design.md).
+The user authorized implementation and selected a kitchen/mead hall in-engine
+review checkpoint before finishing barracks and armory.
 
 Create the required reusable kit and room-specific focal pieces against BR01's
 contracts. Start with the kitchen/mead hall pair to establish proportions, material
@@ -183,9 +189,18 @@ owned disposable runs after selecting evidence and preserve source art and test 
 - [Five plans and five native blockout views](screenshots/blueprint-rooms-br01/README.md)
   record the accepted BR01 layouts and circulation contracts. Campaign generation and
   save versions are unchanged.
-- Next action: separately plan BR02 artwork and assembled-room review against the accepted
-  BR01 contracts. Approval of BR01 does not authorize implementation of BR02 or BR03.
-  Disposable run output has been cleaned.
+- BR02 implementation was subsequently authorized with a **pair-first user review**
+  checkpoint. The user rejected the first delivery's scale and hearth treatment.
+  The four furnishings are now half size with smaller collision footprints; the
+  hearth has wall-matched stone, an arch and detailed interior/cookware. This
+  explicitly supersedes those four initial BR01 kit dimensions while retaining
+  the room/socket/ceiling contracts and historical BR01 acceptance.
+- The revision passes four affected CPU suites, 192 room variants/four pair
+  orientations, the production bake and 30 hidden views. [Six refreshed images](screenshots/blueprint-rooms-br02/README.md)
+  and the [BR02 handoff](br02_blueprint_rooms_design.md) record the current result.
+  Run `./review-rooms` to walk it. Barracks/armory follow revised user review;
+  BR03 remains separately proposed. Owned disposable output is cleaned;
+  durable art and the Debug publication remain.
 
 Related foundations: [variable layouts and ceilings](procedural_layout_design.md),
 [Underkeep dressing](underkeep_dressing_design.md),
