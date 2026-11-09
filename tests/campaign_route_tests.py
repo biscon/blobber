@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/"tools"))
-from campaign_route_review import Route, path_step
+from campaign_route_review import Route, path_step, reachable_enemy
 from arena_experiments.trial import StopTrial
 
 
@@ -37,6 +37,36 @@ class RouteTests(unittest.TestCase):
         s = state()
         s["generation"]["dressing"] = [dict(cell=[2, 1], blocking=True)]
         self.assertEqual(path_step(s, [4, 1]), (1, 2))
+
+    def test_blocked_near_actor_does_not_hide_reachable_member(self):
+        s = state()
+        s["generation"]["map"] = "#######\n#.....#\n#.....#\n#.....#\n#######\n"
+        s["position"] = [1, 1]
+        near = dict(actor=0, position=[3, 1], health_fraction=1)
+        far = dict(actor=1, position=[5, 2], health_fraction=1)
+        s["enemies"] = [near, far]
+        s["generation"]["dressing"] = [dict(cell=list(c), blocking=True)
+            for c in [(2, 1), (3, 2), (4, 1)]]
+        self.assertIs(reachable_enemy(s, [near, far]), far)
+
+    def test_fight_reselects_actor_positions_after_reaction_time(self):
+        r = Route.__new__(Route)
+        r.state = state()
+        r.state.update(phase="approach", enemies=[dict(actor=0, position=[3, 1], health_fraction=1)])
+        r.settle = lambda: None
+        r.living = lambda _: r.state["enemies"]
+        def tactics():
+            r.state["enemies"] = [dict(actor=0, position=[4, 2], health_fraction=1)]
+            return False
+        r.tactics = tactics
+        calls = []
+        def goto(target, adjacent, actor):
+            calls.append((target, actor))
+            raise RuntimeError("stop after selection")
+        r.goto = goto
+        with self.assertRaisesRegex(RuntimeError, "stop after selection"):
+            r.fight(dict(first=0, count=1))
+        self.assertEqual(calls, [([4, 2], 0)])
 
     def test_transfer_not_consumption(self):
         s = dict(party=[dict(inventory=[dict(item="mana_potion", quantity=2)]), dict(inventory=[])])

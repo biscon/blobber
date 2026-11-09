@@ -1,5 +1,13 @@
 # Inventory and equipment — slice 11
 
+The [early equipment expansion](early_equipment_design.md) extends the accepted
+paperdoll with shipped wearables, typed additive equipped bonuses and magic
+weapons. Party uses shared stat/resource reconciliation across inventory changes,
+acquisition, consumption, trade, dropping and travel supplies. Increased maximum
+HP/mana does not fill current values; removal clamps them. Spell attack remains
+separate from spell DC. There is no attunement or magic-item count restriction.
+Inventory sizes and the 244-stack pool remain unchanged.
+
 Status: implemented, **accepted and closed** by the user on 2026-10-27, including UI corrections and the Character tab.
 The [2026-11-08 paperdoll extension](#expanded-paperdoll-mockup--2026-11-08)
 supersedes the historical four-slot/208-stack bounds below. Its mockup is accepted;

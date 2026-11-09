@@ -143,6 +143,10 @@ Json encodeObservation(const Observation& o) {
                   {"saves", p.stats.saves},
                   {"proficiency", p.stats.proficiency},
                   {"initiative", p.stats.initiative},
+                  {"spell_attack_bonus", p.stats.spellAttackBonus},
+                  {"max_mana_bonus", p.stats.maxManaBonus},
+                  {"death_save_bonus", p.stats.deathSaveBonus},
+                  {"bolts", g.party().inventory().count({i}, rules::Ammunition::Bolt, g.party().catalog())},
                   {"carried_weight", p.stats.carriedWeight},
                   {"carrying_capacity", p.stats.carryingCapacity},
                   {"statuses", status(g.effects().statuses(rules::CharacterId{i}))},
@@ -169,10 +173,17 @@ Json encodeObservation(const Observation& o) {
             const auto h = g.party().inventory().at({{i}, slot});
             const auto* stack = g.party().inventory().stack(h);
             if (stack)
-                c["inventory"].push_back({{"cell", slot},
-                                          {"handle", handle(h)},
-                                          {"item", cat.item(stack->item)->id},
-                                          {"quantity", stack->quantity}});
+                c["inventory"].push_back(
+                    {{"cell", slot},
+                     {"handle", handle(h)},
+                     {"item", cat.item(stack->item)->id},
+                     {"quantity", stack->quantity},
+                     {"ammunition",
+                      rules::ammunitionFor(*cat.item(stack->item)) == rules::Ammunition::Bolt    ? "bolt"
+                      : rules::ammunitionFor(*cat.item(stack->item)) == rules::Ammunition::Arrow ? "arrow"
+                                                                                                 : "none"},
+                     {"enchantment", cat.item(stack->item)->enchantment},
+                     {"heavy_disadvantage", p.stats.weapons[slot].heavyDisadvantage}});
         }
         if (o.diagnostic) {
             c["xp_fraction"] = p.experienceFraction;

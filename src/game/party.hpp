@@ -102,6 +102,7 @@ class Party {
                          rules::CharacterStats&) const noexcept;
     InventoryResult stageInventoryChange(const InventoryRequest&, Inventory&,
                                          std::array<rules::CharacterStats, 4>&) const noexcept;
+    void commitStats(rules::CharacterId, const rules::CharacterStats&) noexcept;
     rules::HealthResult commit(rules::CharacterId id, rules::HealthResult result) noexcept;
 };
 } // namespace blobber

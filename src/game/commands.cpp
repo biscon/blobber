@@ -537,7 +537,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     if (session_.objective().known) {
         if (session_.objective().completed && !objectiveReported_) {
             state_.log.append(session_.fixtures().definition().depth == 3
-                                  ? "Final guardians defeated."
+                                  ? "Guardians defeated. Reward chest unsealed."
                                   : "Guardians defeated. Gate opened; supplies await beyond.");
             objectiveReported_ = true;
         }

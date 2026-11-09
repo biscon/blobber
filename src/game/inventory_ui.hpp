@@ -16,7 +16,7 @@ struct CharacterSheet {
     bool racialCasting = false;
     int racialAttack = 0, racialDifficulty = 0;
     std::uint32_t experience = 0, nextLevelExperience = 0;
-    unsigned arrows = 0;
+    unsigned arrows = 0, bolts = 0;
     std::array<char, 96> armor{};
     std::array<char, 384> weapons{};
     std::array<char, 192> effects{};

@@ -83,6 +83,7 @@ struct ItemComparison {
     const rules::ItemDefinition* equipped = nullptr;
     rules::WeaponPreview offeredWeapon, equippedWeapon;
     int offeredArmorClass = 0, equippedArmorClass = 0;
+    rules::CharacterStats currentStats{}, offeredStats{};
     bool equippable = false;
     const char* restriction = "";
 };

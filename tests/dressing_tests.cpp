@@ -123,8 +123,7 @@ void generated() {
             const auto a = generation::generate({seed, depth}), b = generation::generate({seed, depth});
             check(bool(a) && bool(b), "Dressed floor generated");
             const auto& f = *a.floor;
-            check(f.map.definition().assetPack == "underkeep" &&
-                      f.layout.cacheCount == (depth == 3 ? 2u : 3u),
+            check(f.map.definition().assetPack == "underkeep" && f.layout.cacheCount == 3u,
                   "Biome and chest count");
             check(f.map.definition().fingerprint() == b.floor->map.definition().fingerprint(),
                   "Dressing deterministic");

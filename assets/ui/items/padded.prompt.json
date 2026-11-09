@@ -1,0 +1,6 @@
+{
+  "tool": "image_gen.imagegen",
+  "prompt": "Create a single inventory icon for a dark fantasy dungeon RPG: PADDED ARMOR, a complete quilted tan gambeson, no wearer, no head or limbs. Match reference's detailed hand-painted realistic materials, isolated object, warm weathered brown palette, restrained highlights, crisp silhouette legible at 72 pixels. Center the whole item with 8% margin on genuinely transparent background. No text, border, panel, scene or extra objects. Use the reference only for rendering style.",
+  "reference": "quarterstaff.png",
+  "transparent_background": true
+}

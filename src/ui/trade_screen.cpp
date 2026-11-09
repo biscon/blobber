@@ -66,6 +66,13 @@ void itemText(TooltipText& lines, const HudPainter& p, const rules::ItemDefiniti
         std::snprintf(value, sizeof(value), "%s | %s", rules::damageTypeName(item.damageType),
                       weapon.proficient ? "Trained" : "Untrained");
         lines.add(value);
+        if (item.ranged)
+            lines.add(rules::ammunitionFor(item) == rules::Ammunition::Bolt ? "Ammunition: bolts"
+                                                                            : "Ammunition: arrows");
+        if (weapon.heavyDisadvantage)
+            lines.add("Heavy: disadvantage for Small wielder");
+        if (item.loading)
+            lines.add("Loading: one shot per action");
         if (item.twoHanded)
             lines.add("Two-handed");
         else if (item.versatileSides)
@@ -221,6 +228,20 @@ void HudPainter::tradeTooltip(const HudSnapshot& h) const {
     }
     itemText(offered, *this, *cell.definition, comparison.offeredWeapon, comparison.offeredArmorClass,
              width - 16);
+    if (cell.definition->wearSlot != rules::WearSlot::None) {
+        char delta[160];
+        const auto& a = comparison.currentStats;
+        const auto& b = comparison.offeredStats;
+        std::snprintf(delta, sizeof(delta), "If equipped: AC %+d | HP %+d | Mana %+d",
+                      b.armorClass - a.armorClass, b.maxHitPoints - a.maxHitPoints,
+                      b.maxManaBonus - a.maxManaBonus);
+        offered.wrap(*this, delta, width - 16);
+        std::snprintf(delta, sizeof(delta), "Spell hit %+d | Initiative %+d | Saves %+d/%+d/%+d/%+d/%+d/%+d",
+                      b.spellAttackBonus - a.spellAttackBonus, b.initiative - a.initiative,
+                      b.saves[0] - a.saves[0], b.saves[1] - a.saves[1], b.saves[2] - a.saves[2],
+                      b.saves[3] - a.saves[3], b.saves[4] - a.saves[4], b.saves[5] - a.saves[5]);
+        offered.wrap(*this, delta, width - 16);
+    }
     if (comparison.restriction[0]) {
         offered.add("");
         warningStart = offered.count;

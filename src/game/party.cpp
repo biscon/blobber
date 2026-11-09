@@ -48,7 +48,7 @@ Party::Party(const rules::Catalog& catalog, const rules::PresetParty& startingPa
         c.hitPoints = c.stats.maxHitPoints;
         c.availableHitDice = c.build.level;
         const auto* cls = catalog.characterClass(c.build.characterClass);
-        c.mana = c.maxMana = rules::maximumMana(cls->casting, c.build.level);
+        c.mana = c.maxMana = rules::maximumMana(cls->casting, c.build.level) + c.stats.maxManaBonus;
         c.secondWind = rules::hasFeature(cls->features, rules::ClassFeature::SecondWind);
         c.arcaneRecovery = rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery);
     }
@@ -71,6 +71,14 @@ Party::Party(const rules::Catalog& catalog, const rules::PresetParty& startingPa
 rules::SpellAccess Party::spellAccess(rules::CharacterId id, rules::SpellId spell) const noexcept {
     const auto* c = character(id);
     return c ? rules::spellAccess(*catalog_, c->build, c->stats, spell) : rules::SpellAccess{};
+}
+void Party::commitStats(rules::CharacterId id, const rules::CharacterStats& stats) noexcept {
+    auto& c = state_.characters[id.index];
+    c.stats = stats;
+    const auto* cls = catalog_->characterClass(c.build.characterClass);
+    c.maxMana = rules::maximumMana(cls->casting, c.build.level) + stats.maxManaBonus;
+    c.hitPoints = std::min(c.hitPoints, stats.maxHitPoints);
+    c.mana = std::min(c.mana, c.maxMana);
 }
 InventoryResult Party::stageInventoryChange(const InventoryRequest& request, Inventory& candidate,
                                             std::array<rules::CharacterStats, 4>& stats) const noexcept {
@@ -101,7 +109,7 @@ InventoryResult Party::inventoryChange(const InventoryRequest& request) noexcept
         return result;
     inventory_ = candidate;
     for (std::uint16_t i = 0; i < 4; ++i)
-        state_.characters[i].stats = stats[i];
+        commitStats({i}, stats[i]);
     return result;
 }
 InventoryResult Party::releaseItem(ItemHandle handle, std::uint64_t revision, bool preview) noexcept {
@@ -120,9 +128,9 @@ InventoryResult Party::releaseItem(ItemHandle handle, std::uint64_t revision, bo
         return {InventoryError::Equipment};
     if (!preview) {
         inventory_ = candidate;
-        state_.characters[location.character.index].stats = derived.value;
-        state_.characters[location.character.index].stats.maxHitPoints +=
-            state_.characters[location.character.index].aidBonus;
+        auto stats = derived.value;
+        stats.maxHitPoints += state_.characters[location.character.index].aidBonus;
+        commitStats(location.character, stats);
     }
     return {InventoryError::None, true};
 }
@@ -131,8 +139,9 @@ bool Party::consumeItem(ItemHandle h, unsigned q) noexcept {
     if (location.cell >= bagCells || !inventory_.consume(h, q))
         return false;
     auto& c = state_.characters[location.character.index];
-    c.stats = rules::deriveCharacter(*catalog_, c.build, inventory_.loadout(location.character)).value;
-    c.stats.maxHitPoints += c.aidBonus;
+    auto stats = rules::deriveCharacter(*catalog_, c.build, inventory_.loadout(location.character)).value;
+    stats.maxHitPoints += c.aidBonus;
+    commitStats(location.character, stats);
     return true;
 }
 bool Party::restoreMana(rules::CharacterId id, int amount) noexcept {
@@ -184,7 +193,8 @@ rules::HealthResult Party::stabilize(rules::CharacterId id) noexcept {
 }
 rules::HealthResult Party::deathSave(rules::CharacterId id, int face, int modifier) noexcept {
     const auto* c = character(id);
-    return c ? commit(id, rules::deathSave(*c, c->stats.maxHitPoints, face, modifier))
+    return c ? commit(id,
+                      rules::deathSave(*c, c->stats.maxHitPoints, face, modifier + c->stats.deathSaveBonus))
              : rules::HealthResult{{}, rules::HealthError::InvalidCharacter};
 }
 bool Party::hasFeature(rules::CharacterId id, rules::ClassFeature feature) const noexcept {

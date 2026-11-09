@@ -72,7 +72,8 @@ AdvancementResult Party::advance(const AdvancementRequest& r, bool preview) noex
     ++c.build.level;
     c.build.spells = result.preview.spells;
     const auto mana =
-        rules::maximumMana(catalog_->characterClass(c.build.characterClass)->casting, c.build.level);
+        rules::maximumMana(catalog_->characterClass(c.build.characterClass)->casting, c.build.level) +
+        c.stats.maxManaBonus;
     c.mana += mana - c.maxMana;
     c.maxMana = mana;
     ++c.availableHitDice;

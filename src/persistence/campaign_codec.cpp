@@ -289,9 +289,9 @@ Json parse(const std::string& text) {
     });
 }
 void envelope(const Json& j, const CampaignContent& content) {
-    if (!j.is_object() || j.size() != 10 || !j.at("schema").is_number_integer() ||
+    if (!j.is_object() || j.size() != 11 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 20 || j.at("simulation") != 23 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 21 || j.at("simulation") != 24 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) || !j.contains("campaign") ||
@@ -299,6 +299,11 @@ void envelope(const Json& j, const CampaignContent& content) {
         j.at("seed").get<std::uint64_t>() > UINT32_MAX || !j.at("baseline").is_array() ||
         j.at("baseline").size() != campaignLocationCount)
         invalid("Incompatible campaign schema, simulation or content");
+    const auto& profile = j.at("reward_profile");
+    if (!profile.is_array() || profile.size() != 4 || !profile[0].is_number_unsigned() ||
+        profile[0].get<std::uint64_t>() > rules::allWeaponTraining || !profile[1].is_boolean() ||
+        !profile[2].is_boolean() || !profile[3].is_boolean())
+        invalid("Invalid reward profile");
     for (const auto& signature : j.at("baseline"))
         if (!signature.is_string() || signature.get_ref<const std::string&>().empty() ||
             signature.get_ref<const std::string&>().size() > 20 ||
@@ -324,6 +329,17 @@ std::string definitionSignature(const CampaignLocationState& location) {
         }
     for (const auto& row : location.rows)
         fingerprintBytes(h, row.data(), row.size());
+    const auto reward = [&](const GroundPlacement& item) {
+        for (auto value : {unsigned(item.item.index), unsigned(item.quantity), unsigned(item.container)})
+            for (unsigned byte = 0; byte < 4; ++byte) {
+                const auto part = static_cast<unsigned char>(value >> (byte * 8));
+                fingerprintBytes(h, &part, 1);
+            }
+    };
+    for (unsigned i = 0; i < location.recovery.groundCount; ++i)
+        reward(location.recovery.ground[i]);
+    for (unsigned i = 0; i < location.objective.rewardCount; ++i)
+        reward(location.objective.rewards[i]);
     return std::to_string(h);
 }
 Json signatures(const CampaignDefinitions& definitions) {
@@ -361,13 +377,16 @@ std::string encode(const rules::Catalog& catalog, const NpcDefinitions& definiti
     Json summary = {{"location", value.activeLocation}, {"party", Json::array()}};
     for (const auto& member : value.party.state.characters)
         summary["party"].push_back(member.build.name);
-    Json j = {{"schema", 20},
-              {"simulation", 23},
+    Json j = {{"schema", 21},
+              {"simulation", 24},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},
               {"npcs", std::to_string(content.npcs)},
               {"seed", value.baseline->seed},
+              {"reward_profile",
+               {value.baseline->rewardProfile.weapons, value.baseline->rewardProfile.spellAttack,
+                value.baseline->rewardProfile.manaCaster, value.baseline->rewardProfile.unarmored}},
               {"baseline", signatures(*value.baseline)},
               {"summary", std::move(summary)}};
     auto scratch = std::make_unique<FloorState>();
@@ -432,7 +451,11 @@ std::unique_ptr<CampaignCheckpoint> decodeCampaign(const rules::Catalog& catalog
     if (!j.at("seed").is_number_unsigned() || j.at("seed").get<std::uint64_t>() > UINT32_MAX)
         invalid("Invalid campaign seed");
     auto out = std::make_unique<CampaignCheckpoint>();
-    out->baseline = prepareCampaignDefinitions(catalog, definitions.types, j["seed"].get<std::uint32_t>());
+    const auto& profile = j.at("reward_profile");
+    out->baseline =
+        prepareCampaignDefinitions(catalog, definitions.types, j["seed"].get<std::uint32_t>(),
+                                   {profile[0].get<rules::WeaponTraining>(), profile[1].get<bool>(),
+                                    profile[2].get<bool>(), profile[3].get<bool>()});
     if (j.at("baseline") != signatures(*out->baseline))
         invalid("Campaign definition baseline differs");
     auto baseline = std::make_unique<CampaignCheckpoint>();

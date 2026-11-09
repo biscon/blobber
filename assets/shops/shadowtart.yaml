@@ -7,6 +7,14 @@ buyback_markup_percent: 25
 prices:
   healing_potion: {buy: 50, sell: 12}
   mana_potion: {buy: 65, sell: 16}
+  circlet_of_focus: {buy: 400, sell: 100}
+  gloves_of_striking: {buy: 400, sell: 100}
+  boots_of_balance: {buy: 400, sell: 100}
+  belt_of_vigor: {buy: 400, sell: 100}
+  cloak_of_protection: {buy: 400, sell: 100}
+  ring_of_resolve: {buy: 400, sell: 100}
+  amulet_of_reserves: {buy: 400, sell: 100}
+  apprentice_bracers: {buy: 400, sell: 100}
 stock:
   - {item: healing_potion, quantity: 6}
   - {item: mana_potion, quantity: 6}

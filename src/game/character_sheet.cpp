@@ -32,9 +32,12 @@ void CommandController::refreshCharacterSheet() noexcept {
     out.casting = cls.casting;
     out.spellAttack = party_.castingModifier(i.character) + out.proficiency;
     out.spellDifficulty = 8 + out.spellAttack;
+    out.spellAttack += c->stats.spellAttackBonus;
     out.racialCasting = c->build.spells.racial != 0;
     out.racialAttack = c->stats.modifiers[3] + out.proficiency;
     out.racialDifficulty = 8 + out.racialAttack;
+    out.racialAttack += c->stats.spellAttackBonus;
+    out.bolts = party_.inventory().count(i.character, rules::Ammunition::Bolt, party_.catalog());
     out.arrows = party_.inventory().count(i.character, rules::Ammunition::Arrow, party_.catalog());
     constexpr const char* armor[]{"Light armor", "Medium armor", "Heavy armor", "Shields"};
     for (unsigned n = 0; n < 4; ++n)
@@ -50,10 +53,11 @@ void CommandController::refreshCharacterSheet() noexcept {
         append(out.weapons, "Simple weapons");
         weapons &= ~rules::simpleWeaponTraining;
     }
-    constexpr const char* names[]{
-        "Daggers",    "Maces",    "Longswords",    "Shortswords",     "Shortbows", "Longbows",
-        "Battleaxes", "Handaxes", "Light hammers", "Warhammers",      "Rapiers",   "Hand crossbows",
-        "Darts",      "Slings",   "Quarterstaffs", "Light crossbows", "Scimitars"};
+    constexpr const char* names[]{"Daggers",       "Maces",       "Longswords",    "Shortswords",
+                                  "Shortbows",     "Longbows",    "Battleaxes",    "Handaxes",
+                                  "Light hammers", "Warhammers",  "Rapiers",       "Hand crossbows",
+                                  "Darts",         "Slings",      "Quarterstaffs", "Light crossbows",
+                                  "Scimitars",     "Greatswords", "Mauls"};
     static_assert(std::size(names) == rules::weaponTypeCount);
     for (unsigned n = 0; n < rules::weaponTypeCount; ++n)
         if (weapons & (1u << n))

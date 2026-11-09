@@ -649,6 +649,19 @@ void wearableLoading() {
                                  {"weight", 25},
                                  {"stack_limit", 1},
                                  {"wear_slot", location}});
+    auto expanded = good;
+    expanded["schema_version"] = 16;
+    expanded["items"][1]["bonuses"] = {{"spell_attack", 1}, {"max_mana", 1}};
+    check(files.load(expanded).item({1})->bonuses.spellAttack == 1, "Schema 16 typed bonuses load");
+    auto invalid = expanded;
+    invalid["items"][1]["bonuses"]["spell_attack"] = -1;
+    files.invalid(invalid, "invalid wearable bonus");
+    invalid = expanded;
+    invalid["items"][1]["bonuses"]["invented"] = 1;
+    files.invalid(invalid, "unknown bonus");
+    invalid = expanded;
+    invalid["items"][0]["bonuses"] = {{"max_hp", 3}};
+    files.invalid(invalid, "invalid wearable bonus");
     const auto catalog = files.load(good);
     check(catalog.item({8})->wearSlot == WearSlot::Wrists &&
               equipmentFits(*catalog.item({6}), EquipmentSlot::Ring1) &&

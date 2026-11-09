@@ -35,6 +35,7 @@ void CommandController::refreshMagic() noexcept {
     m.maxMana = c->maxMana;
     m.attackBonus = c->stats.proficiency + party_.castingModifier(caster);
     m.difficulty = 8 + m.attackBonus;
+    m.attackBonus += c->stats.spellAttackBonus;
     const auto* cls = party_.catalog().characterClass(c->build.characterClass);
     m.spellcaster = cls->casting != rules::Casting::None || c->build.spells.racial;
     static_assert(std::tuple_size<decltype(cls->spells)>::value + 6 <= MagicHud::capacity,
@@ -213,8 +214,8 @@ void CommandController::refreshMagic() noexcept {
         const auto allies = std::count(m.footprint.allies.begin(), m.footprint.allies.end(), true);
         for (std::size_t i = 0; i < rules::partySize; ++i)
             m.selectedAllies[i] = m.footprint.allies[party_.snapshot().formation[i].index];
-        std::snprintf(m.targets.data(), m.targets.size(), "%d subcells / %zu enemies / %d allies%s", int(cells),
-                      m.affectedCount, int(allies),
+        std::snprintf(m.targets.data(), m.targets.size(), "%d subcells / %zu enemies / %d allies%s",
+                      int(cells), m.affectedCount, int(allies),
                       m.ground && !m.pending.aimedCell && !m.pending.aimedSubcell ? " / aim first" : "");
     } else if (m.hostile) {
         for (std::size_t i = 0; i < m.pending.targetCount; ++i) {

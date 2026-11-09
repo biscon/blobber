@@ -172,7 +172,10 @@ void HudPainter::inventory(const HudSnapshot& h) const {
         if (d.kind == rules::ItemKind::Weapon) {
             const auto& w = selected->weapon;
             std::snprintf(line, sizeof(line), "Hit %+d / %dd%d%+d%s", w.attackBonus, w.damage.count,
-                          w.damage.sides, w.damage.modifier, w.proficient ? "" : " / untrained");
+                          w.damage.sides, w.damage.modifier,
+                          w.heavyDisadvantage ? " / disadvantage"
+                          : w.proficient      ? ""
+                                              : " / untrained");
         } else if (d.kind == rules::ItemKind::Armor)
             std::snprintf(line, sizeof(line), "Base AC %d / armor training", d.baseArmorClass);
         else if (d.kind == rules::ItemKind::Shield)

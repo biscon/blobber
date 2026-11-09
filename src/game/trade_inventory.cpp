@@ -45,8 +45,9 @@ InventoryResult Party::exchange(const InventoryExchange& r, bool preview) noexce
         inventory_ = candidate;
         gold_ = purse;
         auto& c = state_.characters[r.character.index];
-        c.stats = derived.value;
-        c.stats.maxHitPoints += c.aidBonus;
+        auto stats = derived.value;
+        stats.maxHitPoints += c.aidBonus;
+        commitStats(r.character, stats);
     }
     return {InventoryError::None, true};
 }

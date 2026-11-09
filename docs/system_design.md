@@ -1,5 +1,14 @@
 # System design
 
+[Early equipment and continued campaign play](early_equipment_design.md): implemented
+and mechanically verified; interactive review pending. Adds 31 ordinary/magical
+items with generated artwork, modest equipped bonuses, five party-matched seeded
+magic rewards and a final guardian chest. Campaign play/save/Continue remain
+active after the third guardian. No attunement or magical equipment cap. Focused
+CPU/allocation/replay, full persistence and owned full-clear checks pass; hidden
+OpenGL evidence is indexed in the design. New campaigns are required (21/24,
+generator/templates 12/9); existing saves remain untouched.
+
 [Compact campaign persistence](procedural_campaign_save_design.md#compact-persistence--2026-11-09)
 is implemented and mechanically verified: schema 20 stores canonical baselines
 plus sparse changes and removes save/inspection reconstruction. The owned Debug

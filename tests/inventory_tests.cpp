@@ -3,6 +3,7 @@
 #include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
+#include "support/early_equipment_fixtures.hpp"
 #include "support/inventory_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include "ui/inventory_layout.hpp"
@@ -926,6 +927,142 @@ void wearableInput() {
               "Equip fills empty ring positions before deterministically replacing Ring 1");
     }
 }
+void crossbowAmmunition() {
+    using namespace rules;
+    auto f = inventoryFixture();
+    ItemDefinition bolt;
+    bolt.id = "fixture.bolt";
+    bolt.name = "Bolt";
+    bolt.description = "Owned crossbow ammunition";
+    bolt.kind = ItemKind::Ammunition;
+    bolt.ammunition = Ammunition::Bolt;
+    const ItemId boltId{std::uint16_t(f.items.size())};
+    f.items.push_back(bolt);
+    auto crossbow = f.items[3];
+    crossbow.id = "fixture.crossbow";
+    crossbow.name = "Crossbow";
+    crossbow.weapon = WeaponType::LightCrossbow;
+    crossbow.ammunition = Ammunition::Bolt;
+    crossbow.loading = true;
+    crossbow.damage = {1, 8, 0};
+    const ItemId crossbowId{std::uint16_t(f.items.size())};
+    f.items.push_back(crossbow);
+    auto& rogue = f.preset.characters[2];
+    rogue.items[2].item = crossbowId;
+    const auto cat = inventoryCatalog(f);
+    const auto map = hybridRoom();
+    const Player pose{{6, 8}, Heading::North};
+    NpcWorld placements(map, pose.cell, {"goblin"}, {{{0}, {6, 4}, {0, 0}, Heading::North}});
+    GameSession game(map, cat, placements, 9, pose, false);
+    auto shot = turnCommand(game, PartyAction::Ranged);
+    shot.character = {2};
+    shot.target = game.actors().id(0);
+    check(game.submit(shot).reason == CommandReason::NoAmmunition, "Arrows cannot substitute for bolts");
+    check(bool(game.party().acquire({{2}, boltId, 1, game.party().inventory().revision()})),
+          "Acquire one owned bolt");
+    shot = turnCommand(game, PartyAction::Ranged);
+    shot.character = {2};
+    shot.target = game.actors().id(0);
+    const auto arrows = game.party().inventory().count({2}, Ammunition::Arrow, cat);
+    const auto outcome = game.submit(shot);
+    check(outcome.reason == CommandReason::Resolved &&
+              game.party().inventory().count({2}, Ammunition::Bolt, cat) == 0 &&
+              game.party().inventory().count({2}, Ammunition::Arrow, cat) == arrows,
+          "Crossbow consumes its bolt at acceptance and preserves arrows");
+    check(game.submit(shot).reason == CommandReason::StaleTurn,
+          "Repeated crossbow request cannot create another shot");
+}
+void magicEquipment() {
+    using namespace rules;
+    const auto cat = blobber::test::withMagicItems(inventoryCatalog());
+    Party party(cat);
+    const CharacterId wizard{3};
+    const auto baseline = party.character(wizard)->stats;
+    const int mana = party.character(wizard)->mana;
+    constexpr const char* names[]{"circlet_of_focus",   "gloves_of_striking",  "boots_of_balance",
+                                  "belt_of_vigor",      "cloak_of_protection", "ring_of_resolve",
+                                  "amulet_of_reserves", "apprentice_bracers"};
+    for (const auto* name : names) {
+        const auto id = cat.findItem(name);
+        check(bool(party.acquire({wizard, id, 1, party.inventory().revision()})),
+              "Acquire dedicated magic fixture");
+        const auto handle = findInventoryItem(party, 3, id.index);
+        const auto slot = rules::itemEquipmentPosition(*cat.item(id));
+        allocations = 0;
+        watching = true;
+        const auto changed = party.inventoryChange(inventoryRequest(party, handle, 3, unsigned(slot)));
+        watching = false;
+        check(bool(changed) && allocations == 0,
+              "Every magic equip succeeds allocation free, including fourth through eighth");
+    }
+    auto current = party.character(wizard);
+    check(current->stats.armorClass == baseline.armorClass + 2 && current->stats.spellAttackBonus == 1 &&
+              current->stats.initiative == baseline.initiative + 1,
+          "Conditional bracers, cloak, circlet and boots compose");
+    for (unsigned i = 0; i < 6; ++i)
+        check(current->stats.saves[i] == baseline.saves[i] + 2 + (i == 1),
+              "Ring/cloak/boots save bonuses compose");
+    check(current->hitPoints == baseline.maxHitPoints &&
+              current->stats.maxHitPoints == baseline.maxHitPoints + 3 && current->mana == mana &&
+              current->maxMana == mana + 1,
+          "Increasing equipment capacity never fills HP or mana");
+    check(current->stats.weapons[unsigned(EquipmentSlot::MainHand)].damage.modifier ==
+              baseline.weapons[unsigned(EquipmentSlot::MainHand)].damage.modifier + 1,
+          "Gloves add one flat melee weapon damage");
+    party.heal(wizard, 100);
+    party.restoreMana(wizard, 100);
+    const auto saved = party.checkpoint();
+    Party restored(cat, saved);
+    check(restored.character(wizard)->mana == mana + 1 &&
+              restored.character(wizard)->stats.armorClass == current->stats.armorClass,
+          "Restoration derives wearable stats before validating resource caps");
+    for (const auto* name : {"belt_of_vigor", "amulet_of_reserves"}) {
+        const auto h = findInventoryItem(party, 3, cat.findItem(name).index);
+        check(bool(party.inventoryChange(inventoryRequest(party, h, 3, 47))), "Unequip capacity item");
+        check(bool(party.inventoryChange(inventoryRequest(
+                  party, h, 3, unsigned(rules::itemEquipmentPosition(*cat.item(cat.findItem(name))))))),
+              "Reequip capacity item");
+    }
+    check(party.character(wizard)->hitPoints == baseline.maxHitPoints &&
+              party.character(wizard)->mana == mana,
+          "Capacity removal clamps and swapping cannot generate resources");
+    const auto offered = compareItem(party, wizard, *cat.item(cat.findItem("cloak_of_protection")));
+    check(offered.offeredStats.armorClass == party.character(wizard)->stats.armorClass,
+          "Comparison derives the same bonuses as actual equipment");
+    const auto belt = findInventoryItem(party, 3, cat.findItem("belt_of_vigor").index);
+    const auto stale = inventoryRequest(party, belt, 3, 46);
+    party.acquire({wizard, cat.findItem("dagger_plus1"), 1, party.inventory().revision()});
+    check(!party.inventoryChange(stale), "Stale magic equip preserves resources");
+    const auto enchanted = findInventoryItem(party, 3, cat.findItem("dagger_plus1").index);
+    check(
+        bool(party.inventoryChange(inventoryRequest(party, enchanted, 3, unsigned(EquipmentSlot::MainHand)))),
+        "Equip enchanted weapon");
+    const auto& weapon = party.character(wizard)->stats.weapons[unsigned(EquipmentSlot::MainHand)];
+    check(weapon.attackBonus == baseline.weapons[unsigned(EquipmentSlot::MainHand)].attackBonus + 1 &&
+              weapon.damage.modifier ==
+                  baseline.weapons[unsigned(EquipmentSlot::MainHand)].damage.modifier + 2,
+          "Weapon enchantment and gloves combine without changing spell modifiers");
+    auto f = inventoryFixture();
+    f.races[2].size = CreatureSize::Small;
+    auto heavy = f.items[0];
+    heavy.id = "fixture.heavy";
+    heavy.weapon = WeaponType::Greatsword;
+    heavy.damage = {2, 6, 0};
+    heavy.versatileSides = 0;
+    heavy.twoHanded = heavy.heavy = true;
+    f.items.push_back(heavy);
+    const auto heavyCat = inventoryCatalog(f);
+    Party heavyParty(heavyCat);
+    const ItemId heavyId{std::uint16_t(f.items.size() - 1)};
+    check(bool(heavyParty.acquire({{2}, heavyId, 1, heavyParty.inventory().revision()})),
+          "Acquire heavy weapon");
+    auto handle = findInventoryItem(heavyParty, 2, heavyId.index);
+    check(bool(heavyParty.inventoryChange(
+              inventoryRequest(heavyParty, handle, 2, unsigned(EquipmentSlot::MainHand)))),
+          "Small characters can equip heavy weapons");
+    check(heavyParty.character({2})->stats.weapons[unsigned(EquipmentSlot::MainHand)].heavyDisadvantage,
+          "Heavy weapon records Small wielder disadvantage without rejecting equipment");
+}
 } // namespace
 int main(int argc, char** argv) {
     try {
@@ -942,6 +1079,8 @@ int main(int argc, char** argv) {
         contextualActions();
         characterSheet();
         wearableEquipment();
+        magicEquipment();
+        crossbowAmmunition();
         paperdollGeometry();
         wearableInput();
         std::cout << "Inventory transactions, costs, effects and input passed ("

@@ -1,5 +1,5 @@
 {
-  "schema_version": 14,
+  "schema_version": 16,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -669,7 +669,8 @@
       "hit_points_per_level": 0,
       "weapons": [],
       "sleep_immune": false,
-      "wizard_cantrip": false
+      "wizard_cantrip": false,
+      "size": "medium"
     },
     {
       "id": "hill_dwarf",
@@ -690,7 +691,8 @@
         "warhammer"
       ],
       "sleep_immune": false,
-      "wizard_cantrip": false
+      "wizard_cantrip": false,
+      "size": "medium"
     },
     {
       "id": "lightfoot_halfling",
@@ -706,7 +708,8 @@
       "hit_points_per_level": 0,
       "weapons": [],
       "sleep_immune": false,
-      "wizard_cantrip": false
+      "wizard_cantrip": false,
+      "size": "small"
     },
     {
       "id": "high_elf",
@@ -727,7 +730,8 @@
         "longbow"
       ],
       "sleep_immune": true,
-      "wizard_cantrip": true
+      "wizard_cantrip": true,
+      "size": "medium"
     }
   ],
   "classes": [
@@ -1108,6 +1112,481 @@
       "versatile_sides": 8,
       "stack_limit": 1,
       "ammunition": "none"
+    },
+    {
+      "id": "padded",
+      "name": "Padded armor",
+      "description": "Padded armor. Armor movement and Stealth penalties are not modeled.",
+      "weight": 800,
+      "kind": "armor",
+      "armor": "light",
+      "base_ac": 11,
+      "stack_limit": 1,
+      "metal_armor": false
+    },
+    {
+      "id": "studded_leather",
+      "name": "Studded leather",
+      "description": "Studded leather. Armor movement and Stealth penalties are not modeled.",
+      "weight": 1300,
+      "kind": "armor",
+      "armor": "light",
+      "base_ac": 12,
+      "stack_limit": 1,
+      "metal_armor": false
+    },
+    {
+      "id": "hide",
+      "name": "Hide armor",
+      "description": "Hide armor. Armor movement and Stealth penalties are not modeled.",
+      "weight": 1200,
+      "kind": "armor",
+      "armor": "medium",
+      "base_ac": 12,
+      "stack_limit": 1,
+      "metal_armor": false
+    },
+    {
+      "id": "chain_shirt",
+      "name": "Chain shirt",
+      "description": "Chain shirt. Armor movement and Stealth penalties are not modeled.",
+      "weight": 2000,
+      "kind": "armor",
+      "armor": "medium",
+      "base_ac": 13,
+      "stack_limit": 1,
+      "metal_armor": true
+    },
+    {
+      "id": "breastplate",
+      "name": "Breastplate",
+      "description": "Breastplate. Armor movement and Stealth penalties are not modeled.",
+      "weight": 2000,
+      "kind": "armor",
+      "armor": "medium",
+      "base_ac": 14,
+      "stack_limit": 1,
+      "metal_armor": true
+    },
+    {
+      "id": "half_plate",
+      "name": "Half plate",
+      "description": "Half plate. Armor movement and Stealth penalties are not modeled.",
+      "weight": 4000,
+      "kind": "armor",
+      "armor": "medium",
+      "base_ac": 15,
+      "stack_limit": 1,
+      "metal_armor": true
+    },
+    {
+      "id": "ring_mail",
+      "name": "Ring mail",
+      "description": "Ring mail. Armor movement and Stealth penalties are not modeled.",
+      "weight": 4000,
+      "kind": "armor",
+      "armor": "heavy",
+      "base_ac": 14,
+      "stack_limit": 1,
+      "metal_armor": true
+    },
+    {
+      "id": "splint",
+      "name": "Splint armor",
+      "description": "Splint armor. Armor movement and Stealth penalties are not modeled.",
+      "weight": 6000,
+      "kind": "armor",
+      "armor": "heavy",
+      "base_ac": 17,
+      "stack_limit": 1,
+      "metal_armor": true
+    },
+    {
+      "id": "plate",
+      "name": "Plate armor",
+      "description": "Plate armor. Armor movement and Stealth penalties are not modeled.",
+      "weight": 6500,
+      "kind": "armor",
+      "armor": "heavy",
+      "base_ac": 18,
+      "stack_limit": 1,
+      "metal_armor": true
+    },
+    {
+      "id": "rapier",
+      "name": "Rapier",
+      "description": "Rapier.",
+      "weight": 200,
+      "kind": "weapon",
+      "weapon": "rapier",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "piercing"
+      },
+      "ranged": false,
+      "finesse": true,
+      "two_handed": false,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "heavy": false,
+      "loading": false
+    },
+    {
+      "id": "warhammer",
+      "name": "Warhammer",
+      "description": "Warhammer.",
+      "weight": 200,
+      "kind": "weapon",
+      "weapon": "warhammer",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "bludgeoning"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": false,
+      "versatile_sides": 10,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "heavy": false,
+      "loading": false
+    },
+    {
+      "id": "battleaxe",
+      "name": "Battleaxe",
+      "description": "Battleaxe.",
+      "weight": 400,
+      "kind": "weapon",
+      "weapon": "battleaxe",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "slashing"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": false,
+      "versatile_sides": 10,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "heavy": false,
+      "loading": false
+    },
+    {
+      "id": "greatsword",
+      "name": "Greatsword",
+      "description": "Greatsword. Heavy: Small wielders have disadvantage.",
+      "weight": 600,
+      "kind": "weapon",
+      "weapon": "greatsword",
+      "damage": {
+        "count": 2,
+        "sides": 6,
+        "type": "slashing"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": true,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "heavy": true,
+      "loading": false
+    },
+    {
+      "id": "maul",
+      "name": "Maul",
+      "description": "Maul. Heavy: Small wielders have disadvantage.",
+      "weight": 1000,
+      "kind": "weapon",
+      "weapon": "maul",
+      "damage": {
+        "count": 2,
+        "sides": 6,
+        "type": "bludgeoning"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": true,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "heavy": true,
+      "loading": false
+    },
+    {
+      "id": "longbow",
+      "name": "Longbow",
+      "description": "Longbow. Heavy: Small wielders have disadvantage.",
+      "weight": 200,
+      "kind": "weapon",
+      "weapon": "longbow",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "piercing"
+      },
+      "ranged": true,
+      "finesse": false,
+      "two_handed": true,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "arrow",
+      "heavy": true,
+      "loading": false
+    },
+    {
+      "id": "light_crossbow",
+      "name": "Light crossbow",
+      "description": "Light crossbow. Loading: one shot per action. Uses bolts.",
+      "weight": 500,
+      "kind": "weapon",
+      "weapon": "light_crossbow",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "piercing"
+      },
+      "ranged": true,
+      "finesse": false,
+      "two_handed": true,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "bolt",
+      "heavy": false,
+      "loading": true
+    },
+    {
+      "id": "bolt",
+      "name": "Crossbow bolt",
+      "description": "One crossbow bolt. Required by light crossbows; arrows cannot substitute.",
+      "weight": 8,
+      "kind": "ammunition",
+      "stack_limit": 100,
+      "ammunition": "bolt"
+    },
+    {
+      "id": "circlet_of_focus",
+      "name": "Circlet of Focus",
+      "description": "+1 spell attack rolls. Does not increase spell save DC.",
+      "weight": 100,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "head",
+      "bonuses": {
+        "spell_attack": 1
+      }
+    },
+    {
+      "id": "gloves_of_striking",
+      "name": "Gloves of Striking",
+      "description": "+1 melee weapon damage. Does not affect ranged weapons or spells.",
+      "weight": 100,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "hands",
+      "bonuses": {
+        "melee_damage": 1
+      }
+    },
+    {
+      "id": "boots_of_balance",
+      "name": "Boots of Balance",
+      "description": "+1 initiative and Dexterity saving throws.",
+      "weight": 200,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "feet",
+      "bonuses": {
+        "initiative": 1,
+        "dexterity_save": 1
+      }
+    },
+    {
+      "id": "belt_of_vigor",
+      "name": "Belt of Vigor",
+      "description": "+3 maximum HP. Equipping does not heal; removal clamps current HP.",
+      "weight": 100,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "belt",
+      "bonuses": {
+        "max_hp": 3
+      }
+    },
+    {
+      "id": "cloak_of_protection",
+      "name": "Cloak of Protection",
+      "description": "+1 AC and all saving throws, including concentration and death saves.",
+      "weight": 300,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "cloak",
+      "bonuses": {
+        "armor_class": 1,
+        "all_saves": 1
+      }
+    },
+    {
+      "id": "ring_of_resolve",
+      "name": "Ring of Resolve",
+      "description": "+1 all saving throws, including concentration and death saves.",
+      "weight": 0,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "ring",
+      "bonuses": {
+        "all_saves": 1
+      }
+    },
+    {
+      "id": "amulet_of_reserves",
+      "name": "Amulet of Reserves",
+      "description": "+1 maximum mana for clerics and wizards. Equipping does not restore mana.",
+      "weight": 100,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "amulet",
+      "bonuses": {
+        "max_mana": 1
+      }
+    },
+    {
+      "id": "apprentice_bracers",
+      "name": "Apprentice's Bracers",
+      "description": "+1 AC without body armor or shield. Compatible with Mage Armor.",
+      "weight": 100,
+      "kind": "gear",
+      "stack_limit": 1,
+      "wear_slot": "wrists",
+      "bonuses": {
+        "unarmored_ac": 1
+      }
+    },
+    {
+      "id": "longsword_plus1",
+      "name": "Longsword +1",
+      "description": "Magical weapon: +1 to attack and damage rolls with this weapon. Does not improve spells.",
+      "weight": 300,
+      "kind": "weapon",
+      "weapon": "longsword",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "slashing"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": false,
+      "versatile_sides": 10,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "enchantment": 1
+    },
+    {
+      "id": "mace_plus1",
+      "name": "Mace +1",
+      "description": "Magical weapon: +1 to attack and damage rolls with this weapon. Does not improve spells.",
+      "weight": 400,
+      "kind": "weapon",
+      "weapon": "mace",
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "type": "bludgeoning"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": false,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "enchantment": 1
+    },
+    {
+      "id": "rapier_plus1",
+      "name": "Rapier +1",
+      "description": "Magical weapon: +1 to attack and damage rolls with this weapon. Does not improve spells.",
+      "weight": 200,
+      "kind": "weapon",
+      "weapon": "rapier",
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "type": "piercing"
+      },
+      "ranged": false,
+      "finesse": true,
+      "two_handed": false,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "heavy": false,
+      "loading": false,
+      "enchantment": 1
+    },
+    {
+      "id": "shortbow_plus1",
+      "name": "Shortbow +1",
+      "description": "Magical weapon: +1 to attack and damage rolls with this weapon. Does not improve spells.",
+      "weight": 200,
+      "kind": "weapon",
+      "weapon": "shortbow",
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "type": "piercing"
+      },
+      "ranged": true,
+      "finesse": false,
+      "two_handed": true,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "arrow",
+      "enchantment": 1
+    },
+    {
+      "id": "dagger_plus1",
+      "name": "Dagger +1",
+      "description": "Magical weapon: +1 to attack and damage rolls with this weapon. Does not improve spells.",
+      "weight": 100,
+      "kind": "weapon",
+      "weapon": "dagger",
+      "damage": {
+        "count": 1,
+        "sides": 4,
+        "type": "piercing"
+      },
+      "ranged": false,
+      "finesse": true,
+      "two_handed": false,
+      "versatile_sides": 0,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "enchantment": 1
+    },
+    {
+      "id": "quarterstaff_plus1",
+      "name": "Quarterstaff +1",
+      "description": "Magical weapon: +1 to attack and damage rolls with this weapon. Does not improve spells.",
+      "weight": 400,
+      "kind": "weapon",
+      "weapon": "quarterstaff",
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "type": "bludgeoning"
+      },
+      "ranged": false,
+      "finesse": false,
+      "two_handed": false,
+      "versatile_sides": 8,
+      "stack_limit": 1,
+      "ammunition": "none",
+      "enchantment": 1
     }
   ],
   "preset_party": {

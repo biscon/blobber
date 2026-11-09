@@ -222,7 +222,7 @@ bool dressUnderkeep(FloorLayout& f, GenerationRequest request, WorldDefinition& 
         d.protect(f.population[i].cell);
     for (auto c : {f.spawn.cell, f.supply, f.optionalSupply, f.guardianReward, f.guardianApproach})
         d.protect(c);
-    f.cacheCount = f.depth == 3 ? 2 : 3;
+    f.cacheCount = 3;
     if (!d.chest(0, f.supply, false) || !d.chest(1, f.optionalSupply, false) ||
         (f.cacheCount == 3 && !d.chest(2, f.guardianReward, true)))
         return false;

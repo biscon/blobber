@@ -70,7 +70,7 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
             throw std::invalid_argument("Invalid saved character equipment or Aid");
         c.stats = stats.value;
         c.stats.maxHitPoints += c.aidBonus;
-        c.maxMana = rules::maximumMana(cls->casting, c.build.level);
+        c.maxMana = rules::maximumMana(cls->casting, c.build.level) + c.stats.maxManaBonus;
         if (!rules::validHealth(c, c.stats.maxHitPoints) || c.mana < 0 || c.mana > c.maxMana ||
             c.temporaryUntilMs > UINT64_MAX / 2 || c.availableHitDice < 0 ||
             c.availableHitDice > c.build.level || c.experience > rules::experienceCap ||

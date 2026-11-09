@@ -1,4 +1,4 @@
-# Duncan Ironballs: all currently shipped weapons, body armor, shield and arrows.
+# Duncan Ironballs: all currently shipped weapons, body armor, shields and ammunition.
 version: 1
 id: sanctuary_smithy
 restock_days: 3
@@ -17,6 +17,29 @@ prices:
   dagger: {buy: 6, sell: 2}
   scimitar: {buy: 40, sell: 12}
   quarterstaff: {buy: 8, sell: 2}
+  rapier: {buy: 25, sell: 6}
+  warhammer: {buy: 15, sell: 3}
+  battleaxe: {buy: 10, sell: 2}
+  greatsword: {buy: 50, sell: 12}
+  maul: {buy: 10, sell: 2}
+  longbow: {buy: 50, sell: 12}
+  light_crossbow: {buy: 25, sell: 6}
+  bolt: {buy: 2, sell: 1}
+  longsword_plus1: {buy: 400, sell: 100}
+  mace_plus1: {buy: 400, sell: 100}
+  rapier_plus1: {buy: 400, sell: 100}
+  shortbow_plus1: {buy: 400, sell: 100}
+  dagger_plus1: {buy: 400, sell: 100}
+  quarterstaff_plus1: {buy: 400, sell: 100}
+  padded: {buy: 5, sell: 1}
+  studded_leather: {buy: 45, sell: 11}
+  hide: {buy: 10, sell: 2}
+  chain_shirt: {buy: 50, sell: 12}
+  breastplate: {buy: 400, sell: 100}
+  half_plate: {buy: 750, sell: 187}
+  ring_mail: {buy: 30, sell: 7}
+  splint: {buy: 200, sell: 50}
+  plate: {buy: 1500, sell: 375}
 stock:
   - {item: longsword, quantity: 2}
   - {item: mace, quantity: 2}
@@ -30,3 +53,20 @@ stock:
   - {item: leather, quantity: 2}
   - {item: shield, quantity: 2}
   - {item: arrow, quantity: 100}
+  - {item: rapier, quantity: 2}
+  - {item: warhammer, quantity: 2}
+  - {item: battleaxe, quantity: 2}
+  - {item: greatsword, quantity: 2}
+  - {item: maul, quantity: 2}
+  - {item: longbow, quantity: 2}
+  - {item: light_crossbow, quantity: 2}
+  - {item: bolt, quantity: 100}
+  - {item: padded, quantity: 2}
+  - {item: studded_leather, quantity: 2}
+  - {item: hide, quantity: 2}
+  - {item: chain_shirt, quantity: 2}
+  - {item: breastplate, quantity: 1}
+  - {item: half_plate, quantity: 1}
+  - {item: ring_mail, quantity: 2}
+  - {item: splint, quantity: 2}
+  - {item: plate, quantity: 1}

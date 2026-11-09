@@ -15,7 +15,7 @@ CombatOutcome CombatController::spectralAttack(const PartyCommand& c, Player pos
     out.roll = roll.selected;
     const auto hit = rules::resolveAttack(roll,
                                           ch->stats.proficiency + ch->stats.modifiers[4] +
-                                              effects_.rollModifier(c.character),
+                                              ch->stats.spellAttackBonus + effects_.rollModifier(c.character),
                                           effects_.armorClass(out.enemy))
                          .value;
     out.hit = hit.outcome != rules::AttackOutcome::Miss;

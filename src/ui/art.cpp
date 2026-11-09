@@ -6,6 +6,7 @@
 #include "assets/prepared_image.hpp"
 #include "core/preparation.hpp"
 #include "game/effects.hpp"
+#include "ui/equipment_art.hpp"
 #include "ui/map_model.hpp"
 #include <algorithm>
 #include <cmath>
@@ -13,7 +14,8 @@
 #include <stdexcept>
 namespace blobber {
 UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
-             const std::filesystem::path& preparedDirectory) : resources_(resources) {
+             const std::filesystem::path& preparedDirectory)
+    : resources_(resources) {
     constexpr const char* names[]{"alden",
                                   "brunna",
                                   "merrin",
@@ -78,7 +80,8 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
                                   "giant-rat",
                                   "zombie",
                                   "goblin-shaman"};
-    const auto prepared = preparedDirectory.empty() ? directory.parent_path() / "prepared" : preparedDirectory;
+    const auto prepared =
+        preparedDirectory.empty() ? directory.parent_path() / "prepared" : preparedDirectory;
     auto loadPreparedAtlas = [&](const char* name, int height) {
         preparationPoint("Loading interface atlases");
         const auto path = prepared / name;
@@ -138,6 +141,24 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
         map_ = resources_.createTexture(mapAtlas.value);
         SetTextureFilter(resources_.texture(map_), TEXTURE_FILTER_BILINEAR);
     }
+    {
+        OwnedImage equipment(GenImageColor(2048, 1024, BLANK));
+        if (!equipment.value.data)
+            throw std::runtime_error("Equipment atlas allocation failed");
+        for (unsigned i = 0; i < equipmentIconIds.size(); ++i) {
+            OwnedImage icon(preparedImage(directory / "items" / (std::string(equipmentIconIds[i]) + ".png")));
+            if (!icon.value.data)
+                throw std::runtime_error("Missing equipment icon");
+            const float scale = 240.f / std::max(icon.value.width, icon.value.height);
+            const int width = std::max(1, int(std::round(icon.value.width * scale)));
+            const int height = std::max(1, int(std::round(icon.value.height * scale)));
+            ImageResize(&icon.value, width, height);
+            ImageDrawImage(&equipment.value, icon.value, int(i % 8 * 256) + (256 - width) / 2,
+                           int(i / 8 * 256) + (256 - height) / 2, WHITE);
+        }
+        equipment_ = resources_.createTexture(equipment.value);
+        SetTextureFilter(resources_.texture(equipment_), TEXTURE_FILTER_BILINEAR);
+    }
     OwnedImage atlas(GenImageColor(2048, 2048, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
@@ -181,6 +202,9 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
 static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 32,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
+    for (unsigned i = 0; i < equipmentIconIds.size(); ++i)
+        if (item.id == equipmentIconIds[i])
+            return equipmentIconFirst + i;
     if (item.id == "quarterstaff")
         return quarterstaffIcon;
     if (item.id == "scimitar")
@@ -233,6 +257,13 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     }
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
+    if (index >= equipmentIconFirst && index < equipmentIconFirst + equipmentIconIds.size()) {
+        const auto tile = index - equipmentIconFirst;
+        DrawTexturePro(resources_.texture(equipment_),
+                       {float(tile % 8 * 256), float(tile / 8 * 256), 256, 256}, destination, {0, 0}, 0,
+                       tint);
+        return;
+    }
     if (index < 4)
         index += 64; // Retain diagnostic compatibility for the original four art IDs.
     if (index >= 64 && index < 64 + rules::portraitCount) {

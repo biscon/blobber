@@ -15,7 +15,7 @@ full_clear = "--full-clear" in sys.argv
 scenario = json.loads(subprocess.check_output([str(exe), "--scenario"], text=True))
 with tempfile.TemporaryDirectory(prefix="blobber-route-") as name:
     directory = Path(name)
-    route = Route(exe, directory, directory, scenario, full_clear, time.monotonic()+30, record=False)
+    route = Route(exe, directory, directory, scenario, full_clear, time.monotonic()+(60 if full_clear else 30), record=False)
     try:
         if city_entry_only:
             route.call("start", scenario=scenario)
@@ -36,7 +36,7 @@ with tempfile.TemporaryDirectory(prefix="blobber-route-") as name:
         assert len(route.checkpoints) == 3
         assert all(p[0] >= 300 for p in route.checkpoints[-1]["xp"])
         assert route.rests <= 3
-        assert route.state["campaign"]["status"] == "victory"
+        assert route.state["campaign"]["status"] == "active"
         if full_clear:
             assert route.state["party"][0]["xp"] == 793
             assert route.state["party"][0]["xp_fraction"] == 9

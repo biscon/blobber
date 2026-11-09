@@ -60,6 +60,19 @@ def path_step(state, goal, adjacent=False):
     return found
 
 
+def reachable_enemy(state, living):
+    """Prefer nearby actors with an actual approach, not blocked back ranks."""
+    for enemy in sorted(living, key=lambda e: abs(e["position"][0]-state["position"][0])+
+                                               abs(e["position"][1]-state["position"][1])):
+        try:
+            path_step(state, enemy["position"], True)
+            return enemy
+        except StopTrial as exc:
+            if exc.reason != "no_diagnostic_path":
+                raise
+    return None
+
+
 class Route:
     def __init__(self, runner, assets, directory, scenario, reserve, deadline, *, record=True):
         self.directory, self.reserve = directory, reserve
@@ -226,7 +239,12 @@ class Route:
                 if current["health_fraction"] <= 0:
                     return
                 goal = current["position"]
-            step = path_step(self.state, goal, adjacent)
+            try:
+                step = path_step(self.state, goal, adjacent)
+            except StopTrial as exc:
+                if actor is not None and exc.reason == "no_diagnostic_path":
+                    return  # The actor moved behind another occupant; choose again.
+                raise
             if step is None:
                 return
             here = self.state["position"]
@@ -260,11 +278,14 @@ class Route:
                 return
             if self.tactics():
                 continue
+            # A false tactics result may still advance reaction time and move actors.
+            living = self.living(encounter)
             if not living:
                 self.advance(25, False)
                 continue
-            enemy = min(living, key=lambda e: abs(e["position"][0]-self.state["position"][0])+
-                                             abs(e["position"][1]-self.state["position"][1]))
+            enemy = reachable_enemy(self.state, living)
+            if enemy is None:
+                raise StopTrial("policy_failure", "no_reachable_encounter_member")
             target = enemy["position"]
             self.goto(target, True, enemy["actor"])
             delta = target[0]-self.state["position"][0], target[1]-self.state["position"][1]
@@ -398,14 +419,13 @@ class Route:
             self.face(approach["heading"])
             self.act(dict(kind="interact", fixture=approach["id"]))
             self.fight(guardian)
-            if depth < 3:
-                self.collect_cache(2)
-            else:
-                self.goto(layout["objective"]["reward"])
-                self.loot()
+            self.collect_cache(2)
             self.advance_party()
-            self.stairs(3)
-        raise StopTrial("policy_failure", "missing_campaign_victory")
+            if depth < 3:
+                self.stairs(3)
+        if self.state["campaign"]["status"] != "active":
+            raise StopTrial("policy_failure", "campaign_ended_after_guardian")
+        raise StopTrial("victory", "current_content_cleared_campaign_still_active")
 
     def close(self):
         if not self.client.closed and not self.client.failed:
@@ -466,7 +486,7 @@ def main():
                 name = f"{package['id']}-{seed}-{'reserve' if reserve else 'direct'}"
                 directory = args.output/name
                 directory.mkdir()
-                scenario = dict(kind="campaign", schema_version=1, generator_version=11, template_version=8,
+                scenario = dict(kind="campaign", schema_version=1, generator_version=12, template_version=9,
                                 seed=seed, party=package["scenario"]["party"])
                 (directory/"scenario.json").write_text(json.dumps(scenario, indent=2)+"\n")
                 route = Route(args.runner, args.assets, directory, scenario, reserve, deadline)

@@ -10,8 +10,7 @@
 namespace blobber {
 std::string campaignRunId();
 bool GameSession::runActive() const noexcept {
-    return !campaign_ || (campaign_->status() == CampaignStatus::Active &&
-                          !(campaign_->activeLocation() == 3 && objective_.completed));
+    return !campaign_ || campaign_->status() == CampaignStatus::Active;
 }
 namespace {
 std::uint64_t rebase(std::uint64_t deadline, std::uint64_t from, std::uint64_t to) {
@@ -33,7 +32,7 @@ bool portable(const EffectInstance& e) noexcept {
 } // namespace
 std::array<CampaignLocation, campaignLocationCount>
 prepareCampaignLocations(const rules::Catalog& catalog, const std::vector<std::string>& types,
-                         std::uint32_t seed) {
+                         std::uint32_t seed, generation::RewardProfile profile) {
     std::array<CampaignLocation, campaignLocationCount> locations;
     auto& hub = locations[0];
     auto definition = sanctuaryHub();
@@ -52,7 +51,7 @@ prepareCampaignLocations(const rules::Catalog& catalog, const std::vector<std::s
             throw std::runtime_error("Campaign generation failed");
         auto& floor = locations[depth];
         floor.generated = std::move(result.floor);
-        auto population = generation::preparePopulation(*floor.generated, catalog, types);
+        auto population = generation::preparePopulation(*floor.generated, catalog, types, profile);
         floor.placements = std::move(population.placements);
         floor.recovery = population.recovery;
         floor.objective = population.objective;
@@ -101,15 +100,18 @@ prepareCampaignLocations(const rules::Catalog& catalog, const std::vector<std::s
 }
 std::shared_ptr<const CampaignDefinitions> prepareCampaignDefinitions(const rules::Catalog& catalog,
                                                                       const std::vector<std::string>& types,
-                                                                      std::uint32_t seed) {
-    return campaignDefinitions(prepareCampaignLocations(catalog, types, seed), seed, catalog);
+                                                                      std::uint32_t seed,
+                                                                      generation::RewardProfile profile) {
+    return campaignDefinitions(prepareCampaignLocations(catalog, types, seed, profile), seed, catalog,
+                               nullptr, profile);
 }
 CampaignRun::CampaignRun(const rules::Catalog& catalog, const rules::PresetParty& starting,
                          const std::vector<std::string>& types, const std::vector<NpcTimings>& timings,
                          std::uint32_t seed)
     : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
-    locations_ = prepareCampaignLocations(catalog, types, seed);
-    definitions_ = baseline_ = campaignDefinitions(locations_, seed, catalog);
+    const auto profile = generation::rewardProfile(catalog, starting);
+    locations_ = prepareCampaignLocations(catalog, types, seed, profile);
+    definitions_ = baseline_ = campaignDefinitions(locations_, seed, catalog, nullptr, profile);
     const auto spawn = sanctuaryHub().spawn;
     configureDoorways();
     active_ = prepare(0, spawn);
@@ -176,9 +178,6 @@ CampaignStatus CampaignRun::status() const noexcept {
         conscious |= member.life == rules::Life::Conscious;
     if (!conscious || game().combat().snapshot().phase == CombatPhase::Defeat)
         return CampaignStatus::Defeat;
-    if (location_ == 3 && game().objective().completed && !game().opening() &&
-        game().combat().settledActions(game().timeMs()))
-        return CampaignStatus::Victory;
     return CampaignStatus::Active;
 }
 const char* CampaignRun::name() const noexcept {
@@ -373,7 +372,7 @@ bool CampaignRun::commitTravel(PreparedTravel& ticket) noexcept {
     elapsed_ = gameplayMs();
     if (ticket.chargedInventory) {
         party_.inventory_ = *ticket.chargedInventory;
-        party_.state_.characters[ticket.supplier.index].stats = ticket.supplierStats;
+        party_.commitStats(ticket.supplier, ticket.supplierStats);
     }
     for (unsigned i = 0; i < 4; ++i)
         party_.state_.characters[i].temporaryUntilMs = ticket.temporaryUntil[i];

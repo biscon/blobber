@@ -197,19 +197,17 @@ void campaign() {
         final.actors().damage(final.objective().members[i], 100000, final.timeMs());
     final.update(0, false);
     check(run.status() == CampaignStatus::Active, "final result waits for accepted presentation to settle");
-    const auto pose = final.movement().player;
-    const auto aiTime = final.ai().timeMs;
-    final.move(Action::TurnLeft);
-    final.update(.1, false);
-    check(final.movement().player == pose && final.ai().timeMs == aiTime,
-          "closing campaign drains existing presentation without new movement or AI actions");
-    final.update(.6, false);
+    final.update(.7, false);
     check(final.actors().snapshot().actors[0].life == ActorLife::Alive &&
-              run.status() == CampaignStatus::Victory,
-          "final designated guardian completion wins without an unrelated clear");
-    check(!continueLocalVictory(final, false), "Campaign completion retains terminal navigation");
-    check(!run.previewTravel(run.request(stair(run.game(), FixtureKind::Upstairs))).accepted,
-          "terminal travel rejects");
+              run.status() == CampaignStatus::Active && final.runActive(),
+          "final designated guardian completion retains active gameplay without unrelated clear");
+    check(final.objective().completed && final.loot().snapshot().containerCount == 3 &&
+              !final.loot().snapshot().containers[2].sealed,
+          "final guardian chest exists and unseals");
+    kill(final);
+    travel(run, FixtureKind::Upstairs);
+    check(run.activeLocation() == 2 && run.status() == CampaignStatus::Active,
+          "completed final floor permits returning upstairs");
     std::cout << "snapshot_bytes=" << run.snapshotBytes() << '\n';
 }
 void transferFailuresAndEffects() {

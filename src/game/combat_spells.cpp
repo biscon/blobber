@@ -626,7 +626,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     result.roll = roll.selected;
                     const auto hit =
                         rules::resolveAttack(roll,
-                                             ch->stats.proficiency +
+                                             ch->stats.proficiency + ch->stats.spellAttackBonus +
                                                  party_.spellAccess(c.character, c.spell).modifier +
                                                  effects_.rollModifier(c.character),
                                              effects_.armorClass(id))

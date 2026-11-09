@@ -48,6 +48,7 @@ struct CampaignLocationState {
 // Immutable preparation data shared by captures. Never contains floor snapshots.
 struct CampaignDefinitions {
     std::uint32_t seed = 0;
+    generation::RewardProfile rewardProfile;
     std::array<CampaignLocationState, campaignLocationCount> locations;
 };
 struct CampaignCheckpoint {
@@ -83,12 +84,16 @@ struct CampaignSaveData {
     std::string runId;
 };
 std::array<CampaignLocation, campaignLocationCount>
-prepareCampaignLocations(const rules::Catalog&, const std::vector<std::string>&, std::uint32_t seed);
+prepareCampaignLocations(const rules::Catalog&, const std::vector<std::string>&, std::uint32_t seed,
+                         generation::RewardProfile profile = {});
 std::shared_ptr<const CampaignDefinitions>
 campaignDefinitions(const std::array<CampaignLocation, campaignLocationCount>&, std::uint32_t seed,
-                    const rules::Catalog&, const CampaignDefinitions* canonical = nullptr);
-std::shared_ptr<const CampaignDefinitions>
-prepareCampaignDefinitions(const rules::Catalog&, const std::vector<std::string>&, std::uint32_t seed);
+                    const rules::Catalog&, const CampaignDefinitions* canonical = nullptr,
+                    generation::RewardProfile profile = {});
+std::shared_ptr<const CampaignDefinitions> prepareCampaignDefinitions(const rules::Catalog&,
+                                                                      const std::vector<std::string>&,
+                                                                      std::uint32_t seed,
+                                                                      generation::RewardProfile profile = {});
 class CampaignRun {
   public:
     class PreparedTravel {

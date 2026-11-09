@@ -63,3 +63,12 @@ the frame path. Current innkeeper potions are temporary provisioner stock.
 Duncan Ironballs at the smithy stocks all current weapons, body armor, shields
 and arrows. The inn retains its former equipment prices for selling/buyback;
 its temporary longsword and chain-mail retail stock has moved to Duncan.
+
+The early equipment expansion adds the nine new body armors to Duncan's smithy,
+alongside its existing armor, shields, weapons and ammunition. The inn stocks
+camp provisions. Duncan also stocks rapier, battleaxe, warhammer, greatsword,
+maul, longbow, light crossbow and bolts. New equipment sells for 25% of its ordinary purchase price (rounded down,
+minimum one), except bolts use the existing arrow economy, 2/1 per unit. Magic
+weapons have price entries at Duncan's, and magic wearables at the emporium, for
+100-gold sales and ordinary temporary buyback. No merchant stocks or restocks
+magical equipment; their 400-gold reference prices do not create retail stock.

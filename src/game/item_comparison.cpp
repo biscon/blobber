@@ -22,53 +22,50 @@ ItemComparison compareItem(const Party& party, rules::CharacterId who,
     result.equippedArmorClass = result.offeredArmorClass = c->stats.armorClass;
     const auto index = unsigned(*slot);
     result.equippedWeapon = c->stats.weapons[index];
-    const auto* shield = party.equipped(who, EquipmentSlot::OffHand);
-    const auto* cls = party.catalog().characterClass(c->build.characterClass);
-    const auto* race = party.catalog().race(c->build.race);
-    if (offered.kind == rules::ItemKind::Weapon) {
-        auto& weapon = result.offeredWeapon;
-        weapon.available = true;
-        weapon.ranged = offered.ranged;
-        weapon.proficient = ((cls->weapons | race->weapons) & rules::weaponBit(offered.weapon)) != 0;
-        const auto strength = c->stats.modifiers[0], dexterity = c->stats.modifiers[1];
-        const bool useDexterity = offered.finesse ? dexterity > strength : offered.ranged;
-        weapon.ability = useDexterity ? rules::Ability::Dexterity : rules::Ability::Strength;
-        const int modifier = useDexterity ? dexterity : strength;
-        weapon.attackBonus = modifier + (weapon.proficient ? c->stats.proficiency : 0);
-        weapon.damage = offered.damage;
-        weapon.damage.modifier = modifier;
-        weapon.damageType = offered.damageType;
-        if (offered.versatileSides && !shield && !offered.ranged)
-            weapon.damage.sides = offered.versatileSides;
-        if (shield && (offered.twoHanded || offered.ranged))
-            result.restriction = "Unequip shield before equipping this weapon.";
-        else if (!weapon.proficient)
+    auto loadout = party.inventory().loadout(who);
+    const auto offeredId = party.catalog().findItem(offered.id);
+    for (unsigned i = 0; i < bagCells; ++i)
+        if (loadout.items[i].quantity && loadout.items[i].item.index == offeredId.index) {
+            --loadout.items[i].quantity;
+            break;
+        }
+    loadout.items[index] = {offeredId, 1};
+    loadout.equipment.set(*slot, {std::uint16_t(index)});
+    const auto checked = rules::deriveCharacter(party.catalog(), c->build, loadout);
+    auto candidate = checked;
+    if (checked.error == rules::CharacterError::InvalidEquipment) {
+        // Show the hypothetical usable loadout while retaining the live restriction.
+        if (offered.kind == rules::ItemKind::Weapon && (offered.twoHanded || offered.ranged))
+            loadout.equipment.offHand = {};
+        if (offered.kind == rules::ItemKind::Shield) {
+            loadout.equipment.ranged = {};
+            const auto* main = party.equipped(who, EquipmentSlot::MainHand);
+            if (main && main->twoHanded)
+                loadout.equipment.mainHand = {};
+        }
+        candidate = rules::deriveCharacter(party.catalog(), c->build.view(), loadout, false);
+    } else if (checked.error == rules::CharacterError::ArmorProficiency)
+        candidate = rules::deriveCharacter(party.catalog(), c->build.view(), loadout, false);
+    if (candidate) {
+        result.offeredArmorClass = candidate.value.armorClass;
+        result.offeredWeapon = candidate.value.weapons[index];
+        result.offeredStats = candidate.value;
+        result.offeredStats.maxHitPoints += c->aidBonus;
+        result.currentStats = c->stats;
+        if (checked.error == rules::CharacterError::InvalidEquipment)
+            result.restriction = "Unequip conflicting weapon or shield first.";
+        else if (checked.error == rules::CharacterError::ArmorProficiency)
+            result.restriction = "Missing armor training: cannot equip.";
+        else if (result.offeredWeapon.heavyDisadvantage)
+            result.restriction = "Heavy weapon: Small wielder has disadvantage.";
+        else if (offered.kind == rules::ItemKind::Weapon && !result.offeredWeapon.proficient)
             result.restriction = "No weapon training: proficiency bonus does not apply.";
     } else {
-        const auto training =
-            cls->armor | (c->build.lifeDomain ? rules::armorBit(rules::ArmorType::Heavy) : 0);
-        if (offered.kind == rules::ItemKind::Armor) {
-            int ac = offered.baseArmorClass;
-            if (offered.armor == rules::ArmorType::Light)
-                ac += c->stats.modifiers[1];
-            else if (offered.armor == rules::ArmorType::Medium)
-                ac += std::min(2, c->stats.modifiers[1]);
-            if (shield)
-                ac += 2;
-            if (c->build.defense)
-                ++ac;
-            result.offeredArmorClass = ac;
-            if (!(training & rules::armorBit(offered.armor)))
-                result.restriction = "Missing armor training: cannot equip.";
-        } else if (offered.kind == rules::ItemKind::Shield) {
-            result.offeredArmorClass = c->stats.armorClass + (shield ? 0 : 2);
-            if (!(training & rules::armorBit(rules::ArmorType::Shield)))
-                result.restriction = "Missing shield training: cannot equip.";
-            else if (party.equipped(who, EquipmentSlot::Ranged) ||
-                     (party.equipped(who, EquipmentSlot::MainHand) &&
-                      party.equipped(who, EquipmentSlot::MainHand)->twoHanded))
-                result.restriction = "Unequip conflicting weapon before equipping shield.";
-        }
+        result.restriction = candidate.error == rules::CharacterError::Overweight
+                                 ? "Carried weight exceeds capacity."
+                             : candidate.error == rules::CharacterError::ArmorProficiency
+                                 ? "Missing armor training: cannot equip."
+                                 : "Unequip conflicting weapon or shield first.";
     }
     return result;
 }

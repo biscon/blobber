@@ -255,6 +255,7 @@ SpellAccess spellAccess(const Catalog& cat, const CharacterIdentity& b, const Ch
     out.modifier = stats.modifiers[out.casting == Casting::Wisdom ? 4 : 3];
     out.attack = stats.proficiency + out.modifier;
     out.difficulty = 8 + out.attack;
+    out.attack += stats.spellAttackBonus;
     out.cost = spellManaCost(r.level);
     return out;
 }

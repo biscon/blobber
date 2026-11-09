@@ -64,7 +64,7 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
     validateIds(items_, "items");
     for (const auto& r : races_) {
         if (!validDisplayText(r.name, 64) || r.hitPointsPerLevel < 0 || r.hitPointsPerLevel > 1 ||
-            (r.weapons & ~allWeaponTraining))
+            (r.weapons & ~allWeaponTraining) || unsigned(r.size) > unsigned(CreatureSize::Small))
             throw std::runtime_error("races." + r.id + ": invalid name, HP bonus, or weapon training");
         for (const int increase : r.abilityIncreases)
             if (increase < 0 || increase > 2)
@@ -105,12 +105,24 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                                   : i.kind == ItemKind::Ammunition ? 100
                                   : i.kind == ItemKind::Consumable ? 20
                                                                    : 1;
-        if (stackLimit(i) != expected || static_cast<unsigned>(i.ammunition) > 1 ||
+        if (stackLimit(i) != expected || static_cast<unsigned>(i.ammunition) > 2 ||
             static_cast<unsigned>(i.consumable) > 2 ||
             (i.kind == ItemKind::Consumable) != (i.consumable != Consumable::None) ||
             (i.ammunition != Ammunition::None && i.kind != ItemKind::Ammunition &&
              (i.kind != ItemKind::Weapon || !i.ranged)))
             throw std::runtime_error("items: invalid stack, ammunition or consumable definition");
+        for (int bonus : {i.bonuses.armorClass, i.bonuses.allSaves, i.bonuses.dexteritySave,
+                          i.bonuses.initiative, i.bonuses.spellAttack, i.bonuses.meleeDamage,
+                          i.bonuses.maxHitPoints, i.bonuses.maxMana, i.bonuses.unarmoredArmorClass})
+            if (bonus < 0 || bonus > 10 ||
+                (bonus && (i.kind != ItemKind::Gear || i.wearSlot == WearSlot::None)))
+                throw std::runtime_error("items: invalid wearable bonus");
+        if (i.enchantment < 0 || i.enchantment > 3 ||
+            ((i.enchantment || i.heavy || i.loading) && i.kind != ItemKind::Weapon) ||
+            (i.loading && (!i.ranged || i.ammunition != Ammunition::Bolt)) ||
+            (i.kind == ItemKind::Weapon && i.weapon == WeaponType::LightCrossbow &&
+             (i.ammunition != Ammunition::Bolt || !i.ranged || !i.loading || !i.twoHanded)))
+            throw std::runtime_error("items: invalid enchantment or weapon property");
         if (i.kind == ItemKind::Weapon &&
             (!weaponBit(i.weapon) || !validDice(i.damage) || i.damage.modifier != 0 ||
              static_cast<unsigned>(i.damageType) > static_cast<unsigned>(DamageType::Slashing) ||

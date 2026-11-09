@@ -91,9 +91,11 @@ void copyDefinition(CampaignLocationState& to, const CampaignLocation& from) {
 } // namespace
 std::shared_ptr<const CampaignDefinitions>
 campaignDefinitions(const std::array<CampaignLocation, campaignLocationCount>& locations, std::uint32_t seed,
-                    const rules::Catalog& catalog, const CampaignDefinitions* canonical) {
+                    const rules::Catalog& catalog, const CampaignDefinitions* canonical,
+                    generation::RewardProfile profile) {
     auto out = std::make_shared<CampaignDefinitions>();
     out->seed = seed;
+    out->rewardProfile = canonical ? canonical->rewardProfile : profile;
     for (unsigned i = 0; i < campaignLocationCount; ++i) {
         auto& definition = out->locations[i];
         copyDefinition(definition, locations[i]);
@@ -227,7 +229,7 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
             if (from.seed != std::uint32_t(generation::seedFor(from.generation, generation::Domain::Runtime)))
                 throw std::invalid_argument("Saved runtime seed differs from provenance");
             if (from.layout.dressingFingerprint != map.definition().fingerprint() ||
-                from.layout.cacheCount != (i == 3 ? 2u : 3u) || map.definition().assetPack != "underkeep")
+                from.layout.cacheCount != 3u || map.definition().assetPack != "underkeep")
                 throw std::invalid_argument("Saved Underkeep dressing differs");
             if (from.generation.depth != i || from.generation.generator != generation::generatorVersion ||
                 from.generation.templates != generation::templateVersion || from.layout.depth != i ||
@@ -302,8 +304,6 @@ CampaignRun::CampaignRun(const rules::Catalog& catalog, CampaignCheckpoint&& s,
                 throw std::invalid_argument("Saved campaign key ownership mismatch");
         }
     }
-    if (locations_[3].saved && locations_[3].saved->objective.completed)
-        throw std::invalid_argument("Completed campaign cannot resume as active");
     baseline_ = s.baseline;
     if (!baseline_)
         throw std::invalid_argument("Missing campaign definition baseline");

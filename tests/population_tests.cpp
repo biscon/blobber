@@ -2,6 +2,7 @@
 #include "game/sanctuary_hub.hpp"
 #include "generation/population.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/early_equipment_fixtures.hpp"
 #include <iostream>
 #include <queue>
 using namespace blobber;
@@ -264,11 +265,62 @@ void approaches() {
         }
     }
 }
+void magicRewards() {
+    const auto cat = blobber::test::withMagicItems(catalog());
+    const auto defs = definitions();
+    for (std::uint32_t seed : {5u, 8u}) {
+        for (RewardProfile profile : {RewardProfile{},
+                                      RewardProfile{rules::weaponBit(rules::WeaponType::Dagger) |
+                                                        rules::weaponBit(rules::WeaponType::Quarterstaff),
+                                                    true, true, true},
+                                      RewardProfile{rules::simpleWeaponTraining, false, false, false}}) {
+            rules::ItemId previous;
+            unsigned count = 0;
+            for (unsigned depth = 1; depth <= 3; ++depth) {
+                const auto generated = generate({seed, depth});
+                check(bool(generated), "Owned reward floor generated");
+                const auto first = resolvePopulation(generated.floor->layout, generated.floor->request, cat,
+                                                     defs.types, profile);
+                const auto repeat = resolvePopulation(generated.floor->layout, generated.floor->request, cat,
+                                                      defs.types, profile);
+                check(first.objective.rewardCount == (depth < 3 ? 2u : 1u) &&
+                          generated.floor->layout.cacheCount == 3,
+                      "Each guardian has a magic reward; initial floors retain supplies");
+                for (unsigned i = 0; i < first.objective.rewardCount; ++i) {
+                    const auto* item = cat.item(first.objective.rewards[i].item);
+                    check(first.objective.rewards[i].item.index == repeat.objective.rewards[i].item.index,
+                          "Reward selection repeats independently of runtime");
+                    if (item->wearSlot != rules::WearSlot::None) {
+                        ++count;
+                        check((profile.manaCaster || item->id != "amulet_of_reserves") &&
+                                  (profile.spellAttack || item->id != "circlet_of_focus") &&
+                                  (profile.unarmored || item->id != "apprentice_bracers"),
+                              "Wearable rewards respect frozen party eligibility");
+                    }
+                }
+                for (unsigned i = 0; i < first.recovery.groundCount; ++i) {
+                    const auto& placement = first.recovery.ground[i];
+                    const auto* item = cat.item(placement.item);
+                    if (!item->enchantment)
+                        continue;
+                    ++count;
+                    check(placement.container == 1 && (profile.weapons & rules::weaponBit(item->weapon)),
+                          "Optional magic weapons are trained and assigned to optional chest");
+                    if (depth == 3)
+                        check(placement.item.index != previous.index, "Weapon rewards are distinct");
+                    previous = placement.item;
+                }
+            }
+            check(count == 5, "Full clear contains exactly five permanent magic rewards");
+        }
+    }
+}
 } // namespace
 int main() {
     try {
         knowledge();
         budgets();
+        magicRewards();
         approaches();
         std::cout << "Population budgets and actual AI approaches passed\n";
     } catch (const std::exception& e) {

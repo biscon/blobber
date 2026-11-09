@@ -288,6 +288,10 @@ void comparisons() {
     c = compareItem(p, {2}, *catalog.item({3}));
     check(c.equipped == p.equipped({2}, EquipmentSlot::Ranged),
           "Ranged comparison uses alternate ranged slot");
+    auto restricted = compareItem(p, {0}, *catalog.item({3}));
+    check(restricted.restriction[0] && restricted.offeredWeapon.available &&
+              restricted.offeredWeapon.damage.sides == 6 && restricted.offeredWeapon.attackBonus == 4,
+          "Shield conflict retains a real hypothetical bow preview with restriction");
     check(c.offeredWeapon.ability == rules::Ability::Dexterity,
           "Ranged comparison records its derived attack ability");
     c = compareItem(p, {3}, *catalog.item({7}));

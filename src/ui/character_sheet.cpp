@@ -150,7 +150,10 @@ void HudPainter::characterSheet(const HudSnapshot& h) const {
         const auto low = std::max<std::int64_t>(0, w.damage.count + w.damage.modifier);
         const auto high =
             std::max<std::int64_t>(0, std::int64_t(w.damage.count) * w.damage.sides + w.damage.modifier);
-        if (rules::ammunitionFor(*cell.definition) == rules::Ammunition::Arrow)
+        if (rules::ammunitionFor(*cell.definition) == rules::Ammunition::Bolt)
+            std::snprintf(value, sizeof(value), "%lld-%lld damage / %u bolts", (long long)low,
+                          (long long)high, s.bolts);
+        else if (rules::ammunitionFor(*cell.definition) == rules::Ammunition::Arrow)
             std::snprintf(value, sizeof(value), "%lld-%lld damage / %u arrows", (long long)low,
                           (long long)high, s.arrows);
         else

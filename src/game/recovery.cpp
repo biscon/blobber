@@ -97,8 +97,9 @@ InventoryResult Party::acquire(const AcquisitionRequest& request, bool preview) 
                                                                    : InventoryError::Equipment};
     if (!preview) {
         inventory_ = candidate;
-        state_.characters[id.index].stats = derived.value;
-        state_.characters[id.index].stats.maxHitPoints += state_.characters[id.index].aidBonus;
+        auto stats = derived.value;
+        stats.maxHitPoints += state_.characters[id.index].aidBonus;
+        commitStats(id, stats);
     }
     return result;
 }

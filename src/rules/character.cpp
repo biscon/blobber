@@ -119,7 +119,7 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentity&
     return deriveCharacter(catalog, b.view(), gear);
 }
 CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityView& b,
-                                const CharacterLoadout& gear) noexcept {
+                                const CharacterLoadout& gear, bool validateArmorTraining) noexcept {
     const auto fail = [](CharacterError e) { return CharacterResult{{}, e}; };
     if (!validContentId(b.id) || !validDisplayText(b.name, 64))
         return fail(CharacterError::InvalidIdentity);
@@ -190,7 +190,8 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
         return fail(CharacterError::InvalidEquipment);
     if (items[0]) {
         const auto& armor = *items[0];
-        if (!((cls->armor | (b.lifeDomain ? armorBit(ArmorType::Heavy) : 0)) & armorBit(armor.armor)))
+        if (validateArmorTraining &&
+            !((cls->armor | (b.lifeDomain ? armorBit(ArmorType::Heavy) : 0)) & armorBit(armor.armor)))
             return fail(CharacterError::ArmorProficiency);
         stats.armorClass = armor.baseArmorClass;
         if (armor.armor == ArmorType::Light)
@@ -201,9 +202,29 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
             ++stats.armorClass;
     }
     if (items[2]) {
-        if (!((cls->armor | (b.lifeDomain ? armorBit(ArmorType::Heavy) : 0)) & armorBit(ArmorType::Shield)))
+        if (validateArmorTraining &&
+            !((cls->armor | (b.lifeDomain ? armorBit(ArmorType::Heavy) : 0)) & armorBit(ArmorType::Shield)))
             return fail(CharacterError::ArmorProficiency);
         stats.armorClass += 2;
+    }
+    int meleeDamage = 0;
+    for (const auto* item : items) {
+        if (!item)
+            continue;
+        const auto& bonus = item->bonuses;
+        stats.armorClass += bonus.armorClass;
+        if (!items[0] && !items[2])
+            stats.armorClass += bonus.unarmoredArmorClass;
+        for (auto& save : stats.saves)
+            save += bonus.allSaves;
+        stats.deathSaveBonus += bonus.allSaves;
+        stats.saves[1] += bonus.dexteritySave;
+        stats.initiative += bonus.initiative;
+        stats.maxHitPoints += bonus.maxHitPoints;
+        stats.spellAttackBonus += bonus.spellAttack;
+        if (cls->casting != Casting::None)
+            stats.maxManaBonus += bonus.maxMana;
+        meleeDamage += bonus.meleeDamage;
     }
     for (std::size_t i = 0; i < gear.itemCount; ++i) {
         if (!gear.items[i].quantity)
@@ -218,9 +239,10 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
         preview.ability =
             (item.finesse ? dexterity > strength : item.ranged) ? Ability::Dexterity : Ability::Strength;
         const int modifier = stats.modifiers[static_cast<std::size_t>(preview.ability)];
-        preview.attackBonus = modifier + (preview.proficient ? stats.proficiency : 0);
+        preview.attackBonus = modifier + (preview.proficient ? stats.proficiency : 0) + item.enchantment;
+        preview.heavyDisadvantage = item.heavy && race->size == CreatureSize::Small;
         preview.damage = item.damage;
-        preview.damage.modifier = modifier;
+        preview.damage.modifier = modifier + item.enchantment + (item.ranged ? 0 : meleeDamage);
         if (item.versatileSides && gear.equipment.mainHand.index == i && !items[2])
             preview.damage.sides = item.versatileSides;
         preview.damageType = item.damageType;

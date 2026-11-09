@@ -9,9 +9,9 @@ using namespace rules_json;
 constexpr std::array<const char*, abilityCount> abilities{"strength",     "dexterity", "constitution",
                                                           "intelligence", "wisdom",    "charisma"};
 constexpr std::array<const char*, weaponTypeCount> weapons{
-    "dagger",    "mace",    "longsword",    "shortsword",     "shortbow", "longbow",
-    "battleaxe", "handaxe", "light_hammer", "warhammer",      "rapier",   "hand_crossbow",
-    "dart",      "sling",   "quarterstaff", "light_crossbow", "scimitar"};
+    "dagger",       "mace",           "longsword", "shortsword", "shortbow",      "longbow", "battleaxe",
+    "handaxe",      "light_hammer",   "warhammer", "rapier",     "hand_crossbow", "dart",    "sling",
+    "quarterstaff", "light_crossbow", "scimitar",  "greatsword", "maul"};
 template <std::size_t N>
 std::size_t choice(const Json& value, const std::string& path, const std::array<const char*, N>& names) {
     const auto name = string(value, path);
@@ -92,7 +92,13 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     array(races, "races", Catalog::maxRaces);
     for (std::size_t i = 0; i < races.size(); ++i) {
         const auto p = "races[" + std::to_string(i) + "]";
-        const auto& r = races[i];
+        auto r = races[i];
+        CreatureSize size = CreatureSize::Medium;
+        if (version >= 16 && r.contains("size")) {
+            size = static_cast<CreatureSize>(
+                choice(r.at("size"), p + ".size", std::array<const char*, 2>{"medium", "small"}));
+            r.erase("size");
+        }
         if (version >= 8)
             fields(r, p,
                    {"id", "name", "ability_increases", "hit_points_per_level", "weapons", "sleep_immune",
@@ -110,6 +116,7 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
             out.races.back().sleepImmune = boolean(r.at("sleep_immune"), p + ".sleep_immune");
         out.races.back().wizardCantrip = version >= 8 ? boolean(r.at("wizard_cantrip"), p + ".wizard_cantrip")
                                                       : out.races.back().id == "high_elf";
+        out.races.back().size = size;
     }
     const auto& classes = root.at("classes");
     array(classes, "classes", Catalog::maxClasses);
@@ -188,6 +195,47 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                                               "currency", "supply"}));
         if (version < 6 && item.kind > ItemKind::Consumable)
             fail(p + ".kind", "currency/supplies require schema 6");
+        if (version >= 16) {
+            auto optionalInt = [&](const char* name, int& value) {
+                if (j.contains(name)) {
+                    value = integer(j.at(name), p + "." + name);
+                    j.erase(name);
+                }
+            };
+            optionalInt("enchantment", item.enchantment);
+            if (j.contains("bonuses")) {
+                const auto& b = j.at("bonuses");
+                if (!b.is_object())
+                    fail(p + ".bonuses", "expected object");
+                auto bonus = [&](const char* name, int& value) {
+                    if (b.contains(name))
+                        value = integer(b.at(name), p + ".bonuses." + name);
+                };
+                for (auto it = b.begin(); it != b.end(); ++it) {
+                    const auto& k = it.key();
+                    if (k != "armor_class" && k != "all_saves" && k != "dexterity_save" &&
+                        k != "initiative" && k != "spell_attack" && k != "melee_damage" && k != "max_hp" &&
+                        k != "max_mana" && k != "unarmored_ac")
+                        fail(p + ".bonuses", "unknown bonus: " + k);
+                }
+                bonus("armor_class", item.bonuses.armorClass);
+                bonus("all_saves", item.bonuses.allSaves);
+                bonus("dexterity_save", item.bonuses.dexteritySave);
+                bonus("initiative", item.bonuses.initiative);
+                bonus("spell_attack", item.bonuses.spellAttack);
+                bonus("melee_damage", item.bonuses.meleeDamage);
+                bonus("max_hp", item.bonuses.maxHitPoints);
+                bonus("max_mana", item.bonuses.maxMana);
+                bonus("unarmored_ac", item.bonuses.unarmoredArmorClass);
+                j.erase("bonuses");
+            }
+            for (auto flag : {"heavy", "loading"})
+                if (j.contains(flag)) {
+                    (std::string_view(flag) == "heavy" ? item.heavy : item.loading) =
+                        boolean(j.at(flag), p + "." + flag);
+                    j.erase(flag);
+                }
+        }
         if (version >= 15 && j.contains("wear_slot")) {
             if (item.kind != ItemKind::Gear)
                 fail(p + ".wear_slot", "only gear has a wearing location");
@@ -212,8 +260,11 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
             if (item.kind == ItemKind::Weapon || item.kind == ItemKind::Ammunition) {
                 if (!j.contains("ammunition"))
                     fail(p + ".ammunition", "missing field");
-                item.ammunition = static_cast<Ammunition>(choice(
-                    j.at("ammunition"), p + ".ammunition", std::array<const char*, 2>{"none", "arrow"}));
+                item.ammunition =
+                    static_cast<Ammunition>(choice(j.at("ammunition"), p + ".ammunition",
+                                                   std::array<const char*, 3>{"none", "arrow", "bolt"}));
+                if (version < 16 && item.ammunition == Ammunition::Bolt)
+                    fail(p + ".ammunition", "bolts require schema 16");
                 j.erase("ammunition");
             }
             if (item.kind == ItemKind::Consumable) {
@@ -230,6 +281,8 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                    {"id", "name", "description", "weight", "kind", "weapon", "damage", "ranged", "finesse",
                     "two_handed", "versatile_sides"});
             item.weapon = static_cast<WeaponType>(choice(j.at("weapon"), p + ".weapon", weapons));
+            if (version < 16 && item.weapon >= WeaponType::Greatsword)
+                fail(p + ".weapon", "weapon requires schema 16");
             if (version < 6 && item.weapon == WeaponType::Scimitar)
                 fail(p + ".weapon", "scimitar requires schema 6");
             const auto& damage = j.at("damage");

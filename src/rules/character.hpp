@@ -41,6 +41,8 @@ enum class WeaponType : std::uint8_t {
     Quarterstaff,
     LightCrossbow,
     Scimitar,
+    Greatsword,
+    Maul,
     Count
 };
 constexpr std::size_t weaponTypeCount = static_cast<std::size_t>(WeaponType::Count);
@@ -59,7 +61,7 @@ constexpr std::uint8_t armorBit(ArmorType type) noexcept {
                                             : 0;
 }
 enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear, Consumable, Currency, Supply };
-enum class Ammunition : std::uint8_t { None, Arrow };
+enum class Ammunition : std::uint8_t { None, Arrow, Bolt };
 enum class Consumable : std::uint8_t { None, Healing, Mana };
 // Wearing location is independent of item category. Rings share one location type.
 enum class WearSlot : std::uint8_t { None, Head, Hands, Feet, Belt, Cloak, Ring, Amulet, Wrists };
@@ -88,6 +90,7 @@ struct PortraitId {
 struct SpellGrants {
     std::uint32_t cantrips = 0, learned = 0, prepared = 0, domain = 0, racial = 0;
 };
+enum class CreatureSize : std::uint8_t { Medium, Small };
 struct RaceDefinition {
     std::string id, name;
     Abilities abilityIncreases{};
@@ -95,6 +98,7 @@ struct RaceDefinition {
     WeaponTraining weapons = 0;
     bool sleepImmune = false;
     bool wizardCantrip = false;
+    CreatureSize size = CreatureSize::Medium;
 };
 enum class ProgressionClass : std::uint8_t { None, Fighter, Cleric, Rogue, Wizard };
 struct ClassDefinition {
@@ -109,6 +113,11 @@ struct ClassDefinition {
     std::array<SpellId, 32> spells{};
     std::size_t spellCount = 0;
     ProgressionClass progression = ProgressionClass::None;
+};
+struct EquipmentBonuses {
+    int armorClass = 0, allSaves = 0, dexteritySave = 0, initiative = 0;
+    int spellAttack = 0, meleeDamage = 0, maxHitPoints = 0, maxMana = 0;
+    int unarmoredArmorClass = 0;
 };
 struct ItemDefinition {
     std::string id, name, description;
@@ -125,7 +134,10 @@ struct ItemDefinition {
     Ammunition ammunition = Ammunition::None;
     Consumable consumable = Consumable::None;
     bool metalArmor = false;
-    WearSlot wearSlot = WearSlot::None; // Gear only; no implicit magical/stat effects.
+    WearSlot wearSlot = WearSlot::None;
+    EquipmentBonuses bonuses;
+    int enchantment = 0;
+    bool heavy = false, loading = false;
 };
 unsigned stackLimit(const ItemDefinition&) noexcept;
 Ammunition ammunitionFor(const ItemDefinition&) noexcept;
@@ -234,7 +246,7 @@ struct PresetParty {
 struct WeaponPreview {
     bool available = false;
     bool proficient = false;
-    bool ranged = false;
+    bool ranged = false, heavyDisadvantage = false;
     Ability ability = Ability::Strength;
     int attackBonus = 0;
     Dice damage{};
@@ -249,6 +261,7 @@ struct CharacterLoadout {
 struct CharacterStats {
     Abilities abilities{}, modifiers{}, saves{};
     int proficiency = 0, initiative = 0, maxHitPoints = 0, armorClass = 0;
+    int spellAttackBonus = 0, maxManaBonus = 0, deathSaveBonus = 0;
     std::int64_t carriedWeight = 0, carryingCapacity = 0;
     std::array<WeaponPreview, maxCarriedItems> weapons{}; // Indexed by owned entry.
 };
@@ -275,6 +288,6 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& bu
 CharacterResult deriveCharacter(const Catalog&, const CharacterIdentity&, const CharacterLoadout&) noexcept;
 bool validFormation(const std::array<CharacterId, partySize>& formation) noexcept;
 bool validDisplayText(std::string_view text, std::size_t maximum) noexcept;
-CharacterResult deriveCharacter(const Catalog&, const CharacterIdentityView&,
-                                const CharacterLoadout&) noexcept;
+CharacterResult deriveCharacter(const Catalog&, const CharacterIdentityView&, const CharacterLoadout&,
+                                bool validateArmorTraining = true) noexcept;
 } // namespace blobber::rules

@@ -41,8 +41,8 @@ class UiArt {
 
   private:
     GpuResources& resources_;
-    TextureHandle creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_, portraitEffects_,
-        feedback_, supportEffects_;
+    TextureHandle equipment_, creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_,
+        portraitEffects_, feedback_, supportEffects_;
     std::array<Rectangle, 64> regions_{};
     GpuLease<TextureHandle> menuTitle_;
     GpuLease<ShaderHandle> menuTitleShader_;

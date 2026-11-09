@@ -1,5 +1,27 @@
 # SRD 5.1 source and adaptation ledger
 
+## Early equipment expansion — 2026-11-09
+
+See [equipment/reward design](early_equipment_design.md). The nine missing body
+armors and rapier, battleaxe, warhammer, greatsword, maul, longbow and light
+crossbow use SRD 5.1 pp. 63–66 statistics and training. Bolts are a distinct
+ammunition kind; their 0.075 lb unit weight rounds up to 0.08 lb in the existing
+hundredth-pound representation. Loading is one shot per action; Action Surge's
+separate action may fire again. Heavy gives Small wielders disadvantage.
+Existing six-cell range, ammunition consumption at acceptance, hand compatibility
+and discrete party movement remain project rules. Armor Stealth disadvantage and
+Strength-related speed penalties remain deferred, explicitly disclosed in item
+descriptions; no stealth or shared-party speed subsystem is added.
+
++1 weapons use the attack/damage bonus from p. 254. Cloak of Protection adopts
+its +1 AC/saving throws (p. 214), with attunement deliberately omitted at the
+user's request. All other wearables are original project items, not renamed or
+silently weakened SRD items. There is no attunement system or magic-item cap.
+Bonuses are equipped effects; maximum HP/mana increases do not restore resources.
+Prices, stock, resale, seeded party-matched five-item reward budget and continued
+campaign after the final guardian are game design choices. Artwork is original
+imagegen output, with individual prompts beside the source images.
+
 Source: [official SRD 5.1 Creative Commons edition](https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf).
 Page references below are printed page numbers. Only listed primitives/data are
 adopted; this is not an import of the complete SRD. Attribution travels with the

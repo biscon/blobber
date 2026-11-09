@@ -190,9 +190,9 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const bool advantage = ranged && realTime(state_.phase) && !ai_.aware(out.enemy) &&
                                !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
         const bool held = effects_.helpless(out.enemy);
-        const auto mode =
-            effects_.attackMode(c.character, out.enemy, combatAdjacent(map_, pose.cell, a->npc.cell),
-                                advantage || effects_.guiding(out.enemy), ranged && adjacent(pose.cell));
+        const auto mode = effects_.attackMode(
+            c.character, out.enemy, combatAdjacent(map_, pose.cell, a->npc.cell),
+            advantage || effects_.guiding(out.enemy), w.heavyDisadvantage || (ranged && adjacent(pose.cell)));
         const auto roll = rng_.d20(mode).value;
         effects_.consumeGuiding(out.enemy, now, events);
         out.roll = roll.selected;

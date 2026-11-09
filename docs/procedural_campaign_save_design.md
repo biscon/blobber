@@ -1,5 +1,14 @@
 # PC06: campaign save and resume
 
+The [early equipment expansion](early_equipment_design.md) advances campaign
+schema/simulation to **21/24**, generator/templates to **12/9**. The compact
+envelope now carries the immutable initial-party reward profile so regeneration
+preserves future rewards despite equipment changes and deaths. Baseline signatures
+also bind reward identities. Inspection stays metadata-only and saving shares
+already-prepared definitions. Final guardian completion is now valid active saved
+progress; it does not publish a terminal result. Defeat still does. Old campaign
+formats reject untouched without migration.
+
 ## Compact persistence — 2026-11-09
 
 **Implemented and mechanically verified; interactive timing/user acceptance pending.**

@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 11, templateVersion = 8;
+constexpr unsigned generatorVersion = 12, templateVersion = 9;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 using CellMask = std::array<bool, maxCells>;
 constexpr int floorDimension = 36;

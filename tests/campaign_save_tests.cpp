@@ -4,6 +4,7 @@
 #include "persistence/campaign_store.hpp"
 #include "persistence/character_library.hpp"
 #include "support/campaign_fixtures.hpp"
+#include "support/early_equipment_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include "ui/save_layout.hpp"
 #include <chrono>
@@ -195,7 +196,7 @@ void environmentRoundtrip() {
     bad = blobber::automation::Json::parse(text);
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); }, "Pre-architecture schema rejects");
-    bad["schema"] = 20;
+    bad["schema"] = 21;
     savedLocation(bad, 1)["world"]["buildings"] = {{"size", buildingCapacity + 1},
                                                    {"entries", blobber::automation::Json::array()}};
     rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
@@ -360,6 +361,45 @@ std::unique_ptr<CampaignRun> copy(const rules::Catalog& c, const NpcDefinitions&
     auto after = result->checkpoint();
     check(encodeCampaign(c, d, {"fixture", 0}, *after) == text, "exact logical campaign round trip");
     return result;
+}
+void magicRewardPersistence() {
+    const auto c = blobber::test::withMagicItems(catalog());
+    const auto d = definitions();
+    CampaignRun run(c, *c.preset(), d.types, d.timings, 5);
+    std::array<std::array<rules::ItemId, 2>, 3> rewards{};
+    std::array<rules::ItemId, 2> weapons{};
+    for (unsigned depth = 1; depth <= 3; ++depth) {
+        const auto& location = run.location(depth);
+        for (unsigned i = 0; i < location.objective.rewardCount; ++i)
+            rewards[depth - 1][i] = location.objective.rewards[i].item;
+        for (unsigned i = 0; i < location.recovery.groundCount; ++i) {
+            const auto id = location.recovery.ground[i].item;
+            if (c.item(id)->enchantment)
+                weapons[depth - 2] = id;
+        }
+    }
+    // Starting eligibility remains immutable after both mana users die.
+    run.party().damage({1}, 100000);
+    run.party().damage({3}, 100000);
+    auto restored = copy(c, d, run);
+    check(restored->status() == CampaignStatus::Active, "Remaining companions keep campaign active");
+    for (unsigned depth = 1; depth <= 3; ++depth) {
+        const auto& location = restored->location(depth);
+        for (unsigned i = 0; i < location.objective.rewardCount; ++i)
+            check(location.objective.rewards[i].item.index == rewards[depth - 1][i].index,
+                  "Unvisited wearable rewards preserve original party eligibility after deaths and reload");
+        for (unsigned i = 0; i < location.recovery.groundCount; ++i) {
+            const auto id = location.recovery.ground[i].item;
+            if (c.item(id)->enchantment)
+                check(id.index == weapons[depth - 2].index, "Unvisited optional weapons do not reroll");
+        }
+    }
+    auto state = restored->checkpoint();
+    auto text = encodeCampaign(c, d, {"fixture", 0}, *state);
+    auto bad = blobber::automation::Json::parse(text);
+    bad["reward_profile"][0] = UINT32_MAX;
+    rejects([&] { decodeCampaign(c, d, {"fixture", 0}, bad.dump()); },
+            "Invalid reward training mask rejects");
 }
 void spellPresentationLifecycle() {
     const auto c = catalog();
@@ -1346,8 +1386,20 @@ void terminalWorker() {
         else
             for (unsigned i = 0; i < rules::partySize; ++i)
                 run->party().damage({std::uint16_t(i)}, 100000);
-        check(run->status() == (victory ? CampaignStatus::Victory : CampaignStatus::Defeat),
-              "Terminal fixture reaches its intended result");
+        if (victory) {
+            check(run->status() == CampaignStatus::Active && run->game().objective().completed,
+                  "Final guardian completion remains active");
+            CommandController commands(run->game(), d.timings);
+            commands.refresh({}, false, false, true);
+            CampaignSaveFlow flow(&store);
+            check(!flow.terminalPending(*run, commands), "Completed content does not publish terminal state");
+            check(store.save(*run, store.inspect().revision).durable, "Save after final guardian");
+            auto restored = store.load();
+            check(restored->status() == CampaignStatus::Active && restored->game().objective().completed,
+                  "Continue restores completed final floor as active");
+            continue;
+        }
+        check(run->status() == CampaignStatus::Defeat, "Defeat remains terminal");
         CommandController commands(run->game(), d.timings);
         commands.refresh({}, false, false, true);
         CampaignSaveFlow flow(&store);
@@ -1417,6 +1469,7 @@ int main(int argc, char** argv) {
         if (argc == 2 && std::string(argv[1]) == "--smoke") {
             terminalWorker();
             sparsePersistence();
+            magicRewardPersistence();
             ignoredCampaigns();
             environmentRoundtrip();
             roundtrip();
@@ -1431,6 +1484,7 @@ int main(int argc, char** argv) {
             throw std::invalid_argument("Expected no arguments or --smoke");
         terminalWorker();
         sparsePersistence();
+        magicRewardPersistence();
         ignoredCampaigns();
         environmentRoundtrip();
         roundtrip();

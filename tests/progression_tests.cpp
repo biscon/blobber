@@ -2,6 +2,7 @@
 #include "game/session.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/early_equipment_fixtures.hpp"
 #include <cstring>
 #include <iostream>
 using namespace blobber;
@@ -14,6 +15,55 @@ AdvancementRequest chosen(GameSession& s, CharacterId id) {
         advancementChoices(s.party().catalog(), c.build.view(), c.build.portrait, c.build.spells, {}, true);
     r.choices.learned = recommendedChoices(s.party().catalog(), context, SpellChoice::Learned);
     return r;
+}
+void equippedAdvancement() {
+    const auto cat = blobber::test::withMagicItems(creationCatalog(true));
+    const auto map = hybridRoom();
+    const NpcWorld none(map, spellSpawn.cell, {"goblin"}, {});
+    GameSession s(map, cat, none, 5, spellSpawn, false);
+    auto& party = s.party();
+    for (const auto* name : {"belt_of_vigor", "amulet_of_reserves", "circlet_of_focus"}) {
+        const auto id = cat.findItem(name);
+        check(bool(party.acquire({{3}, id, 1, party.inventory().revision()})),
+              "Acquire advancement magic fixture");
+        for (std::uint16_t cell = 0; cell < bagCells; ++cell) {
+            const auto h = party.inventory().at({{3}, cell});
+            const auto* stack = party.inventory().stack(h);
+            if (stack && stack->item.index == id.index) {
+                check(bool(party.inventoryChange({InventoryOp::Move,
+                                                  h,
+                                                  {{3}, std::uint16_t(itemEquipmentPosition(*cat.item(id)))},
+                                                  0,
+                                                  party.inventory().revision()})),
+                      "Equip advancement fixture");
+                break;
+            }
+        }
+    }
+    const auto old = *party.character({3});
+    party.grantNextLevelExperience();
+    auto request = chosen(s, {3});
+    const auto result = party.advance(request);
+    check(bool(result), "Wizard advances with capacity items equipped");
+    const auto& now = *party.character({3});
+    check(now.maxMana == maximumMana(Casting::Intelligence, 2) + 1 && now.mana == old.mana + 2 &&
+              now.stats.maxHitPoints == old.stats.maxHitPoints + 5 && now.hitPoints == old.hitPoints + 5,
+          "Advancement retains item capacity and grants only ordinary level resource increases");
+    const auto stats = now.stats;
+    auto without = stats;
+    without.spellAttackBonus = 0;
+    bool tested = false;
+    for (std::uint16_t i = 0; i < cat.spellCount(); ++i) {
+        const auto before = spellAccess(cat, now.build, without, {i});
+        const auto after = party.spellAccess({3}, {i});
+        if (before) {
+            check(after.attack == before.attack + 1 && after.difficulty == before.difficulty &&
+                      after.modifier == before.modifier,
+                  "Circlet improves spell attack access without changing DC or ability modifier");
+            tested = true;
+        }
+    }
+    check(tested, "Owned caster has usable spells");
 }
 void identities() {
     const auto cat = creationCatalog(true);
@@ -218,6 +268,7 @@ void advancementUi() {
 int main() {
     try {
         identities();
+        equippedAdvancement();
         rewards();
         advancementUi();
         std::cout << "Progression checks passed\n";
