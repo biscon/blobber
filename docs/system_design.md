@@ -1,5 +1,12 @@
 # System design
 
+[Linux distribution roadmap](linux_distribution_plan.md): proposed, 2026-11-11.
+LD01–LD04 are planned for separate fresh-context planning and implementation:
+curated runtime staging, a controlled Linux x86-64/glibc baseline, a verified
+downloadable archive, then standard GitHub-hosted automation for the public repo.
+No distribution targets, portability claims or hosted runs are implemented by
+this roadmap. Next action: detailed planning of LD01; no automatic advancement.
+
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,
 mob-to-mob LOS warning in NpcAiController. Door thresholds block warning rays even
