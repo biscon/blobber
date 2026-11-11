@@ -1,4 +1,5 @@
 #include "audio/music.hpp"
+#include "platform/file_io.hpp"
 #include <cmath>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -103,13 +104,7 @@ bool savePlaylist(const std::filesystem::path& path, const std::vector<MusicTrac
                {"random", p.random},
                {"last", p.last < tracks.size() ? tracks[p.last].id : ""}};
         std::filesystem::create_directories(path.parent_path());
-        const auto temp = path.string() + ".tmp";
-        std::ofstream out(temp);
-        out << j.dump(2) << '\n';
-        out.close();
-        if (!out)
-            throw std::runtime_error("Cannot write music state");
-        std::filesystem::rename(temp, path);
+        disk::writeDocument(path, j.dump(2) + "\n");
         return true;
     } catch (const std::exception& e) {
         warning += std::string(e.what()) + '\n';

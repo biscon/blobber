@@ -39,7 +39,7 @@ void preparePortraits(const std::filesystem::path& source, const std::filesystem
                 dimension(16) > 2048 || dimension(20) < 648 || dimension(20) > 2048 || bytes[24] != 8 ||
                 (bytes[25] != 2 && bytes[25] != 6))
                 throw std::runtime_error("Invalid or oversized portrait PNG header: " + path.string());
-            OwnedImage master(LoadImage(path.string().c_str()));
+            OwnedImage master(LoadImage(path.u8string().c_str()));
             if (!master.value.data || master.value.width < 432 || master.value.height < 648 ||
                 master.value.width > 2048 || master.value.height > 2048)
                 throw std::runtime_error("Portrait master dimensions outside 432x648..2048x2048: " +
@@ -77,7 +77,7 @@ void preparePortraits(const std::filesystem::path& source, const std::filesystem
                          << a.y << '\t' << b.x << '\t' << b.y << "\t0.5\t0.5\n";
         }
         if (!ExportImage(atlas,
-                         (output / (big ? "portraits-large.qoi" : "portraits-small.qoi")).string().c_str()))
+                         (output / (big ? "portraits-large.qoi" : "portraits-small.qoi")).u8string().c_str()))
             throw std::runtime_error("Cannot export portrait atlas");
     }
     manifest.flush();

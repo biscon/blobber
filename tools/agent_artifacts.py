@@ -71,13 +71,15 @@ def clean(project, directory, apply=False):
     for parent, dirs, files in os.walk(run, followlinks=False, onerror=walk_error):
         for name in dirs + files:
             info = (Path(parent) / name).lstat()
+            if getattr(info, 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0):
+                raise ValueError('Run contains a Windows reparse point')
             if not (stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode)):
                 raise ValueError('Run contains a symlink or special file')
             if stat.S_ISREG(info.st_mode):
                 count += 1
                 size += info.st_size
     if apply:
-        if not shutil.rmtree.avoids_symlink_attacks:
+        if not shutil.rmtree.avoids_symlink_attacks and os.name != 'nt':
             raise ValueError('Safe directory removal is unavailable on this platform')
         shutil.rmtree(run)
     return {'directory': str(run), 'files': count, 'bytes': size,

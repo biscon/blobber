@@ -52,7 +52,7 @@ rules::ItemId itemId(const std::string& name, const rules::Catalog& catalog) {
 ShopCatalog loadShops(const std::filesystem::path& directory, const rules::Catalog& catalog) {
     ShopCatalog out;
     if (!std::filesystem::is_directory(directory))
-        throw std::runtime_error("Missing shops directory: " + directory.string());
+        throw std::runtime_error("Missing shops directory: " + directory.u8string());
     std::vector<std::filesystem::path> paths;
     std::uintmax_t bytes = 0;
     for (const auto& entry : std::filesystem::directory_iterator(directory)) {
@@ -67,7 +67,7 @@ ShopCatalog loadShops(const std::filesystem::path& directory, const rules::Catal
     std::sort(paths.begin(), paths.end());
     for (const auto& path : paths) {
         try {
-            const auto documents = YAML::LoadAllFromFile(path.string());
+            const auto documents = YAML::LoadAllFromFile(path.u8string());
             if (documents.size() != 1)
                 throw std::runtime_error("Expected one shop YAML document");
             const auto n = documents.front();
@@ -112,7 +112,7 @@ ShopCatalog loadShops(const std::filesystem::path& directory, const rules::Catal
             }
             out.shops.push_back(std::move(shop));
         } catch (const std::exception& e) {
-            throw std::runtime_error(path.string() + ": " + e.what());
+            throw std::runtime_error(path.u8string() + ": " + e.what());
         }
     }
     return out;

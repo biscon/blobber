@@ -40,7 +40,7 @@ claim; notice gaps remain.
 prepared-asset portability, a versioned ZIP and a minimal manual hosted build/test
 workflow managed from Linux with `gh`. User review requires only the downloaded
 game on Windows. [WD01 detailed design](linux_distribution_wd01.md) is **In progress
-— planning; proposed and awaiting review, 2026-11-12**. It specifies Windows 11 x64,
+— implementation; reviewed and authorized, 2026-11-12**. It specifies Windows 11 x64,
 native hosted MSVC/static dependencies, small native I/O and Unicode-path boundaries,
 validated Linux-prepared publication import/cache, ZIP/PE checks and the narrow
 agent-managed registration PR during later authorized implementation. No Windows

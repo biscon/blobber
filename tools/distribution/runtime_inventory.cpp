@@ -160,6 +160,9 @@ Inventory resolve(const Settings& settings, bool includePrepared) {
         add("assets", name, "assets/" + name, reason);
     };
     for (const auto& file : manifest.at("files")) {
+#ifdef _WIN32
+        if (file.at("path").get<std::string>().find("notices/gcc-runtime-") == 0) continue;
+#endif
         for (auto it = file.begin(); it != file.end(); ++it)
             require(it.key() == "root" || it.key() == "path" || it.key() == "destination",
                     "Unknown manifest file field: " + it.key());

@@ -5,19 +5,13 @@
 #include "creation_fixtures.hpp"
 #include "generation_blueprints.hpp"
 #include "persistence/arena_store.hpp"
+#include "temp_directory.hpp"
 #include <fstream>
 #include <sstream>
-#include <unistd.h>
 namespace blobber::automation::test {
 struct Directory {
     std::filesystem::path path;
-    Directory() {
-        auto pattern = (std::filesystem::temp_directory_path() / "blobber-automation-XXXXXX").string();
-        auto* p = mkdtemp(pattern.data());
-        if (!p)
-            throw std::runtime_error("mkdtemp");
-        path = p;
-    }
+    Directory() : path(testDirectory()) {}
     ~Directory() {
         std::error_code error;
         std::filesystem::remove_all(path, error);

@@ -1,12 +1,11 @@
 #include "persistence/library_codec.hpp"
+#include "platform/file_io.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
-#include <fcntl.h>
+#include "support/temp_directory.hpp"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
-#include <sys/file.h>
-#include <unistd.h>
 using namespace blobber;
 namespace {
 int failing = -1;
@@ -21,21 +20,15 @@ bool repeatedEntropy(std::array<std::uint8_t, 16>& b) {
     return true;
 }
 std::string read(const std::filesystem::path& p) {
-    std::ifstream f(p);
+    std::ifstream f(p, std::ios::binary);
     return {std::istreambuf_iterator<char>(f), {}};
 }
 void write(const std::filesystem::path& p, const std::string& s) {
-    std::ofstream(p) << s;
+    std::ofstream(p, std::ios::binary) << s;
 }
 struct Temp {
     std::filesystem::path path;
-    Temp() {
-        char name[] = "/tmp/blobber-library-XXXXXX";
-        auto* p = ::mkdtemp(name);
-        if (!p)
-            throw std::runtime_error("mkdtemp");
-        path = p;
-    }
+    Temp() : path(testDirectory()) {}
     ~Temp() {
         std::error_code ec;
         std::filesystem::remove_all(path, ec);
@@ -90,9 +83,11 @@ void tolerantLoading() {
     check(bool(filtered.load()), "load ignored envelope for concurrency check");
     write(path, valid);
     check(filtered.create(draft, filtered.snapshot().revision).error == LibraryError::Stale &&
-              read(path) == valid, "filtered load cannot overwrite a concurrent valid library");
+              read(path) == valid,
+          "filtered load cannot overwrite a concurrent valid library");
     write(path, std::string(libraryMaxBytes + 1, ' '));
-    check(!filtered.load() && filtered.create(draft, filtered.snapshot().revision).error == LibraryError::Stale,
+    check(!filtered.load() &&
+              filtered.create(draft, filtered.snapshot().revision).error == LibraryError::Stale,
           "bounded read failure remains explicit and cannot overwrite unseen data");
 }
 } // namespace
@@ -154,11 +149,13 @@ int main() {
         auto revised = draft;
         std::snprintf(revised.name.data(), revised.name.size(), "Replacement");
         check(bool(library.replace(added.id, revised, library.snapshot().revision)), "checked replace");
-        const int lock = ::open((path.string() + ".lock").c_str(), O_RDWR);
-        check(lock >= 0 && ::flock(lock, LOCK_EX | LOCK_NB) == 0, "test lock");
-        check(library.create(draft, library.snapshot().revision).error == LibraryError::Busy,
-              "writer lock rejects busy");
-        ::close(lock);
+        {
+            bool busy = false;
+            auto lock = disk::File::lock(disk::suffix(path, ".lock"), false, busy);
+            check(!busy, "test lock");
+            check(library.create(draft, library.snapshot().revision).error == LibraryError::Busy,
+                  "writer lock rejects busy");
+        }
         prior = read(path);
         auto json = nlohmann::json::parse(prior);
         auto invalid = [&](const std::string& bytes, LibraryError error = LibraryError::Invalid) {

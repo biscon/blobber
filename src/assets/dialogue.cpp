@@ -99,7 +99,7 @@ unsigned asset(const Node& n, const std::filesystem::path& directory, std::vecto
     }
     if (r != root.end() || p == path.end())
         throw std::runtime_error("Asset path escapes its directory");
-    const auto resolved = path.string();
+    const auto resolved = path.u8string();
     auto found = std::find(files.begin(), files.end(), resolved);
     if (found != files.end())
         return unsigned(found - files.begin());
@@ -208,7 +208,7 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
         paths.push_back(entry.path());
     }
     if (paths.empty())
-        throw std::runtime_error(directory.string() + ": no YAML conversation files");
+        throw std::runtime_error(directory.u8string() + ": no YAML conversation files");
     std::sort(paths.begin(), paths.end());
     DialogueCatalog out;
     std::set<DialogueKey> identities;
@@ -216,7 +216,7 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
     for (const auto& path : paths) {
         std::string location = "root";
         try {
-            const auto documents = YAML::LoadAllFromFile(path.string());
+            const auto documents = YAML::LoadAllFromFile(path.u8string());
             if (documents.size() != 1)
                 throw std::runtime_error("Expected one YAML document");
             const auto n = documents.front();
@@ -318,7 +318,7 @@ DialogueCatalog loadDialogue(const std::filesystem::path& directory,
             }
             out.characters.push_back(std::move(c));
         } catch (const std::exception& e) {
-            throw std::runtime_error(path.string() + " (" + location + "): " + e.what());
+            throw std::runtime_error(path.u8string() + " (" + location + "): " + e.what());
         }
     }
     return out;

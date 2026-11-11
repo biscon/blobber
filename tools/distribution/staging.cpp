@@ -76,8 +76,8 @@ fs::path ownedDistRoot(const Settings& s, bool create) {
     return root;
 }
 void supported(const Settings& s) {
-#if !defined(__linux__) || !defined(__x86_64__)
-    throw std::runtime_error("dist-stage requires a Linux x86-64 host build");
+#if (!defined(__linux__) || !defined(__x86_64__)) && (!defined(_WIN32) || !defined(_M_X64))
+    throw std::runtime_error("dist-stage requires a native Linux or Windows x86-64 build");
 #endif
     require(s.configuration == "Release" && !s.multiConfig,
             "dist-stage requires a single-configuration Release build (use the release Ninja preset)");
@@ -146,9 +146,13 @@ void verifyPayload(const Settings& s, const fs::path& payload, const Json& repor
                     "Unexpected staged file: " + entry.path().string());
     const auto identities = validateContent(s, payload / "assets", payload / "assets/prepared", true);
     require(identities == report.at("identities"), "Staged content identities differ");
+#ifdef _WIN32
+    require(fs::is_regular_file(payload / "blobber.exe"), "Staged Windows executable missing");
+#else
     const auto execute = fs::perms::owner_exec | fs::perms::group_exec | fs::perms::others_exec;
     require((fs::status(payload / "blobber").permissions() & execute) != fs::perms::none,
             "Staged executable has no execute permission");
+#endif
 }
 } // namespace
 
@@ -224,7 +228,12 @@ void stageDistribution(const Settings& s) {
     auto inventory = resolve(s, true);
     const auto executable = checkedRoot(s.executable);
     require(fs::is_regular_file(executable), "Missing game executable: " + executable.string());
-    inventory.files.push_back({executable, "blobber", "executable", "blobber", "game executable"});
+#ifdef _WIN32
+    const char* gameName = "blobber.exe";
+#else
+    const char* gameName = "blobber";
+#endif
+    inventory.files.push_back({executable, gameName, "executable", gameName, "game executable"});
     std::sort(inventory.files.begin(), inventory.files.end(),
               [](const File& a, const File& b) { return a.destination < b.destination; });
     const auto root = ownedDistRoot(s, true);

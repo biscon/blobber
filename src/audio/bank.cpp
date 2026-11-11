@@ -1,4 +1,5 @@
 #include "audio/bank.hpp"
+#include "platform/file_io.hpp"
 #include <cstdlib>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -108,11 +109,11 @@ Bank loadBank(const std::filesystem::path& root) {
 std::filesystem::path settingsPath(const std::filesystem::path& p) {
     if (!p.empty())
         return p;
-    if (const auto* x = std::getenv("XDG_CONFIG_HOME"); x && std::filesystem::path(x).is_absolute())
-        return std::filesystem::path(x) / "blobber/settings.json";
-    if (const auto* h = std::getenv("HOME"); h && std::filesystem::path(h).is_absolute())
-        return std::filesystem::path(h) / ".config/blobber/settings.json";
-    return {};
+    try {
+        return disk::configDirectory() / "settings.json";
+    } catch (const std::exception&) {
+        return {};
+    }
 }
 Settings loadSettings(const std::filesystem::path& p, std::string& warning) {
     Settings s;
@@ -138,21 +139,13 @@ bool saveSettings(const std::filesystem::path& p, const Settings& s, std::string
         if (p.empty())
             throw std::runtime_error("No settings directory");
         std::filesystem::create_directories(p.parent_path());
-        const auto temp = p.string() + ".tmp";
-        {
-            std::ofstream out(temp);
-            out << Json{{"version", 2},
-                        {"audio", s.values},
-                        {"music_volume", s.musicVolume},
-                        {"music_enabled", s.musicEnabled},
-                        {"borderless_fullscreen", s.borderlessFullscreen}}
-                       .dump(2)
-                << '\n';
-            out.close();
-            if (!out)
-                throw std::runtime_error("Cannot write settings");
-        }
-        std::filesystem::rename(temp, p);
+        disk::writeDocument(p, Json{{"version", 2},
+                                    {"audio", s.values},
+                                    {"music_volume", s.musicVolume},
+                                    {"music_enabled", s.musicEnabled},
+                                    {"borderless_fullscreen", s.borderlessFullscreen}}
+                                       .dump(2) +
+                                   "\n");
         return true;
     } catch (const std::exception& e) {
         warning = e.what();

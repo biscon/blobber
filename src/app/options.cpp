@@ -1,4 +1,5 @@
 #include "app/options.hpp"
+#include "platform/file_io.hpp"
 #include "raylib.h"
 #include <charconv>
 #include <cstring>
@@ -7,7 +8,7 @@
 namespace blobber {
 Options parseOptions(int argc, char** argv) {
     Options result;
-    result.assets = std::filesystem::path(GetApplicationDirectory()) / "assets";
+    result.assets = disk::applicationDirectory() / "assets";
     result.preparedAssets = result.assets / "prepared";
 #ifdef BLOBBER_SOURCE_ASSETS
     result.assets = BLOBBER_SOURCE_ASSETS;
@@ -22,10 +23,10 @@ Options parseOptions(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (arg == "--assets" && i + 1 < argc) {
-            result.assets = argv[++i];
+            result.assets = std::filesystem::u8path(argv[++i]);
             result.preparedAssets = result.assets / "prepared";
         } else if (arg == "--dialogue-dir" && i + 1 < argc)
-            result.dialogueDir = std::filesystem::absolute(argv[++i]);
+            result.dialogueDir = std::filesystem::absolute(std::filesystem::u8path(argv[++i]));
         else if (arg == "--sanctuary-city-review")
             result.sanctuaryCityReview = true;
         else if (arg == "--distribution-smoke" && i + 1 < argc) {
@@ -34,15 +35,16 @@ Options parseOptions(int argc, char** argv) {
                 throw std::invalid_argument("Distribution smoke expects create or continue");
             result.smokePhase = phase == "create" ? SmokePhase::Create : SmokePhase::Continue;
         } else if (arg == "--smoke-output" && i + 1 < argc)
-            result.smokeOutput = std::filesystem::absolute(argv[++i]).lexically_normal();
+            result.smokeOutput =
+                std::filesystem::absolute(std::filesystem::u8path(argv[++i])).lexically_normal();
         else if (arg == "--no-audio")
             result.noAudio = true;
         else if (arg == "--uncapped")
             result.uncapped = true;
         else if (arg == "--settings" && i + 1 < argc)
-            result.settings = std::filesystem::absolute(argv[++i]);
+            result.settings = std::filesystem::absolute(std::filesystem::u8path(argv[++i]));
         else if (arg == "--campaign-save" && i + 1 < argc)
-            result.campaignSave = std::filesystem::absolute(argv[++i]);
+            result.campaignSave = std::filesystem::absolute(std::filesystem::u8path(argv[++i]));
         else if (arg == "--supersampling" && i + 1 < argc) {
             const std::string value = argv[++i];
             if (value != "on" && value != "off")

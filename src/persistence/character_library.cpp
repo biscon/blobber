@@ -1,26 +1,14 @@
 #include "persistence/library_codec.hpp"
+#include "platform/file_io.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fcntl.h>
 #include <fstream>
-#include <sys/file.h>
-#include <unistd.h>
 
 namespace blobber {
 namespace {
-struct Descriptor {
-    int fd = -1;
-    explicit Descriptor(int value) : fd(value) {}
-    ~Descriptor() {
-        if (fd >= 0)
-            ::close(fd);
-    }
-    Descriptor(const Descriptor&) = delete;
-    Descriptor& operator=(const Descriptor&) = delete;
-};
 LibraryResult result(LibraryError code, const char* text, bool committed = false) {
     LibraryResult r;
     r.error = code;
@@ -28,74 +16,34 @@ LibraryResult result(LibraryError code, const char* text, bool committed = false
     std::snprintf(r.message.data(), r.message.size(), "%s", text);
     return r;
 }
-[[noreturn]] void io(const char* operation) {
-    throw LibraryException(LibraryError::Io, std::string(operation) + ": " + std::strerror(errno));
-}
 void fault(const LibraryIoHooks& hooks, LibraryStage stage) {
     if (hooks.fail && hooks.fail(stage))
         throw LibraryException(stage == LibraryStage::Entropy ? LibraryError::Entropy : LibraryError::Io,
                                "Injected library I/O failure");
 }
 std::string readFile(const std::filesystem::path& path) {
-    std::ifstream f(path, std::ios::binary);
-    if (!f)
-        throw LibraryException(LibraryError::Io, "Cannot open character library");
-    std::string out;
-    char block[4096];
-    while (f.read(block, sizeof(block)) || f.gcount()) {
-        if (out.size() + std::size_t(f.gcount()) > libraryMaxBytes)
-            throw LibraryException(LibraryError::Invalid, "Library exceeds 1 MiB");
-        out.append(block, std::size_t(f.gcount()));
-    }
-    if (f.bad())
-        throw LibraryException(LibraryError::Io, "Cannot read character library");
-    return out;
-}
-void writeFile(const std::filesystem::path& path, const std::string& text, const LibraryIoHooks& hooks) {
-    Descriptor file(::open(path.c_str(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600));
-    if (file.fd < 0)
-        io("Create temporary library");
     try {
-        fault(hooks, LibraryStage::Write);
-        std::size_t offset = 0;
-        while (offset < text.size()) {
-            const auto n = ::write(file.fd, text.data() + offset, text.size() - offset);
-            if (n < 0 && errno == EINTR)
-                continue;
-            if (n <= 0)
-                io("Write library");
-            offset += std::size_t(n);
-        }
-        fault(hooks, LibraryStage::Flush);
-        if (::fsync(file.fd) < 0)
-            io("Flush library");
-        const int fd = file.fd;
-        file.fd = -1;
-        if (::close(fd) < 0)
-            io("Close library");
-    } catch (...) {
-        ::unlink(path.c_str());
-        throw;
+        return disk::read(path, libraryMaxBytes).bytes;
+    } catch (const std::length_error& e) {
+        throw LibraryException(LibraryError::Invalid, e.what());
+    } catch (const std::exception& e) {
+        throw LibraryException(LibraryError::Io, e.what());
     }
+}
+void writeFile(disk::Temporary& file, const std::string& text, const LibraryIoHooks& hooks) {
+    fault(hooks, LibraryStage::Write);
+    file.file.write(text);
+    fault(hooks, LibraryStage::Flush);
+    file.file.flush();
+    file.file.close();
 }
 bool systemEntropy(std::array<std::uint8_t, 16>& bytes) {
-    Descriptor f(::open("/dev/urandom", O_RDONLY | O_CLOEXEC));
-    if (f.fd < 0)
-        return false;
-    std::size_t offset = 0;
-    while (offset < bytes.size()) {
-        const auto n = ::read(f.fd, bytes.data() + offset, bytes.size() - offset);
-        if (n < 0 && errno == EINTR)
-            continue;
-        if (n <= 0)
-            return false;
-        offset += std::size_t(n);
-    }
-    return true;
+    return disk::entropy(bytes);
 }
 bool artifacts(const std::filesystem::path& p) {
-    return std::filesystem::exists(p.string() + ".bak") || std::filesystem::exists(p.string() + ".tmp") ||
-           std::filesystem::exists(p.string() + ".bak.tmp");
+    return std::filesystem::exists(disk::suffix(p, ".bak")) ||
+           std::filesystem::exists(disk::suffix(p, ".tmp")) ||
+           std::filesystem::exists(disk::suffix(p, ".bak.tmp"));
 }
 } // namespace
 bool validSavedCharacterId(const SavedCharacterId& id) noexcept {
@@ -121,12 +69,7 @@ const SavedCharacter* LibrarySnapshot::find(SavedCharacterId id) const noexcept 
 std::filesystem::path characterLibraryPath(const std::filesystem::path& overridePath) {
     if (!overridePath.empty())
         return std::filesystem::absolute(overridePath);
-    if (const auto* xdg = std::getenv("XDG_DATA_HOME");
-        xdg && *xdg && std::filesystem::path(xdg).is_absolute())
-        return std::filesystem::path(xdg) / "blobber/characters.json";
-    if (const auto* home = std::getenv("HOME"); home && *home && std::filesystem::path(home).is_absolute())
-        return std::filesystem::path(home) / ".local/share/blobber/characters.json";
-    throw std::runtime_error("No absolute user-data directory; supply a character library path");
+    return disk::dataDirectory() / "characters.json";
 }
 CharacterLibrary::CharacterLibrary(const rules::Catalog& c, std::filesystem::path path, LibraryIoHooks hooks)
     : catalog_(c), path_(characterLibraryPath(path)), hooks_(hooks) {}
@@ -152,7 +95,8 @@ LibraryResult CharacterLibrary::load() {
         loaded_ = true;
         return result(LibraryError::None,
                       ignoredEnvelope ? "Incompatible character library ignored; create new characters."
-                      : skipped ? "Incompatible characters ignored." : "");
+                      : skipped       ? "Incompatible characters ignored."
+                                      : "");
     } catch (const LibraryException& e) {
         return result(e.code, e.what());
     } catch (const std::exception& e) {
@@ -183,19 +127,17 @@ SavedCharacterId CharacterLibrary::newId(const LibrarySnapshot& state) {
 }
 LibraryResult CharacterLibrary::commit(LibrarySnapshot& candidate, std::uint64_t expected, bool initial) {
     bool committed = false;
-    bool ownTemporary = false, ownBackupTemporary = false;
-    const auto temporary = path_.string() + ".tmp", backup = path_.string() + ".bak",
-               backupTemporary = backup + ".tmp";
+    const auto temporary = disk::suffix(path_, ".tmp"), backup = disk::suffix(path_, ".bak"),
+               backupTemporary = disk::suffix(backup, ".tmp");
     try {
         if (expected == UINT64_MAX)
             return result(LibraryError::Exhausted, "Library revision exhausted");
         if (!initial && (!loaded_ || state_.revision != expected))
             return result(LibraryError::Stale, "Reload the library before changing it");
         std::filesystem::create_directories(path_.parent_path());
-        Descriptor lock(::open((path_.string() + ".lock").c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600));
-        if (lock.fd < 0)
-            io("Open library lock");
-        if (::flock(lock.fd, LOCK_EX | LOCK_NB) < 0)
+        bool busy = false;
+        auto lock = disk::File::lock(disk::suffix(path_, ".lock"), false, busy);
+        if (busy)
             return result(LibraryError::Busy, "Library is being changed by another writer");
         std::string old;
         if (std::filesystem::exists(path_)) {
@@ -210,37 +152,23 @@ LibraryResult CharacterLibrary::commit(LibrarySnapshot& candidate, std::uint64_t
                           "Existing library artifacts require manual recovery");
         candidate.revision = expected + 1;
         auto text = encodeLibrary(catalog_, candidate);
-        writeFile(temporary, text, hooks_);
-        ownTemporary = true;
+        disk::Temporary next(temporary);
+        writeFile(next, text, hooks_);
         fault(hooks_, LibraryStage::Backup);
-        // Initial stores also retain a valid recovery copy. Empty libraries are documents, never deletion.
-        writeFile(backupTemporary, initial ? text : old, {});
-        ownBackupTemporary = true;
-        if (::rename(backupTemporary.c_str(), backup.c_str()) < 0)
-            io("Replace library backup");
-        ownBackupTemporary = false;
-        Descriptor directory(::open(path_.parent_path().c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC));
-        if (directory.fd < 0)
-            io("Open library directory");
-        if (::fsync(directory.fd) < 0)
-            io("Flush library backup directory");
+        disk::Temporary backupNext(backupTemporary);
+        writeFile(backupNext, initial ? text : old, {});
+        backupNext.publish(backup);
+        disk::confirm(backup);
         fault(hooks_, LibraryStage::Replace);
-        if (::rename(temporary.c_str(), path_.c_str()) < 0)
-            io("Replace library");
-        ownTemporary = false;
+        next.publish(path_);
         committed = true;
         state_ = candidate;
         diskText_ = std::move(text);
         loaded_ = true;
         fault(hooks_, LibraryStage::DirectoryFlush);
-        if (::fsync(directory.fd) < 0)
-            io("Flush library directory");
+        disk::confirm(path_);
         return result(LibraryError::None, "Library saved", true);
     } catch (const std::exception& e) {
-        if (ownTemporary)
-            ::unlink(temporary.c_str());
-        if (ownBackupTemporary)
-            ::unlink(backupTemporary.c_str());
         if (committed)
             return result(LibraryError::DurabilityUncertain,
                           "Saved, but directory durability could not be confirmed; reload before retrying",

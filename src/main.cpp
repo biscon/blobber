@@ -9,3 +9,30 @@ int main(int argc, char** argv) {
         return 1;
     }
 }
+
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <string>
+#include <vector>
+#include <windows.h>
+int wmain(int argc, wchar_t** argv) {
+    std::vector<std::string> text;
+    std::vector<char*> args;
+    text.reserve(argc);
+    args.reserve(argc);
+    for (int i = 0; i < argc; ++i) {
+        const int n =
+            WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, argv[i], -1, nullptr, 0, nullptr, nullptr);
+        if (!n)
+            return 1;
+        text.emplace_back(std::size_t(n), '\0');
+        if (!WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, argv[i], -1, text.back().data(), n, nullptr,
+                                 nullptr))
+            return 1;
+    }
+    for (auto& value : text)
+        args.push_back(value.data());
+    return main(argc, args.data());
+}
+#endif

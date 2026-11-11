@@ -16,7 +16,7 @@ namespace fs = std::filesystem;
 using namespace blobber;
 using Json = nlohmann::json;
 std::vector<unsigned char> pixels(const fs::path& path, unsigned& w, unsigned& h, unsigned maximum = 4096) {
-    OwnedImage image(LoadImage(path.string().c_str()));
+    OwnedImage image(LoadImage(path.u8string().c_str()));
     if (!image.value.data || image.value.width <= 0 || image.value.height <= 0 || image.value.width > 4096 ||
         image.value.height > 4096)
         throw std::runtime_error("Invalid world source image: " + path.string());
@@ -111,7 +111,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool bloc
             const auto existing = preparedPackTextures.find(key);
             if (existing != preparedPackTextures.end())
                 return existing->second;
-            OwnedImage image(LoadImage(path.string().c_str()));
+            OwnedImage image(LoadImage(path.u8string().c_str()));
             if (!image.value.data || image.value.width > 4096 || image.value.height > 4096)
                 throw std::runtime_error("Invalid pack artwork: " + path.string());
             const float scale =
@@ -172,7 +172,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool bloc
                     unsigned w, h;
                     auto rgba = pixels(source / relative(extra[role].get<std::string>()), w, h);
                     OwnedImage image(
-                        LoadImage((source / relative(extra[role].get<std::string>())).string().c_str()));
+                        LoadImage((source / relative(extra[role].get<std::string>())).u8string().c_str()));
                     const float scale = std::min(1.f, 256.f / std::max(w, h));
                     if (scale < 1)
                         ImageResize(&image.value, std::max(1, int(w * scale)), std::max(1, int(h * scale)));

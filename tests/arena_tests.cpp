@@ -7,12 +7,12 @@
 #include "support/arena_preparation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/temp_directory.hpp"
 #include "ui/interaction.hpp"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <set>
-#include <unistd.h>
 using namespace blobber;
 namespace {
 int failing = -1;
@@ -21,13 +21,7 @@ bool fail(ScenarioStage s) {
 }
 struct Temp {
     std::filesystem::path path;
-    Temp() {
-        char pattern[] = "/tmp/blobber-arena-XXXXXX";
-        const auto* p = mkdtemp(pattern);
-        if (!p)
-            throw std::runtime_error("mkdtemp");
-        path = p;
-    }
+    Temp() : path(testDirectory()) {}
     ~Temp() {
         std::error_code e;
         std::filesystem::remove_all(path, e);

@@ -1,16 +1,12 @@
 #include "assets/image.hpp"
 #include "assets/portrait_preparation.hpp"
 #include "support/check.hpp"
+#include "support/temp_directory.hpp"
 #include <fstream>
 #include <iostream>
-#include <unistd.h>
 using namespace blobber;
 int main() {
-    char pattern[] = "/tmp/blobber-portraits-XXXXXX";
-    const auto* temp = mkdtemp(pattern);
-    if (!temp)
-        return 1;
-    const std::filesystem::path root(temp), source = root / "ui", output = root / "prepared";
+    const auto root = testDirectory(), source = root / "ui", output = root / "prepared";
     struct Cleanup {
         std::filesystem::path path;
         ~Cleanup() {
@@ -24,13 +20,14 @@ int main() {
         for (unsigned i = 0; i < rules::portraitCount; ++i) {
             OwnedImage master(
                 GenImageColor(432, 648, Color{static_cast<unsigned char>(20 + i * 10), 40, 80, 255}));
-            check(ExportImage(master.value, (source / rules::portrait({std::uint8_t(i)})->file).c_str()),
+            check(ExportImage(master.value,
+                              (source / rules::portrait({std::uint8_t(i)})->file).u8string().c_str()),
                   "write fixture");
         }
         preparePortraits(source, output);
         for (bool big : {false, true}) {
-            OwnedImage atlas(
-                LoadImage((output / (big ? "portraits-large.qoi" : "portraits-small.qoi")).c_str()));
+            OwnedImage atlas(LoadImage(
+                (output / (big ? "portraits-large.qoi" : "portraits-small.qoi")).u8string().c_str()));
             check(atlas.value.width == portraitAtlasWidth &&
                       atlas.value.height == (big ? largePortraitHeight : smallPortraitHeight),
                   "atlas bounds");

@@ -1,20 +1,14 @@
 #include "assets/creator_art.hpp"
 #include "assets/image.hpp"
 #include "support/check.hpp"
+#include "support/temp_directory.hpp"
 #include <fstream>
 #include <iostream>
-#include <unistd.h>
 using namespace blobber;
 namespace {
 struct Temp {
     std::filesystem::path path;
-    Temp() {
-        char name[] = "/tmp/blobber-creator-art-XXXXXX";
-        auto* dir = mkdtemp(name);
-        if (!dir)
-            throw std::runtime_error("mkdtemp");
-        path = dir;
-    }
+    Temp() : path(testDirectory()) {}
     ~Temp() {
         std::error_code ec;
         std::filesystem::remove_all(path, ec);
@@ -36,13 +30,13 @@ int main() {
             OwnedImage image(GenImageColor(
                 324, 324, {static_cast<unsigned char>(i * 7), static_cast<unsigned char>(200 - i), 51, 255}));
             check(ExportImage(image.value,
-                              (source / (std::string(creatorArtNames[i]) + ".png")).string().c_str()),
+                              (source / (std::string(creatorArtNames[i]) + ".png")).u8string().c_str()),
                   "export fixture");
         }
         prepareCreatorArt(source, output);
         const auto first = bytes(output / "creator.qoi");
         {
-            OwnedImage atlas(LoadImage((output / "creator.qoi").string().c_str()));
+            OwnedImage atlas(LoadImage((output / "creator.qoi").u8string().c_str()));
             check(atlas.value.width == 2048 && atlas.value.height == 2048, "bounded atlas dimensions");
             for (unsigned i = 0; i < creatorArtNames.size(); ++i) {
                 const int x = int(i % 6) * 328, y = int(i / 6) * 328;

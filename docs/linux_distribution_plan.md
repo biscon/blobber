@@ -3,7 +3,7 @@
 Created: 2026-11-11.
 Status: **LD01 and LD02 accepted and closed by the user, 2026-11-11.
 LD03 accepted and closed by the user, 2026-11-11.
-WD01 is In progress — planning, with its proposed detailed design awaiting review.
+WD01 is In progress — implementation, following user review of its detailed design.
 LD04 remains planned, after WD01 acceptance.**
 
 Deliver downloadable desktop packages containing the executable and only required
@@ -20,12 +20,12 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | WD01 — Windows readiness and manual build; In progress — planning |
+| Active slice | WD01 — Windows readiness and manual build; In progress — implementation |
 | Next eligible slice | WD01 implementation after detailed-design review and explicit instruction; LD04 remains gated on WD01 acceptance |
 | Implemented distribution support | Curated baseline stage/audit, versioned archive and passing Ubuntu/Debian relocated smoke; no CI |
 | Awaiting user review | [Proposed WD01 detailed design](linux_distribution_wd01.md); LD01–LD03 remain accepted and closed |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Review WD01 detailed design; stop before Windows code/workflow implementation |
+| Next action | Implement reviewed WD01 design and verify its native hosted artifact; stop at Ready for review |
 
 **Approved roadmap revision, 2026-11-11:** insert WD01 before LD04 and expand LD04
 to automate both supported packages. WD01 introduces the minimum manual Windows

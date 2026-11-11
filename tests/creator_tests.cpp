@@ -2,22 +2,16 @@
 #include "game/commands.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/temp_directory.hpp"
 #include "ui/interaction.hpp"
 #include <iostream>
 #include <memory>
-#include <unistd.h>
 using namespace blobber;
 using namespace blobber::rules;
 namespace {
 struct Temp {
     std::filesystem::path path;
-    Temp() {
-        char name[] = "/tmp/blobber-creator-test-XXXXXX";
-        const auto* dir = mkdtemp(name);
-        if (!dir)
-            throw std::runtime_error("mkdtemp");
-        path = dir;
-    }
+    Temp() : path(testDirectory()) {}
     ~Temp() {
         std::error_code ec;
         std::filesystem::remove_all(path, ec);
@@ -248,11 +242,11 @@ void selection(const Catalog& c) {
     s.selected = s.context.baseline;
     s.filter(c);
     const auto picked = s.selected;
-    const auto removed = SpellId{std::uint16_t(__builtin_ctz(picked))};
+    const auto removed = SpellId{std::uint16_t(testLowestBit(picked))};
     std::uint32_t extra = s.context.available & ~s.selected;
     check(extra != 0, "choice alternative fixture");
-    check(!s.toggle({std::uint16_t(__builtin_ctz(extra))}), "full budget rejects addition");
-    check(s.toggle(removed) && s.toggle({std::uint16_t(__builtin_ctz(extra))}) && s.valid(),
+    check(!s.toggle({std::uint16_t(testLowestBit(extra))}), "full budget rejects addition");
+    check(s.toggle(removed) && s.toggle({std::uint16_t(testLowestBit(extra))}) && s.valid(),
           "full budget allows deselection then replacement");
     std::snprintf(s.search.data(), 65, "No such spell");
     s.filter(c);
@@ -268,10 +262,10 @@ void selection(const Catalog& c) {
     s.context.available = classSpells(c, d.characterClass, 1) & ~s.context.locked;
     s.context.minimum = s.context.maximum = 2;
     s.filter(c);
-    check(!s.toggle({std::uint16_t(__builtin_ctz(s.context.locked))}), "advancement existing spells locked");
+    check(!s.toggle({std::uint16_t(testLowestBit(s.context.locked))}), "advancement existing spells locked");
     auto available = s.context.available;
     while (available) {
-        const SpellId id{std::uint16_t(__builtin_ctz(available))};
+        const SpellId id{std::uint16_t(testLowestBit(available))};
         s.toggle(id);
         available &= available - 1;
     }

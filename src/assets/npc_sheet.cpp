@@ -41,7 +41,7 @@ void prepareNpcAnimation(const fs::path& configPath, const NpcSheetOptions& opti
         const auto name = entry.at("name").get<std::string>();
         if (name.empty() || name == "." || name == ".." || name.find_first_of("/\\") != std::string::npos)
             throw std::runtime_error("Invalid sheet name");
-        blobber::OwnedImage sheet(LoadImage((root / "sheets" / (name + ".png")).string().c_str()));
+        blobber::OwnedImage sheet(LoadImage((root / "sheets" / (name + ".png")).u8string().c_str()));
         if (!sheet.value.data)
             throw std::runtime_error("Cannot load sheet " + name);
         if (sheet.value.width > 4096 || sheet.value.height > 4096)
@@ -156,7 +156,7 @@ void prepareNpcAnimation(const fs::path& configPath, const NpcSheetOptions& opti
                         target[y * canvasWidth + x] = pixel(sx, sy);
                 }
             const std::string file = name + "-" + std::to_string(f) + ".png";
-            if (!ExportImage(output.value, (destination / "frames" / file).string().c_str()))
+            if (!ExportImage(output.value, (destination / "frames" / file).u8string().c_str()))
                 throw std::runtime_error("Cannot export " + file);
             provenance["outputs"][file] = {{"width", canvasWidth},
                                            {"height", canvasHeight},

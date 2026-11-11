@@ -1,13 +1,14 @@
 # WD01 — Windows readiness and manual review build
 
-Status: **In progress — planning, 2026-11-12. Proposed detailed design;
-awaiting user review and a separate WD01 implementation instruction.**
+Status: **In progress — implementation, 2026-11-12. Design reviewed; the user
+instructed continuation. Mechanical verification and user acceptance pending.**
 
 This document implements the documentation handoff from the conversation plan,
 not the Windows port. No interfaces, targets, scripts or workflow described as
 proposed below exist yet. Accepted LD01–LD03 behavior and acceptance remain in the
 [roadmap](linux_distribution_plan.md) and [LD03 handoff](linux_distribution_ld03.md).
-Stop after this design/checkpoint update; do not start LD04 or publish anything.
+The user approved this design and authorized WD01 implementation after the planning
+handoff. Complete WD01 and stop at Ready for review; do not start LD04 or publish.
 
 ## Decisions and existing constraints
 

@@ -209,7 +209,7 @@ void Presenter::capture(const std::filesystem::path& path, int width, int height
     if (!image.value.data)
         throw std::runtime_error("Cannot read capture target");
     ImageFlipVertical(&image.value);
-    if (!ExportImage(image.value, path.string().c_str()))
+    if (!ExportImage(image.value, path.u8string().c_str()))
         throw std::runtime_error("Cannot export capture: " + path.string());
 }
 } // namespace blobber

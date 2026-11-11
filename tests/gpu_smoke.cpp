@@ -114,14 +114,14 @@ void nativeUi() {
                                std::string_view(names[i]) == "travel" ? RED
                                : i < 4                                ? (x < 32 || x >= 184 ? RED : GREEN)
                                                                       : (x % 2 ? WHITE : BLACK));
-        check(ExportImage(image.value, (fixture.path / (std::string(names[i]) + ".png")).string().c_str()),
+        check(ExportImage(image.value, (fixture.path / (std::string(names[i]) + ".png")).u8string().c_str()),
               "Export generated UI fixture");
     }
     // Own every icon consumed by UiArt, including equipment added after this fixture.
     // These synthetic inputs stay independent of the game's editable artwork.
     for (const auto* id : equipmentIconIds) {
         OwnedImage icon(GenImageColor(168, 168, WHITE));
-        check(ExportImage(icon.value, (fixture.path / "items" / (std::string(id) + ".png")).string().c_str()),
+        check(ExportImage(icon.value, (fixture.path / "items" / (std::string(id) + ".png")).u8string().c_str()),
               "Export owned equipment icon fixture");
     }
     for (bool large : {false, true}) {
@@ -129,14 +129,14 @@ void nativeUi() {
             GenImageColor(portraitAtlasWidth, large ? largePortraitHeight : smallPortraitHeight, GREEN));
         check(ExportImage(atlas.value, (fixture.path.parent_path() / "prepared" /
                                         (large ? "portraits-large.qoi" : "portraits-small.qoi"))
-                                           .string()
+                                           .u8string()
                                            .c_str()),
               "Export test-owned prepared portrait atlas");
     }
     {
         OwnedImage atlas(GenImageColor(2048, 2048, BLUE));
         check(
-            ExportImage(atlas.value, (fixture.path.parent_path() / "prepared/creator.qoi").string().c_str()),
+            ExportImage(atlas.value, (fixture.path.parent_path() / "prepared/creator.qoi").u8string().c_str()),
             "Generated creator atlas");
     }
     {
@@ -147,7 +147,7 @@ void nativeUi() {
             if (i == 0)
                 ImageDrawRectangle(&icons.value, x + 8, y + 8, 8, 8, GREEN);
         }
-        check(ExportImage(icons.value, (fixture.path / "map/markers-v1.png").string().c_str()),
+        check(ExportImage(icons.value, (fixture.path / "map/markers-v1.png").u8string().c_str()),
               "Export owned map marker fixture");
     }
     for (const auto& spec :
@@ -157,14 +157,14 @@ void nativeUi() {
         const auto path = fixture.path.parent_path() / "effects" / spec.first;
         std::filesystem::create_directories(path.parent_path());
         OwnedImage atlas(GenImageColor(spec.second.first, spec.second.second, WHITE));
-        check(ExportImage(atlas.value, path.string().c_str()), "Export owned effect atlas fixture");
+        check(ExportImage(atlas.value, path.u8string().c_str()), "Export owned effect atlas fixture");
     }
     GpuResources resources;
     UiArt art(resources, fixture.path);
     OwnedImage extra(GenImageColor(2, 2, WHITE));
     const auto viewport = resources.createTexture(extra.value), menu = resources.createTexture(extra.value);
     check(bool(viewport) && bool(menu), "Prepared UI artwork plus viewport and menu fit the registry");
-    const auto overlayFile = (fixture.path / "overlay.png").string();
+    const auto overlayFile = (fixture.path / "overlay.png").u8string();
     OwnedImage overlayImage(GenImageColor(8, 4, BLANK));
     ImageDrawRectangle(&overlayImage.value, 2, 0, 4, 4, GREEN);
     check(ExportImage(overlayImage.value, overlayFile.c_str()), "Export owned overlay fixture");
@@ -180,7 +180,7 @@ void nativeUi() {
     rejects([&] { art.prepareDialogue({overlayFile + ".missing"}); }, "Missing overlay rejects");
     rejects([&] { art.prepareDialogue(std::vector<std::string>(17, overlayFile)); },
             "Overlay texture capacity rejects");
-    const auto corrupt = (fixture.path / "corrupt.png").string();
+    const auto corrupt = (fixture.path / "corrupt.png").u8string();
     std::filesystem::copy_file(overlayFile, corrupt);
     { // Keep a valid signature but make IHDR width 65536; reject before decoding.
         std::fstream file(corrupt, std::ios::in | std::ios::out | std::ios::binary);
@@ -194,7 +194,7 @@ void nativeUi() {
         file << "not a PNG";
     }
     rejects([&] { art.prepareDialogue({corrupt}); }, "Corrupt PNG rejects");
-    const auto large = (fixture.path / "large.png").string();
+    const auto large = (fixture.path / "large.png").u8string();
     {
         OwnedImage budget(GenImageColor(2048, 2048, GREEN));
         check(ExportImage(budget.value, large.c_str()), "Export owned budget fixture");

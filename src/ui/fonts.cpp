@@ -14,7 +14,7 @@ static_assert(gameWidth / artWidth == gameHeight / artHeight);
 UiFonts::SizedFont::SizedFont(const std::filesystem::path& path, int pixels) {
     preparationPoint("Loading fonts");
     const auto bytes = preparationFile(path);
-    value = LoadFontFromMemory(path.extension().string().c_str(), bytes.data(), int(bytes.size()), pixels,
+    value = LoadFontFromMemory(path.extension().u8string().c_str(), bytes.data(), int(bytes.size()), pixels,
                                nullptr, 0);
     // LoadFontEx falls back to the shared default on failure; never own or accept that fallback.
     if (value.texture.id == GetFontDefault().texture.id)

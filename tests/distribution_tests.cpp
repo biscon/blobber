@@ -3,6 +3,7 @@
 #include "distribution/runtime_inventory.hpp"
 #include "support/blueprint_fixtures.hpp"
 #include "support/check.hpp"
+#include "support/temp_directory.hpp"
 #include "support/world_fixtures.hpp"
 #include "ui/art_names.hpp"
 #include "ui/equipment_art.hpp"
@@ -10,8 +11,9 @@
 #include <fstream>
 #include <iostream>
 #include <set>
+#ifndef _WIN32
 #include <sys/stat.h>
-#include <unistd.h>
+#endif
 
 namespace d = blobber::distribution;
 namespace fs = std::filesystem;
@@ -34,10 +36,7 @@ struct Fixture {
     d::Settings s;
     J manifest{{"version", 1}, {"files", J::array()}, {"selectors", J::array()}, {"validate", J::array()}};
     Fixture() {
-        auto pattern = (fs::temp_directory_path() / "blobber distribution-XXXXXX").string();
-        const auto path = mkdtemp(pattern.data());
-        check(path, "Create isolated staging fixtures");
-        directory = path;
+        directory = testDirectory();
         s.manifest = directory / "packaging/runtime.json";
         s.source = directory / "source assets";
         s.build = directory / "managed build";
@@ -258,9 +257,11 @@ void unsafeInputs() {
     fs::create_symlink(f.s.executable, f.s.source / "ui/keep.png");
     rejects([&] { d::resolve(f.s, false); }, "Selected source symlink rejected");
     fs::remove(f.s.source / "ui/keep.png");
+#ifndef _WIN32
     check(mkfifo((f.s.source / "ui/keep.png").c_str(), 0600) == 0, "Create owned FIFO fixture");
     rejects([&] { d::resolve(f.s, false); }, "Selected special file rejected before opening");
     fs::remove(f.s.source / "ui/keep.png");
+#endif
     f.asset("ui/keep.png");
     f.fixed("ui/other.png");
     f.manifest["files"].back()["destination"] = "assets/ui/keep.png";
@@ -346,7 +347,12 @@ void distributionStaging() {
     f.save();
     d::stageDistribution(f.s);
     const auto report = d::verifyDistribution(f.s);
-    check(read(f.stage() / "blobber") == read(f.s.executable), "Executable copied with execute permission");
+#ifdef _WIN32
+    const char* gameName = "blobber.exe";
+#else
+    const char* gameName = "blobber";
+#endif
+    check(read(f.stage() / gameName) == read(f.s.executable), "Executable copied");
     check(report["identities"].contains("npc_definitions") && !report["excluded"].empty(),
           "Report records identities, excluded files and sizes");
     const auto previousReport = read(f.report());

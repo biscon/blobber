@@ -2,7 +2,7 @@
 """LD03 bounded, deterministic package construction and checked extraction."""
 import argparse
 from contextlib import contextmanager
-import fcntl
+
 import gzip
 import hashlib
 import io
@@ -43,7 +43,7 @@ def safe(path):
 def regular(path):
     path = Path(path)
     for ancestor in [path, *path.parents]:
-        require(not ancestor.is_symlink(), 'Symlink input: ' + str(ancestor))
+        require(not ancestor.is_symlink() and not getattr(ancestor, 'is_junction', lambda: False)(), 'Link input: ' + str(ancestor))
     require(path.is_file(), 'Missing regular file: ' + str(path))
     return path
 
@@ -227,6 +227,7 @@ def check_source(source, environment):
 
 @contextmanager
 def writer(build):
+    import fcntl  # Linux-only release locking; shared helpers remain importable on Windows
     if os.environ.get('BLOBBER_RELEASE_LOCK_HELD') == '1':
         yield
         return

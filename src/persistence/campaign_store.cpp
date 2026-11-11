@@ -1,49 +1,17 @@
 #include "persistence/campaign_store.hpp"
 #include "assets/fingerprint.hpp"
 #include "persistence/character_library.hpp"
-#include <cerrno>
-#include <fcntl.h>
+#include "platform/file_io.hpp"
 #include <nlohmann/json.hpp>
 #include <set>
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace blobber {
 namespace {
 using Json = nlohmann::json;
-struct Fd {
-    int value = -1;
-    ~Fd() {
-        if (value >= 0)
-            ::close(value);
-    }
-};
 CampaignIoReply diskRead(const std::filesystem::path& path) {
-    Fd file{::open(path.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK)};
-    if (file.value < 0) {
-        if (errno == ENOENT)
-            return {};
-        throw std::runtime_error("Cannot read campaign slot");
-    }
-    struct stat info{};
-    if (::fstat(file.value, &info) || !S_ISREG(info.st_mode) || info.st_size < 0 ||
-        std::uint64_t(info.st_size) > campaignMaxBytes)
-        throw std::runtime_error("Campaign slot must be a regular file within 16 MiB");
+    auto read = disk::read(path, campaignMaxBytes, true);
     CampaignIoReply out;
-    out.exists = true;
-    out.data.resize(std::size_t(info.st_size));
-    std::size_t offset = 0;
-    while (offset < out.data.size()) {
-        const auto n = ::read(file.value, out.data.data() + offset, out.data.size() - offset);
-        if (n < 0 && errno == EINTR)
-            continue;
-        if (n <= 0)
-            throw std::runtime_error("Campaign slot changed during read");
-        offset += std::size_t(n);
-    }
-    char extra;
-    if (::read(file.value, &extra, 1) != 0)
-        throw std::runtime_error("Campaign slot changed during read");
+    out.exists = read.exists;
+    out.data = std::move(read.bytes);
     return out;
 }
 bool terminalRecord(const std::string& text, std::string& id) {
@@ -116,54 +84,28 @@ CampaignIoReply CampaignDisk::exchange(const CampaignIoRequest& request) {
         if (request.operation != "replace" || request.data.size() > campaignMaxBytes)
             throw std::runtime_error("Invalid campaign file operation");
         std::filesystem::create_directories(path_.parent_path());
-        Fd lock{::open((path_.string() + ".lock").c_str(), O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600)};
-        if (lock.value < 0 || ::flock(lock.value, LOCK_EX))
-            throw std::runtime_error("Cannot lock campaign slot");
+        bool busy = false;
+        auto lock = disk::File::lock(disk::suffix(path_, ".lock"), true, busy);
         auto check = [&] {
             auto current = diskRead(path_);
             if ((current.exists ? campaignRevision(current.data) : "missing") != request.expected)
                 throw std::runtime_error("Campaign slot changed; review it before retrying");
         };
         check();
-        auto temp = (path_.parent_path() / ".campaign-XXXXXX").string();
-        Fd file{::mkstemp(temp.data())};
-        if (file.value < 0)
-            throw std::runtime_error("Cannot create campaign temporary file");
-        try {
-            fail(CampaignIoStage::Write);
-            std::size_t offset = 0;
-            while (offset < request.data.size()) {
-                const auto n =
-                    ::write(file.value, request.data.data() + offset, request.data.size() - offset);
-                if (n < 0 && errno == EINTR)
-                    continue;
-                if (n <= 0)
-                    throw std::runtime_error("Cannot write campaign slot");
-                offset += std::size_t(n);
-            }
-            fail(CampaignIoStage::Flush);
-            if (::fsync(file.value))
-                throw std::runtime_error("Cannot flush campaign slot");
-            fail(CampaignIoStage::Close);
-            const auto descriptor = file.value;
-            file.value = -1;
-            if (::close(descriptor))
-                throw std::runtime_error("Cannot close campaign slot");
-            fail(CampaignIoStage::Rename);
-            check();
-            if (::rename(temp.c_str(), path_.c_str()))
-                throw std::runtime_error("Cannot replace campaign slot");
-            result.published = result.exists = true;
-            fail(CampaignIoStage::DirectoryFlush);
-            Fd directory{::open(path_.parent_path().c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC)};
-            if (directory.value < 0 || ::fsync(directory.value))
-                throw std::runtime_error("Campaign published; directory durability unconfirmed");
-            result.durable = true;
-        } catch (...) {
-            if (!result.published)
-                ::unlink(temp.c_str());
-            throw;
-        }
+        disk::Temporary temp(path_.parent_path() / ".campaign-", true);
+        fail(CampaignIoStage::Write);
+        temp.file.write(request.data);
+        fail(CampaignIoStage::Flush);
+        temp.file.flush();
+        fail(CampaignIoStage::Close);
+        temp.file.close();
+        fail(CampaignIoStage::Rename);
+        check();
+        temp.publish(path_);
+        result.published = result.exists = true;
+        fail(CampaignIoStage::DirectoryFlush);
+        disk::confirm(path_);
+        result.durable = true;
     } catch (const std::exception& e) {
         result.error = campaignError(e.what());
     }

@@ -1,15 +1,12 @@
 #include "persistence/arena_store.hpp"
 #include "assets/rules_json.hpp"
 #include "persistence/starting_codec.hpp"
+#include "platform/file_io.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <fcntl.h>
 #include <set>
-#include <sys/file.h>
-#include <sys/stat.h>
-#include <unistd.h>
 namespace blobber {
 namespace {
 using namespace rules_json;
@@ -31,13 +28,6 @@ std::uint32_t spellMask(const rules::Catalog& c, const Json& j) {
     }
     return mask;
 }
-struct Fd {
-    int fd;
-    ~Fd() {
-        if (fd >= 0)
-            ::close(fd);
-    }
-};
 std::uint64_t digest(const std::string& s) {
     std::uint64_t h = 14695981039346656037ull;
     for (unsigned char ch : s) {
@@ -47,28 +37,10 @@ std::uint64_t digest(const std::string& s) {
     return h;
 }
 std::string read(const std::filesystem::path& path) {
-    Fd f{::open(path.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK)};
-    struct stat st{};
-    if (f.fd < 0 || ::fstat(f.fd, &st) || !S_ISREG(st.st_mode) || st.st_size < 0 ||
-        std::uint64_t(st.st_size) > arenaMaxBytes)
-        throw std::runtime_error("Scenario must be a readable regular file within 1 MiB.");
-    std::string text(std::size_t(st.st_size), '\0');
-    std::size_t offset = 0;
-    while (offset < text.size()) {
-        const auto n = ::read(f.fd, text.data() + offset, text.size() - offset);
-        if (n < 0 && errno == EINTR)
-            continue;
-        if (n <= 0)
-            throw std::runtime_error("Scenario changed or could not be read.");
-        offset += std::size_t(n);
-    }
-    char extra;
-    if (::read(f.fd, &extra, 1) != 0)
-        throw std::runtime_error("Scenario changed while reading.");
-    return text;
+    return disk::read(path, arenaMaxBytes).bytes;
 }
 std::filesystem::path child(const std::filesystem::path& directory, const char* file) {
-    std::filesystem::path p(file);
+    auto p = std::filesystem::u8path(file);
     if (p.empty() || p.has_parent_path() || p.extension() != ".json")
         throw std::runtime_error("Invalid scenario filename.");
     return directory / p;
@@ -194,7 +166,7 @@ ScenarioListing ArenaScenarioStore::list() const {
         if (result.count == result.entries.size())
             throw std::runtime_error("Scenario folder exceeds 128 files. Move some files and refresh.");
         auto& entry = result.entries[result.count++];
-        const auto filename = f.path().filename().string();
+        const auto filename = f.path().filename().u8string();
         if (filename.size() >= entry.file.size())
             throw std::runtime_error("Scenario filename too long.");
         std::snprintf(entry.file.data(), entry.file.size(), "%s", filename.c_str());
@@ -224,9 +196,8 @@ ArenaScenario ArenaScenarioStore::load(const ScenarioEntry& e) const {
 ScenarioWrite ArenaScenarioStore::save(const ArenaScenario& s, const ScenarioEntry* replace) const {
     const auto text = encodeArena(catalog_, s);
     std::filesystem::create_directories(directory_);
-    Fd lock{::open((directory_ / ".lock").c_str(), O_RDWR | O_CREAT | O_CLOEXEC | O_NOFOLLOW, 0600)};
-    if (lock.fd < 0 || ::flock(lock.fd, LOCK_EX))
-        throw std::runtime_error("Cannot lock scenario folder.");
+    bool busy = false;
+    auto lock = disk::File::lock(directory_ / ".lock", true, busy);
     auto listing = list();
     if (!replace && listing.count == listing.entries.size())
         throw std::runtime_error("Scenario folder is full (128).");
@@ -244,57 +215,31 @@ ScenarioWrite ArenaScenarioStore::save(const ArenaScenario& s, const ScenarioEnt
         }
     }
     ScenarioWrite result;
-    std::snprintf(result.entry.file.data(), result.entry.file.size(), "%s", target.filename().c_str());
+    std::snprintf(result.entry.file.data(), result.entry.file.size(), "%s",
+                  target.filename().u8string().c_str());
     result.entry.name = s.name;
     result.entry.revision = digest(text);
-    auto pattern = (directory_ / ".scenario-XXXXXX").string();
-    Fd temp{::mkstemp(pattern.data())};
-    if (temp.fd < 0)
-        throw std::runtime_error("Cannot create temporary scenario file.");
-    bool committed = false;
+    disk::Temporary temp(directory_ / ".scenario-", true);
     auto fault = [&](ScenarioStage stage) {
         if (hooks_.fail && hooks_.fail(stage))
             throw std::runtime_error("Scenario write interrupted.");
     };
+    fault(ScenarioStage::Write);
+    temp.file.write(text);
+    fault(ScenarioStage::Flush);
+    temp.file.flush();
+    temp.file.close();
+    fault(ScenarioStage::Rename);
+    if (replace && digest(read(target)) != replace->revision)
+        throw std::runtime_error("Scenario changed during save.");
+    temp.publish(target, replace != nullptr);
+    result.durable = false;
     try {
-        fault(ScenarioStage::Write);
-        std::size_t offset = 0;
-        while (offset < text.size()) {
-            const auto n = ::write(temp.fd, text.data() + offset, text.size() - offset);
-            if (n < 0 && errno == EINTR)
-                continue;
-            if (n <= 0)
-                throw std::runtime_error("Cannot write scenario.");
-            offset += std::size_t(n);
-        }
-        fault(ScenarioStage::Flush);
-        if (::fsync(temp.fd))
-            throw std::runtime_error("Cannot flush scenario.");
-        const int descriptor = temp.fd;
-        temp.fd = -1;
-        if (::close(descriptor))
-            throw std::runtime_error("Cannot close scenario before publication.");
-        fault(ScenarioStage::Rename);
-        // Lock serializes our writers; recheck external edits immediately before publication.
-        if (replace && digest(read(target)) != replace->revision)
-            throw std::runtime_error("Scenario changed during save.");
-        if (replace) {
-            if (::rename(pattern.c_str(), target.c_str()))
-                throw std::runtime_error("Cannot replace scenario.");
-        } else {
-            if (::link(pattern.c_str(), target.c_str()))
-                throw std::runtime_error("Cannot publish scenario; filename changed.");
-            ::unlink(pattern.c_str());
-        }
-        committed = true;
-        Fd dir{::open(directory_.c_str(), O_RDONLY | O_DIRECTORY | O_CLOEXEC)};
-        result.durable = !(hooks_.fail && hooks_.fail(ScenarioStage::DirectoryFlush)) && dir.fd >= 0 &&
-                         ::fsync(dir.fd) == 0;
-        return result;
-    } catch (...) {
-        if (!committed)
-            ::unlink(pattern.c_str());
-        throw;
+        fault(ScenarioStage::DirectoryFlush);
+        disk::confirm(target);
+        result.durable = true;
+    } catch (const std::exception&) { /* Published, but durability is unconfirmed. */
     }
+    return result;
 }
 } // namespace blobber

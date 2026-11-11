@@ -27,7 +27,7 @@ void prepareCreatorArt(const std::filesystem::path& source, const std::filesyste
             u32(16) < 324 || u32(20) < 324 || u32(16) > 2048 || u32(20) > 2048 || bytes[24] != 8 ||
             (bytes[25] != 2 && bytes[25] != 6))
             throw std::runtime_error("Invalid bounded creator PNG: " + path.string());
-        OwnedImage image(LoadImage(path.string().c_str()));
+        OwnedImage image(LoadImage(path.u8string().c_str()));
         if (!image.value.data)
             throw std::runtime_error("Cannot load creator art");
         const int side = std::min(image.value.width, image.value.height);
@@ -45,7 +45,7 @@ void prepareCreatorArt(const std::filesystem::path& source, const std::filesyste
                                    GetImageColor(image.value, std::clamp(px, 0, creatorTileSize - 1),
                                                  std::clamp(py, 0, creatorTileSize - 1)));
     }
-    if (!ExportImage(atlas.value, (output / "creator.qoi").string().c_str()))
+    if (!ExportImage(atlas.value, (output / "creator.qoi").u8string().c_str()))
         throw std::runtime_error("Cannot export creator atlas");
 }
 } // namespace blobber
