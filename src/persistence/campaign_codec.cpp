@@ -234,7 +234,7 @@ struct Archive {
                 invalid("Unknown spell field");
             if (!reading)
                 j = std::move(obj);
-        } else if constexpr (std::is_same_v<T, std::mt19937> || std::is_same_v<T, rules::DiceRng>) {
+        } else if constexpr (std::is_same_v<T, blobber::Mt19937> || std::is_same_v<T, rules::DiceRng>) {
             if (reading) {
                 if (!j.is_string() || j.get_ref<const std::string&>().size() > 8192)
                     invalid("Invalid RNG state");
@@ -255,7 +255,7 @@ struct Archive {
                     invalid("Invalid RNG word count");
                 std::istringstream in(text);
                 in.imbue(std::locale::classic());
-                if constexpr (std::is_same_v<T, std::mt19937>) {
+                if constexpr (std::is_same_v<T, blobber::Mt19937>) {
                     if (!(in >> v))
                         invalid("Invalid RNG");
                 } else if (!v.restore(in))
@@ -263,7 +263,7 @@ struct Archive {
             } else {
                 std::ostringstream out;
                 out.imbue(std::locale::classic());
-                if constexpr (std::is_same_v<T, std::mt19937>)
+                if constexpr (std::is_same_v<T, blobber::Mt19937>)
                     out << v;
                 else
                     v.describe(out);

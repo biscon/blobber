@@ -53,4 +53,5 @@ std::filesystem::path dataDirectory();
 std::filesystem::path configDirectory();
 std::filesystem::path applicationDirectory();
 std::filesystem::path loadedModulePath(const char* name); // Borrowed OS module query, diagnostics only.
+bool reparsePoint(const std::filesystem::path&);          // No following symlinks/junctions.
 } // namespace blobber::disk

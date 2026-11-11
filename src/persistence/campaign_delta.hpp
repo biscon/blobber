@@ -111,7 +111,7 @@ struct DeltaArchive {
                                  std::is_same_v<T, rules::MonsterId> || std::is_same_v<T, rules::RaceId> ||
                                  std::is_same_v<T, rules::ClassId> || std::is_same_v<T, rules::PortraitId> ||
                                  std::is_same_v<T, NpcTypeId> || std::is_same_v<T, rules::SpellGrants> ||
-                                 std::is_same_v<T, std::mt19937> || std::is_same_v<T, rules::DiceRng>;
+                                 std::is_same_v<T, blobber::Mt19937> || std::is_same_v<T, rules::DiceRng>;
 
     static std::size_t index(const Json& value, std::size_t limit) {
         if (!value.is_number_unsigned() || value.get<std::uint64_t>() >= limit)

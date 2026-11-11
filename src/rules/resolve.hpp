@@ -1,4 +1,5 @@
 #pragma once
+#include "core/mt19937.hpp"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -68,7 +69,7 @@ class DiceRng {
   private:
     std::uint32_t face(std::uint32_t sides) noexcept;
     DiceRoll rollValidated(Dice dice, bool critical) noexcept;
-    std::mt19937 engine_;
+    blobber::Mt19937 engine_;
 };
 enum class AttackOutcome { Miss, Hit, Critical };
 struct AttackResult {

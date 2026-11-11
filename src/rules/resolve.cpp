@@ -113,7 +113,7 @@ Result<SaveResult> resolveSave(D20Roll roll, std::int32_t bonus, std::int32_t di
 
 namespace blobber::rules {
 bool DiceRng::restore(std::istream& in) {
-    std::mt19937 candidate;
+    blobber::Mt19937 candidate;
     if (!(in >> candidate))
         return false;
     in >> std::ws;

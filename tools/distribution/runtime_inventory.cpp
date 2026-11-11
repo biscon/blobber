@@ -8,6 +8,7 @@
 #include "assets/world_assets.hpp"
 #include "audio/bank.hpp"
 #include "audio/music.hpp"
+#include "platform/file_io.hpp"
 #include "ui/art_names.hpp"
 #include "ui/equipment_art.hpp"
 #include <algorithm>
@@ -97,7 +98,7 @@ fs::path checkedRoot(const fs::path& path) {
     for (const auto& part : absolute) {
         current /= part;
         const auto status = fs::symlink_status(current);
-        require(!fs::is_symlink(status), "Refusing symlink: " + current.string());
+        require(!disk::reparsePoint(current), "Refusing symlink/reparse point: " + current.u8string());
         require(!fs::exists(status) || fs::is_directory(status) || fs::is_regular_file(status),
                 "Refusing special file: " + current.string());
     }
@@ -161,7 +162,8 @@ Inventory resolve(const Settings& settings, bool includePrepared) {
     };
     for (const auto& file : manifest.at("files")) {
 #ifdef _WIN32
-        if (file.at("path").get<std::string>().find("notices/gcc-runtime-") == 0) continue;
+        if (file.at("path").get<std::string>().find("notices/gcc-runtime-") == 0)
+            continue;
 #endif
         for (auto it = file.begin(); it != file.end(); ++it)
             require(it.key() == "root" || it.key() == "path" || it.key() == "destination",

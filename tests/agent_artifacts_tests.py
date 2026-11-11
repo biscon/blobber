@@ -1,5 +1,6 @@
 """Safety and lifecycle checks; no game assets, windows or builds required."""
 import importlib.util
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -85,6 +86,31 @@ class ArtifactTests(unittest.TestCase):
             artifacts.create(self.project)
         with self.assertRaises(ValueError):
             artifacts.clean(self.project, external / 'run', True)
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows directory junction behavior')
+    def test_windows_junctions_are_rejected(self):
+        run = artifacts.create(self.project)
+        target = self.project / 'external'
+        target.mkdir()
+        (target / 'save.json').write_text('keep')
+        junction = run / 'junction'
+        subprocess.run(['cmd', '/c', 'mklink', '/J', str(junction), str(target)], check=True,
+                       stdout=subprocess.DEVNULL)
+        try:
+            with self.assertRaises(ValueError):
+                artifacts.clean(self.project, run, True)
+            self.assertEqual((target / 'save.json').read_text(), 'keep')
+            self.assertTrue((run / artifacts.MARKER).exists())
+        finally:
+            junction.rmdir()
+        alias = run.parent / 'alias'
+        subprocess.run(['cmd', '/c', 'mklink', '/J', str(alias), str(run)], check=True,
+                       stdout=subprocess.DEVNULL)
+        try:
+            with self.assertRaises(ValueError):
+                artifacts.clean(self.project, alias, True)
+        finally:
+            alias.rmdir()
 
     def test_git_failure_preserves_run(self):
         run = artifacts.create(self.project)

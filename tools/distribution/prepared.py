@@ -56,7 +56,7 @@ def validate(bundle, source):
     return manifest
 
 
-def export(prepared, output, source):
+def export(prepared, output, source, environment=None, identities=None):
     require(not output.exists(), 'Export output already exists')
     ledger = files(prepared)
     output.mkdir(parents=True)
@@ -64,7 +64,8 @@ def export(prepared, output, source):
         shutil.copytree(prepared, output / 'prepared')
         manifest = {'version': 1, 'producer_revision': subprocess.check_output(
             ['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),
-            'input_digest': input_digest(source), 'inputs': inputs(source), 'files': ledger}
+            'input_digest': input_digest(source), 'inputs': inputs(source), 'files': ledger,
+            'producer_environment': environment or {}, 'identities': identities or {}}
         (output / 'prepared.json').write_bytes(encoded(manifest))
         validate(output, source)
     except BaseException:
@@ -107,9 +108,13 @@ def main():
     p.add_argument('--prepared', type=Path)
     p.add_argument('--bundle', type=Path)
     p.add_argument('--output', type=Path)
+    p.add_argument('--environment', type=Path)
+    p.add_argument('--validation', type=Path)
     a = p.parse_args()
     if a.operation == 'key': print('wd01-prepared-v1-' + input_digest(a.source))
-    elif a.operation == 'export': export(a.prepared, a.output, a.source)
+    elif a.operation == 'export': export(a.prepared, a.output, a.source,
+        json.loads(a.environment.read_text()) if a.environment else None,
+        json.loads(a.validation.read_text()) if a.validation else None)
     elif a.operation == 'import': import_prepared(a.bundle, a.output, a.source)
     else: validate(a.bundle, a.source)
 

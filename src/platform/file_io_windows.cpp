@@ -196,4 +196,13 @@ std::filesystem::path loadedModulePath(const char* name) {
         error("Inspect loaded module path");
     return std::filesystem::path(std::wstring(buffer.data(), n));
 }
+bool reparsePoint(const std::filesystem::path& path) {
+    const auto attributes = GetFileAttributesW(path.c_str());
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        if (GetLastError() == ERROR_FILE_NOT_FOUND || GetLastError() == ERROR_PATH_NOT_FOUND)
+            return false;
+        error("Inspect reparse point");
+    }
+    return (attributes & FILE_ATTRIBUTE_REPARSE_POINT) != 0;
+}
 } // namespace blobber::disk

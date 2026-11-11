@@ -20,10 +20,10 @@ from windows_archive import package
 from windows_smoke import smoke
 
 ROOT=Path(__file__).resolve().parents[1]
-TESTS=['platform_io','platform_io_process','library','arena','campaign_save_smoke','options','packaged_options',
+TESTS=['agent_artifacts_tools','rng_portability','platform_io','platform_io_process','library','arena','campaign_save_smoke','options','packaged_options',
        'runtime_inventory','dist_staging','npc_metadata','dialogue','audio','music','menu','gameplay_startup',
        'distribution_smoke','buttons','windows_distribution_tools','creator_art','portraits']
-TARGETS=['blobber_platform_io_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
+TARGETS=['blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
          'blobber_options_tests','blobber_packaged_options_tests','blobber_distribution_tests','blobber_npc_metadata_tests',
          'blobber_dialogue_tests','blobber_audio_tests','blobber_music_tests','blobber_menu_tests','blobber_gameplay_startup_tests',
          'blobber_distribution_smoke_tests','blobber_buttons_tests','blobber_distribution_compatibility','blobber_validate_prepared',
@@ -83,7 +83,8 @@ def build_release(run,bundle,build,allow_dirty):
         owner.write_bytes(encoded(ownership))
     with writer(build):
         manifest=prepared.validate(bundle,ROOT)
-        environment['prepared']={k:manifest[k] for k in ['producer_revision','input_digest']}
+        environment['prepared']={k:manifest[k] for k in ['producer_revision','input_digest','producer_environment','identities']}
+        require(manifest['producer_environment'] and manifest['identities'],'Missing prepared producer evidence')
         lock=json.loads((ROOT/'packaging/linux/lock.json').read_text())
         dependencies=run/'dependencies';dependencies.mkdir()
         overrides=[]
@@ -111,11 +112,15 @@ def build_release(run,bundle,build,allow_dirty):
         final_source=source_identity()
         require(final_source=={k:environment[k] for k in final_source},'Source changed during build')
         version=re.search(r'project\(blobber VERSION ([0-9.]+)',(ROOT/'CMakeLists.txt').read_text()).group(1)
-        final=package(build,ROOT,environment,version,allow_dirty)
+        def unchanged_source():
+            current=source_identity()
+            require(current=={k:environment[k] for k in current},'Source changed while packaging')
+        final=package(build,ROOT,environment,version,allow_dirty,unchanged_source)
         result=smoke(final,ROOT,build,run)
         (final/'verification.json').write_bytes(encoded(result))
         shutil.copytree(compatibility,final/'compatibility-windows')
         (final/'focused-tests.txt').write_bytes((run/'windows-focused-tests.log').read_bytes())
+        if (run/'selected-captures').is_dir():shutil.copytree(run/'selected-captures',final/'captures')
         if result['status']=='passed':
             # Same provider, hidden context; no OS input or desktop focus changes.
             import windows_smoke

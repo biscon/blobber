@@ -159,6 +159,21 @@ See [Microsoft's UTF-8 process manifest](https://learn.microsoft.com/en-us/windo
 
 ## Build, prepared publication and package
 
+### RNG state portability correction discovered during implementation
+
+The existing save/restore contract requires 624 MT19937 state words plus an index.
+MSVC 17.14's standard-library stream writes 624 normalized history words without
+the index, so its `std::mt19937` stream cannot implement that existing contract.
+Use a small owned MT19937 value with 624 uint32 words and a bounded index in the two
+existing RNG owners. Keep the standard MT recurrence, seed and output sequence and
+the exact existing Linux text representation; no save/content version changes.
+It uses fixed storage, no allocation or indirection, and replaces rather than
+duplicates the library engine. Verify outputs against `std::mt19937` across twist
+boundaries and compare serialized state directly to the accepted Linux implementation;
+then run cross-platform interchange and affected dice/AI/persistence checks.
+The concrete dependency difference is visible in Microsoft's
+[17.14 STL source](https://github.com/microsoft/STL/blob/vs-2022-17.14/stl/inc/random).
+
 ### Native Windows build policy
 
 Use `windows-2022`, VS 2022/v143, the MSVC 14.44 compiler family and Windows SDK

@@ -4,6 +4,7 @@
 #include <iostream>
 int main(int argc, char** argv) {
     try {
+        SetTraceLogLevel(LOG_WARNING);
         if (argc != 4)
             throw std::runtime_error("usage: validate_prepared MANIFEST ASSETS PREPARED");
         namespace d = blobber::distribution;

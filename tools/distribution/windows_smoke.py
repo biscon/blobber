@@ -61,7 +61,7 @@ def smoke(bundle, source, build, run):
         denied=[source/'assets',build/'assets']
         for path in denied:acl(path,'deny')
         for path in denied:
-            try:list(path.iterdir())
+            try:(path/'rules/catalog.json').read_bytes()
             except PermissionError:pass
             else:raise RuntimeError('Source/build assets still readable after isolation')
         try:

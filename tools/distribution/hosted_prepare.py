@@ -13,13 +13,16 @@ from archive import encoded
 ROOT=Path(__file__).resolve().parents[2]
 
 
-def prepare(run):
+def _prepare(run):
     recipe=ROOT/'packaging/linux'
     hashes={n:hashlib.sha256((recipe/n).read_bytes()).hexdigest() for n in ['Dockerfile','lock.json','provision.py','bootstrap-ca.pem']}
     recipe_id=hashlib.sha256(json.dumps(hashes,sort_keys=True).encode()).hexdigest()
     image='blobber-baseline:'+recipe_id[:20]
     def command(args,name):
-        with (run/name).open('w') as log:subprocess.run(args,stdout=log,stderr=subprocess.STDOUT,check=True)
+        print('Preparation phase: '+name,flush=True)
+        with (run/name).open('w') as log:
+            result=subprocess.run(args,stdout=log,stderr=subprocess.STDOUT)
+        if result.returncode:raise RuntimeError(name+' failed:\n'+(run/name).read_text(errors='replace')[-16000:])
     if subprocess.run(['docker','image','inspect',image],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode:
         command(['nice','-n','15','ionice','-c','3','docker','build','--platform','linux/amd64','--force-rm','-t',image,str(recipe)],'prepare-image.log')
     build=ROOT/'build-wd01-prepare';build.mkdir(exist_ok=True)
@@ -39,8 +42,13 @@ def prepare(run):
                  'blobber_validate_prepared','blobber_distribution_compatibility','--parallel','2'],'prepare-tools.log')
     command(base+['/opt/cmake/bin/cmake','--build','/build','--target','blobber_prepared_assets','--parallel','1'],'prepare-assets.log')
     command(base+['/build/blobber_validate_prepared','/src/packaging/runtime-content.json','/src/assets','/build/assets/prepared'],'prepare-validation.log')
+    image_id=subprocess.check_output(['docker','image','inspect','--format','{{.Id}}',image],text=True).strip()
+    command(base+['python3','-c',
+        'import json,pathlib,sys; d=json.loads(pathlib.Path("/build/baseline-build.json").read_text()); d["image_id"]=sys.argv[1]; print(json.dumps(d))',
+        image_id],'producer-environment.json')
     command(base+['python3','/src/tools/distribution/prepared.py','export','--source','/src','--prepared','/build/assets/prepared',
-                 '--output','/transfer/wd01-prepared'],'prepare-export.log')
+                 '--output','/transfer/wd01-prepared','--environment','/run-output/producer-environment.json',
+                 '--validation','/run-output/prepare-validation.log'],'prepare-export.log')
     command(base+['/build/blobber_distribution_compatibility','export','/transfer/wd01-prepared/compatibility'],'prepare-compatibility.log')
     # Bound compressed transfer conservatively before requesting remote cache storage.
     import zlib
@@ -53,6 +61,22 @@ def prepare(run):
             total+=len(compressor.flush())
     if total>1024**3:raise RuntimeError('Prepared compressed transfer exceeds 1 GiB')
     print(json.dumps({'image':image,'recipe_sha256':recipe_id,'deflate_transfer_estimate':total}))
+
+
+def prepare(run):
+    import fcntl
+    build=ROOT/'build-wd01-prepare'
+    build.mkdir(exist_ok=True)
+    owner=build/'.wd01-prepare-owner.json'
+    identity={'version':1,'source':str(ROOT),'policy':'pinned-linux-preparation'}
+    if owner.exists():
+        if json.loads(owner.read_text())!=identity:raise RuntimeError('Preparation build ownership differs')
+    else:
+        if any(build.iterdir()):raise RuntimeError('Refusing unowned preparation build')
+        owner.write_bytes(encoded(identity))
+    with (build/'.prepare.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        _prepare(run)
 
 
 if __name__=='__main__':

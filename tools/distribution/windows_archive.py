@@ -100,7 +100,7 @@ def inspect_zip(path, output=None):
         raise
 
 
-def package(build, source, environment, version, allow_dirty=False):
+def package(build, source, environment, version, allow_dirty=False, check_source=None):
     require(not environment['dirty'] or allow_dirty, 'Dirty source requires explicit allowance')
     require(re.fullmatch('[0-9a-f]{40}', environment['revision']), 'Invalid revision')
     require(re.fullmatch(r'\d+\.\d+\.\d+', version), 'Invalid project version')
@@ -130,6 +130,7 @@ def package(build, source, environment, version, allow_dirty=False):
         info['unpacked_bytes'], info['files'] = summary['unpacked_bytes'], summary['files']
         (candidate/(archive.name+'.sha256')).write_bytes((info['archive_sha256']+'  '+archive.name+'\n').encode())
         (candidate/'build.json').write_bytes(encoded(info))
+        if check_source:check_source()
         promote(candidate,final)
         return final
     finally:

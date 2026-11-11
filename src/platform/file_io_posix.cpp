@@ -170,4 +170,7 @@ std::filesystem::path applicationDirectory() {
 std::filesystem::path loadedModulePath(const char*) {
     return {};
 }
+bool reparsePoint(const std::filesystem::path& path) {
+    return std::filesystem::is_symlink(std::filesystem::symlink_status(path));
+}
 } // namespace blobber::disk

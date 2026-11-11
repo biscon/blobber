@@ -13,11 +13,15 @@ import uuid
 MARKER = '.agent-run.json'
 
 
+def linked(path):
+    return path.is_symlink() or getattr(path, 'is_junction', lambda: False)()
+
+
 def managed_root(project):
     project = project.resolve()
     root = project / 'output' / 'agent-runs'
     for path in (project / 'output', root):
-        if path.is_symlink():
+        if linked(path):
             raise ValueError(f'Symlink is not allowed: {path}')
         if path.exists() and not path.is_dir():
             raise ValueError(f'Not a directory: {path}')
@@ -43,7 +47,7 @@ def clean(project, directory, apply=False):
     run = Path(os.path.abspath(directory))
     if run.parent != root:
         raise ValueError('Specify one direct child of output/agent-runs')
-    if run.is_symlink():
+    if linked(run):
         raise ValueError('Symlink is not allowed')
     # An already removed run is a harmless no-op, including on repeated cleanup.
     if not run.exists():
@@ -51,7 +55,7 @@ def clean(project, directory, apply=False):
     if not run.is_dir():
         raise ValueError('Run must be a directory')
     marker = run / MARKER
-    if marker.is_symlink() or not marker.is_file():
+    if linked(marker) or not marker.is_file():
         raise ValueError('Run has no regular ownership marker')
     try:
         identity = json.loads(marker.read_text())
@@ -79,6 +83,9 @@ def clean(project, directory, apply=False):
                 count += 1
                 size += info.st_size
     if apply:
+        # Windows Python >=3.8 removes junctions without descending them. Our
+        # complete preflight additionally rejects every reparse point, including
+        # the managed roots. No runner/writer may remain active during cleanup.
         if not shutil.rmtree.avoids_symlink_attacks and os.name != 'nt':
             raise ValueError('Safe directory removal is unavailable on this platform')
         shutil.rmtree(run)

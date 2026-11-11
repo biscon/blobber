@@ -1,4 +1,5 @@
 #pragma once
+#include "core/mt19937.hpp"
 #include "game/movement.hpp"
 #include "game/navigation.hpp"
 #include "game/tactical_navigation.hpp"
@@ -53,7 +54,7 @@ class NpcAiController {
     struct Saved {
         NpcAiSnapshot state;
         std::array<std::optional<Cell>, NpcWorld::maxInstances> prepared{};
-        std::mt19937 rng;
+        blobber::Mt19937 rng;
         std::uint64_t tickDue = 100;
         std::size_t priority = 0;
     };
@@ -69,7 +70,7 @@ class NpcAiController {
     EffectController* effects_ = nullptr;
     bool turnMovement_ = false;
     std::array<std::optional<Cell>, NpcWorld::maxInstances> prepared_{};
-    std::mt19937 rng_;
+    blobber::Mt19937 rng_;
     NpcAiSnapshot state_;
     std::array<bool, NpcWorld::maxInstances> rangedOnly_{};
     std::uint64_t tickDue_ = 100, geometryRevision_ = 0;

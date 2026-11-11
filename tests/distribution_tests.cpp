@@ -45,7 +45,9 @@ struct Fixture {
         s.executable = s.build / "blobber";
         write(s.build / "CMakeCache.txt", "fixture build\n");
         write(s.executable, "fixture executable\n");
+#ifndef _WIN32
         fs::permissions(s.executable, fs::perms::owner_read | fs::perms::owner_exec);
+#endif
         fs::create_directories(s.source);
         fs::create_directories(s.prepared);
         save();

@@ -26,7 +26,7 @@ struct Canonical {
         for (std::size_t i = 0; i < N; ++i)
             add(bits[i]);
     }
-    void add(const std::mt19937& rng) { out << rng << ';'; }
+    void add(const blobber::Mt19937& rng) { out << rng << ';'; }
     void add(const rules::DiceRng& rng) {
         rng.describe(out);
         out << ';';
