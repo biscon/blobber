@@ -39,9 +39,16 @@ claim; notice gaps remain.
 **WD01 before LD04**. WD01 covers Windows platform I/O/user paths, dependency and
 prepared-asset portability, a versioned ZIP and a minimal manual hosted build/test
 workflow managed from Linux with `gh`. User review requires only the downloaded
-game on Windows. Detailed WD01 planning is next; no Windows code/workflow has been
-implemented. LD04 then consolidates Linux and Windows automation. Accepted LD01–LD03
-history remains unchanged; no automatic advancement or public publication.
+game on Windows. [WD01 detailed design](linux_distribution_wd01.md) is **In progress
+— planning; proposed and awaiting review, 2026-11-12**. It specifies Windows 11 x64,
+native hosted MSVC/static dependencies, small native I/O and Unicode-path boundaries,
+validated Linux-prepared publication import/cache, ZIP/PE checks and the narrow
+agent-managed registration PR during later authorized implementation. No Windows
+code/workflow has been implemented. The user added the `gh` workflow scope; access
+was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
+Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.
+LD04 consolidates Linux and Windows automation only after WD01 acceptance. Accepted
+LD01–LD03 history remains unchanged; no automatic advancement or public publication.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,
