@@ -1,11 +1,17 @@
 # System design
 
-[Linux distribution roadmap](linux_distribution_plan.md): proposed, 2026-11-11.
-LD01–LD04 are planned for separate fresh-context planning and implementation:
-curated runtime staging, a controlled Linux x86-64/glibc baseline, a verified
-downloadable archive, then standard GitHub-hosted automation for the public repo.
-No distribution targets, portability claims or hosted runs are implemented by
-this roadmap. Next action: detailed planning of LD01; no automatic advancement.
+[Linux distribution roadmap](linux_distribution_plan.md): **LD01 accepted and closed
+by the user, 2026-11-11**; implemented and mechanically verified.
+[LD01 design/handoff](linux_distribution_ld01.md) documents the shared curated
+runtime inventory, CPU-only build helper and clean `dist-stage` ownership. Debug
+source paths and content identities remain unchanged. Nine focused suites and a
+388-file / 1,334,576,722-byte production stage pass; native host dependencies and
+notice gaps remain explicit. LD02–LD04 remain planned: controlled Linux baseline,
+verified archive and hosted automation. No portability or playable-package claim;
+no automatic advancement. The user reports working content and clean folders and
+accepts the audit's 1.5 MB (0.114%) of existing repeated material/sound data. The
+stage excludes original world artwork alongside the packed publication; its main
+size is uncompressed pixels, mip levels and masks. LD02 planning has not started.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,

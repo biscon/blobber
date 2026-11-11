@@ -51,6 +51,21 @@ Release stages assets beside the executable for a self-contained game folder.
 `prepared/` output; `--dialogue-dir DIRECTORY` overrides only the scripts.
 Tools that require a staged Debug asset folder can explicitly build `blobber_assets`.
 
+### Linux content staging
+
+Release and `blobber_assets` share the curated runtime inventory. To prepare a clean
+Linux x86-64 content stage, use a single-configuration Release build with graphics:
+
+```sh
+cmake --build --preset release --target dist-stage -j 1
+```
+
+For an existing build tree, use its configured CMake/Ninja pair. The payload is
+`cmake-build-release/dist-stage/Release/`, with its file/size inventory beside it.
+This is local content staging; portable binaries and downloadable archives are
+later distribution slices. See the [LD01 contract and verification](docs/linux_distribution_ld01.md)
+for ownership rules, notice gaps and the next-slice handoff.
+
 ## Development checks
 
 Build presets use at most two workers; test presets run serially and skip labelled

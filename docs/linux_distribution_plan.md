@@ -1,8 +1,8 @@
 # Linux distribution: proposed delivery roadmap
 
 Created: 2026-11-11.
-Status: **Roadmap written at the user's request; LD01–LD04 planned.
-No detailed slice plan or implementation is approved by this document.**
+Status: **LD01 accepted and closed by the user, 2026-11-11.
+LD02–LD04 remain planned.**
 
 Deliver a downloadable Linux x86-64 game archive containing the executable and
 only its required runtime content. The user will run a separate planning step and
@@ -15,12 +15,12 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | None |
-| Next eligible slice | LD01 — Runtime content and clean staging, for detailed planning |
-| Implemented distribution support | Asset preparation and broad Release staging only; no distribution targets or CI workflow |
-| Awaiting user review | This roadmap; no delivered package |
+| Active slice | None — LD01 accepted and closed |
+| Next eligible slice | LD02 — detailed planning; not started |
+| Implemented distribution support | Shared curated Release inventory, clean dist-stage and content verification; no portable build/archive/CI |
+| Awaiting user review | None for LD01; [accepted handoff](linux_distribution_ld01.md) retains the audit and limitations |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Read current code and plan LD01 only; implementation follows the user's authorization |
+| Next action | Separate LD02 planning when requested; do not advance automatically |
 
 Update this checkpoint, the tracker and the active slice's handoff together.
 Implementation completion and user acceptance are separate states. Only the user
@@ -50,6 +50,12 @@ Retain existing applicable third-party license/attribution notices in the packag
 record any unresolved notice or distribution requirement for user decision.
 
 ## Findings to recheck before implementation
+
+These are pre-LD01 observations retained as roadmap context. LD01's current
+implementation, inventory, observed dependencies and limitations are in its
+[handoff](linux_distribution_ld01.md#implementation-handoff); the broad copy list
+and missing blueprint below have been corrected. Later slices must inspect their
+own actual build rather than treating these historical observations as tests.
 
 - CMakeLists.txt stages broad recursive asset directories for Release and prepares
   world textures, portraits and creator artwork. There are no install, dist or
@@ -126,12 +132,24 @@ source revision, toolchain and content identity so results can be reproduced.
 
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
-| LD01 | Runtime inventory and clean dist-stage target | Existing game and asset pipeline | Planned |
-| LD02 | Controlled Linux baseline build and dependency/ABI checks | Reviewed LD01 content contract | Planned |
+| LD01 | Runtime inventory and clean dist-stage target | Existing game and asset pipeline | Accepted and closed — 2026-11-11 |
+| LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Planned |
 | LD03 | Versioned archive, checksums and relocated-package verification | Reviewed LD02 release build | Planned |
 | LD04 | GitHub-hosted automation and compatibility evidence | Reviewed LD03 package/verification commands | Planned |
 
 ### LD01 — Runtime content and clean staging
+
+Approved [detailed design and handoff](linux_distribution_ld01.md), 2026-11-11.
+Implementation and focused verification are complete; **accepted and closed by the
+user on 2026-11-11**.
+The user reports working content and clean folders. A follow-up audit found about
+1.5 MB (0.114%) of existing repeated material/sound data. The user accepted these
+findings and clarified that the concern was shipping both packed world textures
+and their original files; the stage does not do that. Details remain in the handoff.
+The local stage contains
+388 files / 1,334,576,722 bytes. Its native executable is
+not portable; no archive, desktop smoke or hosted run is claimed. See the handoff
+for commands, inventory location, notice gaps, cleanup and LD02's contract.
 
 Audit runtime file access and build a single shipping inventory. Include all
 required prepared outputs, runtime definitions/scripts/fonts/audio/UI images and
@@ -326,10 +344,12 @@ Policy references checked 2026-11-11; recheck when implementing hosted automatio
 - [AppImage compatibility guidance](https://docs.appimage.org/reference/best-practices.html):
   the payload's build baseline matters independently of the packaging format.
 
-This roadmap was checked against the existing build/path/loading code and roadmap
+Original roadmap-only verification, before LD01 implementation: this roadmap was
+checked against the existing build/path/loading code and roadmap
 format. No distribution code, build, package, hosted workflow or desktop test was
 run as part of writing it. Documentation verification: git diff --check passes;
 a focused Python check confirms all local roadmap links resolve, each LD01–LD04
 heading occurs once and system_design.md indexes this roadmap. The owned disposable
 run was previewed and cleaned with tools/agent_artifacts.py; no output was retained.
 These checks do not establish distribution support.
+Current LD01 implementation verification is recorded in its linked design/handoff.

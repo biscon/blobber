@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "files": [
+    {
+      "root": "assets",
+      "path": "rules/catalog.json"
+    },
+    {
+      "root": "assets",
+      "path": "blueprints/underkeep.json"
+    },
+    {
+      "root": "assets",
+      "path": "fonts/IBMPlexSans-Regular.ttf"
+    },
+    {
+      "root": "assets",
+      "path": "fonts/IBMPlexSans-Bold.ttf"
+    },
+    {
+      "root": "assets",
+      "path": "fonts/Inconsolata.otf"
+    },
+    {
+      "root": "assets",
+      "path": "fonts/DejaVuSerif-Bold.ttf"
+    },
+    {
+      "root": "assets",
+      "path": "ui/menu-background.png"
+    },
+    {
+      "root": "assets",
+      "path": "ui/menu-title.png"
+    },
+    {
+      "root": "assets",
+      "path": "ui/camp/bonfire-sheet.png"
+    },
+    {
+      "root": "assets",
+      "path": "ui/items/loot-sheet.png"
+    },
+    {
+      "root": "assets",
+      "path": "ui/map/markers-v1.png"
+    },
+    {
+      "root": "assets",
+      "path": "effects/se02/portraits.png"
+    },
+    {
+      "root": "assets",
+      "path": "effects/se03/portraits.png"
+    },
+    {
+      "root": "assets",
+      "path": "effects/combat-feedback/backdrops.png"
+    },
+    {
+      "root": "prepared",
+      "path": "creator.qoi"
+    },
+    {
+      "root": "prepared",
+      "path": "portraits-small.qoi"
+    },
+    {
+      "root": "prepared",
+      "path": "portraits-large.qoi"
+    },
+    {
+      "root": "prepared",
+      "path": "world/textures.bin"
+    },
+    {
+      "root": "prepared",
+      "path": "world/metadata.json"
+    },
+    {
+      "root": "prepared",
+      "path": "world/sources.json"
+    },
+    {
+      "root": "assets",
+      "path": "fonts/DejaVu-LICENSE.txt",
+      "destination": "notices/DejaVu-LICENSE.txt"
+    },
+    {
+      "root": "assets",
+      "path": "rules/ATTRIBUTION.md",
+      "destination": "notices/SRD-ATTRIBUTION.md"
+    },
+    {
+      "root": "assets",
+      "path": "audio/music/README.md",
+      "destination": "notices/music-credits.md"
+    },
+    {
+      "root": "assets",
+      "path": "audio/replacements/provenance.json",
+      "destination": "notices/audio-replacements-provenance.json"
+    },
+    {
+      "root": "manifest",
+      "path": "notices/raylib.txt",
+      "destination": "notices/raylib.txt"
+    },
+    {
+      "root": "manifest",
+      "path": "notices/glfw.txt",
+      "destination": "notices/glfw.txt"
+    },
+    {
+      "root": "manifest",
+      "path": "notices/yaml-cpp.txt",
+      "destination": "notices/yaml-cpp.txt"
+    },
+    {
+      "root": "manifest",
+      "path": "notices/nlohmann-json.txt",
+      "destination": "notices/nlohmann-json.txt"
+    }
+  ],
+  "selectors": [
+    "ui-icons",
+    "npcs",
+    "dialogue",
+    "shops",
+    "audio"
+  ],
+  "validate": [
+    "rules",
+    "blueprints",
+    "world",
+    "atlases"
+  ]
+}

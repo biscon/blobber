@@ -188,43 +188,28 @@ if(BLOBBER_BUILD_GRAPHICS)
         blobber_warnings(${target})
     endforeach()
 
-    set(BLOBBER_RAW_ASSET_DIR "${CMAKE_CURRENT_BINARY_DIR}/assets")
+    set(BLOBBER_STAGE_ARGUMENTS
+        --manifest "${CMAKE_CURRENT_SOURCE_DIR}/packaging/runtime-content.json"
+        --source "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        --prepared "${BLOBBER_PREPARED_DIR}"
+        --build "${CMAKE_CURRENT_BINARY_DIR}" --config "$<CONFIG>")
     if(CMAKE_CONFIGURATION_TYPES)
-        set(BLOBBER_RAW_ASSET_DIR "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/assets")
+        list(APPEND BLOBBER_STAGE_ARGUMENTS --multi-config)
     endif()
-    file(GLOB_RECURSE BLOBBER_COPY_INPUTS CONFIGURE_DEPENDS LIST_DIRECTORIES false
-        RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/dialogue/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/shops/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/audio/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/rules/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/textures/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/npcs/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/ui/*"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/effects/se02/portraits.png"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/effects/se03/portraits.png"
-        "${CMAKE_CURRENT_SOURCE_DIR}/assets/effects/combat-feedback/backdrops.png")
-
-    set(BLOBBER_COPY_OUTPUTS)
-    foreach(asset IN LISTS BLOBBER_COPY_INPUTS)
-        set(source "${CMAKE_CURRENT_SOURCE_DIR}/assets/${asset}")
-        set(destination "${BLOBBER_RAW_ASSET_DIR}/${asset}")
-        get_filename_component(destination_directory "${destination}" DIRECTORY)
-        # Refresh the output timestamp even when a touched source has identical bytes.
-        add_custom_command(OUTPUT "${destination}"
-            COMMAND ${CMAKE_COMMAND} -E make_directory "${destination_directory}"
-            COMMAND ${CMAKE_COMMAND} -E copy "${source}" "${destination}"
-            DEPENDS "${source}"
-            COMMENT "Copying asset ${asset}" VERBATIM)
-        list(APPEND BLOBBER_COPY_OUTPUTS "${destination}")
-    endforeach()
-    # Debug reads editable assets from the checkout; tools can explicitly request staging.
-    add_custom_target(blobber_assets DEPENDS ${BLOBBER_COPY_OUTPUTS})
-    add_dependencies(blobber_assets blobber_retire_assets)
-    add_custom_target(blobber_runtime_assets ALL
-        DEPENDS "$<$<NOT:$<CONFIG:Debug>>:${BLOBBER_COPY_OUTPUTS}>")
-    add_dependencies(blobber_runtime_assets blobber_retire_assets)
+    # Explicit tool staging and normal Release staging use the same inventory.
+    add_custom_target(blobber_assets
+        COMMAND blobber_stage_runtime raw ${BLOBBER_STAGE_ARGUMENTS}
+        VERBATIM)
+    add_dependencies(blobber_assets blobber_stage_runtime blobber_retire_assets)
+    if(CMAKE_CONFIGURATION_TYPES OR NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+        add_custom_target(blobber_runtime_assets ALL
+            COMMAND blobber_stage_runtime raw ${BLOBBER_STAGE_ARGUMENTS} --skip-debug
+            VERBATIM)
+        add_dependencies(blobber_runtime_assets blobber_stage_runtime blobber_retire_assets)
+    else()
+        # Debug keeps its direct source workflow and has no raw-copy/tool dependency.
+        add_custom_target(blobber_runtime_assets)
+    endif()
     add_dependencies(blobber blobber_runtime_assets)
 
     add_executable(blobber_bake_portraits tools/bake_portraits.cpp)
@@ -837,4 +822,40 @@ if(TARGET blobber_application)
     add_executable(blobber_review_blueprint_campaign EXCLUDE_FROM_ALL tools/review_blueprint_campaign.cpp)
     target_link_libraries(blobber_review_blueprint_campaign PRIVATE blobber_application blobber_generation_io)
     blobber_warnings(blobber_review_blueprint_campaign)
+endif()
+
+# Build-only runtime inventory/staging; these executables never enter the payload.
+add_library(blobber_distribution EXCLUDE_FROM_ALL
+    tools/distribution/runtime_inventory.cpp tools/distribution/staging.cpp)
+target_include_directories(blobber_distribution PUBLIC tools)
+target_link_libraries(blobber_distribution PUBLIC nlohmann_json::nlohmann_json
+    PRIVATE blobber_npc_io blobber_audio_io blobber_rules_io blobber_blueprint_io blobber_world_assets)
+blobber_warnings(blobber_distribution)
+add_executable(blobber_stage_runtime EXCLUDE_FROM_ALL tools/stage_runtime.cpp)
+target_link_libraries(blobber_stage_runtime PRIVATE blobber_distribution)
+blobber_warnings(blobber_stage_runtime)
+
+if(BLOBBER_BUILD_GRAPHICS AND CMAKE_SYSTEM_NAME STREQUAL "Linux"
+    AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86_64|amd64|AMD64)$"
+    AND NOT CMAKE_CONFIGURATION_TYPES AND CMAKE_BUILD_TYPE STREQUAL "Release")
+    add_custom_target(dist-stage
+        COMMAND blobber_stage_runtime dist ${BLOBBER_STAGE_ARGUMENTS}
+            --executable "$<TARGET_FILE:blobber>"
+        DEPENDS blobber blobber_stage_runtime
+        VERBATIM)
+else()
+    add_custom_target(dist-stage
+        COMMAND ${CMAKE_COMMAND} -E echo
+            "dist-stage requires Linux x86-64, graphics ON and single-config Release. Use the release Ninja preset."
+        COMMAND ${CMAKE_COMMAND} -E false
+        VERBATIM)
+endif()
+if(BUILD_TESTING)
+    add_executable(blobber_distribution_tests tests/distribution_tests.cpp)
+    target_include_directories(blobber_distribution_tests PRIVATE tests)
+    target_link_libraries(blobber_distribution_tests PRIVATE blobber_distribution blobber_npc_io)
+    blobber_warnings(blobber_distribution_tests)
+    add_test(NAME runtime_inventory COMMAND blobber_distribution_tests inventory)
+    add_test(NAME dist_staging COMMAND blobber_distribution_tests staging)
+    set_tests_properties(runtime_inventory dist_staging PROPERTIES TIMEOUT 20 LABELS "tooling")
 endif()

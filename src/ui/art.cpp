@@ -6,6 +6,7 @@
 #include "assets/prepared_image.hpp"
 #include "core/preparation.hpp"
 #include "game/effects.hpp"
+#include "ui/art_names.hpp"
 #include "ui/equipment_art.hpp"
 #include "ui/map_model.hpp"
 #include <algorithm>
@@ -16,70 +17,7 @@ namespace blobber {
 UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
              const std::filesystem::path& preparedDirectory)
     : resources_(resources) {
-    constexpr const char* names[]{"alden",
-                                  "brunna",
-                                  "merrin",
-                                  "lethiel",
-                                  "goblin",
-                                  "melee",
-                                  "defend",
-                                  "ranged",
-                                  "spell",
-                                  "backpack",
-                                  "aid",
-                                  "spells/sacred_flame",
-                                  "spells/spare_the_dying",
-                                  "spells/bless",
-                                  "spells/bane",
-                                  "spells/shield_of_faith",
-                                  "spells/cure_wounds",
-                                  "spells/guiding_bolt",
-                                  "spells/inflict_wounds",
-                                  "spells/fire_bolt",
-                                  "spells/acid_splash",
-                                  "spells/mage_armor",
-                                  "spells/magic_missile",
-                                  "spells/burning_hands",
-                                  "spells/thunderwave",
-                                  "spells/second_wind",
-                                  "spells/arcane_recovery",
-                                  "spells/dismiss_concentration",
-                                  "class_features",
-                                  "items/longsword",
-                                  "items/chain_mail",
-                                  "items/shield",
-                                  "items/mace",
-                                  "items/scale_mail",
-                                  "items/holy_symbol",
-                                  "items/shortsword",
-                                  "items/leather",
-                                  "items/shortbow",
-                                  "items/arrow",
-                                  "items/dagger",
-                                  "items/spellbook",
-                                  "items/arcane_focus",
-                                  "items/healing_potion",
-                                  "items/mana_potion",
-                                  "items/silhouette",
-                                  "rest",
-                                  "spells/ray_of_frost",
-                                  "spells/shocking_grasp",
-                                  "spells/poison_spray",
-                                  "spells/sleep",
-                                  "spells/false_life",
-                                  "spells/grease",
-                                  "spells/color_spray",
-                                  "spells/guidance",
-                                  "spells/resistance",
-                                  "spells/sanctuary",
-                                  "spells/hold_person",
-                                  "items/quarterstaff",
-                                  "travel",
-                                  "skeleton",
-                                  "bugbear",
-                                  "giant-rat",
-                                  "zombie",
-                                  "goblin-shaman"};
+    const auto& names = interfaceArtNames;
     const auto prepared =
         preparedDirectory.empty() ? directory.parent_path() / "prepared" : preparedDirectory;
     auto loadPreparedAtlas = [&](const char* name, int height) {
