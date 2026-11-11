@@ -54,3 +54,36 @@ The normal driver performs this check before compiling. No project license or
 publication clearance is implied. Archive/relocation checks are LD03; CI is LD04.
 After recording verification, preview then apply cleanup of the owned agent run
 with `python3 tools/agent_artifacts.py clean RUN_DIRECTORY [--apply]`.
+
+## LD03 archive and relocation checks
+
+```sh
+python3 tools/linux_release.py dist --run-dir output/agent-runs/RUN_ID
+# Add --allow-dirty only for a visibly marked development package.
+python3 tools/linux_release.py verify-package --run-dir output/agent-runs/FRESH_RUN_ID --package-dir BUNDLE_DIRECTORY
+```
+
+Both runs must first be created with `tools/agent_artifacts.py create`. `dist`
+refreshes baseline metadata, stages/audits and atomically promotes a versioned
+archive/checksum/build bundle under `build-linux-baseline/dist/`. Native builds
+cannot produce portable candidates. Dirty source fails by default. Changes to
+source inputs during construction fail rather than presenting a partial new result.
+
+The verifier validates and extracts that archive, then runs its actual executable
+from `/work`, with installation read-only and source/build paths absent. Separate
+Ubuntu 22.04 and Debian 13 runtime-only images use Xvfb/Mesa software GL; each has
+isolated writable HOME/XDG/temp roots and runs create/save then fresh-process
+Continue. It never uses the host display, input, GPU or audio devices. Successful
+`verification.json` is bound to the archive hash and requires both runtimes. It is
+removed before a new verification attempt; failed attempts do not retain success.
+
+Runtime recipes live beside this README. Debian uses its signed snapshot; Ubuntu
+uses exact SHA-256-pinned packages from signed Ubuntu indexes because the snapshot
+endpoint was unavailable during LD03. `runtime-ubuntu22-lock.json` records that
+resolution. No rolling package resolution occurs when reproducing the runtime.
+Both images remain independent of the accepted LD02 build image and package lock.
+
+See [LD03 design/handoff](../../docs/linux_distribution_ld03.md) for actual results,
+selected evidence, failed-check corrections, coverage limits and the user review
+recipe. Software GL and audio path resolution do not establish physical GPU support
+or listening. No hosted workflow, tag push or public publication is included.

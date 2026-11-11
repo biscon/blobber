@@ -6,6 +6,9 @@
 #include "support/check.hpp"
 #include "ui/hud_painter.hpp"
 #include "ui/map_model.hpp"
+#include "ui/equipment_art.hpp"
+#include "rlgl.h"
+#include <cmath>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -113,6 +116,13 @@ void nativeUi() {
                                                                       : (x % 2 ? WHITE : BLACK));
         check(ExportImage(image.value, (fixture.path / (std::string(names[i]) + ".png")).string().c_str()),
               "Export generated UI fixture");
+    }
+    // Own every icon consumed by UiArt, including equipment added after this fixture.
+    // These synthetic inputs stay independent of the game's editable artwork.
+    for (const auto* id : equipmentIconIds) {
+        OwnedImage icon(GenImageColor(168, 168, WHITE));
+        check(ExportImage(icon.value, (fixture.path / "items" / (std::string(id) + ".png")).string().c_str()),
+              "Export owned equipment icon fixture");
     }
     for (bool large : {false, true}) {
         OwnedImage atlas(
@@ -268,11 +278,50 @@ void nativeUi() {
     const auto inset = GetImageColor(result.value, 301, 130);
     check(edge.r == hudInk::gold.r && inset.r == hudInk::panel.r, "Native border is one pixel, not three");
 }
+void depthCopy() {
+    GpuResources resources;
+    GpuLease<TargetHandle> normal(resources, resources.createTarget(32, 32));
+    GpuLease<TargetHandle> sampled(resources, resources.createTarget(32, 32, true));
+    using ClearDepth = void (*)(double);
+    using Clear = void (*)(unsigned);
+    using Read = void (*)(int, int, int, int, unsigned, unsigned, void*);
+    const auto depth = reinterpret_cast<ClearDepth>(rlGetProcAddress("glClearDepth"));
+    const auto clear = reinterpret_cast<Clear>(rlGetProcAddress("glClear"));
+    const auto read = reinterpret_cast<Read>(rlGetProcAddress("glReadPixels"));
+    check(depth && clear && read, "OpenGL depth readback is available");
+    const auto verify = [&](TargetHandle from, TargetHandle to, double value) {
+        rlEnableFramebuffer(resources.target(from).id);
+        depth(value);
+        clear(0x00000100); // GL_DEPTH_BUFFER_BIT
+        rlEnableFramebuffer(resources.target(to).id);
+        depth(1 - value);
+        clear(0x00000100);
+        resources.copyDepth(from, to);
+        rlEnableFramebuffer(resources.target(to).id);
+        float actual = -1;
+        read(16, 16, 1, 1, 0x1902, 0x1406, &actual); // GL_DEPTH_COMPONENT, GL_FLOAT
+        check(std::abs(actual - value) < 1e-6, "Copied depth survives renderbuffer/texture transfer");
+        resources.finishPreparation();
+    };
+    verify(normal.get(), sampled.get(), .25);
+    verify(sampled.get(), normal.get(), .625);
+    depth(1);
+    rlDisableFramebuffer();
+    normal.reset();
+    sampled.reset();
+    check(resources.counts().targets == 0 && resources.counts().bytes == 0, "Depth targets release all owned storage");
+}
 } // namespace
-int main() {
+int main(int argc, char** argv) {
     try {
         const Window window(320, 240, true);
         check(IsWindowState(FLAG_WINDOW_HIDDEN), "GPU diagnostics use a hidden window");
+        depthCopy();
+        if (argc == 2 && std::string_view(argv[1]) == "--depth-copy") {
+            std::cout << "Bidirectional depth copy, readback and resource cleanup passed\n";
+            return 0;
+        }
+        check(argc == 1, "Usage: blobber_gpu_smoke [--depth-copy]");
         nativeUi();
         GpuResources resources;
         rejects([&] { resources.createTarget(0, 32); }, "Invalid target size rejected");

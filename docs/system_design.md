@@ -7,7 +7,8 @@ runtime inventory, CPU-only build helper and clean `dist-stage` ownership. Debug
 source paths and content identities remain unchanged. Nine focused suites and a
 388-file / 1,334,576,722-byte production stage pass; native host dependencies and
 notice gaps remain explicit. LD02 is accepted and closed by the user, 2026-11-11;
-verified archives and hosted automation remain planned in LD03–LD04. No portability or playable-package claim;
+LD03 now supplies a mechanically verified archive; hosted automation remains
+planned in LD04. Runtime coverage and limits are recorded separately below;
 no automatic advancement. The user reports working content and clean folders and
 accepts the audit's 1.5 MB (0.114%) of existing repeated material/sound data. The
 stage excludes original world artwork alongside the packed publication; its main
@@ -18,9 +19,29 @@ behavior. A pinned Ubuntu 22.04 / glibc 2.35 build uses
 static raylib/yaml-cpp/libstdc++/libgcc and generic x86-64 compilation. The separate
 391-file stage passes content and ELF/symbol/dependency checks, including required
 GLX runtime loads; maximum GLIBC requirement is 2.35. Twelve focused suites and
-seventeen checker cases pass. Native CLion trees remain independent. Agent checks
+seventeen checker cases pass. Native CLion trees remain independent. LD02 agent checks
 did not include desktop review; no playable extracted package, hosted run or
-publication claim. LD03 is next for separate planning when requested.
+publication claim.
+[LD03 design/handoff](linux_distribution_ld03.md): **implemented, mechanically
+verified, accepted and closed by the user, 2026-11-11**. A 540.26 MiB
+versioned archive, checksums and manifest pass read-only extracted New Campaign,
+town/inn/dungeon/dialogue/resource/save and fresh-process Continue checks in Ubuntu
+22.04 and Debian 13 runtime-only images under Xvfb/Mesa software GL. Eighteen focused
+suites and hidden GPU lifecycle/depth-copy checks pass. Mesa exposed unsized depth
+attachment mismatches; target preparation now selects matching 24-bit storage for
+sampled textures and renderbuffers. Existing four-byte depth accounting and normal
+frame ownership remain unchanged. Six selected captures remain as evidence. The
+user reports working behavior and explicitly accepts LD03.
+No host desktop control, physical GPU, playback/listening or publication/hosted-run
+claim; notice gaps remain.
+[Distribution roadmap revision](linux_distribution_plan.md#wd01--windows-readiness-and-manual-build),
+2026-11-11: the user selected native GitHub-hosted Windows/MSVC builds and inserted
+**WD01 before LD04**. WD01 covers Windows platform I/O/user paths, dependency and
+prepared-asset portability, a versioned ZIP and a minimal manual hosted build/test
+workflow managed from Linux with `gh`. User review requires only the downloaded
+game on Windows. Detailed WD01 planning is next; no Windows code/workflow has been
+implemented. LD04 then consolidates Linux and Windows automation. Accepted LD01–LD03
+history remains unchanged; no automatic advancement or public publication.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,

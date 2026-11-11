@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "runtimes": [
+    {
+      "name": "ubuntu22",
+      "dockerfile": "runtime-ubuntu22.Dockerfile",
+      "baseline": true,
+      "inputs": [
+        "runtime-ubuntu22.debs.tsv",
+        "runtime-ubuntu22-lock.json"
+      ]
+    },
+    {
+      "name": "debian13",
+      "dockerfile": "runtime-debian13.Dockerfile",
+      "baseline": false
+    }
+  ]
+}

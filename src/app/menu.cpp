@@ -1,4 +1,5 @@
 #include "app/menu.hpp"
+#include "app/distribution_smoke.hpp"
 #include "app/audio_settings.hpp"
 #include "app/loading.hpp"
 #include "app/menu_model.hpp"
@@ -17,7 +18,7 @@
 #include <random>
 namespace blobber {
 int runMenus(const Options& options) try {
-    Window window(options.width, options.height, false, options.uncapped);
+    Window window(options.width, options.height, options.smoke != nullptr, options.uncapped);
     PreparationWorker worker;
     auto loading = std::make_unique<LoadingScreen>(&worker);
     const auto catalog = prepareCpu([&] {
@@ -27,7 +28,8 @@ int runMenus(const Options& options) try {
     GpuResources resources;
     AudioRuntime audio;
     audio.prepare(options.assets, options.noAudio, options.settings);
-    setBorderlessFullscreen(audio.settings.borderlessFullscreen);
+    if (!options.smoke)
+        setBorderlessFullscreen(audio.settings.borderlessFullscreen);
     Presenter presenter(resources, options.assets, &worker, options.preparedAssets);
     presenter.audio = &audio;
     loading->attach(presenter);
@@ -77,136 +79,142 @@ int runMenus(const Options& options) try {
     while (!WindowShouldClose()) {
         v.titleSeconds = GetTime() - menuStarted;
         presenter.presentMenu(drawMenu, &v);
-        auto sample = input.poll(GetFrameTime());
-        audio.update(nullptr, false, sample.ui.focused, GetFrameTime());
         auto& m = v.model;
-        v.interaction.tick(GetFrameTime(), sample.ui.focused);
-        if (!sample.ui.focused) {
-            v.pointerButtons.cancel();
-            v.creator.controls.buttons.cancel();
-            v.arena.preparation.controls.buttons.cancel();
-            v.arena.preparation.advancement.controls.buttons.cancel();
-            v.arena.preparation.route(catalog, sample.ui, {}, 0);
-            v.arena.blur();
-            v.creation.model.nameEdit.tick(0, false);
-            v.creation.model.searchEdit.tick(0, false);
-            continue;
-        }
-        if (suppress) {
-            while (GetCharPressed()) {
-            };
-            if (!IsKeyDown(KEY_ENTER) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
-                suppress = false;
-            continue;
-        }
-        if (v.creation.active) {
-            const auto textInput = pollTextInput();
-            routeCreator(v.creation.model, v.creator.controls, catalog, sample.ui, textInput, GetFrameTime());
-            if (v.creation.model.canceled) {
-                v.creation.cancel(m);
-                suppress = true;
-            } else if (v.creation.model.saveRequested) {
-                const auto result = v.creation.save(library, m);
-                if (result.committed) {
-                    v.usable = bool(result);
-                    v.message(result ? "Character saved." : libraryFeedback(result));
-                    suppress = true;
-                }
-            }
-            continue;
-        }
-        if (v.arena.preparation.active) {
-            auto& flow = v.arena.preparation;
-            flow.route(catalog, sample.ui, pollTextInput(), GetFrameTime());
-            if (flow.commitRequested) {
-                if (!flow.commit(catalog, v.arena.scenario))
-                    v.message("Arena preparation is incomplete.");
-            }
-            if (!flow.active) {
-                suppress = true;
-                v.focus = 0;
-            }
-            continue;
-        }
-        if (v.interaction.routeDrag(m, library.snapshot(), sample.ui)) {
-            v.pointerButtons.cancel();
-            while (GetCharPressed()) {
-            }
-            continue;
-        }
-        sample.ui = v.pointerInput(sample.ui);
-        const bool arenaScreen = m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios;
-        if (arenaScreen) {
-            auto& a = v.arena;
-            const auto text = pollTextInput();
-            a.nameEdit.tick(GetFrameTime(), sample.ui.focused);
-            a.seedEdit.tick(GetFrameTime(), sample.ui.focused);
-            a.searchEdit.tick(GetFrameTime(), sample.ui.focused);
-            a.nameEdit.edit(a.scenario.name, text);
-            a.seedEdit.edit(a.seedText, text);
-            if (a.searchEdit.edit(a.search, text)) {
-                a.first = 0;
-                a.filter(catalog);
-            }
-        } else if (v.interaction.searchFocused && !m.deletion) {
-            for (int ch = GetCharPressed(); ch; ch = GetCharPressed()) {
-                auto n = std::strlen(m.search.data());
-                if (ch >= 32 && ch < 127 && n < 64) {
-                    m.search[n] = char(ch);
-                    m.search[n + 1] = 0;
-                    v.interaction.edited();
-                }
-            }
-            if (IsKeyPressed(KEY_BACKSPACE)) {
-                auto n = std::strlen(m.search.data());
-                if (n) {
-                    m.search[n - 1] = 0;
-                    v.interaction.edited();
-                }
-            }
-            m.filter(library.snapshot());
-        } else
-            while (GetCharPressed()) {
-            }
-        const bool arenaEditing = arenaScreen && (v.arena.nameEdit.focused || v.arena.searchEdit.focused ||
-                                                  v.arena.seedEdit.focused);
-        if (sample.ui.has(UiKey::Tab) || sample.ui.has(UiKey::Down) ||
-            (!arenaEditing && sample.ui.has(UiKey::Right)))
-            v.focus = (v.focus + (sample.ui.shift ? std::max(1, v.count) - 1 : 1)) % std::max(1, v.count);
-        if (sample.ui.has(UiKey::Up) || (!arenaEditing && sample.ui.has(UiKey::Left)))
-            v.focus = (v.focus + std::max(1, v.count) - 1) % std::max(1, v.count);
-        if (sample.ui.has(UiKey::Tab) || sample.ui.has(UiKey::Up) || sample.ui.has(UiKey::Down) ||
-            sample.ui.has(UiKey::Left) || sample.ui.has(UiKey::Right))
-            v.interaction.focusSearch(v.focus < v.count && v.actions[v.focus] == 5);
-        if (sample.ui.has(UiKey::Click) &&
-            (!sample.ui.pointer || !menuLayout::search.contains(*sample.ui.pointer)))
-            v.interaction.focusSearch(false);
+        bool arenaScreen = m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios;
         int action = 0;
-        if (sample.ui.has(UiKey::Confirm) && !v.controlOverflow && v.focus < v.count && v.enabled[v.focus])
-            action = v.actions[v.focus];
-        if (sample.ui.has(UiKey::Click) && sample.ui.pointer)
-            for (int i = 0; i < v.count; ++i)
-                if (v.buttons[i].contains(*sample.ui.pointer)) {
-                    v.focus = i;
-                    action = v.actions[i];
-                    break;
+        if (options.smoke) {
+            action = options.smoke->menu(v, presenter);
+        } else {
+            auto sample = input.poll(GetFrameTime());
+            audio.update(nullptr, false, sample.ui.focused, GetFrameTime());
+            v.interaction.tick(GetFrameTime(), sample.ui.focused);
+            if (!sample.ui.focused) {
+                v.pointerButtons.cancel();
+                v.creator.controls.buttons.cancel();
+                v.arena.preparation.controls.buttons.cancel();
+                v.arena.preparation.advancement.controls.buttons.cancel();
+                v.arena.preparation.route(catalog, sample.ui, {}, 0);
+                v.arena.blur();
+                v.creation.model.nameEdit.tick(0, false);
+                v.creation.model.searchEdit.tick(0, false);
+                continue;
+            }
+            if (suppress) {
+                while (GetCharPressed()) {
+                };
+                if (!IsKeyDown(KEY_ENTER) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+                    suppress = false;
+                continue;
+            }
+            if (v.creation.active) {
+                const auto textInput = pollTextInput();
+                routeCreator(v.creation.model, v.creator.controls, catalog, sample.ui, textInput, GetFrameTime());
+                if (v.creation.model.canceled) {
+                    v.creation.cancel(m);
+                    suppress = true;
+                } else if (v.creation.model.saveRequested) {
+                    const auto result = v.creation.save(library, m);
+                    if (result.committed) {
+                        v.usable = bool(result);
+                        v.message(result ? "Character saved." : libraryFeedback(result));
+                        suppress = true;
+                    }
                 }
-        if (IsKeyPressed(KEY_ESCAPE))
-            action = v.arena.pendingLoad >= 0            ? 4501
-                     : m.deletion                        ? 40
-                     : m.screen == MenuScreen::Scenarios ? 4010
-                                                         : 4;
-        if (!arenaScreen && !m.deletion && sample.ui.scroll)
-            action = m.screen == MenuScreen::Detail ? (sample.ui.scroll > 0 ? 33 : 34)
-                                                    : (sample.ui.scroll > 0 ? 31 : 32);
-        if (!arenaScreen && !m.deletion &&
-            (sample.ui.has(UiKey::PreviousPage) || sample.ui.has(UiKey::NextPage))) {
-            const bool previous = sample.ui.has(UiKey::PreviousPage);
-            action = m.screen == MenuScreen::Detail ? (previous ? 33 : 34) : (previous ? 31 : 32);
+                continue;
+            }
+            if (v.arena.preparation.active) {
+                auto& flow = v.arena.preparation;
+                flow.route(catalog, sample.ui, pollTextInput(), GetFrameTime());
+                if (flow.commitRequested) {
+                    if (!flow.commit(catalog, v.arena.scenario))
+                        v.message("Arena preparation is incomplete.");
+                }
+                if (!flow.active) {
+                    suppress = true;
+                    v.focus = 0;
+                }
+                continue;
+            }
+            if (v.interaction.routeDrag(m, library.snapshot(), sample.ui)) {
+                v.pointerButtons.cancel();
+                while (GetCharPressed()) {
+                }
+                continue;
+            }
+            sample.ui = v.pointerInput(sample.ui);
+            arenaScreen = m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios;
+            if (arenaScreen) {
+                auto& a = v.arena;
+                const auto text = pollTextInput();
+                a.nameEdit.tick(GetFrameTime(), sample.ui.focused);
+                a.seedEdit.tick(GetFrameTime(), sample.ui.focused);
+                a.searchEdit.tick(GetFrameTime(), sample.ui.focused);
+                a.nameEdit.edit(a.scenario.name, text);
+                a.seedEdit.edit(a.seedText, text);
+                if (a.searchEdit.edit(a.search, text)) {
+                    a.first = 0;
+                    a.filter(catalog);
+                }
+            } else if (v.interaction.searchFocused && !m.deletion) {
+                for (int ch = GetCharPressed(); ch; ch = GetCharPressed()) {
+                    auto n = std::strlen(m.search.data());
+                    if (ch >= 32 && ch < 127 && n < 64) {
+                        m.search[n] = char(ch);
+                        m.search[n + 1] = 0;
+                        v.interaction.edited();
+                    }
+                }
+                if (IsKeyPressed(KEY_BACKSPACE)) {
+                    auto n = std::strlen(m.search.data());
+                    if (n) {
+                        m.search[n - 1] = 0;
+                        v.interaction.edited();
+                    }
+                }
+                m.filter(library.snapshot());
+            } else
+                while (GetCharPressed()) {
+                }
+            const bool arenaEditing = arenaScreen && (v.arena.nameEdit.focused || v.arena.searchEdit.focused ||
+                                                      v.arena.seedEdit.focused);
+            if (sample.ui.has(UiKey::Tab) || sample.ui.has(UiKey::Down) ||
+                (!arenaEditing && sample.ui.has(UiKey::Right)))
+                v.focus = (v.focus + (sample.ui.shift ? std::max(1, v.count) - 1 : 1)) % std::max(1, v.count);
+            if (sample.ui.has(UiKey::Up) || (!arenaEditing && sample.ui.has(UiKey::Left)))
+                v.focus = (v.focus + std::max(1, v.count) - 1) % std::max(1, v.count);
+            if (sample.ui.has(UiKey::Tab) || sample.ui.has(UiKey::Up) || sample.ui.has(UiKey::Down) ||
+                sample.ui.has(UiKey::Left) || sample.ui.has(UiKey::Right))
+                v.interaction.focusSearch(v.focus < v.count && v.actions[v.focus] == 5);
+            if (sample.ui.has(UiKey::Click) &&
+                (!sample.ui.pointer || !menuLayout::search.contains(*sample.ui.pointer)))
+                v.interaction.focusSearch(false);
+            action = 0;
+            if (sample.ui.has(UiKey::Confirm) && !v.controlOverflow && v.focus < v.count && v.enabled[v.focus])
+                action = v.actions[v.focus];
+            if (sample.ui.has(UiKey::Click) && sample.ui.pointer)
+                for (int i = 0; i < v.count; ++i)
+                    if (v.buttons[i].contains(*sample.ui.pointer)) {
+                        v.focus = i;
+                        action = v.actions[i];
+                        break;
+                    }
+            if (IsKeyPressed(KEY_ESCAPE))
+                action = v.arena.pendingLoad >= 0            ? 4501
+                         : m.deletion                        ? 40
+                         : m.screen == MenuScreen::Scenarios ? 4010
+                                                             : 4;
+            if (!arenaScreen && !m.deletion && sample.ui.scroll)
+                action = m.screen == MenuScreen::Detail ? (sample.ui.scroll > 0 ? 33 : 34)
+                                                        : (sample.ui.scroll > 0 ? 31 : 32);
+            if (!arenaScreen && !m.deletion &&
+                (sample.ui.has(UiKey::PreviousPage) || sample.ui.has(UiKey::NextPage))) {
+                const bool previous = sample.ui.has(UiKey::PreviousPage);
+                action = m.screen == MenuScreen::Detail ? (previous ? 33 : 34) : (previous ? 31 : 32);
+            }
+            if (arenaScreen && v.arena.pendingLoad < 0 && sample.ui.scroll)
+                action = m.screen == MenuScreen::Scenarios ? (sample.ui.scroll > 0 ? 4014 : 4015)
+                                                           : (sample.ui.scroll > 0 ? 4007 : 4008);
         }
-        if (arenaScreen && v.arena.pendingLoad < 0 && sample.ui.scroll)
-            action = m.screen == MenuScreen::Scenarios ? (sample.ui.scroll > 0 ? 4014 : 4015)
-                                                       : (sample.ui.scroll > 0 ? 4007 : 4008);
         if (!action)
             continue;
         audio.play(action == 4 ? "ui.cancel" : "ui.confirm", 0, 0, false, true);

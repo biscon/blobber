@@ -30,6 +30,22 @@ int main() {
         check(overrideOptions.assets == assetDirectory &&
                   overrideOptions.preparedAssets == std::filesystem::path(assetDirectory) / "prepared",
               "Explicit asset root selects a complete publication in Debug and packaged launches");
+        char smoke[] = "--distribution-smoke", create[] = "create", output[] = "--smoke-output";
+        char smokePath[] = "/isolated/smoke", unknownPhase[] = "other";
+        char* smokeMissing[]{program, smoke, create};
+        char* smokeOutputOnly[]{program, output, smokePath};
+        char* smokeBad[]{program, smoke, unknownPhase, output, smokePath};
+        char* smokeAssets[]{program, smoke, create, output, smokePath, assets, assetDirectory};
+        rejects([&] { parseOptions(3, smokeMissing); }, "Smoke output is required");
+        rejects([&] { parseOptions(3, smokeOutputOnly); }, "Smoke output requires a phase");
+        rejects([&] { parseOptions(5, smokeBad); }, "Unknown smoke phase rejects");
+        rejects([&] { parseOptions(7, smokeAssets); }, "Smoke cannot hide missing default assets");
+#ifndef BLOBBER_SOURCE_ASSETS
+        char* smokeValid[]{program, smoke, create, output, smokePath};
+        const auto scripted = parseOptions(5, smokeValid);
+        check(scripted.smokePhase == SmokePhase::Create && scripted.seed == 5 && scripted.noAudio &&
+              scripted.smoke == nullptr, "Smoke parsing preserves ownership and fixes deterministic mode");
+#endif
         check(!parseOptions(1, normal).development, "normal launch keeps development disabled");
         char* enabled[]{program, development};
         check(parseOptions(2, enabled).development, "development flag requires no argument");

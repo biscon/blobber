@@ -1,18 +1,26 @@
 #include "app/application.hpp"
+#include "app/distribution_smoke.hpp"
 #include "app/city_review.hpp"
 #include "app/menu.hpp"
 #include "app/options.hpp"
 #include <iostream>
 namespace blobber {
 int run(int argc, char** argv) {
-    const auto options = parseOptions(argc, argv);
+    auto options = parseOptions(argc, argv);
     if (options.help) {
         std::cout
             << "blobber [--size WIDTH HEIGHT] [--assets DIRECTORY] [--campaign-save FILE] "
                "[--no-audio] [--settings FILE] [--seed UINT32] [--development] [--supersampling on|off] "
                "[--ambient-occlusion on|off] [--dialogue-dir DIRECTORY] [--uncapped] "
-               "[--sanctuary-city-review]\n";
+               "[--sanctuary-city-review] [--distribution-smoke create|continue --smoke-output DIRECTORY]\n";
         return 0;
+    }
+    if (options.smokePhase != SmokePhase::None) {
+        DistributionSmoke smoke(options);
+        options.smoke = &smoke;
+        const int result = runMenus(options);
+        smoke.complete();
+        return result;
     }
     return options.sanctuaryCityReview ? runCityReview(options) : runMenus(options);
 }

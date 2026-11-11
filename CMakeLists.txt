@@ -171,7 +171,8 @@ if(BLOBBER_BUILD_GRAPHICS)
     target_sources(blobber_platform PRIVATE src/ui/map_screen.cpp src/ui/menu_title.cpp)
     add_library(blobber_application src/app/city_review.cpp src/app/audio_settings.cpp src/app/campaign_saves.cpp src/app/arena_model.cpp src/app/arena_preparation.cpp src/app/arena_setup.cpp
         src/ui/arena_screen.cpp src/app/creator_flow.cpp src/app/session_launch.cpp src/ui/menu_screen.cpp
-        src/app/menu.cpp src/app/menu_model.cpp src/app/application.cpp src/app/options.cpp src/app/gameplay.cpp)
+        src/app/menu.cpp src/app/menu_model.cpp src/app/application.cpp src/app/options.cpp src/app/gameplay.cpp
+        src/app/distribution_smoke.cpp)
     add_executable(blobber src/main.cpp)
     target_link_libraries(blobber_application PUBLIC blobber_platform blobber_assets_io blobber_rules_io nlohmann_json::nlohmann_json)
     target_link_libraries(blobber PRIVATE blobber_application)
@@ -868,4 +869,18 @@ if(BUILD_TESTING AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_test(NAME linux_distribution_tools COMMAND ${Python3_EXECUTABLE}
         ${CMAKE_CURRENT_SOURCE_DIR}/tests/linux_distribution_tests.py)
     set_tests_properties(linux_distribution_tools PROPERTIES TIMEOUT 30 LABELS "tooling")
+endif()
+
+include(cmake/LinuxDistribution.cmake)
+if(BUILD_TESTING)
+    add_test(NAME distribution_archive COMMAND ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests/distribution_archive_tests.py)
+    set_tests_properties(distribution_archive PROPERTIES TIMEOUT 30 LABELS "tooling")
+    if(BLOBBER_BUILD_GRAPHICS)
+        add_executable(blobber_distribution_smoke_tests tests/distribution_smoke_tests.cpp)
+        target_include_directories(blobber_distribution_smoke_tests PRIVATE tests)
+        target_link_libraries(blobber_distribution_smoke_tests PRIVATE blobber_application blobber_automation_io)
+        blobber_warnings(blobber_distribution_smoke_tests)
+        add_test(NAME distribution_smoke COMMAND blobber_distribution_smoke_tests)
+    endif()
 endif()

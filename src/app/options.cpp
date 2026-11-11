@@ -28,6 +28,13 @@ Options parseOptions(int argc, char** argv) {
             result.dialogueDir = std::filesystem::absolute(argv[++i]);
         else if (arg == "--sanctuary-city-review")
             result.sanctuaryCityReview = true;
+        else if (arg == "--distribution-smoke" && i + 1 < argc) {
+            const std::string phase = argv[++i];
+            if (phase != "create" && phase != "continue")
+                throw std::invalid_argument("Distribution smoke expects create or continue");
+            result.smokePhase = phase == "create" ? SmokePhase::Create : SmokePhase::Continue;
+        } else if (arg == "--smoke-output" && i + 1 < argc)
+            result.smokeOutput = std::filesystem::absolute(argv[++i]).lexically_normal();
         else if (arg == "--no-audio")
             result.noAudio = true;
         else if (arg == "--uncapped")
@@ -63,6 +70,21 @@ Options parseOptions(int argc, char** argv) {
         else
             throw std::runtime_error("Unknown or incomplete argument: " + arg);
     }
+    if (result.smokePhase != SmokePhase::None) {
+        if (result.smokeOutput.empty() || !result.campaignSave.empty() || !result.settings.empty() ||
+            !result.dialogueDir.empty() || result.sanctuaryCityReview || result.development || result.seed ||
+            result.width != 1920 || result.height != 1080)
+            throw std::invalid_argument("Distribution smoke requires default paths, seed and presentation");
+        for (int i = 1; i < argc; ++i)
+            if (std::string(argv[i]) == "--assets")
+                throw std::invalid_argument("Distribution smoke requires default asset discovery");
+#ifdef BLOBBER_SOURCE_ASSETS
+        throw std::invalid_argument("Distribution smoke requires packaged Release asset paths");
+#endif
+        result.noAudio = true;
+        result.seed = 5;
+    } else if (!result.smokeOutput.empty())
+        throw std::invalid_argument("--smoke-output requires --distribution-smoke");
     if (result.sanctuaryCityReview && !result.campaignSave.empty())
         throw std::invalid_argument("City review does not use campaign saves");
     if (result.width < 320 || result.height < 240)

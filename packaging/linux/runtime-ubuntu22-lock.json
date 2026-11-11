@@ -1,0 +1,14 @@
+{
+  "base_image": "ubuntu:22.04@sha256:8a2321a92b438238f93b4346fff61bc4259c99fdd4d9b52ee86f153fee0c344f",
+  "download_bytes": 60536282,
+  "packages": 93,
+  "reason": "Ubuntu snapshot service returned 502/503. Exact packages resolved using signed Ubuntu jammy indexes; apt verified downloads. Runtime reproduction uses only these SHA-256-pinned URLs, not rolling resolution.",
+  "resolved": "2026-11-11",
+  "signed_indexes": {
+    "archive.ubuntu.com_ubuntu_dists_jammy-backports_InRelease": "2683eb121d3edc9002f411fa8b9de42e3c473e338973819fe7cdc527dea3082a",
+    "archive.ubuntu.com_ubuntu_dists_jammy-updates_InRelease": "9e83806b61ddf547be2f43e683f9cedfbbe3d7204e20bd1487646a3664118af3",
+    "archive.ubuntu.com_ubuntu_dists_jammy_InRelease": "c14060cd8c6d625874dfcb9523a35a395bf4865c28b6b6a82569ef326fe92dc6",
+    "security.ubuntu.com_ubuntu_dists_jammy-security_InRelease": "3d8555a9988fed807f911718d8dd9860e83156e17b1f5cabf9b7e2ff27d76fad"
+  },
+  "version": 1
+}

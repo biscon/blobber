@@ -64,7 +64,8 @@ For an existing build tree, use its configured CMake/Ninja pair. The payload is
 `cmake-build-release/dist-stage/Release/`, with its file/size inventory beside it.
 This is native local content staging. For the separate controlled Ubuntu 22.04 /
 glibc 2.35 build and ELF audit, use the [LD02 build entry point](packaging/linux/README.md).
-Downloadable archives and relocated gameplay verification remain later slices. See the [LD01 contract and verification](docs/linux_distribution_ld01.md)
+LD03 adds baseline archives and isolated relocated gameplay verification below;
+user review remains separate from mechanical checks. See the [LD01 contract and verification](docs/linux_distribution_ld01.md)
 for ownership rules, notice gaps and the next-slice handoff.
 
 ## Development checks
@@ -213,3 +214,25 @@ Browse retained images in the [selected evidence index](docs/screenshots/README.
 Selected source art, prompts and animation sheets remain versioned. The source
 texture normalization and NPC sheet tools remain explicit authoring tools,
 independent of runtime rendering.
+
+### Linux distribution archive (LD03)
+
+The controlled build produces a versioned `.tar.gz`, SHA-256 checksum, file manifest
+and build identity. It requires Docker; native CLion build trees are not used.
+
+```sh
+python3 tools/agent_artifacts.py create
+python3 tools/linux_release.py dist --run-dir output/agent-runs/RUN_ID
+# For an explicitly labelled uncommitted development package, add --allow-dirty.
+python3 tools/linux_release.py verify-package --run-dir output/agent-runs/FRESH_RUN_ID --package-dir PRINTED_BUNDLE_DIRECTORY
+```
+
+Verification runs the extracted executable with default resource/user-data discovery
+on read-only mounts in independent Ubuntu 22.04 and Debian 13 runtime images, using
+Xvfb/Mesa software GL. It checks New Campaign, town/inn/dungeon, dialogue/audio file
+resolution, settings/save writes and fresh-process Continue. No host desktop input,
+GPU or audio device is accessed. Hardware graphics and listening remain user review.
+The package's README explains extraction, running and user-data paths. See the
+[LD03 design/handoff](docs/linux_distribution_ld03.md) for evidence, limits and the
+review recipe. Retain the final `build-linux-baseline/dist/` bundle deliberately;
+preview/apply agent-run cleanup after selecting evidence. No publication is performed.

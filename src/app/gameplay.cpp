@@ -1,4 +1,5 @@
 #include "app/gameplay.hpp"
+#include "app/distribution_smoke.hpp"
 #include "app/audio_settings.hpp"
 #include "app/campaign_saves.hpp"
 #include "app/loading.hpp"
@@ -177,15 +178,19 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             return PlayOutcome::Quit;
         loading.reset();
         presenter.fade(0);
+        if (options.smoke)
+            initial.frames.present(presenter, initial.session, initial.map, false, true, &initial.commands.snapshot());
         for (;;) {
             auto& view = *current;
             if (WindowShouldClose() && (!campaign || saveFlow.closeRequested(*campaign, view.commands)))
                 return PlayOutcome::Quit;
-            const float dt = std::min(GetFrameTime(), 0.1f);
-            auto sample = input.poll(dt);
+            if (options.smoke && options.smoke->gameplay(*campaign, view.commands, presenter))
+                return PlayOutcome::MainMenu;
+            const float dt = options.smoke ? 0.f : std::min(GetFrameTime(), 0.1f);
+            auto sample = options.smoke ? options.smoke->sample() : input.poll(dt);
             const bool welcomeWasOpen = view.commands.snapshot().welcomeOpen;
-            sample.ui.text = pollTextInput();
-            if (!inputArmed) {
+            if (!options.smoke) sample.ui.text = pollTextInput();
+            if (!inputArmed && !options.smoke) {
                 inputArmed = !IsKeyDown(KEY_SPACE) && !IsKeyDown(KEY_T) && !IsKeyDown(KEY_ENTER) &&
                              !IsKeyDown(KEY_F) && !IsKeyDown(KEY_W) && !IsKeyDown(KEY_S) &&
                              !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !IsKeyDown(KEY_Q) &&
@@ -323,8 +328,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 if (closing) {
                     if (saveFlow.closeRequested(*campaign, view.commands))
                         return PlayOutcome::Quit;
-                } else if (leave)
+                } else if (leave) {
+                    if (options.smoke) options.smoke->saved(*campaign);
                     return PlayOutcome::MainMenu;
+                }
             }
             if (campaign && view.commands.snapshot().travelRequested) {
                 const auto request = *view.commands.snapshot().travelRequested;

@@ -103,6 +103,32 @@ TargetHandle GpuResources::createTarget(int w, int h, bool sampleDepth) {
         }
         rlDisableFramebuffer();
     }
+    // Unsized GL_DEPTH_COMPONENT may select different actual formats for textures
+    // and renderbuffers. Depth blits require identical formats (Mesa enforces this).
+    // GL_DEPTH_COMPONENT24 is core in OpenGL 3.3; storage remains <= four bytes/pixel.
+    if (sampleDepth) {
+        using Allocate = void (*)(unsigned, int, int, int, int, int, unsigned, unsigned, const void*);
+        const auto allocate = reinterpret_cast<Allocate>(rlGetProcAddress("glTexImage2D"));
+        if (!allocate) {
+            UnloadRenderTexture(t);
+            throw std::runtime_error("Sized depth texture allocation unavailable");
+        }
+        rlEnableTexture(t.depth.id);
+        allocate(0x0DE1, 0, 0x81A6, w, h, 0, 0x1902, 0x1405, nullptr);
+        rlDisableTexture();
+    } else {
+        using Bind = void (*)(unsigned, unsigned);
+        using Allocate = void (*)(unsigned, unsigned, int, int);
+        const auto bind = reinterpret_cast<Bind>(rlGetProcAddress("glBindRenderbuffer"));
+        const auto allocate = reinterpret_cast<Allocate>(rlGetProcAddress("glRenderbufferStorage"));
+        if (!bind || !allocate) {
+            UnloadRenderTexture(t);
+            throw std::runtime_error("Sized depth renderbuffer allocation unavailable");
+        }
+        bind(0x8D41, t.depth.id); // GL_RENDERBUFFER
+        allocate(0x8D41, 0x81A6, w, h);
+        bind(0x8D41, 0);
+    }
     if (!IsRenderTextureValid(t) || !glOkay()) {
         UnloadRenderTexture(t);
         throw std::runtime_error("Cannot create render target");

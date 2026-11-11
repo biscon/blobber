@@ -1,11 +1,15 @@
-# Linux distribution: proposed delivery roadmap
+# Linux and Windows distribution: delivery roadmap
 
 Created: 2026-11-11.
 Status: **LD01 and LD02 accepted and closed by the user, 2026-11-11.
-LD03–LD04 remain planned.**
+LD03 accepted and closed by the user, 2026-11-11.
+WD01 Windows preparation is inserted before LD04; both remain planned.**
 
-Deliver a downloadable Linux x86-64 game archive containing the executable and
-only its required runtime content. The user will run a separate planning step and
+Deliver downloadable desktop packages containing the executable and only required
+runtime content: the accepted Linux x86-64 `.tar.gz`, followed by a Windows x86-64
+ZIP through WD01. This document keeps its existing filename to preserve links.
+The user selected native GitHub-hosted Windows builds on 2026-11-11; development
+and orchestration stay on Linux, with manual Windows play review of the artifact. The user will run a separate planning step and
 implementation step for each slice in fresh contexts, following the existing
 [campaign roadmap](procedural_campaign_plan.md) workflow. Do not implement or
 advance through slices automatically. Runtime behavior, rendering and gameplay
@@ -15,12 +19,21 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | None — LD02 accepted and closed |
-| Next eligible slice | LD03 — separate detailed planning; not started |
-| Implemented distribution support | Curated staging plus pinned Ubuntu 22.04 baseline build and passing ELF/dependency audit; no archive/CI |
-| Awaiting user review | None for LD01/LD02; [accepted LD02 handoff](linux_distribution_ld02.md) retains evidence and limitations |
+| Active slice | None — LD03 accepted and closed |
+| Next eligible slice | WD01 — Windows readiness and manual build; separate detailed planning |
+| Implemented distribution support | Curated baseline stage/audit, versioned archive and passing Ubuntu/Debian relocated smoke; no CI |
+| Awaiting user review | None for LD01–LD03; [accepted LD03 handoff](linux_distribution_ld03.md) retains evidence and limits |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Separate LD03 planning when requested; do not advance automatically |
+| Next action | Plan WD01 for review, then implement when instructed; LD04 follows accepted WD01 |
+
+**Approved roadmap revision, 2026-11-11:** insert WD01 before LD04 and expand LD04
+to automate both supported packages. WD01 introduces the minimum manual Windows
+build workflow; LD04 consolidates release automation. Preserve accepted LD01–LD03
+history and identifiers. This instruction updates the roadmap, not authorization
+to implement WD01, push commits/workflows, dispatch runs or publish anything now.
+No local Windows checkout, development tools or agent installation is required
+for WD01: use the hosted Windows runner for builds/tests and give the user a ZIP
+for dual-boot play review. Local Linux-to-Windows cross-compilation is deferred.
 
 Update this checkpoint, the tracker and the active slice's handoff together.
 Implementation completion and user acceptance are separate states. Only the user
@@ -32,8 +45,10 @@ The first supported download is a versioned Linux x86-64 .tar.gz: extract it and
 run the game without a compiler, the source checkout or administrator installation.
 Declare a concrete compatibility baseline and verify it rather than claiming
 support for every Linux distribution. Initial direction is glibc-based desktop
-Linux, OpenGL 3.3 and X11/XWayland. Native Wayland, Linux ARM, Alpine/musl, NixOS,
-Windows, macOS, browser builds and store integration are outside these four slices.
+Linux, OpenGL 3.3 and X11/XWayland. WD01 adds native desktop Windows x86-64 with
+OpenGL 3.3; declare its minimum client Windows version in the detailed plan rather
+than deriving it from the runner OS. Native Wayland, Linux ARM, Alpine/musl, NixOS,
+Windows ARM, macOS, browser builds and store integration remain outside this roadmap.
 AppImage may be a later wrapper around the same staged package; it is not required
 to complete this roadmap.
 
@@ -98,7 +113,9 @@ outputs remain owned by the existing bake pipeline.
 
 CMake orchestrates preparation and the proposed dist-stage/dist targets. A small
 cohesive packaging helper may resolve/validate inventory, stage files, inspect ELF
-requirements and write archives/manifests. Use existing install/CPack facilities
+requirements and write archives/manifests. Generalize the content/staging contract
+only where the Windows payload needs it; retain separate ELF and PE platform audits.
+Use existing install/CPack facilities
 if they simplify this; no generic packaging framework is required. Packaging work
 runs outside frame processing and introduces no steady-state work or allocations.
 
@@ -134,8 +151,9 @@ source revision, toolchain and content identity so results can be reproduced.
 | --- | --- | --- | --- |
 | LD01 | Runtime inventory and clean dist-stage target | Existing game and asset pipeline | Accepted and closed — 2026-11-11 |
 | LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Accepted and closed — 2026-11-11 |
-| LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Planned |
-| LD04 | GitHub-hosted automation and compatibility evidence | Reviewed LD03 package/verification commands | Planned |
+| LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Accepted and closed — 2026-11-11 |
+| WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | Planned — next, separate detailed planning |
+| LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | Planned — after WD01 acceptance |
 
 ### LD01 — Runtime content and clean staging
 
@@ -184,7 +202,7 @@ by the user, 2026-11-11.** The user reports it is working fine. One actual Ubunt
 22.04 Release build, 391-file stage and ELF/dependency
 audit pass. Maximum GLIBC requirement 2.35; static raylib/yaml-cpp/compiler runtimes.
 Twelve focused suites and seventeen checker cases pass. Exact evidence, corrections,
-notices and limits remain in the accepted handoff. LD03 planning has not started.
+notices and limits remain in the accepted handoff. LD03 is tracked below.
 
 Choose and pin a Linux build environment compatible with the proposed baseline.
 A digest-pinned container recipe can run locally and inside a GitHub-hosted VM;
@@ -213,6 +231,16 @@ not run is not evidence of a successful baseline build. Hand off exact local and
 future CI entry points to LD03/LD04.
 
 ### LD03 — Downloadable archive and relocation verification
+
+[Approved detailed design/handoff](linux_distribution_ld03.md), 2026-11-11;
+implementation complete and **accepted and closed by the user, 2026-11-11**.
+The user reports that all seems to work and explicitly accepts the slice.
+The 566,499,003-byte archive contains 394 files and passes exact extracted-package
+New Campaign/save/fresh-process Continue on Ubuntu 22.04 and Debian 13 with software
+OpenGL. Eighteen focused suites and the hidden GPU lifecycle/depth-copy regression
+pass. Selected captures, checksum, runtime coverage, notice gaps, failures/corrections
+and user review recipe are in the handoff. No physical GPU/listening or hosted run
+is claimed. User selected project version plus revision and a shipped opt-in smoke mode.
 
 Add dist, consuming the same manifest/staging and baseline build. Produce a
 versioned Linux x86-64 .tar.gz with one top-level game directory, preserved execute
@@ -249,12 +277,98 @@ results, explicit distribution/graphics/audio coverage and a user review recipe.
 Keep the selected final package as an intentional deliverable in the documented
 build distribution location; clean disposable intermediate copies and extracts.
 
+### WD01 — Windows readiness and manual build
+
+**Roadmap scope approved 2026-11-11; detailed design and implementation not started.**
+The user selected a native MSVC build on a standard GitHub-hosted Windows x64 runner.
+All source work, workflow management and artifact retrieval can happen from Linux.
+The user tests the resulting ZIP after dual boot; no local Windows Git/compiler/
+CMake/agent setup is a prerequisite. Do not add a cross-compiler, xwin or Wine as a
+required build path. Keep WD01 separate from the accepted Linux slices.
+
+**Port and build contract.** Read the current persistence/application/build code and
+write the detailed design before implementation. Add small platform I/O boundaries
+for campaign, character-library and scenario stores: locking, regular-file checks,
+secure identity entropy, checked temporary writes, flush/replacement and backup
+behavior must preserve existing failure/ownership semantics. Support native Windows
+user-data/config paths and Unicode filesystem paths while preserving Linux defaults.
+Keep save schemas, campaign/gameplay behavior and content identities unchanged;
+verify cross-platform format compatibility rather than claiming it from compilation.
+Port affected owned test fixtures and remove Linux assumptions from their harnesses.
+
+Use C++17, CMake/Ninja and native MSVC in a dedicated Windows Release build. Select
+an explicit hosted runner label, supported compiler/SDK and runtime-linkage policy;
+record actual versions and pin/validate tool/dependency inputs in proportion to
+reproducibility needs. A runner label alone is not an immutable toolchain pin.
+Rebuild the pinned raylib/yaml-cpp sources for Windows, retain header-only JSON and
+reconcile required notices. Prefer a consistently static third-party/compiler-runtime
+configuration; audit the PE executable and any shipped DLLs for architecture,
+imports and undeclared runtime requirements. Windows OS/graphics libraries remain
+host-provided. Native Linux libraries and ELF audit results are not Windows inputs.
+
+**Assets and package.** Reuse the curated runtime inventory with platform-specific
+executable naming. Provide a validated prepared-asset input path so the same source
+revision's compatible Linux-prepared publication can be consumed by Windows without
+unnecessary repeat bakes. Prove loader/format/content identity compatibility first;
+keep native preparation available and document any justified remaining bake. Build
+and run preparation tools on their host OS; never accidentally execute target tools
+on a different host. The detailed plan must reconcile this with current CMake asset
+dependencies. Emit a version/revision-labelled ZIP with one game directory,
+`blobber.exe`, required runtime files/notices, concise run instructions, inventory,
+build/content identity and SHA-256 checksum. Preserve dirty-build labelling and
+transactional owned-output/failure rules. Tests/bakers/review tools stay outside
+player payloads; never ship the original world artwork beside its packed publication.
+
+**Small manual hosted workflow.** Add only the bootstrap workflow needed to build,
+test and retrieve a Windows review artifact (`workflow_dispatch`; no every-push,
+tag publication or full release matrix yet). Build the exact selected source
+revision, run focused CPU/content/path/persistence tests and verify the extracted
+ZIP with default asset discovery, unrelated CWD and isolated writable user data.
+Preserve a read-only install and exercise New Campaign/save/fresh-process Continue
+where the required graphics context is available. Check/provision a suitable
+Windows software OpenGL provider explicitly; report an unavailable graphics smoke
+as unverified and retain the user's native play-review requirement. Successful
+compilation or `--help` alone does not establish playable Windows packaging.
+
+Reuse LD03's bounded in-process smoke route with Windows isolation/path adaptation;
+no desktop input injection or focus/window control. Keep one substantial job at a
+time, at most two build workers and one test process, timeouts and bounded caches.
+Upload only the ZIP/checksum/compact evidence with short explicit retention. Choose
+asset transfer/cache layout deliberately for the existing large publication; avoid
+retaining duplicate uncompressed packages. No paid runners, signing service,
+installer/store integration or public release publication is required.
+
+Manage the authorized implementation's branch/workflow/run operations from Linux
+with `gh` and Git, following the access notes below. Check bootstrap requirements:
+manual dispatch requires workflow registration on the default branch; `--ref` alone
+does not register a new workflow. Define the concrete bootstrap branch/PR/default-
+branch steps in the detailed plan. Future slice authorization covers its agreed
+setup/run operations; do not add repetitive approval gates. Public release/tag scope
+remains separately explicit. This roadmap-edit turn performs no remote mutations.
+
+**Focused verification:** small owned platform-I/O fixtures for normal/failed writes,
+replacement/backup/lock conflicts, resource cleanup and Unicode/default user paths;
+relevant existing persistence/content/options checks on the affected platforms.
+Package layout/hash/import checks precede an actual native Windows hosted run and
+inspection of its downloaded ZIP. Repeat passing Linux checks only for changed
+callers; no routine full matrix or production rebakes to increase passing counts.
+
+**Exit evidence:** native Windows run/job link and exact tool identities; passing
+focused results; a downloaded ZIP/checksum, size/inventory/import evidence and any
+extracted-smoke limits; a short dual-boot review recipe for graphics, audio, save
+and Continue. The user reviews the game artifact, not a local Windows build setup.
+Stop at Ready for review. Only user acceptance closes WD01 and makes LD04 eligible.
+
 ### LD04 — Hosted automation and compatibility evidence
 
-Use standard GitHub-hosted Linux runners for the confirmed public repository;
-no self-hosted machine, separately rented VM or cloud account is required.
-Run LD02's controlled environment and LD03's packaging/verification commands
-unchanged in CI. An explicit runner OS label still receives image updates; it is
+Use standard GitHub-hosted Linux and Windows runners for the confirmed public
+repository; no self-hosted machine, separately rented VM or cloud account is
+required. This slice follows accepted WD01 and consolidates its manual Windows
+workflow with the Linux release workflow. Run LD02's controlled environment and
+LD03's packaging/verification commands unchanged in CI; invoke WD01's native
+Windows build/package/verification commands for the second platform. Reuse the
+validated compatible prepared publication, rather than independently rebaking it
+for each platform without a concrete reason. An explicit runner OS label still receives image updates; it is
 not a substitute for the pinned build environment. Start with manual dispatch and
 deliberate version-tag triggers rather than baking/uploading full assets on every
 unrelated change. Check how all required assets reach a clean checkout, including
@@ -267,8 +381,13 @@ distribution. Validate at least the declared baseline and a newer distinct Linux
 distribution userspace; a second container shares its host kernel and does not
 prove another desktop/GPU stack. Document the exact coverage and limits.
 
-Upload the archive, checksum and compact verification metadata as workflow
-artifacts with explicit short retention; avoid duplicate uncompressed stages and
+Require successful build/package and appropriate tests for both platforms; keep
+Linux userspace compatibility and Windows native execution evidence distinct.
+Do not imply software GL proves physical GPU or audio playback. A matrix or explicit
+job dependencies must serialize substantial work across platforms.
+
+Upload the Linux archive, Windows ZIP, checksums and compact verification metadata
+as workflow artifacts with explicit short retention; avoid duplicate uncompressed stages and
 large logs. Define bounded caches without assuming production bakes are free.
 Retain third-party notices and distinguish GitHub artifact downloads from a
 public GitHub Release download. Document the release attachment procedure; any
@@ -286,10 +405,41 @@ commands; when authorized/access is available, observe one successful hosted bui
 and inspect its downloaded artifact. Local success cannot be reported as an actual
 GitHub Actions run. Do not silently enable paid services to clear a blocker.
 
-**Exit evidence:** checked-in workflow and user-facing release instructions,
-baseline/newer-userspace results, actual hosted artifact/run link when executed,
+**Exit evidence:** checked-in combined workflow and user-facing release instructions,
+Linux baseline/newer-userspace results and native Windows results, downloaded
+artifacts/checksums and actual hosted run links when executed,
 and explicit remaining hardware or interactive checks. A workflow awaiting its
 first hosted run must be recorded as such before user acceptance.
+
+## GitHub CLI setup and access
+
+The user explicitly selected the authenticated local `gh` client for GitHub setup,
+workflow dispatch, run/log inspection and artifact download. Use it in the approved
+WD01/LD04 implementation scope; do not require the user to operate the web UI for
+routine setup. Keep credentials in the CLI credential store and job authentication
+in least-privilege GitHub-provided tokens; do not put personal tokens in the repo,
+logs or workflow inputs. Public Release publication, tag pushes, paid services and
+unrelated repository settings remain outside implicit workflow setup.
+
+Read-only environment check, 2026-11-11: `gh` 2.102.1 is installed and authenticated
+as `biscon`; `biscon/blobber` is public, default branch `main`, the account has
+admin/push access, and Actions is enabled. The current OAuth token includes `repo`
+but does not list `workflow`; it is not a read-only repository token. Token-based
+workflow-file updates may need that additional scope. The Git remote currently
+uses SSH, whose authentication is separate. Recheck the active account/access when
+implementing; these observations are not a permanent permission guarantee.
+
+If token-based workflow updates require reauthorization, the user can run:
+
+```sh
+gh auth refresh --hostname github.com --scopes workflow
+```
+
+Do not run `gh auth token` or print credential-store values. Reauthorization is not
+needed for this documentation change and was not started. Typical future operations
+include `gh workflow run`, `gh run watch`, `gh run view --log-failed` and
+`gh run download RUN_ID --dir OWNED_RUN_DIRECTORY`; identify the exact run/artifact,
+record its revision and clean disposable downloads through the existing workflow.
 
 ## Fresh-context execution and handoff
 
@@ -316,12 +466,13 @@ without silently dropping exit requirements or renumbering completed history.
 
 > Read AGENTS.md, docs/system_design.md and docs/linux_distribution_plan.md.
 > Inspect the current checkpoint, previous slice's handoff and relevant code.
-> Plan the next eligible LD slice only, with a linked detailed design, for review.
+> Plan the next eligible distribution slice (WD01 precedes LD04), with a linked
+> detailed design, for review.
 > Preserve working-tree changes. Do not implement, publish or advance slices.
 
 **Implementation prompt:**
 
-> Implement the approved LD slice from docs/linux_distribution_plan.md and its
+> Implement the approved selected LD/WD slice from docs/linux_distribution_plan.md and its
 > detailed design. Preserve working-tree changes, follow the configured toolchain,
 > resource and desktop restrictions, run focused checks, update tracking/designs
 > and handoff, clean owned disposable output, and stop at Ready for review.
@@ -349,6 +500,11 @@ Policy references checked 2026-11-11; recheck when implementing hosted automatio
   GitHub supplies managed Linux, Windows and macOS execution environments.
 - [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions):
   standard public-repository hosted compute is free; storage is accounted separately.
+- [GitHub CLI workflow dispatch](https://cli.github.com/manual/gh_workflow_run),
+  [run/artifact commands](https://cli.github.com/manual/gh_run), and
+  [auth scope refresh](https://cli.github.com/manual/gh_auth_refresh).
+- [Manual dispatch prerequisites](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow)
+  and [OAuth workflow scope](https://docs.github.com/en/enterprise-cloud%40latest/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps).
 - [AppImage compatibility guidance](https://docs.appimage.org/reference/best-practices.html):
   the payload's build baseline matters independently of the packaging format.
 
@@ -361,3 +517,13 @@ heading occurs once and system_design.md indexes this roadmap. The owned disposa
 run was previewed and cleaned with tools/agent_artifacts.py; no output was retained.
 These checks do not establish distribution support.
 Current LD01 implementation verification is recorded in its linked design/handoff.
+
+
+Roadmap revision, 2026-11-11: the user selected native hosted Windows builds and
+requested WD01 before LD04, plus CLI-driven GitHub setup. Updated the checkpoint,
+tracker, boundaries and system overview without renumbering accepted Linux history.
+Read-only `gh` checks confirmed current repository access/Actions availability;
+no authentication refresh, Windows build, workflow creation/dispatch, Git push,
+repository setting change or publication was performed. Documentation whitespace,
+local links, slice ordering and checkpoint consistency were checked. The owned
+scratch run was previewed and cleaned; no diagnostic output is retained.
