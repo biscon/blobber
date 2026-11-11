@@ -4,10 +4,75 @@
 #include "ui/combat_feedback.hpp"
 #include "ui/interaction.hpp"
 #include "ui/inventory_layout.hpp"
+#include "ui/welcome_layout.hpp"
 #include <cstring>
 #include <iostream>
 using namespace blobber;
 namespace {
+void campaignWelcome() {
+    const auto map = combatMap();
+    const auto catalog = combatCatalog();
+    const NpcWorld placements(map, {3, 3}, {}, {});
+    GameSession session(map, catalog, placements, 5, {{3, 3}, Heading::North});
+    CommandController commands(session);
+    check(!commands.snapshot().welcomeOpen, "Ordinary controllers never open welcome implicitly");
+    const auto pose = session.movement().player;
+    const auto clock = session.timeMs();
+    for (const auto key : {UiKey::Confirm, UiKey::DialogueAdvance, UiKey::Cancel}) {
+        commands.openWelcome();
+        check(commands.snapshot().modal() && commands.snapshot().modal(false) &&
+                  !commands.snapshot().interactionPrompt(),
+              "Welcome blocks gameplay and prompts");
+        for (const auto blocked :
+             {UiKey::Inventory, UiKey::Rest, UiKey::Travel, UiKey::Interact, UiKey::One}) {
+            UiInput input;
+            input.pressed[std::size_t(blocked)] = true;
+            routeHudInput(commands, input);
+            check(commands.snapshot().welcomeOpen && !commands.snapshot().inventory.open &&
+                      !commands.snapshot().camp.open && !commands.snapshot().travel.open &&
+                      !commands.snapshot().dialogue.open,
+                  "Welcome consumes underlying shortcuts");
+        }
+        session.update(.1f, commands.snapshot().modal());
+        UiInput input;
+        input.pressed[std::size_t(key)] = true;
+        input.focused = false;
+        routeHudInput(commands, input);
+        check(commands.snapshot().welcomeOpen, "Unfocused confirmation cannot close welcome");
+        input.focused = true;
+        routeHudInput(commands, input, {}, false);
+        check(commands.snapshot().welcomeOpen, "Unarmed confirmation cannot close welcome");
+        routeHudInput(commands, input);
+        check(!commands.snapshot().welcomeOpen && !commands.snapshot().menuOpen &&
+                  !commands.snapshot().menuRequested && !commands.snapshot().quitRequested &&
+                  !commands.snapshot().modal(),
+              "Every begin key closes in place, without opening menu");
+    }
+    commands.openWelcome();
+    UiInputEdges edges;
+    std::array<bool, uiKeyCount> down{};
+    const ArtPoint button{float(welcomeLayout::begin.x + 5), float(welcomeLayout::begin.y + 5)};
+    down[std::size_t(UiKey::Click)] = true;
+    routeHudInput(commands, edges.sample(down, true, button));
+    check(commands.snapshot().welcomeOpen && commands.snapshot().buttons.feedback,
+          "Begin button waits for release");
+    allocations = 0;
+    watching = true;
+    for (unsigned i = 0; i < 8; ++i) {
+        routeHudInput(commands, edges.sample(down, true, button));
+        commands.refresh({}, false, false, true);
+    }
+    watching = false;
+    check(!allocations && commands.snapshot().welcomeOpen, "Held welcome updates allocate nothing");
+    down.fill(false);
+    routeHudInput(commands, edges.sample(down, true, button));
+    check(!commands.snapshot().welcomeOpen && !commands.snapshot().menuOpen,
+          "Begin button closes on release without click-through");
+    check(session.movement().player == pose && session.timeMs() == clock,
+          "Welcome preserves pose and gameplay time");
+    commands.refresh({}, false, false, true);
+    check(!commands.snapshot().welcomeOpen, "HUD refresh does not reopen welcome");
+}
 void paintedFeedback() {
     CombatFeedback hit;
     hit.active = hit.hit = true;
@@ -492,6 +557,7 @@ void logs() {
 } // namespace
 int main() {
     try {
+        campaignWelcome();
         paintedFeedback();
         delayedCreatureTooltip();
         delayedButtonTooltips();

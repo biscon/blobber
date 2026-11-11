@@ -6,6 +6,8 @@
 using namespace blobber;
 int main() try {
     const auto city = sanctuaryCity();
+    check(city.spawn == Player{{11, 8}, Heading::West},
+          "New Sanctuary spawn faces the mayor, equivalent to one left turn from North");
     validateSanctuaryCity(city);
     check(city.doorway("emporium").approach == Player{{16, 9}, Heading::East} &&
               city.map.definition().buildings[city.doorway("emporium").placement].model == "provisioner",

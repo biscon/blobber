@@ -133,7 +133,15 @@ void CommandController::toggleMenu() noexcept {
     state_.save.cursor = 0;
     state_.hover = {};
 }
+void CommandController::openWelcome() noexcept {
+    closeOverlay();
+    cancel();
+    session_.clearPending();
+    state_.hover = {};
+    state_.welcomeOpen = true;
+}
 void CommandController::closeOverlay() noexcept {
+    state_.welcomeOpen = false;
     closeTrade();
     floorHover({});
     closeTargetPicker();

@@ -6,6 +6,7 @@
 #include "ui/save_screen.hpp"
 #include "ui/spell_layout.hpp"
 #include "ui/status_occlusion.hpp"
+#include "ui/welcome_layout.hpp"
 #include "ui/world_view_draw.hpp"
 #include <cstring>
 namespace blobber {
@@ -62,6 +63,51 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
     }
 }
 namespace {
+void welcome(const HudPainter& p) {
+    p.overlayBox(welcomeLayout::panel);
+    p.centered("WELCOME TO SANCTUARY", {76, 46, 352, 21}, gold, UiTextStyle::WelcomeTitle);
+    p.centered("A few essentials before your adventure begins.", {76, 69, 352, 12});
+    p.fill({80, 89, 162, 12}, {29, 36, 33, 255});
+    p.fill({261, 89, 163, 12}, {29, 36, 33, 255});
+    p.text("BASIC CONTROLS", 85, 90, gold, UiTextStyle::Display);
+    p.text("AROUND TOWN", 266, 90, gold, UiTextStyle::Display);
+    p.line({252, 89}, {252, 230}, edge);
+    constexpr const char* keys[]{"W / S", "A / D", "Q / E", "F", "I", "M", "Esc"};
+    constexpr const char* actions[]{"Move forward / backward", "Strafe left / right", "Turn left / right",
+                                    "Talk or interact ahead",  "Open inventory",      "Open map",
+                                    "Pause and save"};
+    for (int i = 0; i < 7; ++i) {
+        const int y = 107 + i * 12;
+        p.box({90, y, 30, 10}, gold);
+        p.centered(keys[i], {90, y, 30, 10});
+        p.text(actions[i], 130, float(y));
+    }
+    auto lines = [&](int x, int y, std::initializer_list<const char*> text) {
+        for (const auto* line : text) {
+            p.text(line, float(x), float(y));
+            y += 10;
+        }
+    };
+    p.line({80, 198}, {242, 198}, teal);
+    p.text("YOUR PARTY", 85, 203, gold, UiTextStyle::Display);
+    lines(85, 216,
+          {"Select a hero, choose an action below,", "then choose a target. Follow the",
+           "on-screen prompts in combat."});
+    p.text("VENDORS", 266, 109, teal, UiTextStyle::Heading);
+    lines(266, 123,
+          {"Visit the innkeeper, blacksmith and", "Arcane Emporium. Talk to a vendor",
+           "and choose Trade to buy or sell."});
+    p.text("REST FOR FREE", 266, 161, gold, UiTextStyle::Display);
+    lines(266, 175,
+          {"Enter the inn and press R to rest.", "A long rest at the inn costs nothing",
+           "and uses no camp supplies."});
+    p.line({261, 208}, {424, 208}, teal);
+    lines(266, 217, {"The mayor and his guards", "are just ahead."});
+    p.line({80, 250}, {424, 250}, gold);
+    p.box(welcomeLayout::begin, gold);
+    p.centered("BEGIN ADVENTURE", welcomeLayout::begin, gold, UiTextStyle::Display);
+    p.centered("Enter / Space / Esc to begin", {80, 273, 344, 11}, muted);
+}
 void splash(const HudPainter& p, const CombatFeedback& feedback, UiRect r, std::uint64_t now) {
     const auto sample = feedbackPresentation(feedback, now);
     if (sample.alpha <= 0 || !p.fonts)
@@ -104,6 +150,12 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     if (!h)
         return;
     const HudPainter p(fonts, art, metrics);
+    if (h->welcomeOpen) {
+        p.fill({0, 16, 640, 344}, {0, 0, 0, 150});
+        welcome(p);
+        p.buttonFeedback(h->buttons.feedback);
+        return;
+    }
     const auto& combat = h->combat;
     if (!h->modal() && picking && (!h->suspended || h->magic.armed)) {
         const WorldOverlayScope world(h->worldTransform);

@@ -211,7 +211,7 @@ SanctuaryCity sanctuaryCity() {
         {"market-grain", {9, 15}, {0, 0}, Heading::North, 1, 1},
         {"fountain", {10, 11}, {0, 0}, Heading::North, 2, 2},
     };
-    SanctuaryCity result{Map(rows, std::move(world)), {{11, 8}, Heading::North}};
+    SanctuaryCity result{Map(rows, std::move(world)), {{11, 8}, Heading::West}};
     result.doors = doors;
     result.doorCount = count;
     result.reservations[0] = {"fountain", {10, 11}, 2, 2};

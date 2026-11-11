@@ -34,11 +34,12 @@ UiFonts::UiFonts(const std::filesystem::path& directory)
       display_(directory / "DejaVuSerif-Bold.ttf", 27), control_(directory / "IBMPlexSans-Bold.ttf", 48),
       dialogue_(directory / "IBMPlexSans-Regular.ttf", 28),
       musicTitle_(directory / "IBMPlexSans-Bold.ttf", 24),
-      musicCaption_(directory / "IBMPlexSans-Regular.ttf", 18) {}
+      musicCaption_(directory / "IBMPlexSans-Regular.ttf", 18),
+      welcomeTitle_(directory / "DejaVuSerif-Bold.ttf", 42) {}
 std::size_t UiFonts::gpuBytes() const noexcept {
     std::size_t n = 0;
     for (const auto* f : {&label_, &small_, &heading_, &log_, &display_, &control_, &dialogue_, &musicTitle_,
-                          &musicCaption_}) {
+                          &musicCaption_, &welcomeTitle_}) {
         auto t = f->value.texture;
         for (int level = 0; level < t.mipmaps; ++level) {
             n += GetPixelDataSize(t.width, t.height, t.format);
@@ -50,6 +51,8 @@ std::size_t UiFonts::gpuBytes() const noexcept {
 }
 const Font& UiFonts::font(UiTextStyle style) const {
     switch (style) {
+    case UiTextStyle::WelcomeTitle:
+        return welcomeTitle_.value;
     case UiTextStyle::Dialogue:
         return dialogue_.value;
     case UiTextStyle::Control:

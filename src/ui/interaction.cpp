@@ -5,6 +5,7 @@
 #include "ui/inventory_interaction.hpp"
 #include "ui/loot_layout.hpp"
 #include "ui/travel_layout.hpp"
+#include "ui/welcome_layout.hpp"
 namespace blobber {
 UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bool acceptPress) noexcept {
     auto input = physical;
@@ -42,6 +43,13 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
     if (!input.focused) {
         commands.tickInventory(0, false);
         commands.hover(HoverKind::None);
+        return;
+    }
+    if (commands.snapshot().welcomeOpen) {
+        if (allowConfirm &&
+            (input.has(UiKey::Confirm) || input.has(UiKey::DialogueAdvance) || input.has(UiKey::Cancel) ||
+             (input.has(UiKey::Click) && input.pointer && welcomeLayout::begin.contains(*input.pointer))))
+            commands.closeOverlay();
         return;
     }
     if (commands.snapshot().dialogue.open) {

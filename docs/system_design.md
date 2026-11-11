@@ -1,5 +1,47 @@
 # System design
 
+## Campaign welcome and initial heading — 2026-11-11
+
+Implemented and mechanically verified; runtime user review pending. New campaigns
+retain Sanctuary's cell (11,8), but face West toward
+the mayor and guards. Recall, doorways and saved poses retain their own headings.
+The application passes a transient `GameplayLaunch::showWelcome` flag only when
+creating a campaign. The command controller owns the welcome modal boolean;
+the HUD presents a two-column controls/town panel using existing fonts, colors
+and button capture. Enter, Space, Escape/Backspace and Begin Adventure all close
+it in place. Simulation and underlying input stay blocked; dismissal clears queued
+movement and rearms input only after held start/movement keys are released.
+Continue, travel and arenas never open it; no persistence fields change.
+
+The UI owns immutable text/layout; runtime state and button targets are bounded
+and allocate nothing during frames. Reuse size-specific font atlases, adding a
+42-pixel serif welcome title with the same ownership/accounting as existing fonts.
+Validation covers spawn/restored poses, modal routing, keyboard/button edges,
+focus loss and allocation-free updates, plus hidden native OpenGL captures.
+The approved imagegen preview is a visual reference; implementation uses native
+text and panels. Interactive acceptance remains user-owned.
+
+Verification: built Debug `blobber`, `blobber_hud_tests`, `blobber_buttons_tests`,
+`blobber_sanctuary_city_tests`, `blobber_gameplay_startup_tests` and
+`blobber_review_inn` with `/home/bison/clion/bin/cmake/linux/x64/bin/cmake --build
+cmake-build-debug --target TARGETS -j 2`, at low CPU/I/O priority. Prepared assets
+regenerated as a consequence of relinking bake tools. The configured `ctest
+--test-dir cmake-build-debug -R '^(hud|buttons|sanctuary_city|gameplay_startup)$'
+-j 1 --output-on-failure` passes all four suites in 0.32 s. Owned startup fixtures
+check new West orientation and an East-facing saved pose across encode/decode;
+HUD checks cover all begin keys, blocked shortcuts, focus/admission, release-based
+button activation, preserved pose/clock and zero allocations during warmed updates.
+
+Hidden `blobber_review_inn assets NEW_OUTPUT welcome
+cmake-build-debug/assets/prepared` passes on the desktop OpenGL context, with
+OMP/OpenBLAS limited to one thread and Mesa workers limited to two. The initial
+sandbox capture could not access X11; the authorized hidden rerun succeeded.
+Captured text fits at native 1920x1080; Escape closes in place at game time zero.
+[Two runtime captures](screenshots/campaign-welcome/README.md) show the panel and
+unobstructed mayor/guards. No desktop input or focus automation was used; human
+interactive review remains pending. Disposable run output is cleaned after
+promoting these two images; no retained diagnostic exception or save-format change.
+
 [BR03 campaign blueprint integration](br03_blueprint_rooms_design.md): implemented and mechanically verified;
 user visual/play acceptance pending. Every generated floor includes a kitchen, mead hall, barracks
 and armory; authored reservations precede population. New campaigns use generator/

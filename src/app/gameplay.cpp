@@ -135,6 +135,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
         launch ? launch->seed : chooseCampaignSeed(options.seed, {}, [] { return std::random_device{}(); });
     std::cout << "Gameplay seed: " << seed << '\n';
     bool inputArmed = false;
+    bool welcomePending = launch && launch->showWelcome;
     Input input; // Keep edge latches across restart, so held confirmation never replays.
     for (;;) {
         auto loading = std::make_unique<LoadingScreen>(presenter.loadingWorker(), &presenter);
@@ -161,6 +162,10 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
         bool debug = false, reveal = false, first = true, restart = false;
         if (launch && launch->arena)
             initial.commands.arenaContext(false);
+        if (welcomePending) {
+            initial.commands.openWelcome();
+            welcomePending = false;
+        }
         initial.refresh();
         initial.frames.activate();
         if (presenter.audio) {
@@ -178,13 +183,17 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 return PlayOutcome::Quit;
             const float dt = std::min(GetFrameTime(), 0.1f);
             auto sample = input.poll(dt);
+            const bool welcomeWasOpen = view.commands.snapshot().welcomeOpen;
             sample.ui.text = pollTextInput();
             if (!inputArmed) {
                 inputArmed = !IsKeyDown(KEY_SPACE) && !IsKeyDown(KEY_T) && !IsKeyDown(KEY_ENTER) &&
                              !IsKeyDown(KEY_F) && !IsKeyDown(KEY_W) && !IsKeyDown(KEY_S) &&
                              !IsKeyDown(KEY_A) && !IsKeyDown(KEY_D) && !IsKeyDown(KEY_Q) &&
-                             !IsKeyDown(KEY_E) && !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
+                             !IsKeyDown(KEY_E) && !IsKeyDown(KEY_ESCAPE) && !IsKeyDown(KEY_BACKSPACE) &&
+                             !IsMouseButtonDown(MOUSE_BUTTON_LEFT);
                 sample.ui.pressed.fill(false);
+                sample.ui.pointerHeld = sample.ui.pointerReleased = false;
+                sample.toggleMap = sample.toggleAnimation = false;
                 sample.action.reset();
             }
             if (debug && !view.commands.snapshot().modal() && sample.ui.has(UiKey::Cancel)) {
@@ -290,6 +299,11 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                               imageMoved,
                               picking && worldPointer ? picking->pickResident(px, py) : std::nullopt,
                               worldPointer ? view.frames.groundAim(view.session, px, py) : std::nullopt);
+            }
+            if (welcomeWasOpen && !view.commands.snapshot().welcomeOpen) {
+                view.session.clearPending();
+                view.commands.cancelPointerButtons();
+                inputArmed = false;
             }
             if (campaign) {
                 std::optional<SavingScreen> saving;

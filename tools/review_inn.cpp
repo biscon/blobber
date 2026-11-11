@@ -14,9 +14,11 @@
 #include <iostream>
 using namespace blobber;
 int main(int argc, char** argv) try {
-    if (argc != 3 && argc != 4)
-        throw std::runtime_error("Usage: blobber_review_inn ASSETS NEW_OUTPUT [details|innkeeper|dialogue]");
+    if (argc < 3 || argc > 5)
+        throw std::runtime_error("Usage: blobber_review_inn ASSETS NEW_OUTPUT "
+                                 "[details|innkeeper|dialogue|welcome] [PREPARED_ASSETS]");
     const std::filesystem::path root(argv[1]), output(argv[2]);
+    const std::filesystem::path prepared = argc == 5 ? argv[4] : root / "prepared";
     if (!std::filesystem::create_directory(output))
         throw std::runtime_error("Use a new output directory");
     const auto roomBlueprints = blueprints::load(root / "blueprints/underkeep.json");
@@ -28,8 +30,8 @@ int main(int argc, char** argv) try {
     if (!IsWindowState(FLAG_WINDOW_HIDDEN))
         throw std::runtime_error("Capture window must stay hidden");
     GpuResources resources;
-    Presenter presenter(resources, root);
-    WorldRenderer renderer(resources, world_assets::load(root / "prepared/world"));
+    Presenter presenter(resources, root, nullptr, prepared);
+    WorldRenderer renderer(resources, world_assets::load(prepared / "world"));
     auto view = std::make_unique<GameView>(renderer);
     std::ofstream report(output / "report.txt");
     auto memory = [&](const char* name) {
@@ -83,6 +85,29 @@ int main(int argc, char** argv) try {
         }
         next.reset(); // Source view must die before ticket's source session.
     };
+    if (argc >= 4 && std::string_view(argv[3]) == "welcome") {
+        update();
+        auto& game = run->game();
+        CommandController commands(game, definitions.timings);
+        commands.refresh(view->picking()->targets(), false, false, true);
+        commands.openWelcome();
+        const auto pose = game.movement().player;
+        if (!(pose == Player{{11, 8}, Heading::West}))
+            throw std::runtime_error("Unexpected campaign spawn");
+        game.update(.1f, commands.snapshot().modal());
+        view->present(presenter, game, run->map(), false, true, &commands.snapshot());
+        presenter.capture(output / "welcome.png");
+        UiInput begin;
+        begin.pressed[std::size_t(UiKey::Cancel)] = true;
+        routeHudInput(commands, begin);
+        if (commands.snapshot().welcomeOpen || commands.snapshot().menuOpen || game.timeMs() != 0)
+            throw std::runtime_error("Welcome dismissal changed gameplay");
+        commands.refresh(view->picking()->targets(), false, false, true);
+        view->present(presenter, game, run->map(), false, true, &commands.snapshot());
+        presenter.capture(output / "spawn-west.png");
+        report << "welcome and Escape begin: cell=11,8 heading=West game_ms=0\n";
+        return 0;
+    }
     run->game().restorePose(sanctuaryCity().doorway("inn").approach, false);
     capture("city-entry");
     memory("city-only");
@@ -91,7 +116,7 @@ int main(int argc, char** argv) try {
     travel(false);
     capture("entry");
     memory("inn-only");
-    if (argc == 4) {
+    if (argc >= 4) {
         if (std::string_view(argv[3]) == "dialogue") {
             auto dialogue = loadDialogue(root / "dialogue");
             prepareDialogueUi(dialogue, presenter.fonts());

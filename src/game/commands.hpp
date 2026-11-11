@@ -159,6 +159,7 @@ struct EnemyTargetPicker {
     std::uint64_t revision = 0;
 };
 struct HudSnapshot {
+    bool welcomeOpen = false;
     GameTime gameTime;
     DialogueHud dialogue;
     TradeHud trade;
@@ -205,8 +206,9 @@ struct HudSnapshot {
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
     bool modal(bool includeDialogue = true) const noexcept {
-        return (includeDialogue && (dialogue.open || trade.open)) || travel.open || advancement.open ||
-               loot.open || camp.open || inventory.open || logExpanded || menuOpen || magic.open;
+        return welcomeOpen || (includeDialogue && (dialogue.open || trade.open)) || travel.open ||
+               advancement.open || loot.open || camp.open || inventory.open || logExpanded || menuOpen ||
+               magic.open;
     }
     const char* interactionPrompt() const noexcept {
         if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||
@@ -224,6 +226,7 @@ class CommandController {
   public:
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     ~CommandController();
+    void openWelcome() noexcept;
     void bindDialogue(const DialogueCatalog*, DialogueHistory*) noexcept;
     void bindTrade(const ShopCatalog*, MerchantLedger*) noexcept;
     bool openTrade() noexcept;

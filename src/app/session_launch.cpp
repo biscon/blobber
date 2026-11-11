@@ -52,6 +52,7 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         roomCatalog =
             prepareCpu([&] { return blueprints::load(options.assets / "blueprints/underkeep.json"); });
     std::unique_ptr<CampaignRun> campaign = std::move(restored);
+    const bool showWelcome = !arena && !campaign;
     std::optional<Map> arenaFloor;
     if (arena)
         arenaFloor.emplace(arenaMap());
@@ -82,8 +83,8 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         throw std::runtime_error("World NPC definitions differ; rebuild world assets");
     WorldRenderer world(presenter.resources(), std::move(publication), options.supersampling,
                         options.ambientOcclusion);
-    const GameplayLaunch launch{spawn,   runtimeSeed, bool(arena),    true,  nullptr,
-                                nullptr, nullptr,     campaign.get(), saves, arena};
+    const GameplayLaunch launch{spawn,   runtimeSeed,    bool(arena), true,  nullptr,    nullptr,
+                                nullptr, campaign.get(), saves,       arena, showWelcome};
     if (loading->closing())
         return false;
     loading.reset();

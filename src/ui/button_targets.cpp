@@ -6,6 +6,7 @@
 #include "ui/save_layout.hpp"
 #include "ui/trade_layout.hpp"
 #include "ui/travel_layout.hpp"
+#include "ui/welcome_layout.hpp"
 namespace blobber {
 ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
     ButtonTargets t;
@@ -22,6 +23,11 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         for (int i = 0; i < 4; ++i)
             t.add(hudLayout::card(i));
     };
+    if (h.welcomeOpen) {
+        panel(17);
+        t.add(welcomeLayout::begin);
+        return t;
+    }
     if (h.trade.open) {
         const auto& trade = h.trade;
         panel(16);

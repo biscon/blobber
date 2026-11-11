@@ -11,6 +11,8 @@ void restoredCampaignAtOriginalSpawn() {
     const CampaignContent content{"owned-startup", 0, &blobber::test::campaignBlueprints()};
     CampaignRun original(blobber::test::campaignBlueprints(), catalog, *catalog.preset(), definitions.types,
                          definitions.timings, 5);
+    check(original.game().movement().player == Player{{11, 8}, Heading::West},
+          "New campaigns use the mayor-facing Sanctuary spawn");
     campaign_test::entrance(original);
     auto travel = original.prepareTravel(original.request(original.game().nearbyFixture()));
     check(original.commitTravel(travel), "Startup fixture enters dungeon");
@@ -21,7 +23,7 @@ void restoredCampaignAtOriginalSpawn() {
     for (unsigned i = 0; i < game.actors().snapshot().count; ++i)
         game.actors().damage(game.actors().id(i), 10000, game.timeMs());
     original.update(.01, false);
-    game.restorePose({oldSpawn, Heading::West}, false);
+    game.restorePose({oldSpawn, Heading::East}, false);
     original.update(.01, false);
     if (const auto* error = original.saveSafety())
         throw std::runtime_error(std::string("Old NPC spawn is not save-safe: ") + error);
@@ -31,6 +33,8 @@ void restoredCampaignAtOriginalSpawn() {
                          definitions.timings);
     const auto& current = restored.location(restored.activeLocation());
     const auto pose = restored.game().movement().player;
+    check(pose.heading == Heading::East,
+          "Continue preserves the saved heading instead of the new spawn heading");
     check(pose.cell == oldSpawn && current.placements->occupied(pose.cell) &&
               !restored.game().actors().occupied(pose.cell),
           "Restored party legitimately occupies an original spawn, not a live actor cell");
