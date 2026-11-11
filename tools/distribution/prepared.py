@@ -21,7 +21,7 @@ def inputs(root):
     names = subprocess.check_output(['git', '-C', str(root), 'ls-files', '-z']).decode().split('\0')
     selected = [n for n in names if n and (n.startswith(('assets/', 'src/', 'cmake/')) or
                 n == 'CMakeLists.txt' or n == 'packaging/linux/lock.json' or
-                n.startswith(('tools/bake', 'tools/prepare')))]
+                n.startswith(('tools/bake', 'tools/prepare', 'tests/support/')) or n == 'tools/distribution_compatibility.cpp')]
     return {n: digest(regular(root / n)) for n in sorted(selected)}
 
 

@@ -52,4 +52,5 @@ void writeDocument(const std::filesystem::path&, const std::string&);
 std::filesystem::path dataDirectory();
 std::filesystem::path configDirectory();
 std::filesystem::path applicationDirectory();
+std::filesystem::path loadedModulePath(const char* name); // Borrowed OS module query, diagnostics only.
 } // namespace blobber::disk

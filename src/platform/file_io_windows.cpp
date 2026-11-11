@@ -186,4 +186,14 @@ std::filesystem::path applicationDirectory() {
     }
     throw std::runtime_error("Executable path exceeds Windows limit");
 }
+std::filesystem::path loadedModulePath(const char* name) {
+    auto module = GetModuleHandleW(std::filesystem::u8path(name).c_str());
+    if (!module)
+        return {};
+    std::vector<wchar_t> buffer(32768);
+    const auto n = GetModuleFileNameW(module, buffer.data(), DWORD(buffer.size()));
+    if (!n || n >= buffer.size())
+        error("Inspect loaded module path");
+    return std::filesystem::path(std::wstring(buffer.data(), n));
+}
 } // namespace blobber::disk

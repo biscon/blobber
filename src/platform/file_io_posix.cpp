@@ -167,4 +167,7 @@ std::filesystem::path configDirectory() {
 std::filesystem::path applicationDirectory() {
     return std::filesystem::read_symlink("/proc/self/exe").parent_path();
 }
+std::filesystem::path loadedModulePath(const char*) {
+    return {};
+}
 } // namespace blobber::disk

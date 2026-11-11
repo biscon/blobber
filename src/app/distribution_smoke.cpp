@@ -4,6 +4,7 @@
 #include "audio/music.hpp"
 #include "persistence/campaign_store.hpp"
 #include "platform/audio.hpp"
+#include "platform/file_io.hpp"
 #include "platform/presenter.hpp"
 #include "rlgl.h"
 #include "ui/interaction.hpp"
@@ -171,6 +172,9 @@ void DistributionSmoke::point() {
         graphics_ = {{"vendor", reinterpret_cast<const char*>(get(0x1F00))},
                      {"renderer", reinterpret_cast<const char*>(get(0x1F01))},
                      {"version", reinterpret_cast<const char*>(get(0x1F02))}};
+#ifdef _WIN32
+        graphics_["module"] = disk::loadedModulePath("opengl32.dll").u8string();
+#endif
     }
 }
 void DistributionSmoke::capture(Presenter& presenter, const char* name) {

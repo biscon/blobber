@@ -81,6 +81,9 @@ def smoke(bundle, source, build, run):
                 raise RuntimeError('Extracted Windows smoke failed: '+message[-8000:])
             results[phase]=json.loads((user/'smoke'/(phase+'.json')).read_text(encoding='utf-8'))
         require(results['create']['graphics']==results['continue']['graphics'],'Graphics contexts differ')
+        graphics=results['create']['graphics']
+        require('llvmpipe' in graphics['renderer'].lower(), 'Expected software llvmpipe renderer')
+        require(Path(graphics['module']).resolve().parent==provider.resolve(), 'Unexpected loaded OpenGL provider')
         for name,record in summary['manifest']['files'].items():
             path=install/name
             require(path.stat().st_size==record['bytes'] and digest(path)==record['sha256'],'Package changed during smoke')
