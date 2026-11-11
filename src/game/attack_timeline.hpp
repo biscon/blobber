@@ -31,4 +31,5 @@ struct AttackVisualSnapshot {
     std::uint64_t world = 0, revision = 0;
 };
 std::uint32_t arrowFlightMs(Cell from, Cell to) noexcept;
+std::uint32_t projectileFlightMs(Cell from, Cell to, rules::SpellKind spell) noexcept;
 } // namespace blobber

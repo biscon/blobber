@@ -17,7 +17,62 @@ Existing prepared sprites and per-draw controls provide both changes. The
 240 ms negated / 640 ms hit lifetimes, other treatments, resource ownership and
 gameplay are unchanged. No new artwork or system abstraction was needed.
 
+## Magic Missile speed — 2026-11-11
+
+Status: **Implemented; visual feel awaits user review**. The user selected 25% slower
+projectile movement. The existing rounded, distance-based flight duration is multiplied
+by 4/3, rounding to the nearest millisecond (180–450 ms becomes 240–600 ms).
+The established curves, dart assignments, sprites, trails and glow are preserved.
+
+`projectileFlightMs(Cell, Cell, rules::SpellKind)` lives alongside `arrowFlightMs`
+in the combat timeline. It returns the adjusted duration for Magic Missile and
+the existing duration for every other kind, including ordinary arrows. It is used
+for primary attacks, additional recipients and release-time rescheduling.
+The combat controller continues to own arrival deadlines; the visual journal and
+renderer consume those same deadlines. Damage, local alerts, impact effects and
+action holds therefore follow the later arrival. No new storage, frame allocation,
+settings, artwork or save fields are required.
+
+Verification uses the existing Debug tree's configured CLion CMake/CTest
+(`/home/bison/clion/bin/cmake/linux/x64/bin/`), two build workers and one test
+process, with `nice -n 15 ionice -c 3` and bounded library threads.
+`ctest --preset debug -R '^(spells|impact)$'` passed (0.10 s): short/capped/rounded
+durations, exact arrival, pause, multiple distances, large versus split updates,
+removed recipients, and unchanged other projectiles. Missile journal deadlines
+are also asserted so rendering consumes the adjusted arrival for every recipient.
+After strengthening those journal checks, `ctest --preset debug -R '^(spells|combat)$'`
+also passed (0.18 s), including existing combat action-hold/handoff coverage.
+`cmake --build --preset debug --target blobber blobber_spells_tests blobber_combat_tests`
+completed successfully, including its automatic prepared-asset regeneration.
+
+The initial build exposed stale footprint tests; the follow-up below repairs them.
+No renderer or artwork changed, and GPU captures/interactive appearance were not
+checked. No desktop automation was used.
+The owned artifact run was cleaned; no new review images or diagnostics are retained.
+
+### CPU fixture maintenance — 2026-11-11
+
+Status: **Implemented and CPU verified**. Spell-effects tests now use the implemented
+[subcell spell areas](spell_area_design.md): authored cue footprints are populated,
+packet `subcells` checks compare both origin and mask and require clipped packets,
+and area fixtures distinguish covered and uncovered squares. The multi-recipient
+fan fixture fills the front band to prevent tactical movement during turn setup
+from changing its six covered recipients. Shatter verifies twelve covered squares
+and excluded corners; Thunderwave uses a recipient inside its eight-square template.
+Missile/ray journal checks distinguish the slower missile arrival from ray timing.
+Production code and existing allocation, lifetime, restore and publication checks
+are unchanged by this repair.
+
+Using the configured Debug tools and resource limits above,
+`cmake --build --preset debug --target blobber_spell_effects_tests` succeeds and
+`ctest --preset debug -R '^spell_effects$'` passes (0.26 s). Only this affected CPU
+suite was run; no GPU/desktop checks were needed for test-fixture changes.
+The owned artifact run was cleaned with no retained diagnostics or new images.
+
 ## Approved contract
+
+The [Magic Missile timing follow-up](#magic-missile-speed--2026-11-11) supersedes
+the original unchanged-impact-time requirement for that spell only.
 
 Extend SE01 to Magic Missile, Scorching Ray, Guiding Bolt, Sacred Flame,
 Shocking Grasp, Inflict Wounds, Acid Splash, Poison Spray, Thunderwave and Shatter.

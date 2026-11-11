@@ -223,6 +223,23 @@ void effectsAndValidation() {
     armor.character = {0};
     check(s.submit(armor).reason == CommandReason::InvalidSpell, "Class eligibility is authoritative");
 }
+void projectileDurations() {
+    struct Case {
+        Cell target;
+        std::uint32_t ordinary, missile;
+    };
+    // Includes both clamps, a diagonal needing millisecond rounding, and mid-range flight.
+    for (const auto& c : {Case{{0, 0}, 180, 240}, Case{{1, 0}, 180, 240}, Case{{1, 1}, 202, 269},
+                          Case{{2, 0}, 234, 312}, Case{{4, 0}, 342, 456}, Case{{6, 0}, 450, 600},
+                          Case{{20, 0}, 450, 600}}) {
+        check(projectileFlightMs({0, 0}, c.target, SpellKind::MagicMissile) == c.missile,
+              "Magic Missile flies at three-quarter speed across distances and clamps");
+        for (auto kind : {SpellKind::Count, SpellKind::FireBolt, SpellKind::RayOfFrost,
+                          SpellKind::GuidingBolt, SpellKind::ScorchingRay})
+            check(projectileFlightMs({0, 0}, c.target, kind) == c.ordinary,
+                  "Arrows and other projectile spells retain their flight times");
+    }
+}
 void projectiles() {
     const auto map = hybridRoom();
     const auto catalog = spellCatalog();
@@ -237,12 +254,19 @@ void projectiles() {
     const auto started = s.submit(missile);
     check(started.event == CombatEvent::AttackStarted && s.party().character({3})->mana == 2,
           "Missiles cost once at acceptance");
+    const auto& cast = s.combat().spellVisuals().casts[0];
+    check(cast.deliveryCount == 3, "Journal groups all three missile recipients");
+    for (unsigned i = 0; i < cast.deliveryCount; ++i)
+        check(cast.deliveries[i].impactMs == 456,
+              "Every recipient publishes the slower arrival for visual playback");
     for (int i = 0; i < 3; ++i)
         check(s.actors().actor(s.actors().id(i))->hitPoints == 1000, "Missiles do not damage at acceptance");
-    s.update(.341, false);
-    check(s.actors().actor(s.actors().id(0))->hitPoints == 1000, "No damage before exact arrival");
+    s.update(.455, false);
+    for (int i = 0; i < 3; ++i)
+        check(s.actors().actor(s.actors().id(i))->hitPoints == 1000,
+              "No recipient takes damage before exact arrival");
     s.update(60, true);
-    check(s.timeMs() == 341, "Pause freezes flight");
+    check(s.timeMs() == 455, "Pause freezes flight");
     s.update(.001, false);
     int impacts = 0;
     for (const auto& e : s.events())
@@ -265,7 +289,7 @@ void projectiles() {
     dead.submit(missile);
     dead.party().damage({3}, 1000);
     dead.actors().remove(dead.actors().id(0));
-    const auto& batch = dead.update(.342, false);
+    const auto& batch = dead.update(.456, false);
     bool gone = false;
     for (const auto& e : batch)
         gone |= e.event == CombatEvent::Attack && e.targetGone && !e.damage;
@@ -289,8 +313,8 @@ void impactAlerts() {
     check(s.combat().snapshot().phase == CombatPhase::Exploration &&
               s.ai().actors[0].awareness == Awareness::Routine,
           "Casting alone never starts pursuit");
-    const auto first = arrowFlightMs(spellSpawn.cell, {6, 5});
-    const auto last = arrowFlightMs(spellSpawn.cell, {9, 4});
+    const auto first = projectileFlightMs(spellSpawn.cell, {6, 5}, SpellKind::MagicMissile);
+    const auto last = projectileFlightMs(spellSpawn.cell, {9, 4}, SpellKind::MagicMissile);
     s.update(double(first - 1) / 1000, false);
     s.update(60, true);
     check(s.ai().actors[0].awareness == Awareness::Routine &&
@@ -445,8 +469,10 @@ void invalidAndPool() {
     c.darts[0] = 3;
     c.enemies[0] = b.actors().id(0);
     b.submit(c);
-    a.update(.4, false);
-    b.update(.4, false);
+    a.update(.6, false);
+    b.update(.6, false);
+    check(a.actors().actor(a.actors().id(0))->hitPoints < 1000,
+          "RNG comparison includes the resolved missile damage");
     check(a.actors().actor(a.actors().id(0))->hitPoints == b.actors().actor(b.actors().id(0))->hitPoints,
           "Invalid commands preserve RNG stream");
     GameSession full(map, catalog, places, 19, spellSpawn, false);
@@ -1048,12 +1074,13 @@ void timingAndInterruption() {
         }
         s->submit(c);
     }
-    large.update(.45, false);
-    split.update(.234, false);
-    split.update(.108, false);
-    split.update(.108, false);
+    large.update(.6, false);
+    split.update(.312, false);
+    split.update(.144, false);
+    split.update(.144, false);
     for (int i = 0; i < 3; ++i)
-        check(large.actors().actor(large.actors().id(i))->hitPoints ==
+        check(large.actors().actor(large.actors().id(i))->hitPoints < 1000 &&
+                  large.actors().actor(large.actors().id(i))->hitPoints ==
                   split.actors().actor(split.actors().id(i))->hitPoints,
               "Large and split updates preserve staggered recipient impacts");
     const auto close = spellPlacements(map, 12, true);
@@ -1153,7 +1180,7 @@ void trace() {
     s.submit(c);
     std::cout << "cast t=" << s.timeMs() << " mana=" << s.party().character({3})->mana
               << " enemyHP=" << s.actors().actor(c.enemies[0])->hitPoints << '\n';
-    s.update(.342, false);
+    s.update(.456, false);
     for (const auto& e : s.events())
         if (e.event == CombatEvent::Attack)
             std::cout << "impact t=" << e.occurredMs << " darts=" << unsigned(e.darts)
@@ -1166,6 +1193,7 @@ int main(int argc, char** argv) {
         resourcesAndHealing();
         features();
         effectsAndValidation();
+        projectileDurations();
         projectiles();
         impactAlerts();
         meleeAlertTiming();

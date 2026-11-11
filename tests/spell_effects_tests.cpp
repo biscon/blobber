@@ -9,14 +9,23 @@
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <string>
 using namespace blobber;
 using namespace blobber::world_render;
 namespace {
+// North-facing party at spellSpawn: four far squares, two central near squares.
+constexpr SubcellFootprint fullCone{{11, 14}, UINT64_C(0x60f)};
 void commands() {
     const auto map = hybridRoom();
     const auto catalog = spellCatalog(1000, 1, 30);
-    for (int count : {1, 12}) {
-        const auto places = spellPlacements(map, count, true);
+    for (unsigned count : {1u, 6u}) {
+        const Cell squares[]{{12, 15}, {13, 15}, {11, 14}, {12, 14}, {13, 14}, {14, 14}};
+        // Fill the front band in the multi-target case so turn preparation cannot
+        // move recipients into uncovered squares. Only six of its twelve squares are in the fan.
+        const auto places = count == 1
+                                ? NpcWorld(map, spellSpawn.cell, {"goblin"},
+                                           {{{0}, {6, 7}, {0, 1}, Heading::South}})
+                                : spellPlacements(map, 12, true);
         GameSession game(map, catalog, places, 5, spellSpawn, false);
         spellReady(game, 3);
         auto command = spellCommand(game, rules::SpellKind::BurningHands);
@@ -28,8 +37,11 @@ void commands() {
         for (const auto& c : snapshot.casts)
             if (c.id.serial) {
                 ++casts;
-                check(c.count == unsigned(count) && c.impactMs == now,
-                      "One cast carries all targets at instant deadline");
+                check(c.count == count && c.impactMs == now,
+                      ("One cast carries all targets at instant deadline: expected " +
+                       std::to_string(count) + ", got " + std::to_string(c.count) + ", impact " +
+                       std::to_string(c.impactMs) + ", now " + std::to_string(now))
+                          .c_str());
                 for (unsigned i = 0; i < c.count; ++i) {
                     check(c.targets[i].hit && c.targets[i].damage >= 0,
                           "Resolved contact and damage published");
@@ -38,6 +50,9 @@ void commands() {
                 }
                 check(c.eligible[0] && c.eligible[1] && c.eligible[2],
                       "Footprint includes unoccupied eligible cells");
+                check(c.footprint.count() == 6, "Cone publishes all six covered subcells");
+                for (auto square : squares)
+                    check(c.footprint.contains(square), "Cone retains its exact party-front coverage");
             }
         check(casts == 1, "No duplicate cone per victim");
         const auto revision = snapshot.revision;
@@ -122,16 +137,22 @@ void playback() {
     auto* cast = journal.begin(rules::SpellKind::BurningHands, {3}, spellSpawn, 100);
     cast->cells = {Cell{5, 7}, Cell{6, 7}, Cell{7, 7}};
     cast->eligible = {true, true, false};
+    const SubcellFootprint clippedCone{{11, 14}, UINT64_C(0x607)};
+    cast->footprint = clippedCone;
     FrameInput in{map, movement, &actors};
     in.spells = &journal.snapshot();
     in.now = 100;
     EffectsPipeline pipeline(assets);
     check(pipeline.update(in, world) && pipeline.frame().count > 0,
           "Zero-recipient cue still draws eligible cone cells");
+    unsigned clippedPackets = 0;
     for (unsigned i = 0; i < pipeline.frame().count; ++i)
-        if (pipeline.frame().packets[i].footprint)
-            check(pipeline.frame().packets[i].footprint == (512 | 1024 | 3),
-                  "Cone retains exact eligible mask");
+        if (pipeline.frame().packets[i].subcells.mask) {
+            ++clippedPackets;
+            check(pipeline.frame().packets[i].subcells == clippedCone,
+                  "Cone packets retain the exact subcell origin and mask");
+        }
+    check(clippedPackets > 0, "Cone submits packets with subcell clipping enabled");
     const auto revision = pipeline.frame().revision;
     check(!pipeline.update(in, world) && pipeline.frame().revision == revision,
           "Pause/repeated snapshot reuses colour");
@@ -183,6 +204,7 @@ void playback() {
         auto* c = journal.begin(rules::SpellKind::BurningHands, {3}, spellSpawn, 2500);
         c->cells = {Cell{5, 7}, Cell{6, 7}, Cell{7, 7}};
         c->eligible = {true, true, true};
+        c->footprint = fullCone;
         c->count = 36;
         for (auto& t : c->targets)
             t = {actors.id(0), {5.5f, 7.5f}, 0, 5, true, false, false, false};
@@ -208,6 +230,7 @@ void playback() {
     auto* restored = journal.begin(rules::SpellKind::BurningHands, {3}, spellSpawn, 4100);
     restored->cells = {Cell{5, 7}, Cell{6, 7}, Cell{7, 7}};
     restored->eligible = {true, true, true};
+    restored->footprint = fullCone;
     in.now = 4100;
     pipeline.update(in, world);
     check(pipeline.frame().count > 0, "Same-world restore resets cosmetic consumer epoch");

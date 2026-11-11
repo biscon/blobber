@@ -485,6 +485,12 @@ spell/healing/buff badges with prepared portrait animation and small readouts.
 Focused CPU and hidden GPU checks pass; [SE02 review gallery](screenshots/spell-effects/se02/README.md).
 Poison density/green and healing green were strengthened following user review.
 The user accepted SE02 including these corrections.
+[Magic Missile timing follow-up](se02_design.md#magic-missile-speed--2026-11-11)
+is **implemented (2026-11-11); visual feel awaits user review**: dart speed is
+25% slower through shared spell-aware flight scheduling (240–600 ms), keeping
+impacts and action holds synchronized. Focused CPU timing checks and the
+[repaired spell-effects suite](se02_design.md#cpu-fixture-maintenance--2026-11-11)
+pass against the implemented subcell-area contract.
 World and ordinary weapon feedback option A is **accepted and implemented**:
 [painted feedback design](combat_feedback_design.md). Prepared blood/ink splashes
 appear instantly, with a brief damage-number tremor and fade-out; focused CPU and

@@ -23,6 +23,11 @@ std::uint32_t arrowFlightMs(Cell from, Cell to) noexcept {
     return static_cast<std::uint32_t>(
         std::clamp(std::round(180 + 54 * (std::sqrt(x * x + y * y) - 1)), 180., 450.));
 }
+std::uint32_t projectileFlightMs(Cell from, Cell to, rules::SpellKind spell) noexcept {
+    const auto duration = arrowFlightMs(from, to);
+    // Three-quarter speed: extend flight by 4/3, rounded to the nearest millisecond.
+    return spell == rules::SpellKind::MagicMissile ? (duration * 4 + 1) / 3 : duration;
+}
 AttackVisual& CombatController::visual(std::size_t i) noexcept {
     return i < attackCapacity ? visuals_.attacks[i] : visuals_.spellExtras[i - attackCapacity];
 }
@@ -87,7 +92,8 @@ CombatOutcome CombatController::queueAttack(CombatOutcome out, Player pose, std:
     const auto& timing = presentation_[a->npc.type.index];
     const auto windup = out.enemyAttack ? out.impactMs : (v.ranged ? 0u : 200u);
     v.releaseMs = now + windup;
-    v.impactMs = v.releaseMs + (v.ranged && !npcCast ? arrowFlightMs(pose.cell, a->npc.cell) : 0);
+    v.impactMs =
+        v.releaseMs + (v.ranged && !npcCast ? projectileFlightMs(pose.cell, a->npc.cell, v.spell) : 0);
     p.clipEndMs = now + (npcCast           ? (timing.bow ? timing.bow : 1000)
                          : out.enemyAttack ? (v.ranged ? timing.bow : timing.attack)
                                            : windup);
@@ -281,7 +287,7 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
                     v.npcOrigin = a->npc;
                     v.sourcePosition = actorPosition(*a, earliest);
                 }
-                v.impactMs = earliest + arrowFlightMs(pose.cell, a->npc.cell);
+                v.impactMs = earliest + projectileFlightMs(pose.cell, a->npc.cell, v.spell);
                 setAttackHold(owner, std::max(p.clipEndMs, v.impactMs + combatFeedbackDurationMs));
                 v.stage = AttackStage::Flight;
                 auto out = p.result;

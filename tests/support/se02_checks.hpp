@@ -13,7 +13,10 @@ inline void se02Commands() {
                            kind == K::Thunderwave;
         const bool advanced = kind == K::ScorchingRay || kind == K::Shatter;
         const auto catalog = advanced ? creationCatalog(true) : spellCatalog();
-        const auto places = spellPlacements(map, close ? 1 : 3, close);
+        const auto places = kind == K::Thunderwave
+                                ? NpcWorld(map, spellSpawn.cell, {"goblin"},
+                                           {{{0}, {6, 7}, {0, 1}, Heading::South}})
+                                : spellPlacements(map, close ? 1 : 3, close);
         GameSession game(map, catalog, places, 5, spellSpawn, false);
         if (advanced)
             levelParty(game, 3, kind);
@@ -57,6 +60,8 @@ inline void se02Commands() {
                         check(c.deliveries[i].attack.serial && c.deliveries[i].stage == AttackStage::Resolved,
                               "Extra delivery resolves with its own attack identity");
                         check(c.targets[i].actor.slot == i, "Recipient assignment preserved");
+                        check(c.deliveries[i].impactMs == now + (kind == K::MagicMissile ? 456 : 342),
+                              "Missile and ray recipients retain their spell-specific arrival");
                     }
                 }
                 if (kind == K::ShockingGrasp || kind == K::InflictWounds)
@@ -64,12 +69,16 @@ inline void se02Commands() {
                 if (kind == K::Shatter) {
                     check(!c.includeOrigin && c.center == Cell{6, 4},
                           "Shatter clips at aimed area without caster corridor");
-                    check(std::count(c.eligible.begin(), c.eligible.end(), true) == 9 && c.count == 3,
+                    check(c.footprint.count() == 12 &&
+                              std::count(c.eligible.begin(), c.eligible.end(), true) == 5 && c.count == 3,
                           "Shatter publishes all empty and occupied eligible cells once");
+                    check(c.footprint.contains({12, 7}) && !c.footprint.contains({11, 7}),
+                          "Shatter publishes a circle excluding its bounding-box corners");
                 }
                 if (kind == K::Thunderwave)
-                    check(std::count(c.eligible.begin(), c.eligible.end(), true) == 3,
-                          "Thunderwave retains front footprint");
+                    check(c.footprint.count() == 8 &&
+                              std::count(c.eligible.begin(), c.eligible.end(), true) == 3 && c.count == 1,
+                          "Thunderwave publishes eight squares with the covered recipient");
             }
         check(count == 1, "Exactly one journal cast per accepted SE02 command");
     }

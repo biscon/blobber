@@ -717,7 +717,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     v.npcOrigin = a->npc;
                     v.sourcePosition = v.targetPosition = actorPosition(*a, now);
                     v.darts = payload.outcomes[i].darts;
-                    v.impactMs = now + arrowFlightMs(pose.cell, a->npc.cell);
+                    v.impactMs = now + projectileFlightMs(pose.cell, a->npc.cell, v.spell);
                     v.endMs = v.impactMs + combatFeedbackDurationMs;
                     setAttackHold(NpcWorld::maxInstances + c.character.index, v.endMs);
                     payload.outcomes[i].attackId = v.id;
