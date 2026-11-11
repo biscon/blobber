@@ -61,8 +61,9 @@ conscious hostile gives ranged disadvantage; advantage/disadvantage cancel norma
 Healthy goblins shoot while closing in real time. At most one automatic attack per
 update with fair scheduling; no shot during walking or movement during bow playback.
 
-Hit or miss alerts the target and living goblins within three cardinal walkable
-steps of it, using a bounded local flood without recursively propagating alerts.
+Hit or miss alerts the target and conscious living hostiles within three Manhattan
+cells and clear mob-to-mob LOS, without relaying or crossing door thresholds.
+Direct NPC detection uses the same [local warning](goblin_ai_design.md#local-group-alerts--2026-11-11).
 An unnoticed opening shot gains advantage based on pre-resolution awareness.
 Party sight is a strict forward cone with six-cell range, conservative LOS and
 six-second threat memory. The cone excludes distant 45-degree edge cells; the immediate three-cell melee

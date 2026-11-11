@@ -3,13 +3,22 @@
 #include <algorithm>
 #include <cstdlib>
 namespace blobber {
-static bool sight(GeometryView map, Cell from, Cell target, bool blockingEndpoint) noexcept {
+static bool sight(GeometryView map, Cell from, Cell target, bool blockingEndpoint,
+                  bool blockDoors = false) noexcept {
     if (map.solid(from) || (!blockingEndpoint && map.solid(target)))
         return false;
     const int dx = target.x - from.x, dz = target.y - from.y, nx = std::abs(dx), nz = std::abs(dz);
     const int sx = dx > 0 ? 1 : -1, sz = dz > 0 ? 1 : -1;
     const std::int64_t h0 = map.surface(from).floor + 2, dh = map.surface(target).floor + 2 - h0;
     auto clear = [&](Cell c, std::int64_t n, std::int64_t d) {
+        if (blockDoors && map.fixtures()) {
+            const auto i = map.fixtures()->at(c);
+            if (i >= 0) {
+                const auto kind = map.fixtures()->definition().entries[unsigned(i)].kind;
+                if (kind == FixtureKind::Door || kind == FixtureKind::GuardianGate)
+                    return false;
+            }
+        }
         if (blockingEndpoint && c == target && map.solid(c))
             return true;
         if (map.solid(c))
@@ -47,6 +56,9 @@ static bool sight(GeometryView map, Cell from, Cell target, bool blockingEndpoin
 
 bool lineOfSight(GeometryView map, Cell from, Cell target) noexcept {
     return sight(map, from, target, false);
+}
+bool alertLineOfSight(GeometryView map, Cell from, Cell target) noexcept {
+    return sight(map, from, target, false, true);
 }
 bool discoveryVisible(GeometryView map, Cell from, Heading facing, Cell target) noexcept {
     if (unsigned(facing) >= 4 || !inBowRange(from, target))

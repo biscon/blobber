@@ -44,21 +44,14 @@ void NpcAiController::face(std::size_t slot, Cell target) noexcept {
 std::optional<Cell> NpcAiController::preferredFront(Player party) const noexcept {
     return party.cell + forward(party.heading);
 }
-NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party) noexcept {
+NpcAiController::Goal NpcAiController::think(std::size_t slot, Player party, bool seesParty) noexcept {
     auto& a = state_.actors[slot];
     const auto& actor = actors_.snapshot().actors[slot];
     const auto here = actor.npc.cell;
     const auto now = state_.timeMs;
     if (!actor.hostile() || actor.life != ActorLife::Alive)
         return {};
-    if ((!effects_ || effects_->sees(actors_.id(slot))) &&
-        npcSees(map_, here, actor.npc.facing, party.cell)) {
-        if (a.awareness != Awareness::Pursuing)
-            a.moveDueMs = std::min(a.moveDueMs, now + 600);
-        a.awareness = Awareness::Pursuing;
-        a.lastSeen = party.cell;
-        a.lastSeenMs = now;
-    } else if (a.awareness == Awareness::Pursuing)
+    if (!seesParty && a.awareness == Awareness::Pursuing)
         a.awareness = Awareness::Investigating;
     if ((a.awareness == Awareness::Investigating || a.awareness == Awareness::Searching) &&
         now - a.lastSeenMs >= 6000) {
@@ -195,13 +188,26 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
     if (state_.timeMs < tickDue_)
         return;
     tickDue_ = state_.timeMs + 100;
+    // Collect real observers before warning or turning anyone. Awareness alone
+    // never emits a warning, and actor ordering cannot cause a relay.
+    std::array<bool, NpcWorld::maxInstances> seesParty{};
+    for (std::size_t i = 0; i < state_.count; ++i) {
+        const auto& actor = actors_.snapshot().actors[i];
+        seesParty[i] = actor.hostile() && actor.life == ActorLife::Alive &&
+                       (!incapacitated || !(*incapacitated)[i]) &&
+                       (!effects_ || effects_->sees(actors_.id(i))) &&
+                       npcSees(map_, actor.npc.cell, actor.npc.facing, party.cell);
+    }
+    for (std::size_t i = 0; i < state_.count; ++i)
+        if (seesParty[i])
+            alertNearby(actors_.id(i), party.cell);
     std::array<Goal, NpcWorld::maxInstances> goals{};
     for (std::size_t i = 0; i < state_.count; ++i) {
         if (incapacitated && (*incapacitated)[i]) {
             navigation_.cancel(i);
             continue; // Includes facing; ordinary attack/travel locks still perceive.
         }
-        goals[i] = think(i, party);
+        goals[i] = think(i, party, seesParty[i]);
         if ((frozen && (*frozen)[i]) || !goals[i].active)
             navigation_.cancel(i);
         else if (state_.timeMs >= state_.actors[i].moveDueMs)
@@ -267,6 +273,32 @@ void NpcAiController::alert(ActorId id, Cell party) noexcept {
     a.lastSeen = party;
     a.lastSeenMs = state_.timeMs;
     a.moveDueMs = std::min(a.moveDueMs, state_.timeMs + 600);
+}
+void NpcAiController::alertNearby(ActorId source, Cell party) noexcept {
+    const auto* actor = actors_.actor(source);
+    if (!actor || !actor->hostile() || actor->life != ActorLife::Alive)
+        return;
+    // Repeated observations refresh knowledge, not an already-active movement
+    // cooldown (which may include Slow or other deliberate travel delays).
+    const auto warn = [&](ActorId id) {
+        auto& a = state_.actors[id.slot];
+        const auto due = a.moveDueMs;
+        const bool active = aware(id);
+        alert(id, party);
+        if (active)
+            a.moveDueMs = due;
+    };
+    warn(source);
+    const auto origin = actor->npc.cell;
+    for (std::size_t i = 0; i < state_.count; ++i) {
+        const auto& other = actors_.snapshot().actors[i];
+        if (i == source.slot || !other.hostile() || other.life != ActorLife::Alive ||
+            distance(origin, other.npc.cell) > 3 ||
+            (effects_ && !effects_->conscious(actors_.id(i))) ||
+            !alertLineOfSight(map_, origin, other.npc.cell))
+            continue;
+        warn(actors_.id(i));
+    }
 }
 bool NpcAiController::aware(ActorId id) const noexcept {
     const auto* actor = actors_.actor(id);

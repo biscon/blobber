@@ -34,6 +34,8 @@ bool gridSight(Solid solid, Cell from, Cell target, bool blockingEndpoint = fals
 }
 bool discoveryVisible(GeometryView, Cell, Heading, Cell) noexcept;
 bool lineOfSight(GeometryView, Cell, Cell) noexcept;
+// Companion warnings cannot cross door thresholds, even while the door is open.
+bool alertLineOfSight(GeometryView, Cell, Cell) noexcept;
 bool inBowRange(Cell, Cell) noexcept;
 bool combatAdjacent(GeometryView, Cell, Cell) noexcept;
 bool inFrontBand(Cell, Heading, Cell) noexcept;

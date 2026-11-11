@@ -30,6 +30,8 @@ class NpcAiController {
                 const std::array<bool, NpcWorld::maxInstances>* frozen = nullptr,
                 const std::array<bool, NpcWorld::maxInstances>* incapacitated = nullptr) noexcept;
     void alert(ActorId id, Cell party) noexcept;
+    // Direct observation/provocation only; recipients never relay this warning.
+    void alertNearby(ActorId source, Cell party) noexcept;
     void bindEffects(EffectController* e) noexcept { effects_ = e; }
     void turnMovement(bool on) noexcept { turnMovement_ = on; }
     void discardPreparation(ActorId id) noexcept {
@@ -77,7 +79,7 @@ class NpcAiController {
         Cell target{};
         std::optional<Cell> preferred{};
     };
-    Goal think(std::size_t slot, Player party) noexcept;
+    Goal think(std::size_t slot, Player party, bool seesParty) noexcept;
     std::optional<Cell> preferredFront(Player party) const noexcept;
     bool step(std::size_t slot, Cell destination, Player party, std::uint64_t now,
               bool approaching = false) noexcept;

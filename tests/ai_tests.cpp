@@ -1,7 +1,9 @@
 #include "game/npc_ai.hpp"
 #include "game/perception.hpp"
+#include "support/allocations.hpp"
 #include "support/check.hpp"
 #include "support/combat_fixtures.hpp"
+#include <algorithm>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
@@ -101,6 +103,151 @@ void memoryAndRoutines() {
     bad.ai.waypoints[0] = {5, 1};
     rejects([&] { NpcWorld invalid(disconnected, {2, 1}, {"goblin"}, {bad}); },
             "Disconnected patrol destination rejected");
+}
+void sharedSightWarnings() {
+    const auto map = room();
+    const auto catalog = combatCatalog();
+    const Player party{{7, 8}, Heading::North};
+    for (bool reversed : {false, true}) {
+        std::vector<NpcInstance> pack{npc({7, 4}), npc({9, 4}, Heading::North),
+                                       npc({10, 4}, Heading::North), npc({11, 4}, Heading::North)};
+        if (reversed)
+            std::reverse(pack.begin(), pack.end());
+        NpcWorld places(map, party.cell, {"goblin"}, pack);
+        ActorWorld actors(map, catalog, places);
+        NpcAiController ai(map, actors, 5);
+        std::array<bool, NpcWorld::maxInstances> frozen{};
+        frozen.fill(true);
+        allocations = 0;
+        watching = true;
+        ai.update(100, 100, party, &frozen);
+        watching = false;
+        check(allocations == 0, "First direct detection and shared warnings allocate no C++ storage");
+        for (unsigned i = 0; i < pack.size(); ++i) {
+            const bool expected = pack[i].cell.x <= 10;
+            check(ai.aware(actors.id(i)) == expected,
+                  "Sight warns rear-facing companions through radius three without relaying to four");
+            if (expected)
+                check(ai.snapshot().actors[i].lastSeen == party.cell,
+                      "Every warned companion receives the observed party cell in the same tick");
+        }
+        ai.update(100, 200, {{1, 13}, Heading::North}, &frozen);
+        for (unsigned i = 0; i < pack.size(); ++i)
+            if (pack[i].cell.x <= 10)
+                check(ai.snapshot().actors[i].lastSeen == party.cell &&
+                          ai.snapshot().actors[i].lastSeenMs == 100,
+                      "Remembered warnings do not refresh or reveal a hidden party position");
+    }
+}
+void warningDoorBoundaries() {
+    const auto map = room(9, 9);
+    const auto catalog = combatCatalog();
+    const Player party{{4, 5}, Heading::North};
+    NpcWorld guard(map, party.cell, {"goblin"}, {npc({1, 1}, Heading::North)});
+    FloorFixtures fixtures;
+    fixtures.count = 2;
+    fixtures.entries[0] = {{4, 4}, Heading::North, FixtureKind::Door, 0};
+    fixtures.entries[1] = {{4, 2}, Heading::North, FixtureKind::GuardianGate, 0};
+    FloorObjectiveDefinition objective;
+    objective.count = 1;
+    objective.gate = 1;
+    GameSession game(map, catalog, guard, 5, party, false, {}, {}, fixtures, objective);
+    NpcWorld pack(map, party.cell, {"goblin"},
+                 {npc({3, 4}, Heading::West), npc({5, 4}, Heading::East), npc({3, 5}, Heading::West)});
+    for (bool open : {false, true}) {
+        if (open) {
+            check(bool(game.interact(game.nearbyFixture())), "Open warning-boundary fixture door");
+            game.update(.3, false);
+        }
+        ActorWorld actors(game.geometry(), catalog, pack);
+        NpcAiController ai(game.geometry(), actors, 5);
+        ai.alertNearby(actors.id(0), party.cell);
+        check(ai.aware(actors.id(0)) && !ai.aware(actors.id(1)) && ai.aware(actors.id(2)),
+              "Closed and open doors separate warnings without blocking same-side companions");
+        check(lineOfSight(game.geometry(), {3, 4}, {5, 4}) == open,
+              "Ordinary visibility still follows the current door state");
+    }
+    check(!alertLineOfSight(game.geometry(), {4, 4}, {5, 4}) &&
+              !alertLineOfSight(game.geometry(), {3, 4}, {4, 4}),
+          "A warning cannot start or end on an open door threshold");
+    check(!alertLineOfSight(game.geometry(), {3, 2}, {5, 2}), "Closed guardian gate blocks warnings");
+    game.actors().damage(game.actors().id(0), 1000, game.timeMs());
+    game.update(0, false);
+    check(game.fixtures().open(1) && lineOfSight(game.geometry(), {3, 2}, {5, 2}) &&
+              !alertLineOfSight(game.geometry(), {3, 2}, {5, 2}),
+          "Defeated guardians open normal sight while their gate still separates group warnings");
+}
+void warningGeometryAndEffects() {
+    const Map corner({"#######", "#.....#", "#.#...#", "#.....#", "#.....#", "#.....#", "#######"});
+    const auto catalog = combatCatalog();
+    NpcWorld places(corner, {5, 5}, {"goblin"},
+                    {npc({2, 1}), npc({3, 2}, Heading::North), npc({2, 3}, Heading::North)});
+    ActorWorld actors(corner, catalog, places);
+    NpcAiController ai(corner, actors, 5);
+    ai.alertNearby(actors.id(0), {5, 5});
+    check(ai.aware(actors.id(0)) && !ai.aware(actors.id(1)) && !ai.aware(actors.id(2)),
+          "Impact warnings cannot bend around a corner or pass through a wall");
+    ai.alertNearby({actors.id(0).slot, actors.id(0).world + 1}, {1, 1});
+    check(ai.snapshot().actors[0].lastSeen == Cell{5, 5}, "Foreign alert source does not mutate awareness");
+    actors.damage(actors.id(0), 1000, 0);
+    ai.alertNearby(actors.id(0), {1, 1});
+    check(!ai.aware(actors.id(1)), "Dead sources cannot warn companions");
+
+    const std::vector<std::string> rows{"#####", "#...#", "#...#", "#...#", "#####"};
+    WorldDefinition heights;
+    heights.surfaces.resize(25);
+    for (auto& s : heights.surfaces)
+        s.ceiling = 8;
+    heights.surfaces[2 * 5 + 2].floor = 3;
+    const Map raised(rows, heights);
+    check(!alertLineOfSight(raised, {1, 2}, {3, 2}), "Warnings obey height-aware sight occlusion");
+
+    const auto map = room();
+    const Player pose{{7, 8}, Heading::North};
+    NpcWorld pack(map, pose.cell, {"goblin"},
+                 {npc({7, 4}), npc({8, 4}, Heading::North), npc({9, 4}, Heading::North),
+                  npc({10, 4}, Heading::North)});
+    Party party(catalog);
+    ActorWorld group(map, catalog, pack);
+    rules::DiceRng rng(5);
+    EffectController effects(party, group, rng);
+    CombatEvents events;
+    effects.condition(group.id(0), EffectKind::Blind, {3}, 0, events);
+    effects.condition(group.id(1), EffectKind::Blind, {3}, 0, events);
+    effects.condition(group.id(2), EffectKind::Sleep, {3}, 0, events);
+    EffectRequest hold;
+    hold.world = group.snapshot().world;
+    hold.kind = EffectKind::HoldPerson;
+    hold.caster = rules::CharacterId{3};
+    hold.targets[0] = group.id(3);
+    hold.count = 1;
+    hold.difficulty = 1000;
+    check(bool(effects.apply(hold, 0, events)) && effects.has(group.id(3), EffectKind::HoldPerson),
+          "Held warning recipient fixture");
+    NpcAiController guarded(map, group, 5);
+    guarded.bindEffects(&effects);
+    guarded.update(100, 100, pose);
+    check(!guarded.aware(group.id(0)) && !guarded.aware(group.id(1)),
+          "Blind observers do not detect or broadcast player sight");
+    guarded.alertNearby(group.id(0), pose.cell);
+    check(guarded.aware(group.id(1)) && !guarded.aware(group.id(2)) && !guarded.aware(group.id(3)),
+          "Provocation warns blind companions but not sleeping or held companions");
+    check(effects.has(group.id(0), EffectKind::Blind) && effects.has(group.id(2), EffectKind::Sleep) &&
+              effects.has(group.id(3), EffectKind::HoldPerson),
+          "Shared warnings never remove incapacitation or other effects");
+
+    ActorWorld slowGroup(map, catalog, pack);
+    EffectController slowEffects(party, slowGroup, rng);
+    slowEffects.condition(slowGroup.id(0), EffectKind::Slow, {3}, 0, events);
+    NpcAiController slowed(map, slowGroup, 5);
+    slowed.bindEffects(&slowEffects);
+    slowed.update(100, 100, pose);
+    slowed.update(600, 700, pose);
+    const auto due = slowed.snapshot().actors[0].moveDueMs;
+    check(due == 1900, "Slowed pursuit fixture has a full movement cooldown");
+    slowed.update(100, 800, pose);
+    check(slowed.snapshot().actors[0].moveDueMs == due,
+          "Repeated direct observations and group warnings preserve the slowed movement cooldown");
 }
 void navigation() {
     const Map map({"#########", "#...#...#", "#...#...#", "#...#...#", "#.......#", "#########"});
@@ -491,6 +638,9 @@ int main(int argc, char** argv) {
             stress(1024);
         } else {
             sight();
+            sharedSightWarnings();
+            warningDoorBoundaries();
+            warningGeometryAndEffects();
             memoryAndRoutines();
             navigation();
             contentionAndSession();

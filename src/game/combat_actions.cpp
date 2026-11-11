@@ -96,39 +96,7 @@ void CombatController::alert(ActorId target, Player pose) noexcept {
         state_.enemies[state_.enemyCount++] = target;
     }
     episodeActors_[target.slot] = true;
-    // Radius-three floor flood has at most 25 distinct cells; actors do not block sound.
-    struct Node {
-        Cell cell;
-        int depth;
-    };
-    std::array<Node, 25> cells{};
-    std::size_t head = 0, count = 1;
-    cells[0] = {a->npc.cell, 0};
-    while (head < count) {
-        const auto n = cells[head++];
-        if (n.depth == 3)
-            continue;
-        for (int d = 0; d < 4; ++d) {
-            const auto c = n.cell + forward(static_cast<Heading>(d));
-            if (map_.solid(c))
-                continue;
-            bool seen = false;
-            for (std::size_t i = 0; i < count; ++i)
-                seen |= cells[i].cell == c;
-            if (!seen && count < cells.size())
-                cells[count++] = {c, n.depth + 1};
-        }
-    }
-    for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
-        const auto& other = actors_.snapshot().actors[i];
-        if (!other.hostile() || other.life != ActorLife::Alive)
-            continue;
-        for (std::size_t j = 0; j < count; ++j)
-            if (other.npc.cell == cells[j].cell) {
-                ai_.alert(actors_.id(i), pose.cell);
-                break;
-            }
-    }
+    ai_.alertNearby(target, pose.cell);
     known_[target.slot] = true;
     knownUntil_[target.slot] = state_.gameplayMs + combatRoundMs;
     if (realTime(state_.phase)) {

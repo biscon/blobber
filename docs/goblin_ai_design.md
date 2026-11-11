@@ -8,10 +8,95 @@ remains Planned; it has not started.
 
 ## Behavior and boundaries
 
+### Local group alerts — 2026-11-11
+
+Status: implemented and headless verified; user play review pending. NpcAiController owns a shared
+`alertNearby(ActorId, Cell)` operation for direct detection and hostile impacts;
+its existing `alert` remains an individual bookkeeping operation. Each 100 ms
+perception tick first gathers genuine direct observers into fixed stack scratch,
+then emits their warnings before computing any movement goals. Receiving a warning
+does not create an observer, so scan order cannot relay an alert. Observers may
+refresh nearby companions while they actually see the party; lost-sight memory
+does not broadcast or reveal a newer party position. Refreshing an already-aware
+actor preserves its movement deadline, including Slow's longer cooldown.
+
+The source is individually alerted, then living hostile companions within three
+Manhattan cells receive the same reported cell if conservative, height-aware LOS
+is clear. Warnings ignore facing and actor occupancy. The perception ray has a
+warning-only option that blocks every Door/GuardianGate threshold (including ray
+endpoints), irrespective of open state; normal visibility/attacks retain existing
+door behavior. Maps without fixtures use ordinary LOS. This models room boundaries
+at doors, without adding room IDs or encounter-wide bonds. Sleeping/held recipients
+are not warned; blindness does not prevent receiving a warning. Direct perception
+retains existing effect/incapacitation gates; attack provocation still warns before
+lethal damage and does not remove effects from the source or recipients.
+
+Combat delegates its former radius-three corner-following floor flood to this
+operation at the same impact/effect deadlines, including misses. Existing fixed
+round membership and pre-/post-roaming enrollment remain authoritative. No new
+owned resources, persistent state, RNG draws, save fields or compatibility changes.
+Work is bounded by maxInstances: direct detection plus at most one short-range
+actor scan per observer (quadratic worst case, cheap distance rejection before
+LOS); no allocation, flood workspace or pathfinding is added.
+
+Verification uses owned small headless fixtures: detector and recipient scan order,
+radius boundary/no relay, facing, walls/corners/heights, open/closed door and guardian
+thresholds, effect restrictions, impact timing/misses/lethal warnings, and a rotated
+five-member doorway detection/sidestep/enrollment regression without attacks.
+Include allocation-free sight/impact updates and existing reinforcement enrollment
+checks; no graphics change or benchmark. Commands/outcomes are recorded here after
+verification; user interactive review remains pending.
+
+#### Verification outcome
+
+The new sight-sharing regression failed against the previous implementation
+(rear-facing companions remained unaware), then passed with local warnings in
+both actor scan orders. The five-member doorway fixture has exactly two direct
+observers; all five are aware before the sidestep and enroll alive without party
+attacks, in all four headings. Its first detection/update allocates no engine C++
+storage. The original boundary-enrollment fixture still passes with explicit
+mob-to-mob LOS and party occlusion. Impact fixtures cover warning timing on hits
+and misses, no relay and warning survivors before a lethal source impact.
+
+Built Debug `blobber`, `blobber_ai_tests`, `blobber_combat_positioning_tests`,
+`blobber_hybrid_tests`, `blobber_impact_tests`, `blobber_effects_tests`,
+`blobber_combat_tests`, `blobber_automation_allocations_tests`,
+`blobber_expanded_spells_tests` and `blobber_combat_movement_tests` using
+`nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/cmake --build
+cmake-build-debug --target TARGETS -j 2`. The game build's existing bake-tool
+dependencies regenerated prepared assets after relinking; source assets did not
+change. Configured CMake/Ninja were retained throughout.
+
+Ran the configured CTest serially at low CPU/I/O priority:
+
+```sh
+nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest \
+  --test-dir cmake-build-debug -j 1 --output-on-failure \
+  -R '^(ai|combat_positioning|hybrid|impact|effects|combat|automation_allocations)$'
+```
+
+Six suites initially passed (including automation allocations in 21.86 seconds).
+The new doorway fixture initially allowed more than two direct observers; corrected
+its compact placement to exercise exactly two. Reran only changed suites
+`^(ai|combat_positioning|impact)$`: all three passed in 0.23 seconds. The final
+integration selection `^(expanded_spells|combat_movement)$` passed movement and
+exposed an obsolete assumption in the blind-perception fixture: its sighted
+companions now legitimately warn the blind actor. Isolated that actor for the
+existing direct-perception/memory assertions; the separate new AI fixture verifies
+blind warning reception and preserved Sleep/Hold Person. Rebuilt/reran only
+`^expanded_spells$`, passing in 0.03 seconds. All nine selected suites have passed;
+no repeated full matrix, stress test or benchmark was run.
+
+No rendering change, GPU check, desktop automation or interactive encounter review.
+Existing compatible saves require no migration or regeneration. No captures or
+diagnostics are retained; the owned disposable agent run is previewed and cleaned
+after verification, with build caches left intact.
+
 Guards, looping waypoint patrols (at most eight waypoints), and local wandering
 share deterministic directional awareness. Sight uses a six-cell Euclidean range,
 a 90-degree forward cone and conservative cell-center wall/corner occlusion.
-Actors do not obscure sight. No hearing, shared alerts or surprise mechanics.
+Actors do not obscure sight. Shared warnings extend this original behavior as
+described below; combat owns surprise mechanics.
 Pursuit targets a free cardinal neighbor of the visible party. Lost sight retains
 the last seen cell; investigate it (stop adjacent and face it if the party still
 occupies that remembered cell), then turn every 600 ms for 2400 ms. Give up

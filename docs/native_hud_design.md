@@ -68,8 +68,9 @@ its size and resource ownership are unchanged.
 
 Delayed outgoing attacks alert only at authoritative impact, before damage, for a
 valid living target. Misses and zero damage alert; canceled/gone targets do not.
-The existing radius-three local flood uses the current target cell and current
-party position. Lethal hits therefore alert surviving neighbors. Different missile
+The [radius-three local warning](goblin_ai_design.md#local-group-alerts--2026-11-11)
+uses the current target cell and current party position, with mob-to-mob LOS and
+doorway boundaries. Lethal hits therefore alert eligible surviving neighbors. Different missile
 recipients alert at their own deadlines, subject to normal local propagation.
 Instant hostile effects still alert immediately. Normal sight detection remains
 independent. Costs, saved rolls, flight, effect ordering and turn clocks are retained.

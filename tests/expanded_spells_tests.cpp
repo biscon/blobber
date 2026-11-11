@@ -395,6 +395,10 @@ void damageWakeAndBlindAi() {
               f.party.character(wizard)->temporaryHitPoints == 6,
           "Damage wakes even when entirely absorbed by temporary HP");
     const auto enemy = f.actors.id(0);
+    // Isolate direct blind perception: sighted companions can now legitimately
+    // report the party's position to a blind enemy (covered by the AI suite).
+    for (std::size_t i = 1; i < f.actors.snapshot().count; ++i)
+        f.actors.remove(f.actors.id(i));
     NpcAiController ai(f.map, f.actors, 5);
     ai.bindEffects(&f.effects);
     f.effects.condition(enemy, EffectKind::Blind, wizard, 0, f.events);

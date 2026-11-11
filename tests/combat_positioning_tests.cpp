@@ -260,7 +260,9 @@ void reopenedVacancy() {
     check(moves > 0 && claimed == 1, "Waiting enemies retry a death-opened gap; exactly one claims it");
 }
 void soundAlertedDoorway(unsigned heading) {
-    const std::vector<std::string> original{"#########", "#.......#", "#.......#", "#.......#", "###.#####",
+    // Hidden from the party, but visible to the front attacker: a local warning
+    // must still enroll them before the six-second boundary expires its memory.
+    const std::vector<std::string> original{"#########", "#.......#", "#.......#", "#.......#", "###..####",
                                             "###.#####", "#########", "#########", "#########"};
     const auto rotate = [heading](Cell c, int edge) {
         for (unsigned h = 0; h < heading; ++h)
@@ -344,6 +346,66 @@ void soundAlertedDoorway(unsigned heading) {
           "Corner reinforcements move and fill the free front without waiting for a death");
     check(omittedAfterTurn, "A visible enemy that already acted leaves the remaining-turn preview");
 }
+void sightAlertedDoorway(unsigned heading) {
+    const auto rotate = [heading](Cell c, int edge) {
+        for (unsigned h = 0; h < heading; ++h)
+            c = {edge - c.y, c.x};
+        return c;
+    };
+    const std::vector<std::string> original{
+        "###########", "#.........#", "#.........#", "#.........#", "#.........#", "#.........#",
+        "#####.#####", "#.........#", "#.........#", "#.........#", "###########"};
+    auto rows = original;
+    for (int y = 0; y < 11; ++y)
+        for (int x = 0; x < 11; ++x) {
+            const auto c = rotate({x, y}, 10);
+            rows[c.y][c.x] = original[y][x];
+        }
+    const Map map(rows);
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    const Player party{rotate({5, 7}, 10), Heading(heading)};
+    std::vector<NpcInstance> pack;
+    for (Cell c : {Cell{5, 4}, Cell{5, 3}, Cell{4, 4}, Cell{6, 4}, Cell{4, 5}})
+        pack.push_back({{0}, rotate(c, 10), rotate({0, 1}, 1), Heading((heading + 2) % 4)});
+    NpcWorld places(map, party.cell, {"goblin"}, pack);
+    FloorFixtures fixtures;
+    fixtures.count = 1;
+    fixtures.entries[0] = {rotate({5, 6}, 10), party.heading, FixtureKind::Door, 0};
+    GameSession game(map, catalog, places, 5, party, true, {}, {}, fixtures);
+    game.setAnimated(false);
+    game.update(.1, false);
+    for (unsigned i = 0; i < pack.size(); ++i)
+        check(game.ai().actors[i].awareness == Awareness::Routine,
+              "Closed guardian-room entrance prevents direct detection");
+    check(bool(game.interact(game.nearbyFixture())), "Open owned doorway for sight-pull regression");
+    game.update(.3, false);
+    allocations = 0;
+    watching = true;
+    game.update(.1, false);
+    watching = false;
+    check(allocations == 0, "Doorway direct detection and group warning allocate no C++ storage");
+    for (unsigned i = 0; i < pack.size(); ++i) {
+        const auto& actor = *game.actors().actor(game.actors().id(i));
+        check(npcSees(game.geometry(), actor.npc.cell, actor.npc.facing, party.cell) == (i < 2),
+              "Only two of the five compact companions directly see through the opening");
+        check(game.ai().actors[i].awareness == Awareness::Pursuing ||
+                  game.ai().actors[i].awareness == Awareness::Investigating,
+              "All five companions are warned before the party sidesteps or attacks");
+    }
+    game.move(Action::Right);
+    check(game.movement().player.cell == party.cell + right(party.heading),
+          "Party can immediately sidestep the opening before contact");
+    bool joined = false;
+    for (unsigned tick = 0; tick < 50 && !joined; ++tick) {
+        game.update(.1, false);
+        joined = game.combat().snapshot().enemyCount == pack.size();
+    }
+    check(joined, "Doorway sidestep enrolls all five warned companions in the same encounter");
+    for (unsigned i = 0; i < pack.size(); ++i)
+        check(game.combat().member(game.actors().id(i)) &&
+                  game.actors().actor(game.actors().id(i))->life == ActorLife::Alive,
+              "Full group membership requires neither a party attack nor a companion death");
+}
 void facePartyOnArrival() {
     const auto map = hybridRoom();
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
@@ -406,8 +468,10 @@ int main() {
         detourAndLocalMotion();
         pendingSearchTurn();
         reopenedVacancy();
-        for (unsigned heading = 0; heading < 4; ++heading)
+        for (unsigned heading = 0; heading < 4; ++heading) {
             soundAlertedDoorway(heading);
+            sightAlertedDoorway(heading);
+        }
         facePartyOnArrival();
         std::cout << "Combat positioning, route, turn-cost and allocation checks passed\n";
     } catch (const std::exception& e) {

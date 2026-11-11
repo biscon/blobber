@@ -1,5 +1,12 @@
 # System design
 
+[Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
+and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,
+mob-to-mob LOS warning in NpcAiController. Door thresholds block warning rays even
+when open; recipients never relay warnings. Perception is collected before goals
+and movement, with bounded stack scratch and no new persistent state. Existing
+round-boundary enrollment, effect restrictions and save compatibility remain.
+
 [Doorway reinforcement enrollment](combat_positioning.md#doorway-encounter-investigation--2026-11-11):
 implemented; verification recorded in the linked design. Enroll already-alerted enemies at the round boundary before
 roaming's six-second perception update can expire their sound awareness. Freeze

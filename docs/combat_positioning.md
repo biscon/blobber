@@ -5,6 +5,11 @@
 Status: implemented; headless regression verified in all four headings. Interactive
 verification of the user's particular encounter remains pending.
 
+The [local group-alert revision](goblin_ai_design.md#local-group-alerts--2026-11-11)
+retains this boundary ordering. Its owned fixture now explicitly gives the front
+attacker LOS to companions hidden from the party, preserving the expiry/enrollment
+regression while respecting the new warning LOS constraint.
+
 Reproduced: round-end roaming advances AI time by six seconds, which expires a
 sound alert behind a corner before the existing enrollment pass can see it. Each
 new attack alerts the same enemies again; the boundary forgets them again. Killing

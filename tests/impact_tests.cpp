@@ -67,7 +67,10 @@ void partyArrows() {
     const auto map = hybridRoom();
     const auto c = catalog();
     const Player p{{5, 9}, Heading::North};
-    NpcWorld places(map, p.cell, {"goblin"}, {{{0}, {5, 4}, {0, 0}, Heading::North}});
+    NpcWorld places(map, p.cell, {"goblin"},
+                    {{{0}, {5, 4}, {0, 0}, Heading::North},
+                     {{0}, {7, 4}, {0, 0}, Heading::North},
+                     {{0}, {9, 4}, {0, 0}, Heading::North}});
     bool hit = false, miss = false, critical = false;
     for (unsigned seed = 0; seed < 80 && !(hit && miss && critical); ++seed) {
         GameSession s(map, c, places, seed, p, false, {timings()});
@@ -81,6 +84,8 @@ void partyArrows() {
         check(accepted.event == CombatEvent::AttackStarted && accepted.damage == 0 && accepted.roll == 0,
               "Acceptance hides pending result");
         check(s.ai().actors[0].awareness == Awareness::Routine, "Accepting an arrow does not alert");
+        check(s.ai().actors[1].awareness == Awareness::Routine,
+              "Accepting an arrow does not warn nearby companions");
         ui.record(accepted);
         check(ui.snapshot().log.size() == 1, "Acceptance has no result log");
         check(s.submit(command).reason == CommandReason::StaleTurn, "Duplicate spends no action");
@@ -91,6 +96,8 @@ void partyArrows() {
         check(s.actors().actor(*command.target)->hitPoints == hp, "HP unchanged until arrival");
         check(!s.actors().actor(*command.target)->hasDamage, "No premature reaction");
         check(s.ai().actors[0].awareness == Awareness::Routine, "Flight does not alert before arrival");
+        check(s.ai().actors[1].awareness == Awareness::Routine,
+              "Companion warnings wait for the authoritative impact");
         const auto before = s.timeMs();
         s.update(60, true);
         check(s.timeMs() == before, "Pause freezes flight");
@@ -103,6 +110,9 @@ void partyArrows() {
               "Damage committed with event");
         check(ui.snapshot().log.size() == 2, "Result log arrives with impact");
         check(s.ai().actors[0].awareness == Awareness::Pursuing, "Hits and misses alert at impact");
+        check(s.ai().actors[1].awareness == Awareness::Pursuing &&
+                  s.ai().actors[2].awareness == Awareness::Routine,
+              "Hits and misses warn a nearby companion without relaying to a distant one");
         hit |= result.hit;
         miss |= !result.hit;
         critical |= result.critical;
@@ -172,6 +182,17 @@ void overlappingAndLethal() {
     check(s.combat().snapshot().phase == CombatPhase::Victory, "Victory follows settled lethal impact");
     (void)a;
     (void)d;
+    NpcWorld companions(map, p.cell, {"goblin"},
+                        {{{0}, {5, 4}, {0, 0}, Heading::North},
+                         {{0}, {7, 4}, {0, 0}, Heading::North}});
+    GameSession warning(map, c, companions, 5, p, false, {timings()});
+    for (unsigned i = 0; i < 4; ++i)
+        warning.submit(shot(warning, i));
+    warning.update(.396, false);
+    check(warning.actors().actor(warning.actors().id(0))->life == ActorLife::Dead &&
+              warning.actors().actor(warning.actors().id(1))->life == ActorLife::Alive &&
+              warning.ai().actors[1].awareness == Awareness::Pursuing,
+          "A lethal impact warns living companions before its source dies");
     // Same initial commands, split versus skipped time: no lost or duplicated impacts.
     const auto sturdy = catalog();
     GameSession split(map, sturdy, places, 7, p, false, {timings()}),
