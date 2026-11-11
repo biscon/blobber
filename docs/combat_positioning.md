@@ -1,5 +1,58 @@
 # Combat positioning for waiting enemies
 
+## Doorway encounter investigation — 2026-11-11
+
+Status: implemented; headless regression verified in all four headings. Interactive
+verification of the user's particular encounter remains pending.
+
+Reproduced: round-end roaming advances AI time by six seconds, which expires a
+sound alert behind a corner before the existing enrollment pass can see it. Each
+new attack alerts the same enemies again; the boundary forgets them again. Killing
+the current front can release real-time pursuit before that expiry, creating the
+appearance of enemies queuing for deaths even when a front slot is free.
+
+Implemented correction (design recorded before implementation): CombatController enrolls
+already-aware/adjacent survivors at the existing round boundary after effect
+reconciliation, before preparing frozen masks and advancing roaming. These new
+members join the frozen mask and receive only their ordinary initiative movement,
+without an extra roaming step or readiness charge. Retain post-roaming enrollment
+for enemies newly alerted by sight or arriving during roaming, and group insertion
+after both passes. Membership stays fixed during the round; no new state,
+allocations, navigation interfaces or save fields. Fixed actor scans remain bounded
+by maxInstances.
+
+Use a high-HP/no-damage owned three-enemy doorway with two enemies behind a corner;
+pass party turns and verify alert retention, next-boundary enrollment and movement
+into free front slots before any death. Check all four headings, frozen boundary
+positions/readiness and allocation-free updates. Separately check that the read-only
+preview omits an enemy after its turn: it lists remaining opportunities in this
+round, not all encounter participants.
+
+Verification: before the fix, the owned doorway regression failed because sound-
+alerted reinforcements never enrolled over four rounds; after the fix all four
+headings pass. Both reinforcements move and one fills the remaining near slot and
+attacks while the initial attacker remains alive in its original slot. New members
+remain stationary across round-end roaming and updates allocate no engine C++
+storage. The remaining-turn preview correctly omits an enemy after its opportunity.
+
+Built Debug `blobber` and the corresponding nine test targets using the configured
+`/home/bison/clion/bin/cmake/linux/x64/bin/cmake --build cmake-build-debug --target
+TARGETS -j 2`, with `nice -n 15 ionice -c 3`. The game build's existing dependencies
+regenerated prepared world/portrait/creator assets after bake-tool relinking. Ran:
+
+```sh
+nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest \
+  --test-dir cmake-build-debug -j 1 --output-on-failure \
+  -R '^(combat_positioning|combat_movement|hybrid|ai|combat|effects|impact|automation|automation_allocations)$'
+```
+
+All nine suites passed in 28.25 seconds, including existing full-front/vacancy,
+boundary enrollment, interrupted-round and allocation checks. No GPU/rendering
+change, desktop automation, benchmark or alternate-configuration matrix; the
+specific screenshot encounter was not loaded. No save fields or content changed.
+The owned disposable agent run was previewed and cleaned; no images or diagnostic
+exceptions were retained.
+
 ## SRD combat movement — 2026-11-08
 
 Status: implemented, mechanically verified and accepted by the user (2026-11-08).

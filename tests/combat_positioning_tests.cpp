@@ -259,6 +259,91 @@ void reopenedVacancy() {
     }
     check(moves > 0 && claimed == 1, "Waiting enemies retry a death-opened gap; exactly one claims it");
 }
+void soundAlertedDoorway(unsigned heading) {
+    const std::vector<std::string> original{"#########", "#.......#", "#.......#", "#.......#", "###.#####",
+                                            "###.#####", "#########", "#########", "#########"};
+    const auto rotate = [heading](Cell c, int edge) {
+        for (unsigned h = 0; h < heading; ++h)
+            c = {edge - c.y, c.x};
+        return c;
+    };
+    auto rows = original;
+    for (int y = 0; y < 9; ++y)
+        for (int x = 0; x < 9; ++x) {
+            const auto c = rotate({x, y}, 8);
+            rows[c.y][c.x] = original[y][x];
+        }
+    const Map map(rows);
+    const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
+    const Player party{rotate({3, 5}, 8), Heading(heading)};
+    const auto front = rotate({3, 4}, 8), hidden = rotate({5, 3}, 8);
+    const auto anchorSlot = rotate({0, 1}, 1);
+    NpcWorld places(map, party.cell, {"goblin"},
+                    {npc(front, anchorSlot, party.cell), npc(hidden, rotate({0, 1}, 1), party.cell),
+                     npc(hidden, rotate({1, 1}, 1), party.cell)});
+    GameSession game(map, catalog, places, 5, party, true);
+    const auto anchor = game.actors().id(0);
+    const auto newcomer = game.actors().id(1);
+    check(!lineOfSight(map, party.cell, hidden) && game.ai().actors[1].awareness == Awareness::Routine,
+          "Doorway reinforcements start unaware behind the corner");
+    bool alerted = false, enrolled = false, attacked = false, omittedAfterTurn = false;
+    std::uint64_t attackedRound = 0;
+    std::array<bool, 2> moved{};
+    for (unsigned tick = 0; tick < 400 && game.combat().snapshot().round <= 4; ++tick) {
+        const auto before = game.combat().snapshot();
+        std::array<NpcInstance, 2> previous{};
+        for (unsigned i = 0; i < 2; ++i)
+            previous[i] = game.actors().actor(game.actors().id(i + 1))->npc;
+        allocations = 0;
+        watching = true;
+        if (before.awaitingAction)
+            game.submit(turnCommand(game));
+        else {
+            const auto& events = game.update(.25, false);
+            for (const auto& out : events) {
+                if (out.event == CombatEvent::Move && out.enemy.slot >= 1 && out.enemy.slot <= 2)
+                    moved[out.enemy.slot - 1] = true;
+                if (out.event == CombatEvent::AttackStarted && sameActor(out.enemy, newcomer)) {
+                    attacked = true;
+                    attackedRound = before.round;
+                }
+            }
+        }
+        watching = false;
+        check(allocations == 0, "Sound enrollment and reinforcement movement allocate no C++ storage");
+        alerted |= game.ai().actors[1].awareness == Awareness::Pursuing;
+        enrolled |= game.combat().member(newcomer);
+        const auto current = game.combat().snapshot();
+        if (before.phase == CombatPhase::RoundEnd && current.round == before.round + 1) {
+            if (current.round == 2)
+                check(game.combat().member(newcomer) && game.combat().member(game.actors().id(2)),
+                      "Sound-alerted reinforcements join the very next round");
+            for (unsigned i = 0; i < 2; ++i) {
+                const auto& actor = game.actors().actor(game.actors().id(i + 1))->npc;
+                check(actor.cell == previous[i].cell && actor.subcell == previous[i].subcell,
+                      "Newly enrolled reinforcements cannot also take a round-end roaming step");
+            }
+        }
+        if (attacked && current.phase == CombatPhase::Turns && current.round == attackedRound &&
+            (!current.activeEnemy || !sameActor(*current.activeEnemy, newcomer))) {
+            auto preview = current;
+            game.combat().previewTurns(preview);
+            bool listed = false;
+            for (std::size_t i = 0; i < preview.upcomingCount; ++i)
+                listed |= preview.upcoming[i].enemy && sameActor(*preview.upcoming[i].enemy, newcomer);
+            omittedAfterTurn |= !listed;
+        }
+        check(game.actors().actor(anchor)->life == ActorLife::Alive &&
+                  game.actors().actor(anchor)->npc.cell == front &&
+                  game.actors().actor(anchor)->npc.subcell == anchorSlot,
+              "Doorway reinforcements advance while the first attacker lives and holds its slot");
+        checkOccupancy(game.actors());
+    }
+    check(alerted && enrolled, "Combat sound alerts corner reinforcements and enrolls them at a boundary");
+    check(moved[0] && moved[1] && attacked,
+          "Corner reinforcements move and fill the free front without waiting for a death");
+    check(omittedAfterTurn, "A visible enemy that already acted leaves the remaining-turn preview");
+}
 void facePartyOnArrival() {
     const auto map = hybridRoom();
     const auto catalog = combatCatalog(1000, -100, {1, 4, -100});
@@ -321,6 +406,8 @@ int main() {
         detourAndLocalMotion();
         pendingSearchTurn();
         reopenedVacancy();
+        for (unsigned heading = 0; heading < 4; ++heading)
+            soundAlertedDoorway(heading);
         facePartyOnArrival();
         std::cout << "Combat positioning, route, turn-cost and allocation checks passed\n";
     } catch (const std::exception& e) {

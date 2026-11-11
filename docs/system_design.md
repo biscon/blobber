@@ -1,5 +1,12 @@
 # System design
 
+[Doorway reinforcement enrollment](combat_positioning.md#doorway-encounter-investigation--2026-11-11):
+implemented; verification recorded in the linked design. Enroll already-alerted enemies at the round boundary before
+roaming's six-second perception update can expire their sound awareness. Freeze
+these new members during roaming and retain the post-roaming enrollment pass for
+new arrivals. Keep initiative membership fixed within each round and the existing
+remaining-turn preview semantics. No additional storage or save fields.
+
 ## Campaign welcome and initial heading — 2026-11-11
 
 Implemented and mechanically verified; runtime user review pending. New campaigns
@@ -1247,6 +1254,12 @@ See [R06 verification](verification/archive/r06_verification.md) for executed ch
 | `src/persistence/` | Checked content/character/scenario/campaign disk adapters; [campaign save](procedural_campaign_save_design.md) |
 | `src/automation/`, `tools/` | Typed sessions, strict replay, CLI/client/local MCP, owned captures and opt-in experiments; [protocol](headless_protocol.md), [MCP](mcp_design.md) |
 | `tests/` | Self-owned CPU/GPU regression fixtures and resource/allocation guards; no retired renderer harnesses |
+
+[Live diagnostics and encounter reconstruction roadmap](live_diagnostics_plan.md):
+**deferred; LD01–LD04 Planned, no active slice or assigned next task**. Proposed
+read-only live state/capture access and recent history precede separate diagnostic
+checkpoints and headless reconstruction. This is future reference, not an instruction
+to resume work; start only when the user explicitly selects it.
 
 The bestiary expansion is closed with B01–B05 accepted and B06 superseded into
 [campaign PC07](procedural_campaign_plan.md#pc07-depth-bands-and-finite-recovery-encounters).

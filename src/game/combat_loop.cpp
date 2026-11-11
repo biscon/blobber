@@ -120,6 +120,9 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             effects_.advance(state_.gameplayMs, now, false, events);
             reconcileEffects(now, events);
             refreshReadiness();
+            // Capture sound alerts before the full-round perception update can
+            // expire them. New members use initiative movement, not roaming too.
+            enroll(pose, false);
             std::array<bool, NpcWorld::maxInstances> frozen{};
             std::array<Cell, NpcWorld::maxInstances> before{};
             for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
