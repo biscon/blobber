@@ -1,8 +1,8 @@
 # Linux distribution: proposed delivery roadmap
 
 Created: 2026-11-11.
-Status: **LD01 accepted and closed by the user, 2026-11-11.
-LD02–LD04 remain planned.**
+Status: **LD01 and LD02 accepted and closed by the user, 2026-11-11.
+LD03–LD04 remain planned.**
 
 Deliver a downloadable Linux x86-64 game archive containing the executable and
 only its required runtime content. The user will run a separate planning step and
@@ -15,12 +15,12 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | None — LD01 accepted and closed |
-| Next eligible slice | LD02 — detailed planning; not started |
-| Implemented distribution support | Shared curated Release inventory, clean dist-stage and content verification; no portable build/archive/CI |
-| Awaiting user review | None for LD01; [accepted handoff](linux_distribution_ld01.md) retains the audit and limitations |
+| Active slice | None — LD02 accepted and closed |
+| Next eligible slice | LD03 — separate detailed planning; not started |
+| Implemented distribution support | Curated staging plus pinned Ubuntu 22.04 baseline build and passing ELF/dependency audit; no archive/CI |
+| Awaiting user review | None for LD01/LD02; [accepted LD02 handoff](linux_distribution_ld02.md) retains evidence and limitations |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Separate LD02 planning when requested; do not advance automatically |
+| Next action | Separate LD03 planning when requested; do not advance automatically |
 
 Update this checkpoint, the tracker and the active slice's handoff together.
 Implementation completion and user acceptance are separate states. Only the user
@@ -133,8 +133,8 @@ source revision, toolchain and content identity so results can be reproduced.
 | Slice | Deliverable | Dependency | Status |
 | --- | --- | --- | --- |
 | LD01 | Runtime inventory and clean dist-stage target | Existing game and asset pipeline | Accepted and closed — 2026-11-11 |
-| LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Planned |
-| LD03 | Versioned archive, checksums and relocated-package verification | Reviewed LD02 release build | Planned |
+| LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Accepted and closed — 2026-11-11 |
+| LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Planned |
 | LD04 | GitHub-hosted automation and compatibility evidence | Reviewed LD03 package/verification commands | Planned |
 
 ### LD01 — Runtime content and clean staging
@@ -177,6 +177,14 @@ LD02. No portable ABI claim yet. Record exact commands in this slice's design an
 handoff, not a new permanent report for every attempt.
 
 ### LD02 — Controlled baseline and dependency closure
+
+Approved [detailed design/handoff](linux_distribution_ld02.md); implementation
+authorized 2026-11-11. **Implemented, mechanically verified, accepted and closed
+by the user, 2026-11-11.** The user reports it is working fine. One actual Ubuntu
+22.04 Release build, 391-file stage and ELF/dependency
+audit pass. Maximum GLIBC requirement 2.35; static raylib/yaml-cpp/compiler runtimes.
+Twelve focused suites and seventeen checker cases pass. Exact evidence, corrections,
+notices and limits remain in the accepted handoff. LD03 planning has not started.
 
 Choose and pin a Linux build environment compatible with the proposed baseline.
 A digest-pinned container recipe can run locally and inside a GitHub-hosted VM;

@@ -120,6 +120,21 @@
       "root": "manifest",
       "path": "notices/nlohmann-json.txt",
       "destination": "notices/nlohmann-json.txt"
+    },
+    {
+      "root": "manifest",
+      "path": "notices/raylib-components.txt",
+      "destination": "notices/raylib-components.txt"
+    },
+    {
+      "root": "manifest",
+      "path": "notices/gcc-runtime-copyright.txt",
+      "destination": "notices/gcc-runtime-copyright.txt"
+    },
+    {
+      "root": "manifest",
+      "path": "notices/gcc-runtime-GPL-3.txt",
+      "destination": "notices/gcc-runtime-GPL-3.txt"
     }
   ],
   "selectors": [

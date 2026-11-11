@@ -6,12 +6,21 @@ by the user, 2026-11-11**; implemented and mechanically verified.
 runtime inventory, CPU-only build helper and clean `dist-stage` ownership. Debug
 source paths and content identities remain unchanged. Nine focused suites and a
 388-file / 1,334,576,722-byte production stage pass; native host dependencies and
-notice gaps remain explicit. LD02–LD04 remain planned: controlled Linux baseline,
-verified archive and hosted automation. No portability or playable-package claim;
+notice gaps remain explicit. LD02 is accepted and closed by the user, 2026-11-11;
+verified archives and hosted automation remain planned in LD03–LD04. No portability or playable-package claim;
 no automatic advancement. The user reports working content and clean folders and
 accepts the audit's 1.5 MB (0.114%) of existing repeated material/sound data. The
 stage excludes original world artwork alongside the packed publication; its main
-size is uncompressed pixels, mip levels and masks. LD02 planning has not started.
+size is uncompressed pixels, mip levels and masks.
+[LD02 design/handoff](linux_distribution_ld02.md): **implemented, mechanically
+verified, accepted and closed by the user, 2026-11-11**. The user reports working
+behavior. A pinned Ubuntu 22.04 / glibc 2.35 build uses
+static raylib/yaml-cpp/libstdc++/libgcc and generic x86-64 compilation. The separate
+391-file stage passes content and ELF/symbol/dependency checks, including required
+GLX runtime loads; maximum GLIBC requirement is 2.35. Twelve focused suites and
+seventeen checker cases pass. Native CLion trees remain independent. Agent checks
+did not include desktop review; no playable extracted package, hosted run or
+publication claim. LD03 is next for separate planning when requested.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,

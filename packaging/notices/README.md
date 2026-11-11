@@ -19,3 +19,13 @@ absent from the current asset directory. Music source/license documentation and 
 audio replacement model's linked terms have not been independently verified.
 These are recorded distribution gaps, not a claim that publication is cleared.
 Do not invent end-user terms or add a project open-source license to address them.
+
+LD02 reconciles raylib, bundled GLFW, yaml-cpp and nlohmann/json notices against
+its actual hash-pinned sources. `packaging/linux/notices.py` reproduces/checks
+these exact copies inside the baseline image. `raylib-components.txt` retains
+embedded header/library notice blocks (including optional formats conservatively),
+QOI's attribution and MIT permission text. It records source-header SHA-256 values.
+`gcc-runtime-copyright.txt` is the baseline gcc-11-base package's full copyright
+file, including GCC Runtime Library Exception 3.1; `gcc-runtime-GPL-3.txt` is its
+referenced GPLv3 text. These concern dependencies, not Blobber's project license.
+The font/music/audio gaps above remain unresolved and publication is not cleared.

@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "glibc_max": "2.35",
+  "interpreter": "/lib64/ld-linux-x86-64.so.2",
+  "shipped_needed": [
+    "libc.so.6",
+    "libm.so.6",
+    "libpthread.so.0",
+    "libdl.so.2",
+    "librt.so.1",
+    "libOpenGL.so.0",
+    "libGL.so.1",
+    "libGLX.so.0",
+    "libGLU.so.1",
+    "libX11.so.6",
+    "libXext.so.6",
+    "libSM.so.6",
+    "libICE.so.6",
+    "ld-linux-x86-64.so.2"
+  ],
+  "host_needed": [
+    "ld-linux-x86-64.so.2",
+    "libc.so.6",
+    "libm.so.6",
+    "libpthread.so.0",
+    "libdl.so.2",
+    "librt.so.1",
+    "libOpenGL.so.0",
+    "libGL.so.1",
+    "libGLX.so.0",
+    "libGLU.so.1",
+    "libGLdispatch.so.0",
+    "libX11.so.6",
+    "libXext.so.6",
+    "libSM.so.6",
+    "libICE.so.6",
+    "libxcb.so.1",
+    "libXau.so.6",
+    "libXdmcp.so.6",
+    "libbsd.so.0",
+    "libmd.so.0",
+    "libuuid.so.1",
+    "libstdc++.so.6",
+    "libgcc_s.so.1",
+    "libXrender.so.1",
+    "libXi.so.6",
+    "libXrandr.so.2",
+    "libXcursor.so.1",
+    "libXinerama.so.1",
+    "libXfixes.so.3",
+    "libXxf86vm.so.1"
+  ],
+  "runtime_loads": [
+    {
+      "library": "libX11.so.6",
+      "required": true,
+      "owner": "GLFW x11_init.c: X11 platform"
+    },
+    {
+      "library": "libGLX.so.0",
+      "required": true,
+      "owner": "GLFW glx_context.c: GLX; legacy libGL.so.1 fallback"
+    },
+    {
+      "library": "libGL.so.1",
+      "required": false,
+      "owner": "GLFW context.c/glx_context.c: legacy GL and entry points"
+    },
+    {
+      "library": "libEGL.so.1",
+      "required": false,
+      "owner": "GLFW egl_context.c: alternate context route; default uses GLX"
+    },
+    {
+      "library": "libOSMesa.so.8",
+      "required": false,
+      "owner": "GLFW osmesa_context.c: alternate context route, unused by game"
+    },
+    {
+      "library": "libXrandr.so.2",
+      "required": false,
+      "owner": "GLFW x11_init.c: RandR"
+    },
+    {
+      "library": "libXi.so.6",
+      "required": false,
+      "owner": "GLFW x11_init.c: XInput"
+    },
+    {
+      "library": "libXcursor.so.1",
+      "required": false,
+      "owner": "GLFW x11_init.c: cursor themes"
+    },
+    {
+      "library": "libXinerama.so.1",
+      "required": false,
+      "owner": "GLFW x11_init.c: monitor placement"
+    },
+    {
+      "library": "libXxf86vm.so.1",
+      "required": false,
+      "owner": "GLFW x11_init.c: video modes"
+    },
+    {
+      "library": "libX11-xcb.so.1",
+      "required": false,
+      "owner": "GLFW x11_init.c: XCB bridge"
+    },
+    {
+      "library": "libXrender.so.1",
+      "required": false,
+      "owner": "GLFW x11_init.c: Render"
+    },
+    {
+      "library": "libXext.so.6",
+      "required": false,
+      "owner": "GLFW x11_init.c: Shape extension"
+    },
+    {
+      "library": "libpulse.so.0",
+      "required": false,
+      "owner": "miniaudio: PulseAudio; host audio server required"
+    },
+    {
+      "library": "libasound.so.2",
+      "required": false,
+      "owner": "miniaudio: ALSA fallback; audio device required"
+    },
+    {
+      "library": "libjack.so.0",
+      "required": false,
+      "owner": "miniaudio: JACK probe; not required"
+    },
+    {
+      "library": "libsndio.so",
+      "required": false,
+      "owner": "miniaudio: sndio probe; not required"
+    }
+  ]
+}

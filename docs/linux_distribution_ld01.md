@@ -271,8 +271,8 @@ candidate. Preserve notices and exact content identities. Archive versioning,
 hashes, user run instructions and relocation testing remain LD03; CI remains LD04.
 The user accepted and closed LD01 on 2026-11-11. Acceptance covers the LD01 content
 staging contract and the documented duplication findings; subsequent distribution
-slices remain separate work. There is no automatic advancement; LD02 planning has
-not started.
+slices remain separate work. There is no automatic advancement; current LD02 status is recorded in its
+[separate handoff](linux_distribution_ld02.md).
 
 Disposable logs/fixtures belonged to agent run
 `20261111T191813Z-863c6790640c4ffb9e8f910df85ea128`; cleanup is previewed and applied

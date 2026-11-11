@@ -62,8 +62,9 @@ cmake --build --preset release --target dist-stage -j 1
 
 For an existing build tree, use its configured CMake/Ninja pair. The payload is
 `cmake-build-release/dist-stage/Release/`, with its file/size inventory beside it.
-This is local content staging; portable binaries and downloadable archives are
-later distribution slices. See the [LD01 contract and verification](docs/linux_distribution_ld01.md)
+This is native local content staging. For the separate controlled Ubuntu 22.04 /
+glibc 2.35 build and ELF audit, use the [LD02 build entry point](packaging/linux/README.md).
+Downloadable archives and relocated gameplay verification remain later slices. See the [LD01 contract and verification](docs/linux_distribution_ld01.md)
 for ownership rules, notice gaps and the next-slice handoff.
 
 ## Development checks
