@@ -1,5 +1,8 @@
 # Controlled Linux baseline (LD02)
 
+Combined manual Linux/Windows builds and exact download/publication instructions:
+[desktop distribution guide](../README.md).
+
 The environment targets Ubuntu 22.04 amd64 / glibc 2.35, OpenGL 3.3 and X11/XWayland.
 It deliberately does not inherit the development host's toolchain or libraries.
 See [design and executed handoff](../../docs/linux_distribution_ld02.md).
@@ -51,7 +54,7 @@ python3 /src/packaging/linux/notices.py --check /src/packaging/notices
 ```
 
 The normal driver performs this check before compiling. No project license or
-publication clearance is implied. Archive/relocation checks are LD03; CI is LD04.
+publication clearance is implied. Archive/relocation checks are LD03; combined manual CI is LD04.
 After recording verification, preview then apply cleanup of the owned agent run
 with `python3 tools/agent_artifacts.py clean RUN_DIRECTORY [--apply]`.
 
@@ -86,4 +89,5 @@ Both images remain independent of the accepted LD02 build image and package lock
 See [LD03 design/handoff](../../docs/linux_distribution_ld03.md) for actual results,
 selected evidence, failed-check corrections, coverage limits and the user review
 recipe. Software GL and audio path resolution do not establish physical GPU support
-or listening. No hosted workflow, tag push or public publication is included.
+or listening. LD04 automates these commands in the manual hosted workflow; no tag push or
+public publication is part of a build.

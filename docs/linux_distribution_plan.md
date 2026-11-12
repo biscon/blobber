@@ -4,7 +4,7 @@ Created: 2026-11-11.
 Status: **LD01 and LD02 accepted and closed by the user, 2026-11-11.
 LD03 accepted and closed by the user, 2026-11-11.
 WD01 accepted and closed by the user, 2026-11-12.
-LD04 is next eligible for planning and remains unstarted.**
+LD04 is In progress — implementation, authorized 2026-11-12.**
 
 Deliver downloadable desktop packages containing the executable and only required
 runtime content: the accepted Linux x86-64 `.tar.gz`, followed by a Windows x86-64
@@ -20,12 +20,12 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | None — WD01 accepted and closed by the user, 2026-11-12 |
-| Next eligible slice | LD04 — planning when requested; no automatic advancement |
+| Active slice | LD04 — In progress — implementation, authorized 2026-11-12; [design](linux_distribution_ld04.md) |
+| Next eligible slice | Complete LD04 and stop at Ready for review; acceptance remains with the user |
 | Implemented distribution support | Accepted Linux stage/archive/smoke; native Windows port, validated prepared import, ZIP/PE, extracted smoke and manual hosted workflow verified on the review branch |
-| Awaiting user review | None for WD01; working Windows gameplay and GUI/download corrections accepted |
+| Awaiting user review | No LD04 implementation handoff yet; WD01 remains accepted and closed |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Plan LD04 only when requested; stop after recording WD01 acceptance |
+| Next action | Implement and verify the approved LD04 plan; public publication remains separate |
 
 **Approved roadmap revision, 2026-11-11:** insert WD01 before LD04 and expand LD04
 to automate both supported packages. WD01 introduces the minimum manual Windows
@@ -46,6 +46,13 @@ Run workflow or `gh workflow run`; no normal commit/PR/merge, tag or Release eve
 starts builds. Public Release publication stays a separate explicit action. This
 planning handoff wrote documents and local commits only. Implementation was
 subsequently authorized and is recorded in the linked WD01 handoff.
+
+**LD04 planning, 2026-11-12:** the user requested this slice's implementation plan.
+The [proposed design](linux_distribution_ld04.md) reuses the registered workflow
+filename, with serial Linux, Windows and final artifact-verification jobs. Linux
+owns the shared preparation; both packages and downloaded bytes must pass before
+combined success. This request authorizes documentation only. Stop for the user's
+implementation instruction; it does not authorize a build, dispatch or publication.
 
 Update this checkpoint, the tracker and the active slice's handoff together.
 Implementation completion and user acceptance are separate states. Only the user
@@ -166,7 +173,7 @@ source revision, toolchain and content identity so results can be reproduced.
 | LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Accepted and closed — 2026-11-11 |
 | LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Accepted and closed — 2026-11-11 |
 | WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | Accepted and closed — 2026-11-12; [artifact/evidence](linux_distribution_wd01.md#selected-review-artifact) |
-| LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | Planned — next eligible; not started |
+| LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | In progress — implementation, authorized 2026-11-12; [design](linux_distribution_ld04.md) |
 
 ### LD01 — Runtime content and clean staging
 
@@ -392,12 +399,44 @@ Stop at Ready for review. Only user acceptance closes WD01 and makes LD04 eligib
 
 ### LD04 — Hosted automation and compatibility evidence
 
+**In progress — implementation, authorized 2026-11-12;
+[approved detailed implementation design](linux_distribution_ld04.md).**
+
+Implementation sequence:
+
+1. Add plain Linux player naming, checked optional prepared import in the Linux
+   driver and small fixtures for source/provenance, cache/ref bounds and combined
+   result failure cases. Preserve existing ABI/runtime verification contracts.
+2. Consolidate `.github/workflows/windows-review.yml` under the display name
+   `Desktop distribution build`, keeping its existing registration and manual-only
+   trigger. Use `linux -> windows -> verify` dependencies and the existing shared
+   concurrency group. No new bootstrap merge is needed for branch review.
+3. Build/package Linux in LD02's pinned environment. On an exact validated cache
+   hit import preparation; on a miss bake once in that same build and export it.
+   Verify the one archive in Ubuntu 22.04 and Debian 13, serially. Reuse the exact
+   prepared transfer for native Windows build/package/extracted verification.
+4. Upload raw single-file players/checksums and separate bounded evidence. Final
+   verification downloads exact artifact IDs, checks hashes/layout/source/content,
+   performs reverse Windows-to-Linux format import using the already-built small
+   verifier, and writes combined success only after every required check passes.
+   Unavailable graphics cannot satisfy the combined gate.
+5. Verify one real hosted run using `gh`, retain selected review bundles, document
+   dispatch/download/release-attachment instructions and update the handoff to
+   Ready for review. Only the user accepts/closes LD04; publication remains separate.
+
+The detailed design specifies proposed interfaces, failure/promotion rules, cache
+branch restrictions, permissions, test selection and cleanup. Use seven-day player/
+review retention and one-day internal transport retention; retain at most two
+1 GiB prepared cache entries. The first LD04 branch run may miss the sibling WD01
+cache and require one bake. A warm path must not be claimed without evidence.
+
 Use standard GitHub-hosted Linux and Windows runners for the confirmed public
 repository; no self-hosted machine, separately rented VM or cloud account is
 required. This slice follows accepted WD01 and consolidates its manual Windows
-workflow with the Linux release workflow. Run LD02's controlled environment and
-LD03's packaging/verification commands unchanged in CI; invoke WD01's native
-Windows build/package/verification commands for the second platform. Reuse the
+workflow with Linux distribution builds. Reuse LD02's controlled environment and
+LD03's packaging/verification behavior, with the planned import/naming additions;
+invoke WD01's native Windows build/package/verification commands for the second
+platform. Reuse the
 validated compatible prepared publication, rather than independently rebaking it
 for each platform without a concrete reason. An explicit runner OS label still receives image updates; it is
 not a substitute for the pinned build environment. The final pipeline is manual-only:
@@ -592,3 +631,17 @@ Marked WD01 Accepted and closed in the checkpoint, tracker, system overview,
 detailed handoff and capture README. LD04 is next eligible for planning only when
 requested; no LD04 work, workflow run, full-port merge or publication was started.
 Acceptance changes documentation only and preserves all prior verification limits.
+
+LD04 planning handoff, 2026-11-12: inspected accepted LD03/WD01 code, package
+drivers, prepared transfer/cache, current manual workflow and official GitHub
+policies. Added the linked proposed implementation design and practical sequence;
+updated the checkpoint, tracker and system index to In progress — planning, ready
+for plan review. Documentation whitespace, local links, slice heading order and
+status/index consistency pass. No code/workflow changes, builds, bakes, packages,
+remote operations or publication were performed. The owned planning run was
+previewed and cleaned; no disposable evidence or diagnostic exception remains.
+Implementation awaits the user's separate instruction.
+
+LD04 implementation authorized, 2026-11-12: the user instructed “implement the plan.”
+Branch implementation, focused checks, push/manual dispatch and exact artifact
+verification proceed in the approved scope. No publication or full merge is authorized.

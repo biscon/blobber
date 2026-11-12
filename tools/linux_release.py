@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -16,7 +17,7 @@ RECIPE = ROOT / 'packaging/linux'
 TESTS = ['runtime_inventory', 'dist_staging', 'options', 'packaged_options', 'npc_metadata',
          'dialogue', 'audio', 'music', 'blueprints', 'library', 'campaign_save_smoke',
          'linux_distribution_tools', 'distribution_archive', 'distribution_smoke',
-         'menu', 'gameplay_startup', 'commands', 'buttons']
+         'menu', 'gameplay_startup', 'commands', 'buttons', 'hosted_distribution_tools']
 TARGETS = ['blobber_distribution_tests', 'blobber_options_tests', 'blobber_packaged_options_tests',
            'blobber_npc_metadata_tests', 'blobber_dialogue_tests', 'blobber_audio_tests',
            'blobber_music_tests', 'blobber_blueprint_tests', 'blobber_library_tests',
@@ -105,7 +106,18 @@ def check_build_identity(build, identity):
         marker.write_text(json.dumps(identity, indent=2) + '\n')
 
 
-def _build_release(run, build, audit_only=False, dist=False, allow_dirty=False):
+def preparation_input(bundle):
+    if bundle is None:
+        return None
+    from distribution import prepared
+    bundle = Path(bundle).absolute()
+    manifest = prepared.validate(bundle, ROOT)
+    if not manifest['producer_environment'] or not manifest['identities']:
+        raise RuntimeError('Missing prepared producer evidence')
+    return {k: manifest[k] for k in ('producer_revision', 'input_digest', 'producer_environment', 'identities')}
+
+
+def _build_release(run, build, audit_only=False, dist=False, allow_dirty=False, prepared_input=None):
     validate_recipe()
     recipe_id = recipe_identity()
     tag = 'blobber-baseline:' + recipe_id[:20]
@@ -118,8 +130,16 @@ def _build_release(run, build, audit_only=False, dist=False, allow_dirty=False):
     identity = {'version': 1, 'recipe_sha256': recipe_id, 'image_id': image,
                 'source_root': str(ROOT), 'configuration': 'Release', 'baseline': 'ubuntu22.04-amd64',
                 'configuration_sha256': sha(ROOT / 'cmake/LinuxBaseline.cmake')}
+    publication = preparation_input(prepared_input)
+    if publication:
+        identity['prepared_input_digest'] = publication['input_digest']
+        identity['prepared_input_root'] = str(Path(prepared_input).absolute())
     check_build_identity(build, identity)
-    environment = {**identity, **source_identity(), 'lock_sha256': sha(RECIPE / 'lock.json')}
+    captured_source = source_identity()
+    environment = {**identity, **captured_source, 'lock_sha256': sha(RECIPE / 'lock.json')}
+    if publication:
+        environment['prepared'] = publication
+        (build / 'prepared-source-files.json').write_text(json.dumps(environment['source_files']) + '\n')
     if dist and environment['dirty'] and not allow_dirty:
         raise RuntimeError('Dirty source requires --allow-dirty')
     (build / 'baseline-environment.json').write_text(json.dumps(environment, indent=2) + '\n')
@@ -129,6 +149,8 @@ def _build_release(run, build, audit_only=False, dist=False, allow_dirty=False):
             '--mount', 'type=bind,src=' + str(build) + ',dst=/build',
             '--mount', 'type=bind,src=' + str(run) + ',dst=/run-output',
             '--workdir', '/build']
+    if publication:
+        base += ['--mount', 'type=bind,src=' + str(Path(prepared_input).absolute()) + ',dst=/prepared-input,readonly']
     for key, value in {'HOME': '/run-output/home', 'XDG_CONFIG_HOME': '/run-output/home/config',
                        'XDG_DATA_HOME': '/run-output/home/data', 'TMPDIR': '/run-output/tmp',
                        'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1', 'LP_NUM_THREADS': '2',
@@ -144,27 +166,55 @@ def _build_release(run, build, audit_only=False, dist=False, allow_dirty=False):
             raise RuntimeError('audit requires an existing configured baseline build')
         run_command(base + ['python3', '/src/tests/linux_distribution_tests.py'], run / 'checker-tests.log')
     else:
-        run_command(base + ['cmake', '-S', '/src', '-B', '/build', '-G', 'Ninja',
+        import_options = ['-DBLOBBER_PREPARED_INPUT=/prepared-input',
+                          '-DBLOBBER_PREPARED_SOURCE_LEDGER=/build/prepared-source-files.json'] if publication else []
+        run_command(base + ['/opt/cmake/bin/cmake', '-S', '/src', '-B', '/build', '-G', 'Ninja',
                             '-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja', '-DCMAKE_BUILD_TYPE=Release',
-                            '-DBUILD_TESTING=ON', '-DBLOBBER_LINUX_BASELINE=ON'], run / 'configure.log')
-        run_command(base + ['cmake', '--build', '/build', '--target'] + TARGETS + ['-j', '2'],
+                            '-DBUILD_TESTING=ON', '-DBLOBBER_LINUX_BASELINE=ON'] + import_options, run / 'configure.log')
+        targets = TARGETS + (['blobber_validate_prepared', 'blobber_distribution_compatibility'] if dist else [])
+        run_command(base + ['/opt/cmake/bin/cmake', '--build', '/build', '--target'] + targets + ['-j', '2'],
                     run / 'focused-build.log')
         run_command(base + ['ctest', '--test-dir', '/build', '-R', '^(' + '|'.join(TESTS) + ')$',
                             '-j', '1', '--output-on-failure', '--no-tests=error'], run / 'focused-tests.log')
+    if dist:
+        run_command(base + ['/opt/cmake/bin/cmake', '--build', '/build', '--target',
+                            'blobber_prepared_assets', '--parallel', '1'], run / 'prepared-build.log')
+        run_command(base + ['/build/blobber_validate_prepared', '/src/packaging/runtime-content.json',
+                            '/src/assets', '/build/assets/prepared'], run / 'prepared-validation.json')
+        from distribution import prepared
+        from distribution.archive import encoded
+        environment = json.loads((build / 'baseline-environment.json').read_text())
+        if publication is None:
+            publication = {'producer_revision': environment['revision'], 'input_digest': prepared.input_digest(ROOT),
+                           'producer_environment': {k: environment[k] for k in ('image_id','recipe_sha256','tools')},
+                           'identities': json.loads((run / 'prepared-validation.json').read_text())}
+        publication['publication_sha256'] = hashlib.sha256(encoded(prepared.files(build / 'assets/prepared'))).hexdigest()
+        environment['prepared'] = publication
+        (build / 'baseline-environment.json').write_bytes(encoded(environment))
     run_command(base + ['/opt/cmake/bin/cmake', '--build', '/build', '--target',
                         'dist' if dist else 'dist-audit', '-j', '1'], run / 'stage-audit.log')
     print('Baseline stage and audit:', build / 'dist-stage', flush=True)
     if dist:
-        # Translate the container's successful artifact path for the host caller.
-        for line in (run / 'stage-audit.log').read_text().splitlines():
-            if line.startswith('Package complete: /build/'):
-                print('Package:', build / line.removeprefix('Package complete: /build/'), flush=True)
+        run_command(base + ['/build/blobber_distribution_compatibility', 'export',
+                            '/run-output/compatibility-linux'], run / 'compatibility-linux.log')
+        if prepared_input is not None:
+            dry = capture(base + ['/opt/cmake/bin/cmake', '--build', '/build', '--target', 'blobber', '--', '-n'])
+            if re.search(r'\bblobber_bake_(world|portraits|creator)\s', dry):
+                raise RuntimeError('Imported Linux graph still schedules a production baker')
+        if source_identity() != captured_source:
+            raise RuntimeError('Source changed during baseline build')
+        from distribution.archive import package_name, encoded
+        version = re.search(r'project\(blobber VERSION ([0-9.]+)', (ROOT / 'CMakeLists.txt').read_text()).group(1)
+        bundle = build / 'dist' / package_name(version, environment['revision'], environment['dirty'], allow_dirty)
+        (run / 'distribution.json').write_bytes(encoded({'bundle': str(bundle), 'build': str(build)}))
+        print('Package:', bundle, flush=True)
 
 
-def build_release(run, build, audit_only=False, dist=False, allow_dirty=False):
+def build_release(run, build, audit_only=False, dist=False, allow_dirty=False, prepared_input=None):
     with build_lock(build):
         (build / 'dist-stage/Release.audit.json').unlink(missing_ok=True)
-        _build_release(run, build, audit_only, dist, allow_dirty)
+        (run / 'distribution.json').unlink(missing_ok=True)
+        _build_release(run, build, audit_only, dist, allow_dirty, prepared_input)
 
 
 def environment_check():
@@ -196,6 +246,7 @@ def main():
         command.add_argument('--build-dir', type=Path, default=ROOT / 'build-linux-baseline')
         if operation == 'dist':
             command.add_argument('--allow-dirty', action='store_true')
+            command.add_argument('--prepared-input', type=Path)
         if operation == 'verify-package':
             command.add_argument('--package-dir', type=Path, required=True)
     commands.add_parser('environment', help=argparse.SUPPRESS)
@@ -223,7 +274,7 @@ def main():
                 verify_package(run, args.package_dir.absolute())
             else:
                 build_release(run, build, args.operation == 'audit', args.operation == 'dist',
-                              getattr(args, 'allow_dirty', False))
+                              getattr(args, 'allow_dirty', False), getattr(args, 'prepared_input', None))
     except (RuntimeError, OSError, ValueError, subprocess.SubprocessError) as error:
         print('Baseline build failed:', error, file=sys.stderr)
         return 1

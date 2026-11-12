@@ -52,7 +52,7 @@ def package_name(version, revision, dirty, allow_dirty):
     require(re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:[-+][A-Za-z0-9.-]+)?', version), 'Invalid version')
     require(re.fullmatch(r'[0-9a-f]{40}', revision), 'Invalid Git revision')
     require(not dirty or allow_dirty, 'Dirty source requires --allow-dirty')
-    return f'blobber-{version}-g{revision[:12]}' + ('-dirty' if dirty else '') + '-linux-x86_64'
+    return f'blobber-{version}' + ('-dirty' if dirty else '') + '-linux-x86_64'
 
 
 def stage_inputs(stage, inventory, audit):
@@ -283,6 +283,8 @@ def distribute(build, source, version, allow_dirty):
                                                           'configuration_sha256', 'packages_sha256', 'tools')},
                           'policy_sha256': audit['policy_sha256'], 'elfs': audit['elfs'],
                           'required_glibc': audit['required_glibc']}
+            if 'prepared' in env:
+                build_info['prepared'] = env['prepared']
             archive = candidate / (name + '.tar.gz')
             write_archive(archive, name, files, {'BUILD.json': encoded(build_info),
                           'README.txt': regular(source / 'packaging/linux/player-readme.txt').read_bytes()},

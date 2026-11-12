@@ -221,11 +221,17 @@ if(BLOBBER_BUILD_GRAPHICS)
         set(BLOBBER_PREPARED_DIR "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/assets/prepared")
     endif()
     set(BLOBBER_PREPARED_INPUT "" CACHE PATH "Validated portable prepared publication bundle")
+    set(BLOBBER_PREPARED_SOURCE_LEDGER "" CACHE FILEPATH "Host-captured source ledger for Git-free baseline imports")
     if(BLOBBER_PREPARED_INPUT)
         find_package(Python3 REQUIRED COMPONENTS Interpreter)
+        set(prepared_ledger_arguments)
+        if(BLOBBER_PREPARED_SOURCE_LEDGER)
+            list(APPEND prepared_ledger_arguments --source-ledger "${BLOBBER_PREPARED_SOURCE_LEDGER}")
+        endif()
         add_custom_target(blobber_import_prepared
             COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tools/distribution/prepared.py" import
                 --source "${CMAKE_SOURCE_DIR}" --bundle "${BLOBBER_PREPARED_INPUT}" --output "${BLOBBER_PREPARED_DIR}"
+                ${prepared_ledger_arguments}
             VERBATIM)
         foreach(preparation blobber_portraits blobber_creator_art blobber_bake_world_assets)
             add_custom_target(${preparation})
@@ -972,6 +978,8 @@ if(BUILD_TESTING)
     blobber_warnings(blobber_distribution_compatibility)
     add_test(NAME windows_distribution_tools COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tests/windows_distribution_tests.py")
     set_tests_properties(windows_distribution_tools PROPERTIES TIMEOUT 30 LABELS tooling)
+    add_test(NAME hosted_distribution_tools COMMAND ${Python3_EXECUTABLE} "${CMAKE_SOURCE_DIR}/tests/hosted_distribution_tests.py")
+    set_tests_properties(hosted_distribution_tools PROPERTIES TIMEOUT 30 LABELS tooling)
 endif()
 
 if(BUILD_TESTING)

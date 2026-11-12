@@ -57,8 +57,18 @@ Physical-GPU/audio coverage beyond the reported play review remains explicit.
 The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflow scope; access
 was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.
-LD04 consolidation is now eligible for planning when requested and remains
-unstarted. Accepted LD01–LD03 history remains unchanged; no automatic advancement or public publication.
+[LD04 proposed implementation design](linux_distribution_ld04.md), 2026-11-12:
+**In progress — implementation; authorized by the user, 2026-11-12.**
+Reuse the registered manual workflow with serial Linux, Windows and final download/
+format-verification jobs. The Linux baseline build owns one native preparation on
+cache miss or a checked import on hit; Windows consumes the same publication.
+Platform drivers retain package/audit/smoke ownership. A bounded combined record
+binds exact source, publication, player hashes and downloaded artifact IDs only
+after both platforms and reverse format checks pass. Planned Linux plain player
+names match Windows; exact revisions stay in metadata. Cache/storage limits,
+failure states, focused checks and future CLI operations are specified in the
+design. Implementation follows the user’s separate instruction. Accepted LD01–LD03/WD01
+history remains unchanged; no automatic implementation or public publication.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,

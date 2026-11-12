@@ -48,6 +48,8 @@ class ArchiveTests(unittest.TestCase):
         self.assertEqual((game.parent / 'README.txt').stat().st_mode & 0o777, 0o644)
 
     def test_naming_dirty_and_unsafe_version(self):
+        self.assertEqual(self.name, 'blobber-0.1.0-linux-x86_64')
+        self.assertEqual(self.name, a.package_name('0.1.0', 'b' * 40, False, False))
         self.assertIn('-dirty-', a.package_name('0.1.0', 'b' * 40, True, True))
         with self.assertRaisesRegex(ValueError, 'Dirty'):
             a.package_name('0.1.0', 'b' * 40, True, False)

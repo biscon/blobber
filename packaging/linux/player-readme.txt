@@ -16,7 +16,8 @@ Characters, scenarios and campaign saves: $XDG_DATA_HOME/blobber/, or
 remain read-only. Save compatibility follows the game's content/schema versions;
 keep your older package when upgrading rather than overwriting it in place.
 
-BUILD.json identifies this build and content. MANIFEST.json lists the other files
+The download name contains the project version/platform. BUILD.json records the
+exact source revision and identifies this build and content. MANIFEST.json lists the other files
 and their SHA-256 hashes; the adjacent download .sha256 checks the entire archive.
 A name containing -dirty identifies an explicitly permitted development build.
 Software-OpenGL verification does not establish physical GPU or audio compatibility.

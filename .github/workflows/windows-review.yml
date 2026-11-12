@@ -1,12 +1,7 @@
-name: Windows review build
-run-name: WD01 ${{ github.sha }}
+name: Desktop distribution build
+run-name: LD04 ${{ github.sha }}
 on:
   workflow_dispatch:
-    inputs:
-      code_check:
-        description: 'Compile/link and run owned tests only (no preparation or review ZIP)'
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -15,20 +10,26 @@ concurrency:
   group: blobber-distribution-manual
   cancel-in-progress: false
 
+env:
+  OMP_NUM_THREADS: '1'
+  OPENBLAS_NUM_THREADS: '1'
+  LP_NUM_THREADS: '2'
+  CMAKE_BUILD_PARALLEL_LEVEL: '2'
+  CTEST_PARALLEL_LEVEL: '1'
+
 jobs:
-  prepare:
+  linux:
     runs-on: ubuntu-22.04
-    timeout-minutes: 90
+    timeout-minutes: 150
     permissions:
       contents: read
-      actions: write # Delete only the owned prepared-cache namespace before a manual build.
+      actions: write # Only the owned-cache manager receives this token.
     outputs:
       prepared-key: ${{ steps.key.outputs.key }}
-    env:
-      OMP_NUM_THREADS: '1'
-      OPENBLAS_NUM_THREADS: '1'
-      CMAKE_BUILD_PARALLEL_LEVEL: '2'
-      CTEST_PARALLEL_LEVEL: '1'
+      player-id: ${{ steps.player.outputs.artifact-id }}
+      checksum-id: ${{ steps.checksum.outputs.artifact-id }}
+      evidence-id: ${{ steps.evidence.outputs.artifact-id }}
+      transport-id: ${{ steps.transport.outputs.artifact-id }}
     steps:
       - name: Preserve repository bytes
         run: git config --global core.autocrlf false
@@ -36,51 +37,88 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
-      - name: Resolve prepared identity
+      - name: Resolve preparation and create owned run
         id: key
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          python3 -c 'import shutil; assert shutil.disk_usage(".").free >= 12*1024**3'
           echo "key=$(python3 tools/distribution/prepared.py key)" >> "$GITHUB_OUTPUT"
           echo "RUN_DIR=$(python3 tools/agent_artifacts.py create)" >> "$GITHUB_ENV"
-      - name: Bound owned prepared cache storage
-        if: ${{ !inputs.code_check }}
+      - name: Reserve bounded owned cache storage
         env:
           GH_TOKEN: ${{ github.token }}
           PREPARED_KEY: ${{ steps.key.outputs.key }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: python3 tools/distribution/manage_cache.py "$PREPARED_KEY"
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        if: ${{ !inputs.code_check }}
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: publication
         with:
           path: output/wd01-prepared
           key: ${{ steps.key.outputs.key }}
           enableCrossOsArchive: true
-      - name: Native Linux preparation on cache miss
-        if: ${{ !inputs.code_check && steps.publication.outputs.cache-hit != 'true' }}
-        run: nice -n 15 ionice -c 3 python3 tools/distribution/hosted_prepare.py --run-dir "$RUN_DIR"
-      - name: Check portable transfer
-        if: ${{ !inputs.code_check }}
-        run: python3 tools/distribution/prepared.py verify --bundle output/wd01-prepared
-      - name: Clean owned diagnostics
-        if: always() && !cancelled()
-        run: |
-          if test -n "$RUN_DIR"; then
-            python3 tools/agent_artifacts.py clean "$RUN_DIR"
-            python3 tools/agent_artifacts.py clean "$RUN_DIR" --apply
-          fi
+      - name: Baseline package, shared preparation and two userspaces
+        id: build
+        env:
+          PREPARED_CACHE_HIT: ${{ steps.publication.outputs.cache-hit }}
+        run: nice -n 15 ionice -c 3 python3 tools/distribution/hosted_release.py linux --run-dir "$RUN_DIR"
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: steps.publication.outputs.cache-hit != 'true'
+        with:
+          path: output/wd01-prepared
+          key: ${{ steps.key.outputs.key }}
+          enableCrossOsArchive: true
+      - name: Verify actual cache size and cross-OS availability
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREPARED_KEY: ${{ steps.key.outputs.key }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: python3 tools/distribution/manage_cache.py "$PREPARED_KEY" --verify
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: player
+        with:
+          path: ${{ steps.build.outputs.player }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: checksum
+        with:
+          path: ${{ steps.build.outputs.checksum }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: evidence
+        with:
+          name: linux-review-evidence
+          path: ${{ steps.build.outputs.evidence }}
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: transport
+        with:
+          name: linux-format-transport
+          path: ${{ steps.build.outputs.transport }}
+          if-no-files-found: error
+          retention-days: 1
+      - name: Failure diagnostics
+        if: failure() && env.RUN_DIR != ''
+        run: python3 tools/distribution/hosted_release.py diagnostics
+      - name: Clean owned scratch
+        if: always() && env.RUN_DIR != ''
+        run: python3 tools/distribution/hosted_release.py cleanup
 
   windows:
-    needs: prepare
+    needs: linux
     runs-on: windows-2022
     timeout-minutes: 60
-    env:
-      OMP_NUM_THREADS: '1'
-      OPENBLAS_NUM_THREADS: '1'
-      LP_NUM_THREADS: '2'
-      CMAKE_BUILD_PARALLEL_LEVEL: '2'
-      CTEST_PARALLEL_LEVEL: '1'
-      CODE_CHECK: ${{ inputs.code_check }}
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      player-id: ${{ steps.player.outputs.artifact-id }}
+      checksum-id: ${{ steps.checksum.outputs.artifact-id }}
+      evidence-id: ${{ steps.evidence.outputs.artifact-id }}
     steps:
       - name: Preserve repository bytes
         run: git config --global core.autocrlf false
@@ -89,17 +127,21 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        if: ${{ !inputs.code_check }}
         with:
           path: output/wd01-prepared
-          key: ${{ needs.prepare.outputs.prepared-key }}
+          key: ${{ needs.linux.outputs.prepared-key }}
           enableCrossOsArchive: true
           fail-on-cache-miss: true
-      - name: Native MSVC build and selected verification
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          artifact-ids: ${{ needs.linux.outputs.transport-id }}
+          path: output/linux-format-transport
+          merge-multiple: true
+      - name: Native MSVC package and extracted verification
+        id: build
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          if ((git rev-parse HEAD) -ne $env:GITHUB_SHA) { throw 'Source revision differs' }
           $dev = 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\VsDevCmd.bat'
           cmd /c "`"$dev`" -arch=x64 -host_arch=x64 -vcvars_ver=14.44 -winsdk=10.0.22621.0 && set" | ForEach-Object {
             if ($_ -match '^([^=]+)=(.*)$') { [Environment]::SetEnvironmentVariable($matches[1], $matches[2], 'Process') }
@@ -107,54 +149,83 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Native MSVC environment initialization failed' }
           $run = python tools/agent_artifacts.py create
           "RUN_DIR=$run" >> $env:GITHUB_ENV
-          $arguments = @('--run-dir', $run)
-          if ($env:CODE_CHECK -eq 'true') { $arguments += '--code-check' }
-          else { $arguments += @('--prepared-input', 'output/wd01-prepared') }
-          python tools/windows_release.py @arguments
-          if ($LASTEXITCODE -ne 0) { throw 'Windows review build failed' }
-      - name: Upload game ZIP (single download, no wrapper)
-        if: ${{ !inputs.code_check }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+          python tools/distribution/hosted_release.py windows --run-dir $run --transport output/linux-format-transport
+          if ($LASTEXITCODE -ne 0) { throw 'Windows package verification failed' }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: player
         with:
-          path: build-windows-release/dist/blobber-*/*.zip
+          path: ${{ steps.build.outputs.player }}
           archive: false
           if-no-files-found: error
           retention-days: 7
-      - name: Upload game checksum
-        if: ${{ !inputs.code_check }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: checksum
         with:
-          path: build-windows-release/dist/blobber-*/*.zip.sha256
+          path: ${{ steps.build.outputs.checksum }}
           archive: false
           if-no-files-found: error
           retention-days: 7
-      - name: Upload optional review evidence
-        if: ${{ !inputs.code_check }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        id: evidence
         with:
           name: windows-review-evidence
-          path: |
-            build-windows-release/dist/blobber-*/
-            !build-windows-release/dist/blobber-*/*.zip
-            !build-windows-release/dist/blobber-*/*.zip.sha256
+          path: ${{ steps.build.outputs.evidence }}
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
-      - name: Compact failure diagnostics
+      - name: Failure diagnostics
+        if: failure() && env.RUN_DIR != ''
+        run: python tools/distribution/hosted_release.py diagnostics
+      - name: Clean owned scratch
+        if: always() && env.RUN_DIR != ''
+        run: python tools/distribution/hosted_release.py cleanup
+
+  verify:
+    needs: [linux, windows]
+    if: always() && !cancelled()
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Require both producer jobs
+        env:
+          LINUX_RESULT: ${{ needs.linux.result }}
+          WINDOWS_RESULT: ${{ needs.windows.result }}
+        run: test "$LINUX_RESULT" = success && test "$WINDOWS_RESULT" = success
+      - name: Preserve repository bytes
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Create owned run
+        run: echo "RUN_DIR=$(python3 tools/agent_artifacts.py create)" >> "$GITHUB_ENV"
+      - name: Verify exact downloaded players and reverse formats
+        id: result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LINUX_PLAYER_ID: ${{ needs.linux.outputs.player-id }}
+          LINUX_CHECKSUM_ID: ${{ needs.linux.outputs.checksum-id }}
+          LINUX_EVIDENCE_ID: ${{ needs.linux.outputs.evidence-id }}
+          LINUX_TRANSPORT_ID: ${{ needs.linux.outputs.transport-id }}
+          WINDOWS_PLAYER_ID: ${{ needs.windows.outputs.player-id }}
+          WINDOWS_CHECKSUM_ID: ${{ needs.windows.outputs.checksum-id }}
+          WINDOWS_EVIDENCE_ID: ${{ needs.windows.outputs.evidence-id }}
+        run: nice -n 15 ionice -c 3 python3 tools/distribution/hosted_release.py verify --run-dir "$RUN_DIR"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: combined-verification
+          path: ${{ steps.result.outputs.combined }}
+          if-no-files-found: error
+          retention-days: 7
+      - name: Record incomplete combined build
         if: failure()
-        shell: pwsh
-        run: |
-          if ($env:RUN_DIR) {
-            Get-ChildItem $env:RUN_DIR -Filter '*.log' | ForEach-Object {
-              Write-Output $_.Name
-              Get-Content $_.FullName -Tail 50
-            }
-          }
-      - name: Clean owned diagnostics
-        if: always() && !cancelled()
-        shell: pwsh
-        run: |
-          if ($env:RUN_DIR) {
-            python tools/agent_artifacts.py clean $env:RUN_DIR
-            python tools/agent_artifacts.py clean $env:RUN_DIR --apply
-          }
+        run: echo 'Combined verification is incomplete. Inspect the failed job; individual player artifacts do not establish combined success.' >> "$GITHUB_STEP_SUMMARY"
+      - name: Failure diagnostics
+        if: failure() && env.RUN_DIR != ''
+        run: python3 tools/distribution/hosted_release.py diagnostics
+      - name: Clean owned scratch
+        if: always() && env.RUN_DIR != ''
+        run: python3 tools/distribution/hosted_release.py cleanup

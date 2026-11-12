@@ -26,10 +26,21 @@ def source_files(root):
     return ledger
 
 
-def inputs(root):
+def inputs(root, source_ledger=None):
     # Conservative transitive source envelope: no independent artwork allowlist.
     # CMake/tool edits invalidate the envelope, including added/deleted bake inputs.
-    names = source_files(root)
+    if source_ledger is None:
+        names = source_files(root)
+    else:
+        # The pinned baseline image has no Git. The orchestration host captures
+        # names/hashes before mounting source read-only; still hash the inputs here.
+        from archive import safe
+        names = json.loads(regular(source_ledger).read_text())
+        for name, expected in names.items():
+            safe(name)
+            path = root / name
+            require((digest(regular(path)) if path.exists() else None) == expected,
+                    'Source ledger differs: ' + name)
     selected = [n for n in names if (n.startswith(('assets/', 'src/', 'cmake/')) or
                 n == 'CMakeLists.txt' or n == 'packaging/linux/lock.json' or
                 n.startswith(('tools/bake', 'tools/prepare', 'tests/support/')) or n == 'tools/distribution_compatibility.cpp')]
@@ -58,9 +69,9 @@ def files(root):
     return ledger
 
 
-def validate(bundle, source):
+def validate(bundle, source, source_ledger=None):
     manifest = json.loads(regular(bundle / 'prepared.json').read_text())
-    observed = inputs(source)
+    observed = inputs(source, source_ledger)
     require(manifest.get('version') == 1, 'Unsupported prepared input')
     require(manifest['inputs'] == observed and manifest['input_digest'] == __import__('hashlib').sha256(encoded(observed)).hexdigest(),
             'Prepared source inputs differ')
@@ -88,8 +99,8 @@ def export(prepared, output, source, environment=None, identities=None):
         raise
 
 
-def import_prepared(bundle, output, source):
-    manifest = validate(bundle, source)
+def import_prepared(bundle, output, source, source_ledger=None):
+    manifest = validate(bundle, source, source_ledger)
     require(not output.is_symlink() and not getattr(output, 'is_junction', lambda: False)(), 'Unsafe prepared output')
     require(output.resolve() != (bundle / 'prepared').resolve(), 'Input/output overlap')
     marker = output.parent / '.prepared-import-owner.json'
@@ -125,13 +136,14 @@ def main():
     p.add_argument('--output', type=Path)
     p.add_argument('--environment', type=Path)
     p.add_argument('--validation', type=Path)
+    p.add_argument('--source-ledger', type=Path)
     a = p.parse_args()
     if a.operation == 'key': print('wd01-prepared-v1-' + input_digest(a.source))
     elif a.operation == 'export': export(a.prepared, a.output, a.source,
         json.loads(a.environment.read_text()) if a.environment else None,
         json.loads(a.validation.read_text()) if a.validation else None)
-    elif a.operation == 'import': import_prepared(a.bundle, a.output, a.source)
-    else: validate(a.bundle, a.source)
+    elif a.operation == 'import': import_prepared(a.bundle, a.output, a.source, a.source_ledger)
+    else: validate(a.bundle, a.source, a.source_ledger)
 
 
 if __name__ == '__main__': main()

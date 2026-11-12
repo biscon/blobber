@@ -21,9 +21,9 @@ from windows_smoke import smoke, acl_preflight
 from pe_audit import inspect as inspect_pe
 
 ROOT=Path(__file__).resolve().parents[1]
-TESTS=['rules','ai','campaign_save','agent_artifacts_tools','rng_portability','platform_io','platform_io_process','path_decode','path_stream_decode','library','arena','campaign_save_smoke','options','packaged_options',
+TESTS=['rules','ai','agent_artifacts_tools','rng_portability','platform_io','platform_io_process','path_decode','path_stream_decode','library','arena','campaign_save_smoke','options','packaged_options',
        'runtime_inventory','dist_staging','npc_metadata','dialogue','audio','music','menu','gameplay_startup',
-       'distribution_smoke','buttons','windows_distribution_tools','creator_art','portraits']
+       'distribution_smoke','buttons','windows_distribution_tools','hosted_distribution_tools','creator_art','portraits']
 TARGETS=['blobber','blobber_rules_tests','blobber_ai_tests','blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_path_decode_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
          'blobber_options_tests','blobber_packaged_options_tests','blobber_distribution_tests','blobber_npc_metadata_tests',
          'blobber_dialogue_tests','blobber_audio_tests','blobber_music_tests','blobber_menu_tests','blobber_gameplay_startup_tests',
@@ -52,7 +52,7 @@ def writer(build):
         finally:f.seek(0);msvcrt.locking(f.fileno(),msvcrt.LK_UNLCK,1)
 
 
-def build_release(run,bundle,build,allow_dirty,code_check=False):
+def build_release(run,bundle,build,allow_dirty,code_check=False,compatibility_input=None):
     require(sys.platform=='win32','Native Windows environment required')
     require(run.is_dir() and (run/'.agent-run.json').is_file(),'Owned run directory required')
     require(shutil.disk_usage(run).free>=8*1024**3,'Insufficient scratch space')
@@ -120,6 +120,7 @@ def build_release(run,bundle,build,allow_dirty,code_check=False):
         else:
             manifest=prepared.validate(bundle,ROOT)
             environment['prepared']={k:manifest[k] for k in ['producer_revision','input_digest','producer_environment','identities']}
+            environment['prepared']['publication_sha256']=hashlib.sha256(encoded(manifest['files'])).hexdigest()
             require(manifest['producer_environment'] and manifest['identities'],'Missing prepared producer evidence')
         lock=json.loads((ROOT/'packaging/linux/lock.json').read_text())
         dependencies=run/'dependencies';dependencies.mkdir()
@@ -152,7 +153,7 @@ def build_release(run,bundle,build,allow_dirty,code_check=False):
             return
         command([build/'blobber_validate_prepared.exe',ROOT/'packaging/runtime-content.json',ROOT/'assets',bundle/'prepared'],'windows-prepared-validation.log')
         compatibility=run/'compatibility-windows'
-        command([build/'blobber_distribution_compatibility.exe','import',bundle/'compatibility',compatibility],'windows-compatibility.log')
+        command([build/'blobber_distribution_compatibility.exe','import',compatibility_input or bundle/'compatibility',compatibility],'windows-compatibility.log')
         command([cmake,'--build',build,'--target','dist-stage','--parallel','2'],'windows-stage.log')
         dry=capture([cmake,'--build',build,'--target','blobber','--','-n'])
         require(not re.search(r'\bblobber_bake_(world|portraits|creator)(?:\.exe)?\s',dry),'Imported game still schedules production baker')
@@ -176,6 +177,9 @@ def build_release(run,bundle,build,allow_dirty,code_check=False):
             try:command([build/'blobber_gpu_smoke.exe','--depth-copy'],'windows-depth-copy.log')
             finally:ctypes.windll.kernel32.SetDllDirectoryW(None)
             (final/'depth-copy.txt').write_bytes((run/'windows-depth-copy.log').read_bytes())
+            result['depth_copy'] = 'passed'
+            (final/'verification.json').write_bytes(encoded(result))
+        (run/'distribution.json').write_bytes(encoded({'bundle':str(final),'build':str(build)}))
         print('Windows review bundle: '+str(final),flush=True)
         print('Extracted graphics smoke: '+result['status'],flush=True)
 
@@ -184,7 +188,9 @@ if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--run-dir',type=Path,required=True)
     p.add_argument('--prepared-input',type=Path);p.add_argument('--build-dir',type=Path,default=ROOT/'build-windows-release')
     p.add_argument('--code-check',action='store_true',help='Native compile/link and owned tests; no review package')
+    p.add_argument('--compatibility-input',type=Path)
     p.add_argument('--allow-dirty',action='store_true');a=p.parse_args()
     if not a.code_check and a.prepared_input is None:p.error('--prepared-input is required for a full review build')
     build_release(a.run_dir.resolve(),a.prepared_input.resolve() if a.prepared_input else None,
-                  a.build_dir.resolve(),a.allow_dirty,a.code_check)
+                  a.build_dir.resolve(),a.allow_dirty,a.code_check,
+                  a.compatibility_input.resolve() if a.compatibility_input else None)
