@@ -972,10 +972,12 @@ void unsavedTerminal() {
     check(!flow.poll(unsaved, commands) && !commands.saveMenu().terminalWarning &&
               !commands.snapshot().menuOpen,
           "unsaved expedition ending over incompatible slot does not show write failure");
-    std::ifstream input(path);
-    const std::string retained((std::istreambuf_iterator<char>(input)), {});
-    check(retained == original && !store.inspect().active,
-          "incompatible previous save remains byte-identical and unavailable");
+    {
+        std::ifstream input(path, std::ios::binary);
+        const std::string retained((std::istreambuf_iterator<char>(input)), {});
+        check(retained == original && !store.inspect().active,
+              "incompatible previous save remains byte-identical and unavailable");
+    } // Close the fixture reader before later replacement (Windows share-delete policy).
     // Identity parsing has the same hostile-input limits as normal restoration.
     auto duplicate = original;
     duplicate.insert(1, "\"schema\":1,");
@@ -989,8 +991,10 @@ void unsavedTerminal() {
         output << old.dump();
     }
     const auto matching = store.terminal(unsaved);
+    const auto closeMessage =
+        "matching old slot is closed using identity without restoring its simulation: " + matching.error;
     check(matching.durable && matching.published && store.inspect().terminal,
-          "matching old slot is closed using identity without restoring its simulation");
+          closeMessage.c_str());
 }
 
 void libraryIndependence() {

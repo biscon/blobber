@@ -102,13 +102,15 @@ fs::path checkedRoot(const fs::path& path) {
         require(!fs::exists(status) || fs::is_directory(status) || fs::is_regular_file(status),
                 "Refusing special file: " + current.string());
     }
-    return absolute;
+    // Loaders canonicalize asset references. Normalize aliases (including Windows
+    // 8.3 names) only after checking the original path for links/reparse points.
+    return fs::weakly_canonical(absolute);
 }
 fs::path relativePath(const std::string& text) {
     require(!text.empty() && text.find_first_of("\\:") == std::string::npos &&
                 std::none_of(text.begin(), text.end(), [](unsigned char c) { return c < 32; }),
             "Unsafe relative runtime path: " + text);
-    const fs::path path(text);
+    const auto path = fs::u8path(text);
     require(!path.is_absolute() && !path.has_root_path(), "Absolute runtime path: " + text);
     for (const auto& part : path)
         require(!part.empty() && part != "." && part != "..", "Unsafe runtime path: " + text);
@@ -157,7 +159,7 @@ Inventory resolve(const Settings& settings, bool includePrepared) {
         files.emplace(dest, file);
     };
     auto asset = [&](const fs::path& path, const std::string& reason) {
-        const auto name = path.generic_string();
+        const auto name = path.generic_u8string();
         add("assets", name, "assets/" + name, reason);
     };
     for (const auto& file : manifest.at("files")) {
@@ -193,9 +195,9 @@ Inventory resolve(const Settings& settings, bool includePrepared) {
         checkTree(assets / "audio");
         const auto dialogue = loadDialogue(assets / "dialogue", assets / "audio", assets / "ui");
         for (const auto& file : dialogue.audioFiles)
-            asset(fs::path(file).lexically_relative(assets), "dialogue audio");
+            asset(fs::u8path(file).lexically_relative(assets), "dialogue audio");
         for (const auto& file : dialogue.overlayFiles)
-            asset(fs::path(file).lexically_relative(assets), "dialogue overlay");
+            asset(fs::u8path(file).lexically_relative(assets), "dialogue overlay");
     }
     if (selected.count("shops"))
         for (const auto& file : yamlFiles(assets / "shops"))

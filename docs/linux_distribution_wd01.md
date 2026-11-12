@@ -693,3 +693,23 @@ Fifth hosted attempt compiled through the earlier RNG failure, then stopped at t
 portable fixture header's missing explicit `<string>` include. Fix that dependency;
 use code-check mode to collect remaining native issues before the next full bake.
 This adjustment changes verification orchestration, not game behavior or acceptance.
+
+
+Code-check run [43136582454](https://github.com/biscon/blobber/actions/runs/43136582454),
+source `b0ca294bcd49a7e477a878708e8b54d79579570f`, proved the preparation/cache
+steps were skipped and all application/test/tool targets compiled and linked.
+Twenty-four of 27 selected suites passed, audio-device streaming was skipped, and
+two suites failed in 15.97 s. The old-save fixture retained an `ifstream` across
+replacement; Windows correctly refuses a move when an existing reader has not
+shared delete access. Close that fixture reader before mutation. Inventory paths
+mixed a short `RUNNER~1` temporary root with the dialogue loader's canonical long
+path; lexical subtraction then escaped the root. After rejecting each original
+ancestor's links/reparse points, normalize checked roots with `weakly_canonical`
+before comparisons/subtraction and use explicit UTF-8 path conversions. Preserve
+escape/link rejection and the original campaign replacement rules.
+
+
+Configured headless CMake/Ninja rebuilt the affected targets with two low-priority
+workers. `ctest --test-dir cmake-build-headless-release -R '^(campaign_save|runtime_inventory|dist_staging)$' --parallel 1 --output-on-failure --no-tests=error`
+passed all three suites in 2.87 s (full campaign 2.82 s). No production bake,
+graphics window or unrelated matrix ran. Native code-check retry remains required.
