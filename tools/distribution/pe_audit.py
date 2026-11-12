@@ -23,6 +23,8 @@ def inspect(path):
     opt = pe+24
     require(machine == 0x8664 and unpack('<H', opt)[0] == 0x20b, 'PE must be AMD64 PE32+')
     require(0 < count <= 96 and optional_size >= 240, 'Invalid PE headers')
+    subsystem, = unpack('<H', opt+68)
+    require(subsystem == 2, 'Player PE must use the Windows GUI subsystem (no console)')
     image_base, = unpack('<Q', opt+24)
     directories, = unpack('<I', opt+108)
     sections = []
@@ -59,7 +61,8 @@ def inspect(path):
         require(terminated, 'Unterminated import table')
     for name in imports:
         require(name in SYSTEM or name.startswith('api-ms-win-core-'), 'Undeclared Windows dependency: '+name)
-    return {'path': Path(path).name, 'sha256': digest(path), 'machine': 'AMD64', 'imports': sorted(imports)}
+    return {'path': Path(path).name, 'sha256': digest(path), 'machine': 'AMD64',
+            'subsystem': 'Windows GUI', 'imports': sorted(imports)}
 
 
 def audit(stage):

@@ -1,10 +1,10 @@
 # WD01 — Windows readiness and manual review build
 
-Status: **Ready for review — implemented and mechanically verified, 2026-11-12.
-Windows 11 play review and explicit user acceptance pending.**
+Status: **Review corrections in progress, 2026-11-12. The user reports the game
+works on Windows; console-window and download-layout/naming corrections pending.**
 
 This document records the reviewed WD01 design and implementation handoff.
-The [selected Windows ZIP and evidence](#selected-review-artifact) passed native
+The [initial selected Windows ZIP and evidence](#selected-review-artifact) passed native
 hosted verification and local download checks. Six [inspected captures](screenshots/windows-distribution/wd01/README.md)
 are retained; physical-GPU/audio listening remain user review.
 Requirements below remain the target contract; the handoff records which checks
@@ -13,6 +13,60 @@ actually ran. Accepted LD01–LD03 behavior and acceptance remain in the
 The user approved this design and authorized WD01 implementation after the planning
 handoff. Implementation stops at Ready for review; LD04 and public publication
 have not started.
+
+## Windows play-review corrections — 2026-11-12
+
+The user booted Windows, unpacked the initial review artifact and reports working
+behavior. They request three corrections before final delivery: no accompanying
+console window, a single player ZIP without screenshots/reports, and readable
+version/platform filenames without commit hashes. These are WD01 review fixes;
+keep LD04/publication/merging outside this change and preserve previous evidence
+until its replacement is validated.
+
+Set `WIN32_EXECUTABLE` for the Windows player and matching code-check target only.
+Keep the existing CRT `wmainCRTStartup` entry point and its one-time wide-to-UTF-8
+argument conversion; the Windows PE subsystem controls console creation. Do not
+hide/free a console after launch, change test/baker subsystems or alter Linux
+startup. Require PE subsystem 2 (Windows GUI) alongside existing AMD64/static
+runtime/import checks, and cover rejection of subsystem 3 (console) with an owned
+miniature PE fixture. Redirected CI smoke logs must still work. See CMake's
+[GUI target property](https://cmake.org/cmake/help/v3.31/prop_tgt/WIN32_EXECUTABLE.html)
+and Microsoft's [CRT entry points](https://learn.microsoft.com/en-us/cpp/build/reference/entry-entry-point-symbol?view=msvc-170).
+
+Name the player ZIP and its one top-level directory
+`blobber-VERSION-windows-x86_64`; retain `-dirty` only for explicitly allowed local
+nonrelease builds. Keep the exact source SHA, dirty ledger and tool/content
+identities in build metadata. Internal owned review-bundle directories may retain
+revision identifiers to prevent collisions; they are not the player filename.
+This supersedes the original revision-bearing player-name choice below.
+
+Upload the single existing player ZIP with `archive: false`, using official
+`actions/upload-artifact` v7.0.2 pinned to
+`cf430e030ddbb5b0abf93d22962f4752f3646cd9`. Upload its checksum as a separate raw
+file, and only compact reports/captures/interchange fixtures as a separate
+`windows-review-evidence` artifact. The single-file mode uses the original filename
+and bytes, so the downloadable ZIP's SHA-256 must equal the packaged ZIP's hash.
+No second large player copy, public Release or automatic trigger is introduced.
+The upstream [single-file upload contract](https://github.com/actions/upload-artifact/tree/cf430e030ddbb5b0abf93d22962f4752f3646cd9#upload-an-individual-file-unzipped)
+explicitly supports this mode. Final public release attachments will use these
+same plain version/platform filenames directly, with optional checksums beside
+them; screenshots/diagnostics remain internal evidence. LD04 records the matching
+Linux filename requirement without rewriting accepted Linux artifacts here.
+
+Before handoff, run focused tiny packaging/PE fixtures and workflow checks, then
+one complete manual native run to verify GUI startup, redirected smoke output,
+package naming and actual raw artifact downloads. The conservative prepared input
+key includes CMake, so this linker-policy change deliberately requires a new
+validated preparation key. Keep two build workers/one test and serial jobs. Do
+not repeat local gameplay matrices or benchmarks for these build/package fixes.
+
+Implemented locally: GUI subsystem properties, rejecting console PE audits, plain
+player names with revision-bearing internal bundles, and three separate pinned
+uploads. `python3 tests/windows_distribution_tests.py` passes nine owned miniature
+checks (0.05 s), including console rejection and package naming/content/provenance.
+Python compilation, actionlint 1.7.12, parsed manual-trigger/upload/retention checks
+and `git diff --check` pass. Native startup and raw transport verification remain
+pending the next exact manual run. No local production bake or gameplay matrix ran.
 
 ## Decisions and existing constraints
 
@@ -291,8 +345,8 @@ Keep ELF and PE policy/checkers distinct. Isolate Linux-only Python imports/lock
 from shared archive hash/inventory/promotion helpers. A small Windows ZIP path can
 reuse those helpers without turning the Linux driver into a generic build framework.
 
-Name: `blobber-VERSION-gREVISION[-dirty]-windows-x86_64.zip`, with CMake project
-version and twelve Git revision characters. Require clean source by default;
+Name: `blobber-VERSION[-dirty]-windows-x86_64.zip`, with CMake project
+version; source revisions remain in metadata and internal review bundles. Require clean source by default;
 explicitly allowed local dirty builds retain the marker and source ledger. Hosted
 checkout builds are clean and bound to the dispatched immutable SHA. Do not relabel
 accepted old artifacts when commits advance.
@@ -342,9 +396,10 @@ compile workers maximum, one test process, bounded library/Mesa threads, a 90-mi
 prepare timeout and a 60-minute Windows timeout. Check memory/disk first; use Linux
 `nice -n 15`/`ionice -c 3` and below-normal Windows process priority for lengthy work.
 
-Upload only the final ZIP/checksum and compact build/test/compatibility/import/smoke
-evidence with seven-day artifact retention. Store the already-compressed ZIP without
-another expensive compression pass. No duplicate uncompressed player stage,
+Upload the final ZIP and checksum separately in single-file `archive: false` mode;
+compact build/test/compatibility/import/smoke evidence has its own artifact. Apply
+seven-day retention to all three. Preserve the already-compressed player ZIP bytes
+without another ZIP wrapper or compression pass. No duplicate uncompressed player stage,
 production publication artifact, build tree or large raw log archive is uploaded.
 Keep failure evidence compact and marked failed; never label an older package as
 the result of a failed attempt. Infrastructure-unavailable smoke is recorded separately.

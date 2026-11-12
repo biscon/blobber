@@ -104,7 +104,8 @@ def package(build, source, environment, version, allow_dirty=False, check_source
     require(not environment['dirty'] or allow_dirty, 'Dirty source requires explicit allowance')
     require(re.fullmatch('[0-9a-f]{40}', environment['revision']), 'Invalid revision')
     require(re.fullmatch(r'\d+\.\d+\.\d+', version), 'Invalid project version')
-    name = 'blobber-'+version+'-g'+environment['revision'][:12]+('-dirty' if environment['dirty'] else '')+'-windows-x86_64'
+    name = 'blobber-'+version+('-dirty' if environment['dirty'] else '')+'-windows-x86_64'
+    bundle_name = 'blobber-'+version+'-g'+environment['revision'][:12]+('-dirty' if environment['dirty'] else '')+'-windows-x86_64'
     stage = build/'dist-stage/Release'
     inventory = json.loads(regular(build/'dist-stage/Release.inventory.json').read_text())
     require(inventory['complete'] is True and inventory['configuration'] == 'Release', 'Incomplete stage')
@@ -119,7 +120,7 @@ def package(build, source, environment, version, allow_dirty=False, check_source
     require(not root.is_symlink(), 'Unsafe distribution root')
     if root.exists(): require(owner.is_file() and json.loads(owner.read_text()) == {'version':1}, 'Unowned distribution root')
     else: root.mkdir(); owner.write_bytes(encoded({'version':1}))
-    candidate, final = root/('.candidate-'+name), root/name
+    candidate, final = root/('.candidate-'+bundle_name), root/bundle_name
     require(not candidate.exists() and not final.is_symlink(), 'Interrupted/unsafe package output')
     candidate.mkdir()
     try:

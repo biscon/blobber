@@ -191,7 +191,12 @@ if(BLOBBER_BUILD_GRAPHICS)
         src/app/menu.cpp src/app/menu_model.cpp src/app/application.cpp src/app/options.cpp src/app/gameplay.cpp
         src/app/distribution_smoke.cpp)
     add_executable(blobber src/main.cpp)
+    if(WIN32)
+        set_target_properties(blobber PROPERTIES WIN32_EXECUTABLE TRUE)
+    endif()
     if(MSVC)
+        # Retain wide argv/CRT initialization while the GUI subsystem avoids an
+        # accompanying console. Redirected verifier stdout/stderr still work.
         target_link_options(blobber PRIVATE /ENTRY:wmainCRTStartup)
     endif()
     target_link_libraries(blobber_application PUBLIC blobber_platform blobber_assets_io blobber_rules_io nlohmann_json::nlohmann_json)
@@ -200,6 +205,7 @@ if(BLOBBER_BUILD_GRAPHICS)
         # Compile/link the real entry point during a native code-only check. Asset
         # import remains mandatory on the shipping executable's target graph.
         add_executable(blobber_code_check EXCLUDE_FROM_ALL src/main.cpp)
+        set_target_properties(blobber_code_check PROPERTIES WIN32_EXECUTABLE TRUE)
         target_link_libraries(blobber_code_check PRIVATE blobber_application)
         target_link_options(blobber_code_check PRIVATE /ENTRY:wmainCRTStartup)
         blobber_warnings(blobber_code_check)

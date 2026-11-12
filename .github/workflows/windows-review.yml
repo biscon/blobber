@@ -112,12 +112,31 @@ jobs:
           else { $arguments += @('--prepared-input', 'output/wd01-prepared') }
           python tools/windows_release.py @arguments
           if ($LASTEXITCODE -ne 0) { throw 'Windows review build failed' }
-      - name: Upload review ZIP and compact evidence
+      - name: Upload game ZIP (single download, no wrapper)
         if: ${{ !inputs.code_check }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: windows-review-${{ github.sha }}
-          path: build-windows-release/dist/blobber-*/
+          path: build-windows-release/dist/blobber-*/*.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload game checksum
+        if: ${{ !inputs.code_check }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: build-windows-release/dist/blobber-*/*.zip.sha256
+          archive: false
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload optional review evidence
+        if: ${{ !inputs.code_check }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-review-evidence
+          path: |
+            build-windows-release/dist/blobber-*/
+            !build-windows-release/dist/blobber-*/*.zip
+            !build-windows-release/dist/blobber-*/*.zip.sha256
           if-no-files-found: error
           retention-days: 7
           compression-level: 0

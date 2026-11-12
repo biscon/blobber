@@ -20,6 +20,16 @@ driver=importlib.util.module_from_spec(driver_spec)
 driver_spec.loader.exec_module(driver)
 
 
+def write_pe(path, dll='KERNEL32.dll', machine=0x8664, subsystem=2):
+    b=bytearray(1024); b[:2]=b'MZ';struct.pack_into('<I',b,60,64);b[64:68]=b'PE\0\0'
+    struct.pack_into('<HH',b,68,machine,1);struct.pack_into('<H',b,84,240)
+    struct.pack_into('<H',b,88,0x20b);struct.pack_into('<H',b,156,subsystem)
+    struct.pack_into('<I',b,196,16);struct.pack_into('<II',b,208,0x1000,40)
+    struct.pack_into('<IIII',b,336,512,0x1000,512,512)
+    struct.pack_into('<IIIII',b,512,0,0,0,0x1050,0)
+    b[592:592+len(dll)+1]=dll.encode()+b'\0';path.write_bytes(b)
+
+
 class Distribution(unittest.TestCase):
     def test_dacl_policy_restore(self):
         before='D:(A;ID;FA;;;BA)(A;OICIIOID;GA;;;SY)'
@@ -75,20 +85,43 @@ class Distribution(unittest.TestCase):
     def test_pe_imports(self):
         with tempfile.TemporaryDirectory() as temp:
             p=Path(temp)/'game.exe'
-            def pe(dll, machine=0x8664):
-                b=bytearray(1024); b[:2]=b'MZ';struct.pack_into('<I',b,60,64);b[64:68]=b'PE\0\0'
-                struct.pack_into('<HH',b,68,machine,1);struct.pack_into('<H',b,84,240)
-                struct.pack_into('<H',b,88,0x20b);struct.pack_into('<I',b,196,16)
-                struct.pack_into('<II',b,208,0x1000,40)
-                struct.pack_into('<IIII',b,336,512,0x1000,512,512)
-                struct.pack_into('<IIIII',b,512,0,0,0,0x1050,0)
-                b[592:592+len(dll)+1]=dll.encode()+b'\0';p.write_bytes(b)
-            pe('KERNEL32.dll');self.assertEqual(pe_audit.inspect(p)['imports'],['kernel32.dll'])
+            write_pe(p)
+            self.assertEqual(pe_audit.inspect(p)['imports'],['kernel32.dll'])
+            self.assertEqual(pe_audit.inspect(p)['subsystem'],'Windows GUI')
             for dll in ['VCRUNTIME140.dll','MSVCP140.dll','ucrtbase.dll','mystery.dll']:
-                pe(dll)
+                write_pe(p,dll)
                 with self.assertRaises(ValueError):pe_audit.inspect(p)
-            pe('KERNEL32.dll',0x14c)
+            write_pe(p,machine=0x14c)
             with self.assertRaises(ValueError):pe_audit.inspect(p)
+            write_pe(p,subsystem=3)
+            with self.assertRaises(ValueError):pe_audit.inspect(p)
+
+    def test_player_package_name_and_contents(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);build=root/'build';stage=build/'dist-stage/Release';stage.mkdir(parents=True)
+            source=root/'source';readme=source/'packaging/windows/player-readme.txt'
+            readme.parent.mkdir(parents=True);readme.write_bytes(b'player instructions')
+            write_pe(stage/'blobber.exe')
+            (stage/'assets').mkdir();(stage/'assets/fixture').write_bytes(b'owned runtime content')
+            items=[{'path':p.relative_to(stage).as_posix(),'bytes':p.stat().st_size}
+                   for p in stage.rglob('*') if p.is_file()]
+            (build/'dist-stage/Release.inventory.json').write_text(json.dumps(
+                {'complete':True,'configuration':'Release','files':items,'identities':{'fixture':5}}))
+            environment={'revision':'a'*40,'dirty':False,'source_epoch':0}
+            bundle=archive.package(build,source,environment,'1.2.3')
+            player=bundle/'blobber-1.2.3-windows-x86_64.zip'
+            self.assertTrue(player.is_file())
+            (bundle/'verification.json').write_bytes(b'review evidence outside the player')
+            summary=archive.inspect_zip(player)
+            self.assertEqual(summary['name'],'blobber-1.2.3-windows-x86_64')
+            self.assertEqual(set(summary['manifest']['files']),
+                             {'blobber.exe','assets/fixture','BUILD.json','README.txt'})
+            with zipfile.ZipFile(player) as z:
+                info=json.loads(z.read(summary['name']+'/BUILD.json'))
+            self.assertEqual(info['revision'],'a'*40)
+            self.assertEqual(info['pes'][0]['subsystem'],'Windows GUI')
+            self.assertEqual((bundle/(player.name+'.sha256')).read_text(),
+                             archive.digest(player)+'  '+player.name+'\n')
 
     def test_prepared_validation_and_ownership(self):
         with tempfile.TemporaryDirectory() as temp:
