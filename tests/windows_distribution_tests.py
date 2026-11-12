@@ -21,6 +21,14 @@ driver_spec.loader.exec_module(driver)
 
 
 class Distribution(unittest.TestCase):
+    def test_dacl_policy_restore(self):
+        before='D:(A;ID;FA;;;BA)(A;OICIIOID;GA;;;SY)'
+        self.assertEqual(windows_smoke.dacl_policy(before),windows_smoke.dacl_policy(before.replace('D:','D:AI')))
+        for changed in [before.replace('D:','D:P'),before.replace(';FA;',';FR;'),
+                        before.replace(';ID;',';;'),
+                        'D:(A;OICIIOID;GA;;;SY)(A;ID;FA;;;BA)']:
+            self.assertNotEqual(windows_smoke.dacl_policy(before),windows_smoke.dacl_policy(changed))
+
     def test_context_failure_classification(self):
         self.assertTrue(windows_smoke.context_unavailable(
             'Blobber: Graphics unavailable: cannot open an OpenGL window'))

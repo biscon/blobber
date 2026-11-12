@@ -21,6 +21,14 @@ def context_unavailable(message):
     return 'Graphics unavailable: cannot open an OpenGL window' in message
 
 
+def dacl_policy(sddl):
+    require(sddl.startswith('D:'),'Expected DACL-only snapshot')
+    flags, separator, aces=sddl.partition('(')
+    # SetAccessControl can add the computed auto-inherited marker. Keep the
+    # protection/request flags and every ordered ACE byte, including ID/OI/CI.
+    return flags.replace('AI','')+separator+aces
+
+
 def powershell():
     return str(Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe')
 
@@ -109,6 +117,11 @@ def smoke(bundle, source, build, run):
                 'isolation':'read-only ACL install; source/build assets denied; isolated LocalAppData; unrelated CWD',
                 'phases':results,'audio':'references only; playback/listening unverified'}
     finally:
+        restore_errors=[]
         for path,sddl in reversed(saved):
-            saved_acl('restore',path,sddl)
+            try:
+                saved_acl('restore',path,sddl)
+                require(dacl_policy(saved_acl('get',path))==dacl_policy(sddl),'Restored DACL policy differs: '+str(path))
+            except Exception as error:restore_errors.append(str(error))
         kernel.SetDllDirectoryW(None)
+        if restore_errors:raise RuntimeError('DACL restoration failed: '+'; '.join(restore_errors))

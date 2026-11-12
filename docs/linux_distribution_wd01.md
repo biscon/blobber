@@ -822,3 +822,16 @@ and [section-specific SDDL setter](https://learn.microsoft.com/en-us/dotnet/api/
 The preflight snapshots/restores/rereads the descriptor and requires equality.
 Python compilation, seven focused tooling checks and `git diff --check` pass;
 the next native full run must exercise these Windows APIs and real smoke.
+
+
+DACL preflight run [43148885907](https://github.com/biscon/blobber/actions/runs/43148885907)
+(source `5d675a1`) and diagnostic [43149779226](https://github.com/biscon/blobber/actions/runs/43149779226)
+(source `5f2981c`) stopped before compilation. The framework APIs worked; Windows
+added only the computed `AI` auto-inherited flag, with all eight ordered ACEs,
+rights masks and per-ACE inheritance flags unchanged. Compare DACL policy while
+normalizing only that header marker; preserve protection/request flags and every
+ordered ACE byte. See Microsoft's [descriptor flags](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptor-string-format).
+The new regression test accepts that observed normalization and rejects protection,
+rights, inherited-ACE or order changes (eight tooling tests pass in 0.04 s).
+Actual smoke restoration now attempts all saved roots, verifies each restored
+policy and clears DLL selection even when another restoration reports an error.

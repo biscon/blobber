@@ -17,7 +17,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent/'distribution'))
 from archive import digest,encoded,regular,require
 import prepared
 from windows_archive import package
-from windows_smoke import smoke, saved_acl
+from windows_smoke import smoke, saved_acl, dacl_policy
 from pe_audit import inspect as inspect_pe
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -107,9 +107,9 @@ def build_release(run,bundle,build,allow_dirty,code_check=False):
     original_acl=saved_acl('get',acl_probe)
     saved_acl('restore',acl_probe,original_acl)
     restored_acl=saved_acl('get',acl_probe)
-    require(restored_acl==original_acl,'DACL preflight changed descriptor: '+
+    require(dacl_policy(restored_acl)==dacl_policy(original_acl),'DACL preflight changed policy: '+
             json.dumps({'before':original_acl,'after':restored_acl}))
-    environment['acl_preflight']='Unicode directory DACL snapshot/restore passed'
+    environment['acl_preflight']='Unicode directory DACL policy snapshot/restore passed'
     def command(args,name):
         print('Windows phase: '+name,flush=True)
         with (run/name).open('w',encoding='utf-8') as log:
