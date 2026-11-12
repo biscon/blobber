@@ -53,7 +53,8 @@ def source_identity():
 
 
 def recipe_identity():
-    files = ['Dockerfile', 'lock.json', 'provision.py', 'bootstrap-ca.pem']
+    files = ['Dockerfile', 'lock.json', 'provision.py', 'bootstrap-ca.pem',
+             'build-ubuntu22.debs.tsv', 'build-ubuntu22-lock.json']
     return hashlib.sha256(json.dumps({name: sha(RECIPE / name) for name in files},
                                     sort_keys=True).encode()).hexdigest()
 
@@ -65,6 +66,7 @@ def validate_recipe():
         raise RuntimeError('Recipe/lock mismatch')
     if sha(RECIPE / 'bootstrap-ca.pem') != lock['bootstrap_ca']['sha256']:
         raise RuntimeError('Bootstrap CA checksum mismatch')
+    validate_package_transport(RECIPE)
     # The original CMake FetchContent pins remain the dependency source of truth.
     cmake = (ROOT / 'CMakeLists.txt').read_text()
     for name in ('raylib', 'nlohmann_json'):
@@ -72,6 +74,27 @@ def validate_recipe():
             raise RuntimeError('CMake/source-lock mismatch: ' + name)
     if 'f7320141120f720aecc4c32be25586e7da9eb978' not in cmake:
         raise RuntimeError('yaml-cpp commit mismatch')
+
+
+def validate_package_transport(recipe):
+    from urllib.parse import urlsplit
+    transport = json.loads((recipe / 'build-ubuntu22-lock.json').read_text())
+    lock = json.loads((recipe / 'lock.json').read_text())
+    ledger = recipe / 'build-ubuntu22.debs.tsv'
+    if (transport.get('version') != 1 or transport['base_image'] != lock['base_image'] or
+        transport['ledger_sha256'] != sha(ledger) or transport['inventory_sha256'] != sha(recipe / 'packages.tsv')):
+        raise RuntimeError('Baseline package transport lock differs')
+    names = set()
+    for line in ledger.read_text().splitlines():
+        checksum, url, filename = line.split('\t')
+        parsed = urlsplit(url)
+        if (not re.fullmatch('[0-9a-f]{64}', checksum) or parsed.scheme not in ('http','https') or
+            parsed.netloc not in ('archive.ubuntu.com','security.ubuntu.com') or not parsed.path.startswith('/ubuntu/pool/') or
+            not re.fullmatch(r'[A-Za-z0-9+.%_~:-]+[.]deb', filename) or filename in names):
+            raise RuntimeError('Unsafe/duplicate baseline package transport entry')
+        names.add(filename)
+    if len(names) != transport['packages']:
+        raise RuntimeError('Baseline package transport count differs')
 
 
 def run_command(args, log):

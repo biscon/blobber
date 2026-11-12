@@ -1,0 +1,16 @@
+{
+  "base_image": "ubuntu:22.04@sha256:8a2321a92b438238f93b4346fff61bc4259c99fdd4d9b52ee86f153fee0c344f",
+  "download_bytes": 124719810,
+  "inventory_sha256": "a7d18868e90d8e0f58fc7213c1bc9f84a768aed804533e00df5c960ddaa9a8f7",
+  "ledger_sha256": "3c99b7825f7bef4abba205f08d76d21f6c929f9223a2dbccfdd0c0ffd023060f",
+  "packages": 150,
+  "reason": "Snapshot downloads failed with HTTP 503. Exact accepted packages.tsv versions resolved from signed Ubuntu indexes; final recipe uses only this SHA-256-pinned ledger, no rolling resolution.",
+  "resolved": "2026-11-12",
+  "signed_indexes": {
+    "archive.ubuntu.com_ubuntu_dists_jammy-backports_InRelease": "2683eb121d3edc9002f411fa8b9de42e3c473e338973819fe7cdc527dea3082a",
+    "archive.ubuntu.com_ubuntu_dists_jammy-updates_InRelease": "38779968b85d8159f5cd5330a740c6a3c562a5bea87d5234d76a1eb36804b3e4",
+    "archive.ubuntu.com_ubuntu_dists_jammy_InRelease": "c14060cd8c6d625874dfcb9523a35a395bf4865c28b6b6a82569ef326fe92dc6",
+    "security.ubuntu.com_ubuntu_dists_jammy-security_InRelease": "4d3cd2b8ace0fd6d4c2a5fa35daaf75d21ec1d42b84d0480d7cf87df3978607f"
+  },
+  "version": 1
+}

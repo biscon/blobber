@@ -16,7 +16,7 @@ ROOT=Path(__file__).resolve().parents[2]
 
 def _prepare(run):
     recipe=ROOT/'packaging/linux'
-    hashes={n:hashlib.sha256((recipe/n).read_bytes()).hexdigest() for n in ['Dockerfile','lock.json','provision.py','bootstrap-ca.pem']}
+    hashes={n:hashlib.sha256((recipe/n).read_bytes()).hexdigest() for n in ['Dockerfile','lock.json','provision.py','bootstrap-ca.pem','build-ubuntu22.debs.tsv','build-ubuntu22-lock.json']}
     recipe_id=hashlib.sha256(json.dumps(hashes,sort_keys=True).encode()).hexdigest()
     image='blobber-baseline:'+recipe_id[:20]
     def command(args,name):

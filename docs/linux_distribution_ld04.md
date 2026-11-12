@@ -377,6 +377,50 @@ rather than the CLI wrapper. A focused fixture proves insufficient disk or memor
 fails before lock/build creation. Added per-platform and final-runner image/OS/arch
 identity to compact evidence. The focused hosted suite now has 11 passing cases
 (one Linux-only case is skipped on Windows). These changes do not affect prepared
-inputs. After the cold run, a second serial dispatch will verify the corrected
-entry point and the previously unexercised full Linux cache-import path, reusing
-the checked publication rather than baking it again.
+inputs. The failed cold run produced no publication. The next dispatch must create one
+with the corrected transport and entry point. Verify the full Linux import graph
+and typed payload against that publication within the same job, without another
+game compilation or bake; the native Windows consumer then restores that exact key.
+A further full warm-producer run is unnecessary unless a failure justifies it;
+record that path as unexecuted rather than claiming hosted warm-build evidence.
+
+Integration failure and transport adaptation: cold run
+[43223470781](https://github.com/biscon/blobber/actions/runs/43223470781), source
+`f2fdd90231d2023bd0a7e7c0b4184dab5a2ec87c`, failed before compilation or baking.
+The accepted compiler-image recipe spent 46 minutes on Ubuntu snapshot package
+fetches and failed with HTTP 503 for graphics/LLVM dependencies. Windows was
+correctly skipped and the combined job rejected incomplete producers; hosted
+scratch cleanup completed. No prepared publication or player was produced.
+
+Use LD03's existing Ubuntu runtime transport pattern for the compiler image:
+curate SHA-256-pinned `.deb` URLs from signed Ubuntu indexes, selecting only the
+exact package versions already in `packaging/linux/packages.tsv`. The final recipe
+uses those locked inputs without rolling resolution and verifies the same complete
+installed inventory. Record signed-index hashes and the package-ledger hash in a
+small checked-in transport lock. Compiler/CMake/dependency source pins, glibc 2.35,
+static-link policy and generic CPU flags stay unchanged. Recipe identity includes
+the new ledger/transport lock, and preparation digest includes the producer recipe
+inputs so changed producer environments cannot reuse a stale key. Existing native
+build/image caches remain preserved; hosted builds use a fresh dedicated identity.
+This corrects transport availability rather than changing the compatibility floor.
+
+The compiler transport image was built locally at low priority with a two-CPU/
+4 GiB cap, without compiling the game or baking assets. Its installed inventory
+compares byte-for-byte with the unchanged accepted 251-package `packages.tsv`
+(SHA-256 `a7d18868e90d8e0f58fc7213c1bc9f84a768aed804533e00df5c960ddaa9a8f7`).
+It passes notice verification and retains GCC 11.4.0, CMake 3.31.12 and glibc 2.35.
+The first local installer attempt exposed APT’s `--no-download` handling of local
+archives; removed that flag, matching LD03’s runtime recipe. Apt sources/indexes
+are absent during installation, so dependency resolution uses only the locked
+local debs. The corrected image passes. The signed transport lock pins 150 debs /
+124,719,810 bytes; no package version or source-tool pin was changed.
+
+The cold producer now configures a fresh import-only CMake tree inside its marked
+run, using the already-built compiler image and a host-captured source ledger. It
+executes only `blobber_import_prepared`, validates that real imported publication
+with the existing native typed validator, and dry-runs the game graph to reject
+production bakers. No second game or bake is built. Its roughly 1.3 GiB temporary
+copy is removed before runtime extraction. A warm producer uses its actual game
+import result instead. The compact import proof is bound to the publication hash
+and required by final download verification. Local hosted fixtures now total 13
+passing cases, with Linux-specific cases explicitly skipped on Windows.

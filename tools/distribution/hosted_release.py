@@ -22,6 +22,44 @@ import prepared
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def check_linux_import(run, build, cache, publication, already_imported):
+    """Exercise the Git-free CMake import with real data, without another game build."""
+    import linux_release
+    if already_imported:
+        result = {'status':'passed','mode':'built-game-import','publication_sha256':publication['publication_sha256']}
+    else:
+        linux_release.check_resources()
+        check = run/'import-check'
+        require(not check.exists(), 'Import check requires fresh owned scratch')
+        source_ledger = run/'import-source.json'
+        source_ledger.write_bytes(encoded(linux_release.source_identity()['source_files']))
+        image = evidence.read_json(build/'baseline-environment.json')['image_id']
+        base = ['nice','-n','15','ionice','-c','3','docker','run','--rm','--init','--network=none',
+                '--cpus=2','--memory=12g','--pids-limit=256','--user',str(os.getuid())+':'+str(os.getgid()),
+                '--mount','type=bind,src='+str(ROOT)+',dst=/src,readonly',
+                '--mount','type=bind,src='+str(build)+',dst=/native-build,readonly',
+                '--mount','type=bind,src='+str(cache)+',dst=/prepared-input,readonly',
+                '--mount','type=bind,src='+str(run)+',dst=/run-output',
+                '--env','HOME=/run-output/home','--env','TMPDIR=/run-output/tmp',
+                '--env','OMP_NUM_THREADS=1','--env','OPENBLAS_NUM_THREADS=1',
+                image,'nice','-n','15','ionice','-c','3']
+        linux_release.run_command(base+['/opt/cmake/bin/cmake','-S','/src','-B','/run-output/import-check','-G','Ninja',
+            '-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja','-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',
+            '-DBLOBBER_LINUX_BASELINE=ON','-DBLOBBER_PREPARED_INPUT=/prepared-input',
+            '-DBLOBBER_PREPARED_SOURCE_LEDGER=/run-output/import-source.json'],run/'import-configure.log')
+        linux_release.run_command(base+['/opt/cmake/bin/cmake','--build','/run-output/import-check','--target',
+            'blobber_import_prepared','--parallel','1'],run/'import-data.log')
+        linux_release.run_command(base+['/native-build/blobber_validate_prepared','/src/packaging/runtime-content.json',
+            '/src/assets','/run-output/import-check/assets/prepared'],run/'import-typed-validation.log')
+        dry = linux_release.capture(base+['/opt/cmake/bin/cmake','--build','/run-output/import-check','--target','blobber','--','-n'])
+        require(not re.search(r'\bblobber_bake_(world|portraits|creator)(?:\s|[.])',dry), 'Imported Linux graph schedules production baker')
+        result = {'status':'passed','mode':'production-data-import-and-game-graph',
+                  'publication_sha256':publication['publication_sha256'],
+                  'graph_sha256':hashlib.sha256(dry.encode()).hexdigest()}
+        shutil.rmtree(check)  # Entirely disposable, newly created beneath this marked run.
+    evidence.atomic_json(run/'linux-import.json',result)
+
+
 def linux(run):
     import linux_release
     from distribution.verify_package import verify_package
@@ -52,6 +90,7 @@ def linux(run):
                     total += len(compressor.compress(block))
             total += len(compressor.flush())
     require(total <= 1024**3, 'Prepared compressed transfer estimate exceeds 1 GiB')
+    check_linux_import(run, build, cache, publication, hit)
     # A new marked run gives extraction/user data a fresh lifetime, separate from build.
     verify_run = Path(subprocess.check_output([sys.executable, ROOT/'tools/agent_artifacts.py','create'], text=True).strip())
     with Path(os.environ['GITHUB_ENV']).open('a') as stream:
@@ -120,6 +159,9 @@ def verify_player(player, checksum, report, directory):
     if platform == 'linux':
         from distribution.verify_package import verification_record
         verification_record(expected['sha256'], verification['runtimes'])
+        imported = report.get('prepared_import', {})
+        require(imported.get('status') == 'passed' and
+                imported.get('publication_sha256') == info['prepared']['publication_sha256'], 'Stale/incomplete Linux import proof')
     else:
         require(verification.get('depth_copy') == 'passed' and set(verification.get('phases',{})) == {'create','continue'},
                 'Incomplete Windows smoke/depth')

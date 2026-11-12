@@ -38,7 +38,7 @@ class HostedTests(unittest.TestCase):
         exe = directory/'exe';exe.write_bytes(b'owned executable');exe.chmod(0o755)
         name = 'blobber-1.2.3-'+platform+'-x86_64'
         info = {'revision':ENV['GITHUB_SHA'],'dirty':False,'project_version':'1.2.3',
-                'prepared':{'input_digest':'b'*64,'producer_revision':'c'*40},'identities':{'fixture':7}}
+                'prepared':{'input_digest':'b'*64,'producer_revision':'c'*40,'publication_sha256':'d'*64},'identities':{'fixture':7}}
         extra = {'BUILD.json':archive.encoded(info),'README.txt':b'Run the game'}
         if platform == 'linux':
             player = directory/(name+'.tar.gz')
@@ -54,6 +54,7 @@ class HostedTests(unittest.TestCase):
         (directory/'verification.json').write_bytes(archive.encoded(verification))
         checksum = directory/(player.name+'.sha256');checksum.write_text(sha+'  '+player.name+'\n')
         report = {'context':e.context(),'platform':platform,'status':'passed',
+                  'prepared_import':{'status':'passed','publication_sha256':'d'*64},
                   'player':{'name':player.name,'bytes':player.stat().st_size,'sha256':sha},
                   'build_sha256':archive.digest(directory/'build.json'),
                   'verification_sha256':archive.digest(directory/'verification.json')}
@@ -83,6 +84,14 @@ class HostedTests(unittest.TestCase):
             changed = {**report,'verification_sha256':archive.digest(directory/'verification.json')}
             with self.subTest(changes=changes),self.assertRaises(ValueError):
                 h.verify_player(player,checksum,changed,directory)
+
+    @unittest.skipIf(os.name == 'nt', 'Linux archive/import proof')
+    def test_linux_import_proof_bound_to_actual_publication(self):
+        directory,player,checksum,report=self.make_player('linux')
+        for proof in [{},{'status':'unverified','publication_sha256':'d'*64},
+                      {'status':'passed','publication_sha256':'e'*64}]:
+            with self.subTest(proof=proof),self.assertRaisesRegex(ValueError,'import proof'):
+                h.verify_player(player,checksum,{**report,'prepared_import':proof},directory)
 
     def test_same_version_from_wrong_source_and_attempt(self):
         _,_,_,linux = self.make_player('linux')
@@ -180,6 +189,27 @@ class HostedTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError,'Baseline requires'):
                     linux_release.build_release(self.root,self.root/'unused-build')
                 lock.assert_not_called()
+
+    @unittest.skipIf(os.name == 'nt', 'Linux compiler image transport')
+    def test_package_transport_hash_and_url_policy(self):
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+        import linux_release
+        recipe=self.root/'recipe';recipe.mkdir()
+        (recipe/'lock.json').write_text('{"base_image":"fixture-pinned-base"}')
+        (recipe/'packages.tsv').write_text('owned-package\t1.0\tamd64\n')
+        ledger=recipe/'build-ubuntu22.debs.tsv'
+        lock=recipe/'build-ubuntu22-lock.json'
+        def write(url='http://archive.ubuntu.com/ubuntu/pool/main/f/fixture_1_amd64.deb'):
+            ledger.write_text('a'*64+'\t'+url+'\tfixture_1_amd64.deb\n')
+            lock.write_bytes(archive.encoded({'version':1,'base_image':'fixture-pinned-base','packages':1,
+                'ledger_sha256':archive.digest(ledger),'inventory_sha256':archive.digest(recipe/'packages.tsv')}))
+        write();linux_release.validate_package_transport(recipe)
+        ledger.write_text(ledger.read_text().replace('a'*64,'b'*64))
+        with self.assertRaisesRegex(RuntimeError,'lock differs'):linux_release.validate_package_transport(recipe)
+        for url in ['http://example.invalid/ubuntu/pool/a.deb','file:///tmp/a.deb','http://archive.ubuntu.com/other/a.deb']:
+            write(url)
+            with self.subTest(url=url),self.assertRaisesRegex(RuntimeError,'transport entry'):
+                linux_release.validate_package_transport(recipe)
 
 
 if __name__ == '__main__':unittest.main()

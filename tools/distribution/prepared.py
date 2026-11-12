@@ -42,7 +42,9 @@ def inputs(root, source_ledger=None):
             require((digest(regular(path)) if path.exists() else None) == expected,
                     'Source ledger differs: ' + name)
     selected = [n for n in names if (n.startswith(('assets/', 'src/', 'cmake/')) or
-                n == 'CMakeLists.txt' or n == 'packaging/linux/lock.json' or
+                n == 'CMakeLists.txt' or n in ('packaging/linux/lock.json', 'packaging/linux/Dockerfile',
+                    'packaging/linux/provision.py', 'packaging/linux/bootstrap-ca.pem',
+                    'packaging/linux/build-ubuntu22.debs.tsv', 'packaging/linux/build-ubuntu22-lock.json') or
                 n.startswith(('tools/bake', 'tools/prepare', 'tests/support/')) or n == 'tools/distribution_compatibility.cpp')]
     return {n: names[n] for n in selected}
 

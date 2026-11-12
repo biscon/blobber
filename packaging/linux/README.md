@@ -31,9 +31,14 @@ with incremental assets, without rerunning the unrelated passing suites. Configu
 identity changes require a fresh `--build-dir build-linux-baseline-SUFFIX`; no cache
 or unrelated file is deleted automatically. Native CLion trees remain independent.
 
-The pinned base digest, fixed Ubuntu snapshot and verified CMake/dependency source
-hashes live in `lock.json`. The complete package/version/architecture resolution is
-in `packages.tsv`; unexpected resolution fails the build. `bootstrap-ca.pem` is a
+The pinned base digest, original Ubuntu snapshot selection and verified CMake/
+dependency source hashes live in `lock.json`. The complete package/version/
+architecture resolution is in `packages.tsv`; unexpected resolution fails the
+build. LD04 replaces the unavailable snapshot download transport with
+`build-ubuntu22.debs.tsv` and its transport lock: the same exact versions, selected
+from signed Ubuntu indexes, fetched by SHA-256 from the normal Ubuntu archives.
+Image reproduction performs no rolling package resolution. The recipe identity
+includes both files; existing marked baseline builds keep their old identities. `bootstrap-ca.pem` is a
 public Mozilla CA bundle retrieved from curl.se, hash-pinned by the lock, used only
 to bootstrap HTTPS before the snapshot's ca-certificates package is installed.
 Its source/provenance and Mozilla license reference are in its existing header.

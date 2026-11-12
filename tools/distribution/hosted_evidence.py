@@ -123,9 +123,15 @@ def platform_evidence(platform, bundle, run):
         workspace = run/'package-verification'
         for p in sorted(workspace.glob('*/capture-*.png'))[:6]:
             copy_file(p, evidence/'captures'/(p.parent.name+'-'+p.name))
+        imported = read_json(run/'linux-import.json')
+        require(imported.get('status') == 'passed' and
+                imported['publication_sha256'] == info['prepared']['publication_sha256'], 'Missing/stale Linux import check')
+        copy_file(run/'linux-import.json', evidence/'linux-import.json')
     record = {'version':1, 'context':context(), 'runner':runner_identity(), 'platform':platform, 'status':'passed',
               'player':{'name':name,'bytes':player.stat().st_size,'sha256':sha},
               'build_sha256':digest(bundle/'build.json'), 'verification_sha256':digest(bundle/'verification.json')}
+    if platform == 'linux':
+        record['prepared_import'] = imported
     atomic_json(evidence/'platform.json', record)
     seal(evidence)
     write_outputs({'player':player, 'checksum':checksum, 'evidence':evidence})
