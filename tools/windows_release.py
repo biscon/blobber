@@ -106,7 +106,9 @@ def build_release(run,bundle,build,allow_dirty,code_check=False):
     acl_probe=run/'DACL preflight æ 日本';acl_probe.mkdir()
     original_acl=saved_acl('get',acl_probe)
     saved_acl('restore',acl_probe,original_acl)
-    require(saved_acl('get',acl_probe)==original_acl,'DACL preflight did not preserve the descriptor')
+    restored_acl=saved_acl('get',acl_probe)
+    require(restored_acl==original_acl,'DACL preflight changed descriptor: '+
+            json.dumps({'before':original_acl,'after':restored_acl}))
     environment['acl_preflight']='Unicode directory DACL snapshot/restore passed'
     def command(args,name):
         print('Windows phase: '+name,flush=True)
