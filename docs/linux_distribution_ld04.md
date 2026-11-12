@@ -424,3 +424,15 @@ copy is removed before runtime extraction. A warm producer uses its actual game
 import result instead. The compact import proof is bound to the publication hash
 and required by final download verification. Local hosted fixtures now total 13
 passing cases, with Linux-specific cases explicitly skipped on Windows.
+
+Corrected run [43233063432](https://github.com/biscon/blobber/actions/runs/43233063432),
+source `d82aeb5843d968172a3027140205891204ac53b1`, built the compiler image in
+94 seconds, passed its inventory/notices/environment check and compiled focused
+C++ targets in 3m48s. It then exposed a hosted-API integration bug: container HOME/
+TMPDIR creation had remained only in the CLI wrapper. Eight C++ fixture suites
+failed immediately because `/run-output/tmp` did not exist; 11/19 passed. No
+production bake occurred. Moved HOME/TMPDIR setup into the shared build entry point
+and added a fixture asserting those directories exist before container invocation.
+The focused hosted suite now passes all 14 local cases. Windows was correctly
+skipped; combined verification rejected incomplete producers and scratch cleanup
+completed. The next serial dispatch verifies this wrapper correction.

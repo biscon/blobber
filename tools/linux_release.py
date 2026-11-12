@@ -235,6 +235,8 @@ def _build_release(run, build, audit_only=False, dist=False, allow_dirty=False, 
 
 def build_release(run, build, audit_only=False, dist=False, allow_dirty=False, prepared_input=None):
     check_resources()
+    (run / 'home').mkdir(exist_ok=True)
+    (run / 'tmp').mkdir(exist_ok=True)
     with build_lock(build):
         (build / 'dist-stage/Release.audit.json').unlink(missing_ok=True)
         (run / 'distribution.json').unlink(missing_ok=True)

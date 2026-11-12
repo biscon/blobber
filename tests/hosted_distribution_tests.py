@@ -211,5 +211,17 @@ class HostedTests(unittest.TestCase):
             with self.subTest(url=url),self.assertRaisesRegex(RuntimeError,'transport entry'):
                 linux_release.validate_package_transport(recipe)
 
+    @unittest.skipIf(os.name == 'nt', 'Linux baseline API preparation')
+    def test_build_api_creates_container_home_and_tmp_before_invocation(self):
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+        import linux_release
+        def invoke(*args):
+            self.assertTrue((self.root/'home').is_dir())
+            self.assertTrue((self.root/'tmp').is_dir())
+            self.assertTrue((self.root/'build/.baseline.lock').is_file())
+        with patch.object(linux_release,'check_resources'),patch.object(linux_release,'_build_release',side_effect=invoke) as command:
+            linux_release.build_release(self.root,self.root/'build',dist=True)
+            command.assert_called_once()
+
 
 if __name__ == '__main__':unittest.main()
