@@ -429,8 +429,12 @@ paths; preserve its opt-in flags, hidden window, action/deadline bounds and actu
 menu/New Campaign/dialogue/inn/dungeon/save/fresh-process Continue sequence.
 
 Provision verification-only x64 Mesa llvmpipe from a version/hash-locked upstream
-archive. Planned input is `mesa-dist-win` 26.2.6 MSVC release, SHA-256
-`b2e00615feaba45942343c265cc8c5f576142ca682c1ac6661922d4b72492877`.
+archive. Selected verification input is `mesa-dist-win` 26.2.6 MinGW x64 release, SHA-256
+`da0f71d9181b672c1918f3c342f11118c687f6059a46b16502845160733cc388`.
+The originally planned MSVC provider archive omits WGL in this release because of
+an upstream regression; the correction is recorded in the handoff below. This is
+an external verification-only OpenGL C-ABI provider, independent of the game
+compiler/static-runtime policy.
 Verify the downloaded bytes; never use a floating latest URL. Extract only the
 needed x64 runtime closure into the owned runner directory, not the player package
 or system directories. Select `GALLIUM_DRIVER=llvmpipe` and cap `LP_NUM_THREADS=2`.
@@ -713,3 +717,82 @@ Configured headless CMake/Ninja rebuilt the affected targets with two low-priori
 workers. `ctest --test-dir cmake-build-headless-release -R '^(campaign_save|runtime_inventory|dist_staging)$' --parallel 1 --output-on-failure --no-tests=error`
 passed all three suites in 2.87 s (full campaign 2.82 s). No production bake,
 graphics window or unrelated matrix ran. Native code-check retry remains required.
+
+
+Code-check retry [43138720185](https://github.com/biscon/blobber/actions/runs/43138720185)
+resolved the just-pushed branch to the previous `b0ca294` revision. Its SHA mismatch
+was caught and the obsolete attempt canceled during Windows checkout; the native
+driver and upload were skipped. The ephemeral runner/storage were disposed by
+GitHub. Subsequent dispatches verify the remote branch SHA before dispatch and the
+actual run SHA immediately afterward, rather than assuming push visibility.
+
+Correct retry [43139052241](https://github.com/biscon/blobber/actions/runs/43139052241),
+source `302b5d0e3ddf86682a40bf0580cfe1473bba1bf5`, passed: 26 suites passed and
+`path_stream_decode` was skipped because no audio device was available (27 selected,
+15.02 s). Native compilation/linking, AMD64/static-runtime PE audit and the real
+entry-point `--help` check passed. The code-check executable imports only bcrypt,
+gdi32, kernel32, ole32, shell32, user32 and winmm; this is not yet an audit of a
+shipped ZIP. No review artifact or prepared/graphics smoke is claimed by this mode.
+
+Observed native environment: CMake 3.31.6, Ninja 1.13.2, Python 3.12.10, MSVC tools
+14.44.35207 / compiler 19.44.35229, SDK 10.0.22621.0; runner image 20261101.353.1,
+Windows Server version 10.0.20348.5773. The driver binds CTest to the configured
+CMake installation, passes its validated Python to CMake and records exact tool
+paths, memory and scratch availability. Normal full builds use the same policy.
+
+The clean owned bootstrap worktree was removed after verifying its exact commit and
+clean status; branch/history remain. Remote main contained only the authorized
+workflow bootstrap. It was merged into the review branch as `36cc467`, resolving
+only the workflow add/add conflict with the reviewed branch version. `git diff
+--exit-code 302b5d0 HEAD` proved the complete file tree unchanged; no implementation
+was merged to main by this reconciliation.
+
+Full manual run [43140724828](https://github.com/biscon/blobber/actions/runs/43140724828)
+was dispatched and immediately verified at source
+`36cc467c3009255414b19152c0ff0352810a1209`. Its complete preparation/import,
+player ZIP, extracted smoke, reverse interchange and final cleanup remain pending.
+
+
+Full run 43140724828 produced the Windows ZIP and passed native suites, complete
+prepared validation, Linux-to-Windows interchange, staging and the exact game PE
+audit. Its extracted smoke was **unverified at provider setup**, before game launch:
+the hash-correct MSVC Mesa archive has no WGL/OpenGL driver. Inspection of that
+archive confirmed the missing DLL; [upstream 26.2.6 notes](https://github.com/pal1000/mesa-dist-win/releases/tag/26.2.6)
+document the MSVC regression and recommend MinGW x64 for the affected functionality.
+Select that same version's hash-locked MinGW x64 provider, inspect its actual layout
+and rerun extracted verification. No MinGW compiler/runtime enters the player ZIP;
+the game remains native MSVC. Record the provider archive hash, driver/module path
+and llvmpipe identity. A working-context render/content failure still fails the run.
+
+The initial downloaded package is not the selected review evidence yet:
+`blobber-0.1.0-g36cc467c3009-windows-x86_64.zip`, 564,914,993 bytes, SHA-256
+`85d49b86736c5e9d82e3e638197f973ee88eb03b5d7cc5d509594c6858eb83a8`;
+1,331,447,171 unpacked bytes / 392 files. Its code-check and complete game imports
+are the seven allowed Windows DLLs. The download CLI's internal temporary archive
+was automatically removed after transfer; subsequent transfers set TMPDIR to the
+owned disk run explicitly. The superseded package/remote artifact will be removed
+when final evidence is selected.
+
+
+Local verification of the downloaded 36cc467 ZIP passed its SHA-256/checksum file,
+complete manifest/CRC and source/prepared metadata comparison. Extracting only the
+player executable into the owned run and performing a fresh PE audit reproduced
+the recorded executable hash/imports. The configured headless CMake rebuilt
+`blobber_distribution_compatibility`; importing the Windows-reencoded campaign,
+library and scenario fixtures passed and wrote the Linux roundtrip into the owned
+run. Thus both format-interchange directions passed before graphics verification.
+
+The replacement Mesa archive is 55,815,794 bytes and its locally computed hash
+matches the official release digest above. `7z l` and selected extraction/PE import
+inspection confirmed the x64 WGL closure: opengl32.dll, libgallium_wgl.dll and
+libdlclose-skip.dll. Extract only these three files with one decompression thread;
+record their hashes in the smoke result. The provider consumes Windows system/UCRT
+APIs and is kept entirely outside the player install. Seven focused tooling tests
+and Python compilation pass. The prepared key remains
+`wd01-prepared-v1-57a198d470b11b52fb61d7f05781e8257ce4e3bbc75c7fc5c19551c176307850`;
+this verifier-only change can reuse the validated 36cc467 publication.
+
+Only this task's superseded unverified artifact (13910881488, run 43140724828) is
+eligible for remote pruning before replacement upload. Its verified downloaded ZIP
+remains in the owned run until the replacement is selected. Preserve all other
+artifacts/caches/history and the accepted Linux deliverable/evidence.

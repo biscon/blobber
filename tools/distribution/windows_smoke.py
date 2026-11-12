@@ -10,8 +10,9 @@ import urllib.request
 from archive import digest, encoded, require
 from windows_archive import inspect_zip
 
-MESA_URL='https://github.com/pal1000/mesa-dist-win/releases/download/26.2.6/mesa3d-26.2.6-release-msvc.7z'
-MESA_SHA='b2e00615feaba45942343c265cc8c5f576142ca682c1ac6661922d4b72492877'
+MESA_URL='https://github.com/pal1000/mesa-dist-win/releases/download/26.2.6/mesa3d-26.2.6-release-mingw.7z'
+MESA_SHA='da0f71d9181b672c1918f3c342f11118c687f6059a46b16502845160733cc388'
+WGL_FILES=('opengl32.dll','libgallium_wgl.dll','libdlclose-skip.dll')
 
 
 def context_unavailable(message):
@@ -41,9 +42,10 @@ def smoke(bundle, source, build, run):
     try:
         urllib.request.urlretrieve(MESA_URL,download)
         require(digest(download)==MESA_SHA,'Mesa archive hash mismatch')
-        subprocess.run(['7z','x','-y',str(download),'-o'+str(mesa),'x64/*'],check=True,stdout=subprocess.DEVNULL)
+        subprocess.run(['7z','x','-y','-mmt=1',str(download),'-o'+str(mesa),
+                        *('x64/'+name for name in WGL_FILES)],check=True,stdout=subprocess.DEVNULL)
         provider=mesa/'x64'
-        require((provider/'opengl32.dll').is_file(),'Mesa WGL provider missing')
+        require(all((provider/name).is_file() for name in WGL_FILES),'Mesa WGL runtime closure missing')
     except Exception as e:
         return {'status':'unverified','phase':'graphics-provider','reason':str(e),'archive_sha256':digest(archive)}
     env={**os.environ,'LOCALAPPDATA':str(user/'local'),'TEMP':str(user/'tmp'),'TMP':str(user/'tmp'),
@@ -99,6 +101,7 @@ def smoke(bundle, source, build, run):
         for p in sorted((user/'smoke').glob('*.png'))[:6]:shutil.copy2(p,evidence/p.name)
         return {'status':'passed','archive_sha256':digest(archive),'software_gl':True,
                 'provider_sha256':MESA_SHA,'provider_version':'mesa-dist-win-26.2.6',
+                'provider_build':'mingw-x64','provider_files':{name:digest(provider/name) for name in WGL_FILES},
                 'isolation':'read-only ACL install; source/build assets denied; isolated LocalAppData; unrelated CWD',
                 'phases':results,'audio':'references only; playback/listening unverified'}
     finally:
