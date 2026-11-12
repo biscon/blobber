@@ -1,7 +1,9 @@
 # WD01 Windows distribution captures
 
-Status: **Ready for review — user acceptance pending, 2026-11-12.**
-Six selected 1920×1080 application-owned hidden captures from the exact extracted
+Status: **Initial Windows gameplay reported working by the user, 2026-11-12.
+GUI/download corrections verified; final slice acceptance pending.**
+These six selected 1920×1080 application-owned hidden captures retain the initial
+user-played build provenance. They come from its exact extracted
 Windows ZIP. Seed 5, default party/quality. Native MSVC game on hosted Windows
 Server 2022; external Mesa 26.2.6 llvmpipe (LLVM 23.1.4, 256 bits), OpenGL 4.6 Core.
 The install was read-only, source/build assets were denied by checked NTFS DACLs,
@@ -25,8 +27,14 @@ audio-device behavior. Dialogue intentionally includes partly revealed text.
 | [05-inn.png](05-inn.png) | Authored inn interior after doorway travel |
 | [06-dungeon.png](06-dungeon.png) | Generated floor one after stair travel |
 
-The selected ZIP/checksum/build/test/compatibility/smoke bundle is retained under
-`build-windows-review/dist/blobber-0.1.0-g03159b3fc29f-windows-x86_64/`.
+The current GUI/download correction passed [run 43169845969](https://github.com/biscon/blobber/actions/runs/43169845969).
+Five new captures are byte-identical to this set; the animated menu variation was
+inspected and shows the same loaded content/layout. Keep these six selected images
+for unchanged rendering; current captures also remain in optional review evidence.
+The current intentional ZIP/checksum/build/test/smoke bundle is retained under
+`build-windows-review/dist/blobber-0.1.0-g8259b872306f-windows-x86_64/`.
+The player filename inside is plain `blobber-0.1.0-windows-x86_64.zip` and the
+hosted game download has no ZIP wrapper or reports/screenshots.
 See the [design/handoff](../../../linux_distribution_wd01.md#selected-review-artifact)
 for exact evidence, limits and the Windows 11 review recipe. Accepted LD03 Linux
 captures remain unchanged. Only explicit user acceptance closes WD01.

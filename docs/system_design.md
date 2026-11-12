@@ -40,18 +40,20 @@ claim; notice gaps remain.
 prepared-asset portability, a versioned ZIP and a minimal manual hosted build/test
 workflow managed from Linux with `gh`. User review requires only the downloaded
 game on Windows. [WD01 design/handoff](linux_distribution_wd01.md#selected-review-artifact)
-is **In progress — review corrections, 2026-11-12; initial implementation
-mechanically verified and reported working on Windows by the user**. Native Windows I/O/Unicode paths, fixed-storage portable
+is **Ready for review — GUI/download corrections mechanically verified, 2026-11-12;
+working Windows gameplay reported by the user, final acceptance pending**.
+Native Windows I/O/Unicode paths, fixed-storage portable
 MT19937 save state, validated Linux-prepared import/cache, curated ZIP/PE checks
 and a manual hosted workflow are implemented on the review branch. The exact native
 MSVC artifact passes 26 selected suites (one audio-device skip), complete data/import
 validation, read-only Unicode extracted New Campaign/save/fresh-process Continue
 under software OpenGL, and hidden depth-copy/readback/cleanup. Local download checks
 and Windows-to-Linux save interchange pass; six inspected captures are retained.
-The user reports working Windows behavior; [review corrections](linux_distribution_wd01.md#windows-play-review-corrections--2026-11-12)
-are in progress for the GUI subsystem and plain, single-ZIP player downloads with
-separate evidence. Exact commit provenance stays in metadata. Physical-GPU/audio
-coverage beyond the reported play review remains explicit.
+The [review corrections](linux_distribution_wd01.md#windows-play-review-corrections--2026-11-12)
+now require a Windows GUI PE subsystem, plain version/platform player names and
+raw single-ZIP uploads, with checksum/evidence separate. Native startup and actual
+download/hash/content checks pass. Exact commit provenance stays in metadata.
+Physical-GPU/audio coverage beyond the reported play review remains explicit.
 The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflow scope; access
 was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.

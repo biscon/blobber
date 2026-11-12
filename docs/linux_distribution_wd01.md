@@ -1,12 +1,14 @@
 # WD01 — Windows readiness and manual review build
 
-Status: **Review corrections in progress, 2026-11-12. The user reports the game
-works on Windows; console-window and download-layout/naming corrections pending.**
+Status: **Ready for review — GUI startup and clean single-ZIP downloads verified,
+2026-11-12. The user reports working Windows gameplay; correction recheck and
+explicit slice acceptance pending.**
 
 This document records the reviewed WD01 design and implementation handoff.
-The [initial selected Windows ZIP and evidence](#selected-review-artifact) passed native
+The [selected Windows ZIP and evidence](#selected-review-artifact) passed native
 hosted verification and local download checks. Six [inspected captures](screenshots/windows-distribution/wd01/README.md)
-are retained; physical-GPU/audio listening remain user review.
+are retained. The user reports working Windows gameplay; detailed device/audio
+coverage and the final correction recheck remain explicit.
 Requirements below remain the target contract; the handoff records which checks
 actually ran. Accepted LD01–LD03 behavior and acceptance remain in the
 [roadmap](linux_distribution_plan.md) and [LD03 handoff](linux_distribution_ld03.md).
@@ -65,8 +67,13 @@ player names with revision-bearing internal bundles, and three separate pinned
 uploads. `python3 tests/windows_distribution_tests.py` passes nine owned miniature
 checks (0.05 s), including console rejection and package naming/content/provenance.
 Python compilation, actionlint 1.7.12, parsed manual-trigger/upload/retention checks
-and `git diff --check` pass. Native startup and raw transport verification remain
-pending the next exact manual run. No local production bake or gameplay matrix ran.
+and `git diff --check` pass. Native startup and raw transport verification passed in
+[manual run 43169845969](https://github.com/biscon/blobber/actions/runs/43169845969),
+whose exact source `8259b872306f51628f4692d71a1c113e0dc96298` was checked against
+the pushed remote and actual dispatched SHA. The previous executable was confirmed
+to use PE subsystem 3; the replacement is subsystem 2 (Windows GUI). No local
+production bake or gameplay matrix ran. The hosted run performed one fresh
+preparation because CMake is part of its conservative input key.
 
 ## Decisions and existing constraints
 
@@ -436,9 +443,13 @@ compiler diagnostics avoid another full attempt just to expose the next error.
    `main` for registration and on the dispatched branch; `--ref` alone does not
    register a new workflow. No event-triggered build runs when the bootstrap merges.
 6. Resolve the exact run by workflow, branch/source SHA, actor and dispatch time;
-   use `gh run watch`, `gh run view --log-failed` and `gh run download RUN_ID`
-   with its exact artifact name. Never download an ambiguous latest successful run.
-   Check downloaded checksum, manifest, source/prepared identity and compact evidence.
+   use `gh run watch` and `gh run view --log-failed`. Download the exact raw player
+   and checksum artifact IDs through `gh api repos/OWNER/REPO/actions/artifacts/ID/zip`
+   redirected to owned files; use `gh run download RUN_ID` with its exact artifact
+   name only for archived review evidence. CLI 2.102.1 automatically extracts ZIP
+   contents, so it would unpack the raw player and cannot decode the raw text
+   checksum. Never select an ambiguous latest successful run. Check downloaded
+   checksum, manifest, source/prepared identity and compact evidence.
 7. Import the Windows compatibility fixtures into the same revision's Linux verifier,
    promote only the selected review bundle/evidence, close runners and clean owned
    temporary downloads/worktrees. Do not delete another active branch/worktree/cache.
@@ -688,55 +699,71 @@ confirmed. Other artifacts, caches and accepted Linux evidence were preserved.
 
 ### Selected review artifact
 
-Complete manual [run 43153009429](https://github.com/biscon/blobber/actions/runs/43153009429)
-**passed**, pinned to `03159b3fc29f3a2bfbca8abab982d8802c12f8c2`. Its native
-Windows job is [130966972316](https://github.com/biscon/blobber/actions/runs/43153009429/job/130966972316).
-The final handoff changes only documents/selected captures after that tested source;
-player, test, tool, CMake and workflow bytes remain identical.
+The user booted Windows and reports working gameplay from initial run 43153009429,
+source `03159b3`. Their console-window and download-layout/name corrections are now
+implemented and mechanically verified; explicit acceptance of WD01 remains pending.
+The old executable's header confirmed subsystem 3 (console). The replacement's
+header is **subsystem 2 (Windows GUI)**, retaining the tested Unicode CRT entry point.
 
-The selected local bundle is intentionally retained at:
+Complete manual [run 43169845969](https://github.com/biscon/blobber/actions/runs/43169845969)
+**passed**, pinned to `8259b872306f51628f4692d71a1c113e0dc96298`.
+Native Windows job: [131024697309](https://github.com/biscon/blobber/actions/runs/43169845969/job/131024697309).
+Subsequent handoff edits change only documents, not the tested player/tools/build.
+
+Download **[blobber-0.1.0-windows-x86_64.zip](https://github.com/biscon/blobber/actions/runs/43169845969/artifacts/13922812184)**
+to play. This is the exact native player ZIP, uploaded without another ZIP wrapper.
+It contains one `blobber-0.1.0-windows-x86_64/` directory with the executable,
+runtime content/notices, instructions and integrity/provenance metadata. It contains
+no test reports, screenshots or nested ZIP. Optional downloads are the separate
+[checksum](https://github.com/biscon/blobber/actions/runs/43169845969/artifacts/13923040622)
+and [review evidence](https://github.com/biscon/blobber/actions/runs/43169845969/artifacts/13922089513).
+The game/checksum names have no Git revision suffix. Final public attachments will
+use these same plain version/platform names; publication is outside WD01.
+
+The complete selected local verification bundle is intentionally retained at:
 
 ```text
-build-windows-review/dist/blobber-0.1.0-g03159b3fc29f-windows-x86_64/
+build-windows-review/dist/blobber-0.1.0-g8259b872306f-windows-x86_64/
 ```
 
-It contains the player ZIP and adjacent SHA-256, `build.json`, `verification.json`,
-`focused-tests.txt`, `depth-copy.txt`, three Windows-written interchange fixtures
-and six captures. The parent `.blobber-review-owner.json` records this selection.
-The ZIP itself contains only the player/runtime content/notices and player metadata.
+Its revision-bearing directory is internal, not the player's download filename.
+The parent `.blobber-review-owner.json` records its source and run. It contains the
+player ZIP/checksum, build/smoke/focused/depth reports, three Windows-written format
+fixtures and six captures. Only the player ZIP is the game download.
 
 | Evidence | Exact result |
 | --- | --- |
-| ZIP | `blobber-0.1.0-g03159b3fc29f-windows-x86_64.zip`; **564,915,073 bytes** (538.75 MiB) |
-| SHA-256 | `b8c90c9eff720cf4ee313ae3f37f347e93a72195cecb0f1500fb783241adabc5` |
-| Extracted package | **392 files / 1,331,447,256 bytes**, one game directory |
-| Source fingerprint | `36e2511005db213c0ba005e28eef9bfb4975ce73aa235f2ee7c4bebafc31a58d`; clean tested source |
-| Native selected suites | **26 passed, 1 skipped**, 27 selected / 14.29 s; `path_stream_decode` lacks an audio device |
+| Player ZIP | `blobber-0.1.0-windows-x86_64.zip`; **564,904,090 bytes** (538.73 MiB) |
+| SHA-256 | `f003e8e62f166e00448302f707c0f6336c51a4d9e730eef0bcc760d09e793066` |
+| Extracted package | **392 files / 1,331,447,290 bytes**, one plain-named game directory |
+| Source fingerprint | `627a61876769d18101fec3105b421e1928836e3444bda46f16b00146aa1e186d`; clean tested source |
+| Native selected suites | **26 passed, 1 skipped**, 27 selected / 16.05 s; `path_stream_decode` lacks an audio device |
 | Production data | Complete typed prepared validation, curated stage and Linux-to-Windows campaign/library/scenario import/re-encode passed |
-| Extracted runtime | **Passed**: 48 create-route actions, New Campaign/town/dialogue/inn/dungeon/save, then 3 fresh-process Continue actions |
+| GUI startup/runtime | **Passed** with redirected logs: 48 create-route actions, New Campaign/town/dialogue/inn/dungeon/save, then 3 fresh-process Continue actions |
 | Isolation | Checked RX install; denied source/build assets; unrelated CWD; isolated LocalAppData/TEMP; spaces/æ/日本 paths; restored DACL policies/access |
-| Graphics | Mesa 26.2.6 OpenGL 4.6 Core; llvmpipe LLVM 23.1.4 / 256 bits; actual loaded module in the external owned Mesa directory |
+| Graphics | Mesa 26.2.6 OpenGL 4.6 Core; llvmpipe LLVM 23.1.4 / 256 bits; actual module in the external owned Mesa directory |
 | GPU integration | Bidirectional depth copy, readback and resource cleanup passed in a hidden context |
-| Local download | SHA-256, full manifest/CRC, embedded BUILD metadata, producer/consumer identity comparison and fresh AMD64 PE audit passed |
-| Reverse interchange | Exact downloaded Windows-written campaign/library/scenario imported and re-encoded successfully by the native Linux verifier |
+| Raw transport/local ZIP | Backend digest and downloaded bytes equal the native ZIP SHA; complete manifest/CRC, clean root, no nested ZIP/reports, embedded metadata and fresh GUI PE audit passed |
+| Reverse interchange | Exact downloaded Windows-written campaign/library/scenario imported and re-encoded successfully by the unchanged native Linux verifier |
 
 Fresh player PE SHA-256:
-`43559feef0b3673426da3fa27dfe1d104c733d80b3455735948c5f621d06c9c1`.
-Imports are only bcrypt, gdi32, kernel32, ole32, shell32, user32 and winmm DLLs.
-No dynamic MSVC/UCRT or third-party DLL is shipped. The recorded exact toolchain is
-CMake 3.31.6, Ninja 1.13.2, Python 3.12.10, MSVC tools 14.44.35207 / compiler
-19.44.35229, Windows SDK 10.0.22621.0; runner image 20261101.353.1 and Windows
-Server 10.0.20348.5773. Full tool paths/compiler pass versions remain in `build.json`.
+`7037543539e52baa9ca8d9beb824df028b6215c68892600d46f275ed45d4092a`.
+The PE audit requires AMD64 / Windows GUI and imports only bcrypt, gdi32, kernel32,
+ole32, shell32, user32 and winmm. No dynamic MSVC/UCRT or third-party DLL is shipped.
+Recorded tools: CMake 3.31.6, Ninja 1.13.2, Python 3.12.10, MSVC tools
+14.44.35207 / compiler 19.44.35229, Windows SDK 10.0.22621.0; runner image
+20261101.353.1, Windows Server 10.0.20348.5773. Exact paths/compiler pass identities
+remain in build metadata. CLI bakers/tests retain their console subsystem.
 
-The exact prepared cache hit is
-`wd01-prepared-v1-57a198d470b11b52fb61d7f05781e8257ce4e3bbc75c7fc5c19551c176307850`,
-produced at `36cc467c3009255414b19152c0ff0352810a1209` (218,297,335 compressed cache
-bytes). Producer: accepted Linux recipe, GNU 11.4.0 / CMake 3.31.12, image
-`sha256:dc2d79e83f8d2eade94e39129d85615aa0d468a2d7383b14b8deef365cdf962a`.
-Verifier-only changes leave prepared inputs unchanged; producer and consumer
-revisions remain distinct in provenance. Only current/previous owned cache keys
-remain (218,297,335 + 218,297,345 bytes), at most 1 GiB each, without broad restores
-or unrelated deletion. The imported game graph schedules no production bake.
+Fresh preparation key:
+`wd01-prepared-v1-fa8e58427aeaf3b79894a2d281ed3ecdb55c2ff98ccd9cc157e2cdfc3edef6b6`,
+produced at the same `8259b872306f51628f4692d71a1c113e0dc96298` source, 218,297,400
+compressed cache bytes (deflate estimate 228,595,525). Windows restored and validated
+that exact key. The accepted Linux recipe uses GNU 11.4.0 / CMake 3.31.12, image
+`sha256:f1ada908105a940399d672b7e3bb0de90ec74c62453040b1f55fa2374c9f3006`.
+The owned cache namespace retains only this and the previous key (218,297,335 bytes),
+with the existing 1 GiB-per-entry bound. Imported game graphs schedule no production
+bake. All five content identities match the initial user-played package:
 
 | Preserved content identity | Value |
 | --- | --- |
@@ -746,28 +773,38 @@ or unrelated deletion. The imported game graph schedules no production bake.
 | World publication | `16850201644598948673` |
 | World payload | `162051066310005404` |
 
-The exact hosted artifact is [13915456178](https://github.com/biscon/blobber/actions/runs/43153009429/artifacts/13915456178),
-`windows-review-03159b3fc29f3a2bfbca8abab982d8802c12f8c2`, 573,669,141 outer
-artifact bytes, seven-day retention (expires 2026-11-19). The selected local bundle
-has no automatic expiry. Download was performed with `gh run download 43153009429`
-and that exact artifact name, with TMPDIR inside the owned disk run; its internal
-transfer ZIP was automatically removed. Full ZIP inspection used
-`windows_archive.inspect_zip`; the fresh audit extracted only `blobber.exe` locally.
-The configured Linux verifier, already built from the unchanged C++ code, ran:
+Hosted artifacts have seven-day retention, expiring 2026-11-19: player 13922812184
+(564,904,090 bytes), raw checksum 13923040622 (99 bytes), optional archived evidence
+13922089513 (8,754,074 bytes). The player artifact's API digest equals the native
+ZIP's hash exactly; the evidence download contains no copy of the game ZIP/checksum.
+Raw files were downloaded by exact artifact ID using `gh api --allow-escape-sequences`
+with stdout redirected to owned files. One network read timed out after 213,090,304
+bytes; a validated HTTP 206 Content-Range resumed those same bytes, and the complete
+SHA/CRC/file ledger then passed. No credentials or signed URLs were printed. Archived
+evidence used `gh run download 43169845969 --name windows-review-evidence` with
+TMPDIR on the owned disk run. The native Linux format verifier then ran:
 
 ```sh
 nice -n 15 ionice -c 3 cmake-build-headless-release/blobber_distribution_compatibility \
-  import SELECTED_BUNDLE/compatibility-windows OWNED_RUN/final-windows-roundtrip-linux
+  import SELECTED_BUNDLE/compatibility-windows OWNED_RUN/compatibility-linux
 ```
 
-Six [selected screenshots](screenshots/windows-distribution/wd01/README.md) were
-inspected for loaded content/layout. The partial dialogue text is intentional.
-Windows 11 physical-GPU behavior, audio-device streaming/playback and human
-listening remain **unverified**. Existing font/music/audio attribution gaps remain
-as documented in the accepted LD03 handoff. No project-license change, signing,
-installer, public Release/tag or full implementation merge is claimed.
+The six-image [gallery](screenshots/windows-distribution/wd01/README.md) preserves
+initial user-played visual evidence and its original source/hash. Five current
+captures are byte-identical; the animated menu variation was inspected for loaded
+content/layout. Startup/packaging fixes need no new visual set. Current captures
+are also available in the optional evidence artifact. Software-GL checks still do
+not establish a hardware compatibility matrix or audio playback/listening. The user
+has reported working Windows gameplay; no more specific device/audio claim is
+inferred. Existing font/music/audio notice gaps remain as documented in LD03.
+No project-license change, signing, installer, public Release/tag, LD04 work or
+full implementation merge was performed.
 
 ### Windows 11 play review
+
+The user has already reported working gameplay. For this correction, recheck that
+launching opens only the game and that the single ZIP has the plain name/layout.
+The broader recipe below remains available for later reviewers.
 
 1. Back up existing `%LOCALAPPDATA%\blobber` before launching this review build.
 2. Compare `Get-FileHash -Algorithm SHA256 .\PACKAGE.zip` with the adjacent
@@ -785,23 +822,35 @@ installer, public Release/tag or full implementation merge is claimed.
 
 ### Ownership and cleanup
 
-The planning run was previewed/cleaned (three files / 4,303 bytes); the unchanged
-preexisting file snapshot was verified before its commit. After closing all local
-runners, selecting the final bundle and promoting six inspected captures, cleanup
-was previewed and applied to implementation run
-`output/agent-runs/20261111T230536Z-27f016fffc0545899b52fe94526f9985/`:
-**121 disposable files / 773,843,948 bytes removed**. This includes the superseded
-unverified ZIP, provider downloads/extracts, copied executable, temporary graph,
-interchange outputs and raw logs. No unresolved diagnostic exception remains.
-The selected final bundle and gallery are intentional retained evidence.
+The original planning run was previewed/cleaned (three files / 4,303 bytes), and
+the first implementation run removed 121 disposable files / 773,843,948 bytes.
+Their historical verification remains above; the preexisting user changes remain
+unchanged in prerequisite commit `08217e6` and all Git history is preserved.
 
-Both final hosted jobs completed cleanup; the Windows owned run removed 2,290 files /
-1,642,615,828 bytes after DACL restoration and compact artifact upload. Only the
-selected seven-day hosted artifact and two bounded owned prepared caches remain.
-Build caches, user saves, accepted LD03 captures, other task runs and Git history
-were preserved. The clean bootstrap worktree is gone; branches/commits remain.
-Final checks passed: 292 local Markdown links resolve, checkpoint/evidence counts
-match, the manual-only policy is intact, selected ZIP size matches, scratch is
-absent and `git diff --check` is clean. Source/test/tool/CMake/workflow bytes are
-unchanged from the exact tested artifact revision; no new gameplay matrix ran.
+After validating the GUI/raw-download replacement, its exact bundle was promoted
+to the marked `build-windows-review/dist/` location. Only this task's superseded
+remote artifact 13915456178 (573,669,141 bytes) was deleted, after rechecking its
+exact initial run/source/name/size. The initial user-played run/source/hash and
+selected visual evidence remain recorded; no accepted Linux artifact or other
+project artifact was removed. The previous local review bundle was moved into
+this correction's disposable run for scoped cleanup.
+
+All local runners were closed. Preview and apply cleanup of
+`output/agent-runs/20261112T063236Z-cea77689bcb44875b9cd07cbbb052c52/` removed
+**29 disposable files / 586,555,564 bytes**, including the superseded ZIP/evidence,
+copied PE, resumed-transfer helper/logs, actionlint download and Linux roundtrip.
+The network failure was resolved; no retained diagnostic exception remains.
+The selected new bundle and the six-image initial gallery are intentional evidence.
+
+Both replacement hosted jobs completed cleanup: Linux removed 9 files / 131,205
+bytes; Windows removed 2,290 files / 1,642,617,196 bytes after DACL restoration and
+separate uploads. Only the three current seven-day hosted artifacts and two bounded
+owned prepared caches remain. Build caches, user saves, accepted LD03 captures,
+other task runs and Git history were preserved. The bootstrap worktree remains
+removed, with its branches/commits intact.
+
+Final checks passed: 293 local Markdown links resolve; checkpoints, manual-only
+policy, six-image count, selected output and scratch cleanup agree; whitespace is
+clean. Player/test/tool/CMake/workflow bytes equal the tested source revision. No additional
+local gameplay matrix, production bake or benchmark ran for these review fixes.
 WD01 stops **Ready for review**; acceptance and LD04 remain user-controlled.
