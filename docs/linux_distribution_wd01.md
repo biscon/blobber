@@ -835,3 +835,25 @@ The new regression test accepts that observed normalization and rejects protecti
 rights, inherited-ACE or order changes (eight tooling tests pass in 0.04 s).
 Actual smoke restoration now attempts all saved roots, verifies each restored
 policy and clears DLL selection even when another restoration reports an error.
+
+
+Run [43150651693](https://github.com/biscon/blobber/actions/runs/43150651693), source
+`5151ea4`, passed the normalized DACL preflight, native build/suites and prepared/
+interchange/staging checks. Its actual ACL grant failed before game launch with
+icacls exit 1332: numeric SID arguments require the documented leading `*`.
+The saved root policy was restored and verified; no artifact was uploaded.
+
+Prefix numeric SIDs correctly and share the exact restriction/restore operations
+between preflight and real smoke. Extend the owned Unicode preflight to assert new
+file and existing nested-file write denial under RX, nested-file read denial under
+the source policy, and restored access/policy after each case. This moves actual
+NTFS permission prerequisites before compilation and preserves the full smoke's
+independent install/source/build probes. No player/source/prepared data changes.
+
+
+The shared icacls wrapper now follows the [documented numeric SID syntax](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/icacls).
+The Unicode preflight uses those same restrict/restore functions as real smoke and
+checks new-file/overwrite denial, readable RX data, nested read denial, policy
+restoration and subsequent writes. Python compilation, eight tooling tests and
+whitespace checks pass; these native permission prerequisites still require the
+next hosted preflight. No C++/prepared-input changes were made.

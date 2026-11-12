@@ -40,6 +40,49 @@ def saved_acl(operation, path, sddl=None):
     return subprocess.check_output(args,text=True).strip()
 
 
+def current_sid():
+    sid=subprocess.check_output([powershell(),'-NoProfile','-Command',
+        '[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value'],text=True).strip()
+    require(sid.startswith('S-1-'),'Unexpected current-user SID')
+    return '*'+sid # icacls distinguishes numeric SIDs from account names this way.
+
+
+def restrict_acl(path, mode, sid):
+    options=['/inheritance:r','/grant:r',sid+':(OI)(CI)(RX)'] if mode=='install' else ['/deny',sid+':(OI)(CI)(RX)']
+    subprocess.run(['icacls',str(path),*options],check=True,stdout=subprocess.DEVNULL)
+
+
+def restore_acl(path, sddl):
+    saved_acl('restore',path,sddl)
+    require(dacl_policy(saved_acl('get',path))==dacl_policy(sddl),'Restored DACL policy differs: '+str(path))
+
+
+def expect_denied(action, message):
+    try:action()
+    except PermissionError:return
+    raise RuntimeError(message)
+
+
+def acl_preflight(run):
+    probe=run/'DACL preflight æ 日本';probe.mkdir()
+    nested=probe/'nested';nested.mkdir();fixture=nested/'fixture'
+    fixture.write_bytes(b'owned')
+    original=saved_acl('get',probe);sid=current_sid()
+    try:
+        restrict_acl(probe,'install',sid)
+        expect_denied(lambda:(probe/'new-file').write_bytes(b'forbidden'),'RX allowed new file creation')
+        expect_denied(lambda:fixture.write_bytes(b'forbidden'),'RX allowed nested file overwrite')
+        require(fixture.read_bytes()==b'owned','RX changed fixture contents')
+    finally:restore_acl(probe,original)
+    try:
+        restrict_acl(probe,'deny',sid)
+        expect_denied(fixture.read_bytes,'Asset deny allowed nested file reading')
+    finally:restore_acl(probe,original)
+    require(fixture.read_bytes()==b'owned','Restored asset data differs')
+    fixture.write_bytes(b'restored')
+    (probe/'restored-new-file').write_bytes(b'restored')
+
+
 def smoke(bundle, source, build, run):
     archive=next(bundle.glob('*.zip'))
     require((bundle/(archive.name+'.sha256')).read_text()==digest(archive)+'  '+archive.name+'\n','ZIP checksum differs')
@@ -69,13 +112,10 @@ def smoke(bundle, source, build, run):
     kernel.SetDllDirectoryW.argtypes=[ctypes.c_wchar_p]
     require(kernel.SetDllDirectoryW(str(provider.resolve())), 'Cannot set verification DLL directory')
     saved=[]
-    sid=subprocess.check_output([powershell(),'-NoProfile','-Command','[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value'],text=True).strip()
+    sid=current_sid()
     def acl(path, mode):
         sddl=saved_acl('get',path);saved.append((path,sddl))
-        if mode=='install':
-            subprocess.run(['icacls',str(path),'/inheritance:r','/grant:r',sid+':(OI)(CI)(RX)'],check=True,stdout=subprocess.DEVNULL)
-        else:
-            subprocess.run(['icacls',str(path),'/deny',sid+':(OI)(CI)(RX)'],check=True,stdout=subprocess.DEVNULL)
+        restrict_acl(path,mode,sid)
     try:
         acl(install,'install')
         denied=[source/'assets',build/'assets']
@@ -120,8 +160,7 @@ def smoke(bundle, source, build, run):
         restore_errors=[]
         for path,sddl in reversed(saved):
             try:
-                saved_acl('restore',path,sddl)
-                require(dacl_policy(saved_acl('get',path))==dacl_policy(sddl),'Restored DACL policy differs: '+str(path))
+                restore_acl(path,sddl)
             except Exception as error:restore_errors.append(str(error))
         kernel.SetDllDirectoryW(None)
         if restore_errors:raise RuntimeError('DACL restoration failed: '+'; '.join(restore_errors))
