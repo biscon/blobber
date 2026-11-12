@@ -5,6 +5,7 @@
 #include <sstream>
 int main() {
     try {
+        check(blobber::Mt19937{}() == std::mt19937{}(), "standard default seed preserved");
         for (auto seed : {0u, 1u, 5u, 5489u, UINT32_MAX}) {
             blobber::Mt19937 engine(seed);
             std::mt19937 reference(seed);

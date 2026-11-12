@@ -13,6 +13,7 @@ import prepared
 import windows_archive as archive
 import pe_audit
 import manage_cache
+import windows_smoke
 driver_spec=importlib.util.spec_from_file_location('windows_release',
     Path(__file__).resolve().parents[1]/'tools/windows_release.py')
 driver=importlib.util.module_from_spec(driver_spec)
@@ -20,6 +21,12 @@ driver_spec.loader.exec_module(driver)
 
 
 class Distribution(unittest.TestCase):
+    def test_context_failure_classification(self):
+        self.assertTrue(windows_smoke.context_unavailable(
+            'Blobber: Graphics unavailable: cannot open an OpenGL window'))
+        self.assertFalse(windows_smoke.context_unavailable('GLFW: WGL: warning\nBlobber: missing content'))
+        self.assertFalse(windows_smoke.context_unavailable('Blobber: shader compilation failed'))
+
     def test_owned_cache_bound(self):
         key='wd01-prepared-v1-'+'a'*64
         records=[{'id':i,'key':'wd01-prepared-v1-'+str(i)*64,'size_in_bytes':500*1024**2,

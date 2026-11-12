@@ -618,3 +618,39 @@ before costly work and record the Windows resource preflight in build metadata.
    User state belongs beneath `%LOCALAPPDATA%\blobber`, outside the install.
 5. Report physical-GPU/audio issues and acceptance separately. Hosted Windows
    Server/software OpenGL evidence does not replace this Windows 11 review.
+
+
+Corrected verification attempt: [manual run 43129185992](https://github.com/biscon/blobber/actions/runs/43129185992),
+source `624ff9d7900c85cb226bfc7a9d424793123652bf`. Preparation passed with at least
+15,290,556,416 available RAM bytes and 89,553,797,120 free scratch bytes. The exact
+prepared cache key is `wd01-prepared-v1-45c112d366752c2be9f04f31437f3965e8ae5beab7bd325e01243a346a8d428d`
+(218,297,352 compressed bytes). Windows compiled and linked the native OS library,
+then stopped at 182/345 build steps: MSVC rejects an aggregate reset containing
+the owned RNG when its only constructor is explicit with a default argument.
+Separate a nonexplicit default constructor and an explicit seeded constructor,
+matching the standard engine interface; retain the exact seed/state/output behavior.
+The configured headless CMake compiled the affected campaign codec object and RNG
+test, and the golden-state/sequence suite passed again. The Windows suites/package
+remain unexecuted; another corrected manual attempt is required.
+The focused local command was:
+
+```sh
+nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest \
+  --test-dir cmake-build-release \
+  -R '^(path_decode|path_stream_decode|creator_art|portraits|audio|music|audio_runtime|dialogue|library|arena|platform_io|platform_io_process)$' \
+  --parallel 1 --output-on-failure --no-tests=error
+python3 tests/windows_distribution_tests.py
+```
+
+The configured CMake and Ninja paths were read from `cmake-build-release/CMakeCache.txt`;
+configuration and builds used that CLion pair. No existing build cache was switched
+to another toolchain. Local font path coverage remains in the packaged smoke rather
+than a newly copied TTF fixture; physical text rendering/audio listening remain user
+review, independently of these filename/codec tests.
+
+
+The smoke classifier now uses the application's fatal window-construction message
+rather than any earlier WGL warning. A content/shader failure with a working context
+must fail instead of becoming an unavailable-context result. Seven local Python
+packaging/cache/import/classification tests pass (0.04 s); this helper correction
+changes no player payload or prepared input.

@@ -14,6 +14,12 @@ MESA_URL='https://github.com/pal1000/mesa-dist-win/releases/download/26.2.6/mesa
 MESA_SHA='b2e00615feaba45942343c265cc8c5f576142ca682c1ac6661922d4b72492877'
 
 
+def context_unavailable(message):
+    # Use our fatal window-construction result. An earlier GLFW/WGL warning must
+    # never turn a later content/render failure into an unavailable-context skip.
+    return 'Graphics unavailable: cannot open an OpenGL window' in message
+
+
 def saved_acl(operation, path, sddl=None):
     args=['powershell','-NoProfile','-NonInteractive','-File',str(Path(__file__).with_name('windows_acl.ps1')),
           '-Operation',operation,'-Target',str(path)]
@@ -76,7 +82,7 @@ def smoke(bundle, source, build, run):
                     '--smoke-output',str(user/'smoke')],cwd=cwd,env=env,stdout=stream,stderr=subprocess.STDOUT,timeout=600)
             if result.returncode:
                 message=log.read_text(encoding='utf-8',errors='replace')
-                if phase=='create' and any(n in message for n in ['Failed to initialize GLFW','Failed to create window','WGL:','GLFW: Failed to initialize']):
+                if phase=='create' and context_unavailable(message):
                     return {'status':'unverified','phase':'graphics-context','reason':message[-8000:], 'archive_sha256':digest(archive)}
                 raise RuntimeError('Extracted Windows smoke failed: '+message[-8000:])
             results[phase]=json.loads((user/'smoke'/(phase+'.json')).read_text(encoding='utf-8'))

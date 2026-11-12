@@ -10,7 +10,8 @@ namespace blobber {
 class Mt19937 {
   public:
     using result_type = std::uint32_t;
-    explicit Mt19937(result_type value = 5489u) noexcept { seed(value); }
+    Mt19937() noexcept : Mt19937(5489u) {}
+    explicit Mt19937(result_type value) noexcept { seed(value); }
     void seed(result_type value = 5489u) noexcept {
         words_[0] = value;
         for (std::uint32_t i = 1; i < words_.size(); ++i)
