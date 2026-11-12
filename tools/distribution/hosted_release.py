@@ -168,7 +168,7 @@ def verify(run):
     with (run/'reverse-formats.txt').open('w') as log:
         subprocess.run([str(verifier),'import',str(run/'windows-evidence/compatibility-windows'),
                         str(run/'compatibility-roundtrip')],stdout=log,stderr=subprocess.STDOUT,check=True,timeout=60)
-    result = {'version':1,'status':'passed','context':evidence.context(), 'artifacts':artifacts,
+    result = {'version':1,'status':'passed','context':evidence.context(), 'verification_runner':evidence.runner_identity(), 'artifacts':artifacts,
               'platforms':reports, 'prepared':builds['linux']['prepared'], 'identities':builds['linux']['identities'],
               'formats':{'linux_to_windows':'passed','windows_to_linux':'passed'},
               'limits':['Ubuntu 22.04 and Debian 13 share the hosted kernel', 'Software OpenGL only',

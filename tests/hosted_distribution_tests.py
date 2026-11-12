@@ -168,5 +168,18 @@ class HostedTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'another run'):e.download_artifact(17,self.root/'download')
             fetch.assert_not_called()
 
+    @unittest.skipIf(os.name == 'nt', 'Linux resource policy')
+    def test_baseline_api_rejects_exhaustion_before_build_lock(self):
+        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+        import linux_release
+        from types import SimpleNamespace
+        for disk,memory in [(7*1024**3,8*1024**2),(10*1024**3,5*1024**2)]:
+            with patch.object(linux_release.shutil,'disk_usage',return_value=SimpleNamespace(free=disk)), \
+                 patch.object(Path,'read_text',return_value='MemAvailable: '+str(memory)+' kB\n'), \
+                 patch.object(linux_release,'build_lock') as lock:
+                with self.assertRaisesRegex(RuntimeError,'Baseline requires'):
+                    linux_release.build_release(self.root,self.root/'unused-build')
+                lock.assert_not_called()
+
 
 if __name__ == '__main__':unittest.main()

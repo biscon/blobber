@@ -211,10 +211,22 @@ def _build_release(run, build, audit_only=False, dist=False, allow_dirty=False, 
 
 
 def build_release(run, build, audit_only=False, dist=False, allow_dirty=False, prepared_input=None):
+    check_resources()
     with build_lock(build):
         (build / 'dist-stage/Release.audit.json').unlink(missing_ok=True)
         (run / 'distribution.json').unlink(missing_ok=True)
         _build_release(run, build, audit_only, dist, allow_dirty, prepared_input)
+
+
+def check_resources():
+    free = shutil.disk_usage(ROOT).free
+    memory = Path('/proc/meminfo').read_text()
+    available = next(int(line.split()[1]) for line in memory.splitlines() if line.startswith('MemAvailable:')) * 1024
+    if free < 8 * 1024**3 or available < 6 * 1024**3:
+        raise RuntimeError('Baseline requires at least 8 GiB free disk and 6 GiB available memory')
+    result = {'free_scratch_bytes': free, 'available_memory_bytes': available}
+    print(json.dumps(result), flush=True)
+    return result
 
 
 def environment_check():
@@ -261,15 +273,10 @@ def main():
                 raise RuntimeError('--run-dir must be an existing owned agent run')
             if build.is_symlink() or build.parent != ROOT or not build.name.startswith('build-linux-baseline'):
                 raise RuntimeError('--build-dir must be a dedicated build-linux-baseline* directory in the checkout')
-            if shutil.disk_usage(ROOT).free < 8 * 1024**3:
-                raise RuntimeError('At least 8 GiB free disk space is required')
-            memory = Path('/proc/meminfo').read_text()
-            available = next(int(line.split()[1]) for line in memory.splitlines() if line.startswith('MemAvailable:'))
-            if available < 6 * 1024**2:
-                raise RuntimeError('At least 6 GiB available memory is required')
             (run / 'home').mkdir(exist_ok=True)
             (run / 'tmp').mkdir(exist_ok=True)
             if args.operation == 'verify-package':
+                check_resources()
                 from distribution.verify_package import verify_package
                 verify_package(run, args.package_dir.absolute())
             else:

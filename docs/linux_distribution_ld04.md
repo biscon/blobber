@@ -370,3 +370,13 @@ passes `.github/workflows/windows-review.yml` (`-shellcheck=`; shellcheck unavai
 `git diff --check` passes. These are local tooling checks, not hosted success.
 No local production compilation, bake or desktop input was run. The subsequent
 hosted run and exact downloaded results remain to be recorded.
+
+Hosted-path correction during integration: moved the disk/memory guard into the
+shared Linux `build_release` API, since the hosted helper calls that API directly
+rather than the CLI wrapper. A focused fixture proves insufficient disk or memory
+fails before lock/build creation. Added per-platform and final-runner image/OS/arch
+identity to compact evidence. The focused hosted suite now has 11 passing cases
+(one Linux-only case is skipped on Windows). These changes do not affect prepared
+inputs. After the cold run, a second serial dispatch will verify the corrected
+entry point and the previously unexercised full Linux cache-import path, reusing
+the checked publication rather than baking it again.

@@ -29,6 +29,10 @@ def context():
     return result
 
 
+def runner_identity():
+    return {name:os.environ.get(name) for name in ('RUNNER_OS','RUNNER_ARCH','ImageOS','ImageVersion')}
+
+
 def check_source():
     expected = context()
     actual = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
@@ -119,7 +123,7 @@ def platform_evidence(platform, bundle, run):
         workspace = run/'package-verification'
         for p in sorted(workspace.glob('*/capture-*.png'))[:6]:
             copy_file(p, evidence/'captures'/(p.parent.name+'-'+p.name))
-    record = {'version':1, 'context':context(), 'platform':platform, 'status':'passed',
+    record = {'version':1, 'context':context(), 'runner':runner_identity(), 'platform':platform, 'status':'passed',
               'player':{'name':name,'bytes':player.stat().st_size,'sha256':sha},
               'build_sha256':digest(bundle/'build.json'), 'verification_sha256':digest(bundle/'verification.json')}
     atomic_json(evidence/'platform.json', record)
