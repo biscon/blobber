@@ -1,7 +1,7 @@
 # WD01 Windows distribution captures
 
-Status: **Initial Windows gameplay reported working by the user, 2026-11-12.
-GUI/download corrections verified; final slice acceptance pending.**
+Status: **WD01 accepted and closed by the user, 2026-11-12**, following working
+Windows gameplay review and verified GUI/download corrections.
 These six selected 1920×1080 application-owned hidden captures retain the initial
 user-played build provenance. They come from its exact extracted
 Windows ZIP. Seed 5, default party/quality. Native MSVC game on hosted Windows
@@ -37,4 +37,5 @@ The player filename inside is plain `blobber-0.1.0-windows-x86_64.zip` and the
 hosted game download has no ZIP wrapper or reports/screenshots.
 See the [design/handoff](../../../linux_distribution_wd01.md#selected-review-artifact)
 for exact evidence, limits and the Windows 11 review recipe. Accepted LD03 Linux
-captures remain unchanged. Only explicit user acceptance closes WD01.
+captures remain unchanged. The user explicitly accepted WD01; no review is pending
+for this slice.

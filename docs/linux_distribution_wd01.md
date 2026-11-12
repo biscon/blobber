@@ -1,20 +1,21 @@
 # WD01 — Windows readiness and manual review build
 
-Status: **Ready for review — GUI startup and clean single-ZIP downloads verified,
-2026-11-12. The user reports working Windows gameplay; correction recheck and
-explicit slice acceptance pending.**
+Status: **Accepted and closed by the user, 2026-11-12.**
+The user explicitly accepted WD01 after the working Windows play review and the
+verified GUI startup, single-ZIP delivery and plain-filename corrections.
 
 This document records the reviewed WD01 design and implementation handoff.
 The [selected Windows ZIP and evidence](#selected-review-artifact) passed native
 hosted verification and local download checks. Six [inspected captures](screenshots/windows-distribution/wd01/README.md)
-are retained. The user reports working Windows gameplay; detailed device/audio
-coverage and the final correction recheck remain explicit.
+are retained. The user reports working Windows gameplay and has accepted the slice;
+the recorded device/audio coverage and mechanical verification limits remain explicit.
 Requirements below remain the target contract; the handoff records which checks
 actually ran. Accepted LD01–LD03 behavior and acceptance remain in the
 [roadmap](linux_distribution_plan.md) and [LD03 handoff](linux_distribution_ld03.md).
 The user approved this design and authorized WD01 implementation after the planning
-handoff. Implementation stops at Ready for review; LD04 and public publication
-have not started.
+handoff. Following the Ready for review handoff, the user stated “nice slice
+accepted.” LD04 planning is now eligible when requested; LD04 implementation and
+public publication have not started.
 
 ## Windows play-review corrections — 2026-11-12
 
@@ -701,7 +702,8 @@ confirmed. Other artifacts, caches and accepted Linux evidence were preserved.
 
 The user booted Windows and reports working gameplay from initial run 43153009429,
 source `03159b3`. Their console-window and download-layout/name corrections are now
-implemented and mechanically verified; explicit acceptance of WD01 remains pending.
+implemented and mechanically verified; the user explicitly accepted WD01 on
+2026-11-12.
 The old executable's header confirmed subsystem 3 (console). The replacement's
 header is **subsystem 2 (Windows GUI)**, retaining the tested Unicode CRT entry point.
 
@@ -802,9 +804,9 @@ full implementation merge was performed.
 
 ### Windows 11 play review
 
-The user has already reported working gameplay. For this correction, recheck that
-launching opens only the game and that the single ZIP has the plain name/layout.
-The broader recipe below remains available for later reviewers.
+The user reported working gameplay and subsequently accepted the corrected slice.
+The broader recipe below remains available for later reviewers; no further WD01
+review is pending.
 
 1. Back up existing `%LOCALAPPDATA%\blobber` before launching this review build.
 2. Compare `Get-FileHash -Algorithm SHA256 .\PACKAGE.zip` with the adjacent
@@ -853,4 +855,14 @@ Final checks passed: 293 local Markdown links resolve; checkpoints, manual-only
 policy, six-image count, selected output and scratch cleanup agree; whitespace is
 clean. Player/test/tool/CMake/workflow bytes equal the tested source revision. No additional
 local gameplay matrix, production bake or benchmark ran for these review fixes.
-WD01 stops **Ready for review**; acceptance and LD04 remain user-controlled.
+WD01 is **Accepted and closed by the user, 2026-11-12**. Recording acceptance is a
+documentation-only change; no new build, test matrix, workflow dispatch, merge or
+publication is required. LD04 is next eligible for planning when requested and
+remains unstarted.
+
+Acceptance bookkeeping verification, 2026-11-12: all four status/checkpoint/evidence
+documents agree, 293 local Markdown links resolve and `git diff --check` passes.
+No code/build/workflow files changed and no gameplay checks were rerun. The owned
+acceptance run `output/agent-runs/20261112T103738Z-57d1695c3d0249c99f09fafef5bf18f0/`
+was previewed and cleaned (one marker file / 78 bytes); selected artifacts, captures,
+build caches and user data remain intact.

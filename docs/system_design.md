@@ -40,8 +40,8 @@ claim; notice gaps remain.
 prepared-asset portability, a versioned ZIP and a minimal manual hosted build/test
 workflow managed from Linux with `gh`. User review requires only the downloaded
 game on Windows. [WD01 design/handoff](linux_distribution_wd01.md#selected-review-artifact)
-is **Ready for review — GUI/download corrections mechanically verified, 2026-11-12;
-working Windows gameplay reported by the user, final acceptance pending**.
+is **Accepted and closed by the user, 2026-11-12**, following working Windows
+gameplay review and the verified GUI/download corrections.
 Native Windows I/O/Unicode paths, fixed-storage portable
 MT19937 save state, validated Linux-prepared import/cache, curated ZIP/PE checks
 and a manual hosted workflow are implemented on the review branch. The exact native
@@ -57,8 +57,8 @@ Physical-GPU/audio coverage beyond the reported play review remains explicit.
 The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflow scope; access
 was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.
-LD04 consolidates Linux and Windows automation only after WD01 acceptance. Accepted
-LD01–LD03 history remains unchanged; no automatic advancement or public publication.
+LD04 consolidation is now eligible for planning when requested and remains
+unstarted. Accepted LD01–LD03 history remains unchanged; no automatic advancement or public publication.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,

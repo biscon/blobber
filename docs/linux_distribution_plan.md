@@ -3,8 +3,8 @@
 Created: 2026-11-11.
 Status: **LD01 and LD02 accepted and closed by the user, 2026-11-11.
 LD03 accepted and closed by the user, 2026-11-11.
-WD01 is Ready for review — GUI/download corrections verified after working Windows play review; acceptance pending.
-LD04 remains planned, after WD01 acceptance.**
+WD01 accepted and closed by the user, 2026-11-12.
+LD04 is next eligible for planning and remains unstarted.**
 
 Deliver downloadable desktop packages containing the executable and only required
 runtime content: the accepted Linux x86-64 `.tar.gz`, followed by a Windows x86-64
@@ -20,12 +20,12 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | WD01 — Windows readiness and manual build; Ready for review |
-| Next eligible slice | LD04 only after implemented WD01 is accepted; no automatic advancement |
+| Active slice | None — WD01 accepted and closed by the user, 2026-11-12 |
+| Next eligible slice | LD04 — planning when requested; no automatic advancement |
 | Implemented distribution support | Accepted Linux stage/archive/smoke; native Windows port, validated prepared import, ZIP/PE, extracted smoke and manual hosted workflow verified on the review branch |
-| Awaiting user review | WD01 GUI startup and plain single-ZIP download corrections; working Windows gameplay reported, final acceptance pending |
+| Awaiting user review | None for WD01; working Windows gameplay and GUI/download corrections accepted |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Recheck GUI launch/download corrections and explicitly accept WD01 before any LD04 work |
+| Next action | Plan LD04 only when requested; stop after recording WD01 acceptance |
 
 **Approved roadmap revision, 2026-11-11:** insert WD01 before LD04 and expand LD04
 to automate both supported packages. WD01 introduces the minimum manual Windows
@@ -165,8 +165,8 @@ source revision, toolchain and content identity so results can be reproduced.
 | LD01 | Runtime inventory and clean dist-stage target | Existing game and asset pipeline | Accepted and closed — 2026-11-11 |
 | LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Accepted and closed — 2026-11-11 |
 | LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Accepted and closed — 2026-11-11 |
-| WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | Ready for review — [corrected artifact/evidence](linux_distribution_wd01.md#selected-review-artifact) |
-| LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | Planned — after WD01 acceptance |
+| WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | Accepted and closed — 2026-11-12; [artifact/evidence](linux_distribution_wd01.md#selected-review-artifact) |
+| LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | Planned — next eligible; not started |
 
 ### LD01 — Runtime content and clean staging
 
@@ -292,8 +292,8 @@ build distribution location; clean disposable intermediate copies and extracts.
 
 ### WD01 — Windows readiness and manual build
 
-**Ready for review — requested GUI/download corrections mechanically verified,
-2026-11-12; [design and handoff](linux_distribution_wd01.md#selected-review-artifact).**
+**Accepted and closed by the user, 2026-11-12;
+[design and handoff](linux_distribution_wd01.md#selected-review-artifact).**
 The user booted Windows and reports working gameplay. The replacement
 [manual run 43169845969](https://github.com/biscon/blobber/actions/runs/43169845969)
 passes 26 suites (one audio-device skip), data/import/stage/PE/ZIP checks, GUI
@@ -303,8 +303,8 @@ is `blobber-0.1.0-windows-x86_64.zip`, a single ZIP with no commit suffix, neste
 screenshots or test reports. Checksum and optional evidence are separate artifacts.
 Actual raw download SHA/full-ledger/fresh GUI PE and reverse format import pass.
 Internal source provenance remains exact; public final filenames use version/platform.
-Recheck these corrections before final acceptance. The full port remains on
-`distribution/wd01`; only its authorized manual bootstrap was merged to main.
+The user explicitly accepted the corrected WD01 slice on 2026-11-12. The full port
+remains on `distribution/wd01`; only its authorized manual bootstrap was merged to main.
 No public Release/tag or LD04 work was created.
 The design records native I/O/Unicode paths, Windows 11 x64, static MSVC/dependencies,
 prepared-publication import/cache, ZIP/PE checks, manual dispatch/bootstrap and
@@ -578,11 +578,17 @@ review and implementation remain separate, with LD04 gated on accepted WD01.
 
 WD01 implementation handoff, 2026-11-12: native Windows port/package/manual workflow
 and exact hosted/downloaded artifact verification are complete. The checkpoint,
-tracker, system overview and linked handoff are Ready for review, with six selected
+tracker, system overview and linked handoff were initially Ready for review, with six selected
 captures and explicit Windows 11/audio limits. Prior working-tree changes remain in
 `08217e6`. Only explicit user acceptance closes WD01; LD04 remains gated.
 
 WD01 play-review correction handoff, 2026-11-12: the user reported working Windows
 gameplay and requested GUI startup, no nested review download and no revision
 suffixes. These fixes passed the exact native run and raw download verification;
-the checkpoint is Ready for review. Final acceptance and LD04 remain gated.
+the checkpoint was Ready for review before the acceptance below.
+
+WD01 acceptance, 2026-11-12: the user explicitly stated “nice slice accepted.”
+Marked WD01 Accepted and closed in the checkpoint, tracker, system overview,
+detailed handoff and capture README. LD04 is next eligible for planning only when
+requested; no LD04 work, workflow run, full-port merge or publication was started.
+Acceptance changes documentation only and preserves all prior verification limits.
