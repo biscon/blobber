@@ -636,3 +636,18 @@ main operator commands pass; `git diff --check` is clean. Comparison with tested
 The closure run `output/agent-runs/20261112T152459Z-fc029779ed3b440ea812df80817ff9db/`
 was previewed and cleaned (one marker / 78 bytes); no disposable diagnostics or
 retained exception. Selected review artifacts and build caches remain intentional.
+
+README maintenance, 2026-11-12: at the user's request, replaced the technical root
+README with a player/project introduction, an existing accepted screenshot,
+Windows/Linux download instructions, native source-build/CLion/test commands,
+controls and save locations. Internal runner/rendering/protocol/review procedures
+remain in their existing documents. GitHub API inspection confirmed no tagged
+Releases and valid current player artifacts; the README points to the stable
+workflow download page and explains the seven-day retention, with the Releases
+page linked for published versions. Corrected obsolete audio/Linux-only claims.
+Checked local links/image, preset/target names and commands against current CMake,
+platform input/options and player instructions; `git diff --check` passes. No
+source/runtime change, configuration, build, bake, gameplay test or hosted dispatch
+was required. The owned documentation run was previewed and cleaned (one marker /
+78 bytes), with no retained exception. Accepted artifacts, caches and slice status
+remain unchanged.

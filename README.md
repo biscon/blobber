@@ -1,238 +1,143 @@
 # Stone & Shadow
 
-A C++17 / raylib 6.2 grid-based dungeon crawler with a four-character party,
-discrete movement, procedural expeditions, an outdoor sanctuary hub, arena combat,
-spells, class abilities, inventory, travel, and campaign save/Continue.
+Stone & Shadow is an old-school, party-based dungeon crawler built with C++17 and
+[raylib](https://www.raylib.com/). Lead four adventurers from the sanctuary town
+into procedurally generated dungeons, gather loot, and bring the party home alive.
 
-## Build and run
+- Grid-based exploration with a first-person view and turn-based combat.
+- A four-character party with spells, class abilities, and equipment to manage.
+- A sanctuary hub with merchants, an inn, and a place to prepare for expeditions.
+- Campaign saves and Continue, plus an arena mode for combat encounters.
 
-Requirements: a C++17 compiler, CMake 3.24+, Ninja, and desktop OpenGL 3.3 support.
-CMake first looks for an installed raylib **6.2** package. If absent, it downloads
-the pinned release through FetchContent and verifies its SHA-256. Subsequent
-builds can run offline. Set `BLOBBER_USE_SYSTEM_RAYLIB=OFF` to force the pinned fallback.
-NPC JSON uses **nlohmann/json 3.12.0** with the same installed-package preference
-and a SHA-256-pinned download fallback (`BLOBBER_USE_SYSTEM_JSON=OFF` forces it).
+![Exploring a dungeon in Stone & Shadow](docs/screenshots/windows-distribution/wd01/06-dungeon.png)
+
+## Download and play
+
+Prebuilt **Windows x64** and **Linux x86-64** builds are available from
+[Desktop distribution builds](https://github.com/biscon/blobber/actions/workflows/windows-review.yml):
+
+1. Open the latest successful build run.
+2. Scroll to **Artifacts** and download the archive for your platform:
+
+   | Platform | Download | Requirements |
+   | --- | --- | --- |
+   | Windows | `blobber-VERSION-windows-x86_64.zip` | Windows 11 x64 and OpenGL 3.3 |
+   | Linux | `blobber-VERSION-linux-x86_64.tar.gz` | glibc 2.35+, X11 or XWayland, and OpenGL 3.3 |
+
+3. Extract the complete archive into a folder.
+4. On Windows, launch **blobber.exe**. On Linux, run **./blobber** from the extracted
+   folder.
+
+Keep the `assets` and `notices` folders beside the executable. Choose **New Campaign**
+to begin, or **Continue** to resume an expedition. No compiler or administrator
+installation is needed to play a downloaded build.
+
+GitHub requires sign-in to download Actions artifacts, which are kept for seven
+days. There are no tagged releases yet; published versions will appear on the
+[Releases page](https://github.com/biscon/blobber/releases). Optional `.sha256`
+downloads let you check archive integrity.
+
+## Build from source
+
+You will need:
+
+- Git and a C++17 compiler.
+- CMake **3.24 or newer** and Ninja.
+- Python 3 for the development/test configuration.
+- Desktop OpenGL 3.3 support.
+
+CMake downloads raylib, nlohmann/json, and yaml-cpp when suitable installed versions
+are unavailable, so the initial configuration needs an internet connection. The
+first build also prepares the game assets and takes longer than later builds.
+
+### Linux
+
+On Debian or Ubuntu, install the native build dependencies:
+
+```sh
+sudo apt install build-essential git cmake ninja-build python3 \
+    libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev \
+    libgl1-mesa-dev
+```
+
+Make sure `cmake --version` reports 3.24 or newer. If your distribution supplies an
+older version, use a newer CMake release or the one bundled with your IDE.
+
+Clone, build, and run:
+
+```sh
+git clone https://github.com/biscon/blobber.git
+cd blobber
+cmake --preset release
+cmake --build --preset release --target blobber
+./cmake-build-release/blobber
+```
+
+### Windows
+
+Install Visual Studio 2022 or Build Tools for Visual Studio with **Desktop
+development with C++** and a Windows SDK, plus Git, CMake, Ninja, and Python 3.
+Use an **x64 Native Tools Command Prompt for VS 2022**, then run:
+
+```bat
+git clone https://github.com/biscon/blobber.git
+cd blobber
+cmake --preset release
+cmake --build --preset release --target blobber
+cmake-build-release\blobber.exe
+```
+
+### Debug builds and CLion
+
+For a Debug build, replace `release` with `debug` in the commands and executable
+path above.
+
+In CLion, open the project directory or `CMakeLists.txt`, enable the `debug` or
+`release` preset, select the **blobber** target, and build/run it. Keep using the
+same CMake and build tools for an existing build folder.
+
+### Tests
+
+To build and run the development tests:
 
 ```sh
 cmake --preset debug
 cmake --build --preset debug
 ctest --preset debug
-./cmake-build-debug/blobber
 ```
-
-For optimization, substitute `release` for `debug` in all commands. To use a
-different generator, configure normally, for example
-`cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug`, then `cmake --build build`.
-Multi-configuration generators also work; select the desired configuration when
-building and running tests.
-
-On Debian/Ubuntu, the native build dependencies are typically:
-
-```sh
-sudo apt install build-essential cmake ninja-build libx11-dev libxrandr-dev \
-    libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev
-```
-
-Audio is disabled. On Windows use a configured MSVC or MinGW toolchain; on macOS,
-Xcode command-line tools plus CMake and Ninja. Linux/X11 is the verified platform.
-
-### CLion
-
-Open this directory or its `CMakeLists.txt`. Enable the `debug` or `release`
-CMake preset, wait for configuration, select the **blobber** executable, and Run.
-CLion's ordinary CMake profiles also work. No machine-specific `.idea` files or
-working-directory setup is required. Debug reads editable assets (including dialogue
-YAML and audio) directly from this checkout and uses offline-generated images from
-the build folder. Restart the game after editing, adding or deleting dialogue files;
-no build, clean or CMake file-list edit is needed. Dialogue edits do not rebuild images.
-Image preparation remains incremental and runs only when its own inputs change.
-Release stages assets beside the executable for a self-contained game folder.
-`--assets DIRECTORY` selects a complete alternative asset root, including its
-`prepared/` output; `--dialogue-dir DIRECTORY` overrides only the scripts.
-Tools that require a staged Debug asset folder can explicitly build `blobber_assets`.
-
-### Linux content staging
-
-Release and `blobber_assets` share the curated runtime inventory. To prepare a clean
-Linux x86-64 content stage, use a single-configuration Release build with graphics:
-
-```sh
-cmake --build --preset release --target dist-stage -j 1
-```
-
-For an existing build tree, use its configured CMake/Ninja pair. The payload is
-`cmake-build-release/dist-stage/Release/`, with its file/size inventory beside it.
-This is native local content staging. For the separate controlled Ubuntu 22.04 /
-glibc 2.35 build and ELF audit, use the [LD02 build entry point](packaging/linux/README.md).
-LD03 adds baseline archives and isolated relocated gameplay verification below;
-user review remains separate from mechanical checks. See the [LD01 contract and verification](docs/linux_distribution_ld01.md)
-for ownership rules, notice gaps and the next-slice handoff.
-
-## Development checks
-
-Build presets use at most two workers; test presets run serially and skip labelled
-slow integration tests. Run affected test targets in one configuration during
-iteration. Full persistence tests remain explicitly available. Retired image-bank tests are deleted.
-See [verification workflow and resource limits](docs/verification_workflow.md) for
-when to run each check; full Debug/Release matrices and benchmarks are not routine.
 
 ## Controls
 
-| Key | Action |
+| Control | Action |
 | --- | --- |
-| W / S | Forward / backward one tile |
-| A / D | Strafe left / right one tile |
-| Q / E | Turn left / right 90 degrees |
-| Tab | Toggle animated / instant steps |
-| M | Toggle the discovered map overlay |
-| T / compass | Open Travel for checked stairs, waypoint entry or recall |
-| F | Interact with a nearby door, key or stair |
-| R / pause-menu Rest | Open camp; Left/Right selects Short/Long Rest, Enter starts, Escape closes |
-| Floor item hover / click / wheel | Inspect / collect into selected character / page through a crowded cell |
-| Monster hover / click | Preview reach and damage / immediately attack a reachable enemy |
-| 1 / sword | Select basic melee |
-| 2 / shield | Immediately defend |
-| 3 / bow | Select ranged attack |
-| 4 / spell | Browse paused Spells / Abilities, then resume to select targets |
-| I | Toggle the paused fullscreen Inventory/Character panel; open on Inventory for the selected character |
-| 5 / backpack | Open the paused fullscreen panel on Inventory for the selected character |
-| Portrait i | Open the fullscreen panel on Character for that portrait |
-| Inventory / Character top tabs | Switch pages while keeping the viewed character |
-| Fullscreen 1–4 / character strip | View another character; choose a recipient during inventory transfer |
-| Drag / Shift-drag | Move, swap, merge, equip, or transfer / choose a split quantity on release |
-| Inventory E / T / U | Applicable Equip/Unequip, Transfer, and Use Potion actions |
-| Inventory arrows / Tab / Enter | Select a cell / switch bag and equipment / confirm selection or split quantity |
-| Inventory wheel / Page Up / Page Down | Read further description pages; wheel adjusts a split quantity |
-| 6 / aid | Arm Aid; click a dying ally's portrait to commit |
-| Portrait click | Select a character in real time, or a friendly spell/potion/Aid target; use i for Character |
-| Spellbook Up / Down, Enter | Browse descriptions, then choose a spell or ability |
-| Spell targeting Left / Right, Up / Down, Enter | Move cursor, add/toggle or remove recipient, then cast |
-| Casting B / Back | Return to the picker at the remembered scroll position |
-| Magic Missile left / right / Shift-click | Add one dart / remove one dart |
-| Left / Right, Enter | Cycle targets, then execute; Enter also acknowledges outcomes |
-| Escape / Backspace | Cancel targeting or close an overlay; unarmed opens pause menu |
-| Right-click outside casting | Cancel ordinary targeting or close an overlay |
-| Mouse wheel over log / + | Scroll readable history / expand paused history |
-| Gear | Open pause menu with Resume and Quit |
+| W / S | Move forward / backward |
+| A / D | Strafe left / right |
+| Q / E | Turn left / right |
+| F | Interact with a nearby door, key, or stair |
+| M | Open the discovered map |
+| T | Open Travel |
+| I | Open Inventory / Character |
+| R | Open camp and rest options |
+| 1–6 | Combat and quick actions |
+| Escape / Backspace | Pause, cancel an action, or close a panel |
 
-The first movement action occurs on keypress; holding a movement key repeats after 300 ms and then
-every 180 ms. An animated action lasts 160 ms. At most one fresh keypress is
-buffered during an animation. Losing focus clears the buffer and held-key state.
-Collisions block the entire move, including its visual effect. HUD commands never
-repeat while held. Controls held during focus loss require a release in the focused
-window before their next press can act. Spell selections survive focus loss and are revalidated on return; ordinary attack targets clear. Movement clears targeting. Targeting
-and attacks wait until transitions finish and the M map is closed. Each action/turn resets to basic melee.
+Use the mouse to select party members, interact with characters, attack enemies,
+and collect loot. Drag items to move or equip them; Shift-drag splits a stack.
+The opening welcome screen introduces the controls and sanctuary.
 
-Facing an adjacent goblin cell begins combat and locks movement/turning. Each
-character and enemy group rolls initiative once; the initiative strip puts the active participant first and removes resolved turns. Melee, Defend and Aid spend one action. Defend imposes disadvantage until the
-next turn; Aid attempts DC 10 Wisdom stabilization of another dying ally.
+## Saved games
 
-Front slots protect their paired rear slots on **both sides** (FL/BL and FR/BR).
-A rear member can attack or be targeted as soon as its own front slot falls.
-An exposed melee goblin moves into that vacant front slot on its next turn, then
-attacks once. Party members retain their slots. Body visibility is also
-required. Hover explains paired-slot protection and other reach restrictions. The Rogue can melee from behind an ally and gains conditional Sneak Attack; enemy
-paired protection still applies. Inflict Wounds uses ordinary exposed melee reach.
-Ranged attacks and spells ignore enemy row protection. Potions use the checked inventory controls.
+Saved games and characters live outside the installation folder:
 
-At zero HP, characters make death saves on their turns. Aid stabilizes without
-healing. Victory stabilizes surviving downed allies and preserves HP/deaths;
-Continue resumes exploration. No conscious party member means defeat; Restart
-reconstructs the party and monsters. Map/log browsing and focus loss pause gameplay.
-Cleric and Wizard start with four mana; first-level spells cost two and cantrips
-cost none. Casting takes one action or the shared six-second cooldown in real time.
-Mana and feature charges do not reset after encounters. Safe, stationary exploration
-allows camp: a Short Rest takes one gameplay hour and spends the Hit Dice you choose
-(class die + Constitution healing), refreshing Second Wind but not mana. A Long Rest
-takes eight hours, costs one party camp kit outside an authored sanctuary, and restores
-living members' HP, mana, class charges and half their maximum Hit Dice (rounded down,
-minimum one). Dead companions stay dead; dying companions must first be stabilized.
-The campaign begins at a sanctuary hub; expedition floors require camp kits. Cancel before starting costs nothing; Escape after starting only skips the
-animation. Portrait selection is distinct from the active turn.
+- **Windows:** `%LOCALAPPDATA%\blobber\`
+- **Linux:** `~/.local/share/blobber/`, with settings in `~/.config/blobber/`
+  (or your configured XDG locations).
 
-Loot stays in each monster's death cell after the corpse disappears. Click its loot
-bag in your cell or the three reachable front cells to browse everything inside.
-Click a stack to take it, hover for stats, or use Take All; use the wheel/page
-buttons to browse crowded bags without taking unwanted gear. Click a party portrait
-while the dialog is open to change the recipient. Whole stacks that cannot fit stay
-in the bag. Take All closes the dialog after collection; Close or Escape also
-leaves leftovers in place. Gold weighs 0.02 lb per coin;
-camp kits weigh 8 lb each.
+Keep these files when upgrading. Save compatibility depends on the game's content
+and save format, so keep an older package if you want to return to its saves.
 
-The small campfire icon in the top bar, beside Settings, opens camp. It is dimmed and disabled
-when no beneficial, legal rest is available. R and the pause-menu Rest entry also
-open camp, where unavailable choices explain their requirements.
+## Credits
 
-## Rendering and assets
-
-The GPU world renderer is the sole graphical path, with reusable prepared material
-and sprite textures, mip chains and alpha masks. The world renders at 500×282 inside
-fixed 1920×1080 presentation; UI art/text draw at native resolution. Supersampling
-is on by default; `--supersampling off` selects native filtered quality. No renderer
-selector or CPU color fallback remains. Desktop gameplay requires OpenGL 3.3.
-
-Normal builds prepare `assets/prepared/world/{metadata.json,textures.bin,sources.json}`
-and native creator/portrait atlases beside the executable. Source artwork and NPC
-sheet extraction remain; scene/NPC/loot perspective banks and their bakers are gone.
-Incremental builds also remove obsolete banks from managed build asset outputs.
-Missing/corrupt world publication or incompatible NPC definitions fail clearly.
-
-Runtime options: `--assets DIRECTORY`, `--campaign-save FILE`, `--size WIDTH HEIGHT`,
-`--seed UINT32`, `--development`, `--supersampling on|off`, `--help`. The development
-flag retains existing in-game diagnostics; standalone demos, previews, public height
-showcase and dedicated screenshot commands have been retired. A future cheat/debug
-interface is separate work.
-
-NPC source definitions retain registered four-direction animation and attachment
-metadata. Living occupants block cells; hurt/death, prone posture, loot, doors and
-raised surfaces share world depth/IDs for interaction. See the [system design](docs/system_design.md)
-and [NPC metadata](docs/npc_design.md) for content authoring and ownership.
-
-## Automation and screenshots
-
-`blobber_headless --mode diagnostic|visual` drives the regular session engine through
-bounded JSON lines. Visual mode always uses CPU world depth/IDs and needs no display,
-raylib context or source PNGs, including graphics-disabled builds; provide the prepared
-world publication in its `--assets` directory. Diagnostic mode needs only rules/NPC
-JSON. The Python client, local MCP adapter and opt-in arena experiments share this path.
-See [protocol](docs/headless_protocol.md), [MCP usage](docs/mcp_usage.md) and
-[arena experiments](experiments/arena/README.md).
-
-Replay image export remains available in graphics builds using `--replay FILE`,
-`--capture-dir NEW_DIRECTORY` and 1–8 `--capture-operation N` arguments. It creates
-its own hidden GPU context and exports the current scene/HUD without advancing time.
-It never captures other windows or injects OS input. Strict replay rejects old
-renderer recordings. Review evidence: [R06 verification](docs/verification/archive/r06_verification.md).
-
-Create disposable review output with `python3 tools/agent_artifacts.py create`.
-Use the printed run directory, promote only selected evidence into the feature
-gallery, and preview the run with `python3 tools/agent_artifacts.py clean RUN_DIRECTORY`.
-Add `--apply` to delete it. Galleries retain six images, or twelve awaiting review;
-exceptions require a documented review case. See the [artifact workflow](docs/verification_workflow.md#artifact-housekeeping)
-and [historical verification index](docs/verification/archive/README.md).
-Browse retained images in the [selected evidence index](docs/screenshots/README.md).
-Selected source art, prompts and animation sheets remain versioned. The source
-texture normalization and NPC sheet tools remain explicit authoring tools,
-independent of runtime rendering.
-
-### Linux distribution archive (LD03)
-
-The controlled build produces a versioned `.tar.gz`, SHA-256 checksum, file manifest
-and build identity. It requires Docker; native CLion build trees are not used.
-
-```sh
-python3 tools/agent_artifacts.py create
-python3 tools/linux_release.py dist --run-dir output/agent-runs/RUN_ID
-# For an explicitly labelled uncommitted development package, add --allow-dirty.
-python3 tools/linux_release.py verify-package --run-dir output/agent-runs/FRESH_RUN_ID --package-dir PRINTED_BUNDLE_DIRECTORY
-```
-
-Verification runs the extracted executable with default resource/user-data discovery
-on read-only mounts in independent Ubuntu 22.04 and Debian 13 runtime images, using
-Xvfb/Mesa software GL. It checks New Campaign, town/inn/dungeon, dialogue/audio file
-resolution, settings/save writes and fresh-process Continue. No host desktop input,
-GPU or audio device is accessed. Hardware graphics and listening remain user review.
-The package's README explains extraction, running and user-data paths. See the
-[LD03 design/handoff](docs/linux_distribution_ld03.md) for evidence, limits and the
-review recipe. Retain the final `build-linux-baseline/dist/` bundle deliberately;
-preview/apply agent-run cleanup after selecting evidence. No publication is performed.
+Built with raylib, nlohmann/json, and yaml-cpp. Dependency and asset notices are
+included with the downloads; see the [third-party notice information](packaging/notices/README.md)
+for details.
