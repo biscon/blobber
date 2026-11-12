@@ -40,7 +40,8 @@ class Distribution(unittest.TestCase):
         self.assertNotIn(99,manage_cache.removals(records,key))
 
     def test_path_rejection(self):
-        for n in ['../escape','C:/file','a\\b','a/CON.txt','a/x:ads','a/file.','a/file ','/absolute','a/NUL']:
+        for n in ['../escape','C:/file','a\\b','a/CON.txt','a/COM¹.txt','a/LPT²',
+                  'a/x:ads','a/file.','a/file ','/absolute','a/NUL']:
             with self.subTest(n=n), self.assertRaises(ValueError): archive.windows_path(n)
 
     def test_zip_roundtrip_and_determinism(self):

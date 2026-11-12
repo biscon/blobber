@@ -18,12 +18,13 @@ from archive import digest,encoded,regular,require
 import prepared
 from windows_archive import package
 from windows_smoke import smoke
+from pe_audit import inspect as inspect_pe
 
 ROOT=Path(__file__).resolve().parents[1]
 TESTS=['rules','ai','campaign_save','agent_artifacts_tools','rng_portability','platform_io','platform_io_process','path_decode','path_stream_decode','library','arena','campaign_save_smoke','options','packaged_options',
        'runtime_inventory','dist_staging','npc_metadata','dialogue','audio','music','menu','gameplay_startup',
        'distribution_smoke','buttons','windows_distribution_tools','creator_art','portraits']
-TARGETS=['blobber_rules_tests','blobber_ai_tests','blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_path_decode_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
+TARGETS=['blobber','blobber_rules_tests','blobber_ai_tests','blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_path_decode_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
          'blobber_options_tests','blobber_packaged_options_tests','blobber_distribution_tests','blobber_npc_metadata_tests',
          'blobber_dialogue_tests','blobber_audio_tests','blobber_music_tests','blobber_menu_tests','blobber_gameplay_startup_tests',
          'blobber_distribution_smoke_tests','blobber_buttons_tests','blobber_distribution_compatibility','blobber_validate_prepared',
@@ -51,7 +52,7 @@ def writer(build):
         finally:f.seek(0);msvcrt.locking(f.fileno(),msvcrt.LK_UNLCK,1)
 
 
-def build_release(run,bundle,build,allow_dirty):
+def build_release(run,bundle,build,allow_dirty,code_check=False):
     require(sys.platform=='win32','Native Windows environment required')
     require(run.is_dir() and (run/'.agent-run.json').is_file(),'Owned run directory required')
     require(shutil.disk_usage(run).free>=8*1024**3,'Insufficient scratch space')
@@ -80,11 +81,14 @@ def build_release(run,bundle,build,allow_dirty):
     configured_cmake=regular(existing.get('CMAKE_COMMAND:INTERNAL',shutil.which('cmake') or ''))
     configured_ninja=regular(existing.get('CMAKE_MAKE_PROGRAM:FILEPATH',
                             existing.get('CMAKE_MAKE_PROGRAM:UNINITIALIZED',shutil.which('ninja') or '')))
+    configured_ctest=regular(configured_cmake.with_name('ctest.exe'))
     environment=source_identity()
     require(not environment['dirty'] or allow_dirty,'Dirty source requires --allow-dirty')
     tools={'cmake':capture([configured_cmake,'--version']).splitlines()[0],
            'ninja':capture([configured_ninja,'--version']).splitlines()[0],
-           'python':capture([sys.executable,'--version']).splitlines()[0]}
+           'python':capture([sys.executable,'--version']).splitlines()[0],
+           'paths':{'cmake':str(configured_cmake),'ninja':str(configured_ninja),
+                    'ctest':str(configured_ctest),'python':sys.executable}}
     # cl reports its version to stderr; preserve both streams, regardless of no-input exit code.
     compiler=subprocess.run(['cl','/Bv'],capture_output=True,text=True)
     tools['compiler']=compiler.stdout+compiler.stderr
@@ -102,11 +106,18 @@ def build_release(run,bundle,build,allow_dirty):
         print('Windows phase: '+name,flush=True)
         with (run/name).open('w',encoding='utf-8') as log:
             result=subprocess.run(list(map(str,args)),stdout=log,stderr=subprocess.STDOUT)
-        if result.returncode:raise RuntimeError(name+' failed:\n'+(run/name).read_text(encoding='utf-8',errors='replace')[-14000:])
+        if result.returncode:
+            output=(run/name).read_text(encoding='utf-8',errors='replace')
+            errors=[line for line in output.splitlines() if line.startswith('FAILED:') or ': error ' in line or 'fatal error' in line]
+            raise RuntimeError(name+' failed:\n'+'\n'.join(errors[:80])+'\n'+output[-8000:])
     with writer(build):
-        manifest=prepared.validate(bundle,ROOT)
-        environment['prepared']={k:manifest[k] for k in ['producer_revision','input_digest','producer_environment','identities']}
-        require(manifest['producer_environment'] and manifest['identities'],'Missing prepared producer evidence')
+        if code_check:
+            bundle=run/'unused-code-check-publication'
+            bundle.mkdir()
+        else:
+            manifest=prepared.validate(bundle,ROOT)
+            environment['prepared']={k:manifest[k] for k in ['producer_revision','input_digest','producer_environment','identities']}
+            require(manifest['producer_environment'] and manifest['identities'],'Missing prepared producer evidence')
         lock=json.loads((ROOT/'packaging/linux/lock.json').read_text())
         dependencies=run/'dependencies';dependencies.mkdir()
         overrides=[]
@@ -118,12 +129,24 @@ def build_release(run,bundle,build,allow_dirty):
             roots=list(destination.iterdir());require(len(roots)==1 and roots[0].is_dir(),'Dependency root mismatch')
             overrides.append('-DFETCHCONTENT_SOURCE_DIR_'+name.upper()+'='+str(roots[0]))
         command([configured_cmake,'-S',ROOT,'-B',build,'-G','Ninja','-DCMAKE_MAKE_PROGRAM='+str(configured_ninja),'-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',
+                 '-DPython3_EXECUTABLE='+sys.executable,
                  '-DBLOBBER_WINDOWS_DISTRIBUTION=ON','-DBLOBBER_PREPARED_INPUT='+str(bundle),*overrides],'windows-configure.log')
         cache=dict(line.split('=',1) for line in (build/'CMakeCache.txt').read_text().splitlines() if '=' in line and not line.startswith(('#','//')))
         cmake=regular(cache['CMAKE_COMMAND:INTERNAL'])
         regular(cache.get('CMAKE_MAKE_PROGRAM:FILEPATH',cache.get('CMAKE_MAKE_PROGRAM:UNINITIALIZED','')))
-        command([cmake,'--build',build,'--target',*TARGETS,'--parallel','2'],'windows-focused-build.log')
-        command(['ctest','--test-dir',build,'-R','^('+'|'.join(TESTS)+')$','--parallel','1','--output-on-failure','--no-tests=error'],'windows-focused-tests.log')
+        # Compile all required game/test/tool code in one graph. Keep independent
+        # compilation going after errors so one port failure cannot hide others.
+        targets=[('blobber_code_check' if target=='blobber' and code_check else target) for target in TARGETS]
+        command([cmake,'--build',build,'--target',*targets,'--parallel','2','--','-k','0'],'windows-focused-build.log')
+        command([configured_ctest,'--test-dir',build,'-R','^('+'|'.join(TESTS)+')$','--parallel','1','--output-on-failure','--no-tests=error'],'windows-focused-tests.log')
+        if code_check:
+            environment['code_check_pe']=inspect_pe(build/'blobber_code_check.exe')
+            command([build/'blobber_code_check.exe','--help'],'windows-entry-check.log')
+            observed=source_identity()
+            require(observed=={k:environment[k] for k in observed},'Source changed during code check')
+            print((run/'windows-focused-tests.log').read_text(encoding='utf-8',errors='replace')[-6000:],flush=True)
+            print(json.dumps({'status':'code-check-passed','source':environment}),flush=True)
+            return
         command([build/'blobber_validate_prepared.exe',ROOT/'packaging/runtime-content.json',ROOT/'assets',bundle/'prepared'],'windows-prepared-validation.log')
         compatibility=run/'compatibility-windows'
         command([build/'blobber_distribution_compatibility.exe','import',bundle/'compatibility',compatibility],'windows-compatibility.log')
@@ -156,6 +179,9 @@ def build_release(run,bundle,build,allow_dirty):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--run-dir',type=Path,required=True)
-    p.add_argument('--prepared-input',type=Path,required=True);p.add_argument('--build-dir',type=Path,default=ROOT/'build-windows-release')
+    p.add_argument('--prepared-input',type=Path);p.add_argument('--build-dir',type=Path,default=ROOT/'build-windows-release')
+    p.add_argument('--code-check',action='store_true',help='Native compile/link and owned tests; no review package')
     p.add_argument('--allow-dirty',action='store_true');a=p.parse_args()
-    build_release(a.run_dir.resolve(),a.prepared_input.resolve(),a.build_dir.resolve(),a.allow_dirty)
+    if not a.code_check and a.prepared_input is None:p.error('--prepared-input is required for a full review build')
+    build_release(a.run_dir.resolve(),a.prepared_input.resolve() if a.prepared_input else None,
+                  a.build_dir.resolve(),a.allow_dirty,a.code_check)

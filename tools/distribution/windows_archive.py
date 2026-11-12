@@ -18,8 +18,8 @@ def windows_path(name):
     for part in path.parts:
         require(not any(c in part for c in ':<>"|?*') and all(ord(c) >= 32 for c in part), 'Invalid Windows name')
         require(part == part.rstrip(' .') and part.split('.')[0].upper() not in
-                {'CON', 'PRN', 'AUX', 'NUL', *('COM'+str(i) for i in range(1,10)),
-                 *('LPT'+str(i) for i in range(1,10))}, 'Reserved Windows name')
+                {'CON', 'PRN', 'AUX', 'NUL',
+                 *(prefix+digit for prefix in ('COM','LPT') for digit in '123456789¹²³')}, 'Reserved Windows name')
     return path
 
 

@@ -654,3 +654,42 @@ rather than any earlier WGL warning. A content/shader failure with a working con
 must fail instead of becoming an unavailable-context result. Seven local Python
 packaging/cache/import/classification tests pass (0.04 s); this helper correction
 changes no player payload or prepared input.
+
+
+Fifth [manual run](https://github.com/biscon/blobber/actions/runs/43131715951),
+source `9c61adb5b60d36ebea050094a23c28683de483da`, is in progress with the separate
+RNG constructors and strict smoke failure classification. Native Windows results,
+package/interchange review and cleanup remain pending.
+
+A focused Python correction also rejects the superscript COM/LPT device names
+listed by [Microsoft's Windows naming rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).
+The existing path-rejection test covers these names (seven tooling tests pass in
+0.04 s). It changes no player files or preparation identity; the downloaded archive
+will be checked with this stricter validator too.
+
+
+### Manual code-check mode — implementation adjustment
+
+Repeated native compiler stops exposed an avoidable verification cost: each
+conservative source-key change restarts a 9–22 minute cold compiler-image build
+before Windows can diagnose another C++ error. Add an optional `code_check`
+workflow-dispatch boolean (default false) and matching `--code-check` driver flag.
+The serial Linux job still captures the selected source/key but skips prepared
+cache mutation and baking in this mode. Windows compiles/links the application,
+bakers and selected tests, runs the owned CPU/miniature fixtures and an entry-point
+`--help` check. It publishes no review ZIP and claims no prepared/gameplay smoke.
+
+Use a small `blobber_code_check` executable target sharing the real `main.cpp`,
+application libraries, native entry point, UTF-8 manifest and static-runtime policy;
+it has no runtime asset dependencies. The full `blobber` target keeps its validated
+import dependencies. The code-check driver selects the former and a dummy import
+path whose target is never run. Both modes retain two workers/one test and the same
+native tool/dependency/source checks. Keep independent compilation going after
+errors (`Ninja -k 0`) and print bounded compiler diagnostics so one failure does not
+hide other port errors. The normal manual build remains the complete preparation,
+validation/staging/ZIP/smoke path, required before Ready for review.
+
+Fifth hosted attempt compiled through the earlier RNG failure, then stopped at the
+portable fixture header's missing explicit `<string>` include. Fix that dependency;
+use code-check mode to collect remaining native issues before the next full bake.
+This adjustment changes verification orchestration, not game behavior or acceptance.

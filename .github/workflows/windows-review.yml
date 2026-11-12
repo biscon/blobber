@@ -2,6 +2,11 @@ name: Windows review build
 run-name: WD01 ${{ github.sha }}
 on:
   workflow_dispatch:
+    inputs:
+      code_check:
+        description: 'Compile/link and run owned tests only (no preparation or review ZIP)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -39,20 +44,23 @@ jobs:
           echo "key=$(python3 tools/distribution/prepared.py key)" >> "$GITHUB_OUTPUT"
           echo "RUN_DIR=$(python3 tools/agent_artifacts.py create)" >> "$GITHUB_ENV"
       - name: Bound owned prepared cache storage
+        if: ${{ !inputs.code_check }}
         env:
           GH_TOKEN: ${{ github.token }}
           PREPARED_KEY: ${{ steps.key.outputs.key }}
         run: python3 tools/distribution/manage_cache.py "$PREPARED_KEY"
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: ${{ !inputs.code_check }}
         id: publication
         with:
           path: output/wd01-prepared
           key: ${{ steps.key.outputs.key }}
           enableCrossOsArchive: true
       - name: Native Linux preparation on cache miss
-        if: steps.publication.outputs.cache-hit != 'true'
+        if: ${{ !inputs.code_check && steps.publication.outputs.cache-hit != 'true' }}
         run: nice -n 15 ionice -c 3 python3 tools/distribution/hosted_prepare.py --run-dir "$RUN_DIR"
       - name: Check portable transfer
+        if: ${{ !inputs.code_check }}
         run: python3 tools/distribution/prepared.py verify --bundle output/wd01-prepared
       - name: Clean owned diagnostics
         if: always() && !cancelled()
@@ -72,6 +80,7 @@ jobs:
       LP_NUM_THREADS: '2'
       CMAKE_BUILD_PARALLEL_LEVEL: '2'
       CTEST_PARALLEL_LEVEL: '1'
+      CODE_CHECK: ${{ inputs.code_check }}
     steps:
       - name: Preserve repository bytes
         run: git config --global core.autocrlf false
@@ -80,12 +89,13 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: ${{ !inputs.code_check }}
         with:
           path: output/wd01-prepared
           key: ${{ needs.prepare.outputs.prepared-key }}
           enableCrossOsArchive: true
           fail-on-cache-miss: true
-      - name: Native MSVC build, focused tests and extracted ZIP verification
+      - name: Native MSVC build and selected verification
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
@@ -97,9 +107,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw 'Native MSVC environment initialization failed' }
           $run = python tools/agent_artifacts.py create
           "RUN_DIR=$run" >> $env:GITHUB_ENV
-          python tools/windows_release.py --run-dir $run --prepared-input output/wd01-prepared
+          $arguments = @('--run-dir', $run)
+          if ($env:CODE_CHECK -eq 'true') { $arguments += '--code-check' }
+          else { $arguments += @('--prepared-input', 'output/wd01-prepared') }
+          python tools/windows_release.py @arguments
           if ($LASTEXITCODE -ne 0) { throw 'Windows review build failed' }
       - name: Upload review ZIP and compact evidence
+        if: ${{ !inputs.code_check }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-review-${{ github.sha }}

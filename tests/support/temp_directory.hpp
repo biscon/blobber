@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <random>
 #include <stdexcept>
+#include <string>
 inline std::filesystem::path testDirectory() {
     std::random_device entropy;
     for (unsigned attempt = 0; attempt < 64; ++attempt) {
