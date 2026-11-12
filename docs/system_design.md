@@ -44,7 +44,7 @@ is **Accepted and closed by the user, 2026-11-12**, following working Windows
 gameplay review and the verified GUI/download corrections.
 Native Windows I/O/Unicode paths, fixed-storage portable
 MT19937 save state, validated Linux-prepared import/cache, curated ZIP/PE checks
-and a manual hosted workflow are implemented on the review branch. The exact native
+and a manual hosted workflow are implemented and now integrated into main. The exact native
 MSVC artifact passes 26 selected suites (one audio-device skip), complete data/import
 validation, read-only Unicode extracted New Campaign/save/fresh-process Continue
 under software OpenGL, and hidden depth-copy/readback/cleanup. Local download checks
@@ -58,8 +58,7 @@ The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflo
 was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.
 [LD04 design/handoff](linux_distribution_ld04.md#selected-review-artifacts),
-2026-11-12: **implemented, mechanically verified, Ready for review; user acceptance
-pending.** The registered dispatch-only workflow serializes Linux, Windows and
+2026-11-12: **implemented, mechanically verified, accepted and closed by the user.** The registered dispatch-only workflow serializes Linux, Windows and
 final download/format verification. Complete [run 43238079282](https://github.com/biscon/blobber/actions/runs/43238079282)
 passes at `ea222d653be760dd2f05b6f978e1673a1a6b2543`: 19 Linux suites and
 Ubuntu 22.04/Debian 13 extracted smoke; 26 Windows suites with one audio-device skip,
@@ -79,7 +78,10 @@ with exact revisions in metadata and separate review evidence. Selected raw play
 checksums and compact evidence are retained locally in a marked review bundle.
 Full run identities, corrections, limits and operator instructions are linked above.
 Existing LD01–LD03/WD01 acceptance remains unchanged. Software GL does not establish
-new physical-GPU/audio review; no full merge, tag or public publication occurred.
+new physical-GPU/audio review. The user accepted LD04 and authorized Git cleanup;
+main fast-forwarded through the complete accepted WD01/LD04 history. The operator
+guide now targets main; only merged branch refs are pruned. No tag/public
+publication or additional workflow dispatch accompanies this closure.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,

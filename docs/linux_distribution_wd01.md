@@ -14,8 +14,10 @@ actually ran. Accepted LD01–LD03 behavior and acceptance remain in the
 [roadmap](linux_distribution_plan.md) and [LD03 handoff](linux_distribution_ld03.md).
 The user approved this design and authorized WD01 implementation after the planning
 handoff. Following the Ready for review handoff, the user stated “nice slice
-accepted.” LD04 planning is now eligible when requested; LD04 implementation and
-public publication have not started.
+accepted.” LD04 was subsequently implemented and explicitly accepted. On
+2026-11-12 the user authorized integrating the complete WD01/LD04 history into
+main and cleaning merged branch refs; see the [LD04 closeout](linux_distribution_ld04.md#acceptance-and-main-integration).
+Public publication remains separate; original artifact provenance/limits stay unchanged.
 
 ## Windows play-review corrections — 2026-11-12
 

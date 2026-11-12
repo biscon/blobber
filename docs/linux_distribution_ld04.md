@@ -1,16 +1,17 @@
 # LD04 — Combined hosted builds and compatibility evidence
 
 Created: 2026-11-12.
-Status: **Implemented, mechanically verified, Ready for review — 2026-11-12.**
+Status: **Implemented, mechanically verified, accepted and closed by the user — 2026-11-12.**
 Implementation was authorized by “implement the plan.” The complete selected hosted
-run, exact downloads, corrections and limitations are recorded below. User
-acceptance is pending; this status does not close LD04.
+run, exact downloads, corrections and limitations are recorded below. The user
+subsequently stated “slice accepted” and authorized Git cleanup/main integration;
+see the [closeout](#acceptance-and-main-integration).
 
 Dependencies: accepted [LD03](linux_distribution_ld03.md) and
 [WD01](linux_distribution_wd01.md). The [roadmap](linux_distribution_plan.md)
 owns slice status. Their accepted artifacts and evidence remain preserved. The
 approved design is implemented, with recorded adaptations and actual evidence
-below; LD04 user acceptance remains separate.
+below; LD04 acceptance was explicitly supplied by the user on 2026-11-12.
 
 ## Outcome and scope
 
@@ -594,4 +595,44 @@ Final `git diff --check`, local document links, slice-heading/order, Ready state
 selected-run and system-index checks pass. Post-verification changes affect only
 this handoff, the roadmap and system overview: player/build/tool/workflow bytes
 match the tested `ea222d6` source. No passing production matrix was rerun for these
-documentation changes. **LD04 stops at Ready for review; acceptance is pending.**
+documentation changes. This was the Ready for review checkpoint; explicit user
+acceptance and integration are recorded below.
+
+## Acceptance and main integration
+
+On 2026-11-12 the user stated “slice accepted” and instructed: “clean up git, merge
+branches that needs to be merged and get us back on main.” LD04 is **Accepted and
+closed**. LD01–LD03 and WD01 retain their existing acceptance. The roadmap is
+complete; no further slice or public publication is implicitly started.
+
+The starting worktree was clean. A fresh `git fetch origin --prune` and ancestor
+checks confirmed that both local main (`e48505d`, including its two local-only
+commits) and origin/main (`8bf59a6`, including bootstrap PR #4) were ancestors of
+`distribution/ld04` at `5251540`. `git switch main` followed by
+`git merge --ff-only distribution/ld04` integrated the complete accepted WD01/LD04
+history without conflicts or a new implementation tree. No unique local or remote
+main work was discarded. All remaining feature tips were also contained:
+`combat-movement`, `equipment-slots`, `friendly-npcs`, `sanctuary-city`,
+`distribution/wd01` and `distribution/wd01-bootstrap`. Branch cleanup uses only
+normal deletion of refs proven to be ancestors of main; commits remain reachable.
+
+The current operator guide dispatches `windows-review.yml --ref main`. The first
+manual main run may legitimately miss the branch-scoped prepared caches from the
+closed review branches and prepare once. There is no cache migration, extra
+build/dispatch or release/tag publication as part of Git integration. Selected
+artifact provenance stays at the tested `ea222d6` source; package bytes, acceptance
+and mechanical/hardware/audio limits remain unchanged.
+
+Validation for this closure is Git ancestry/tree comparison, `git diff --check`
+and local documentation links/status consistency. Player, source/build/tool and
+workflow files match the tested implementation; only acceptance/operator documents
+change. No passing production build/test matrix is repeated for a fast-forward
+and documentation-only closeout. The owned closure run is previewed/cleaned;
+intentional review artifacts and build caches are preserved.
+
+Closure verification, 2026-11-12: documentation links, accepted-status/index and
+main operator commands pass; `git diff --check` is clean. Comparison with tested
+`ea222d6` confirms changes are confined to five acceptance/operator documents.
+The closure run `output/agent-runs/20261112T152459Z-fc029779ed3b440ea812df80817ff9db/`
+was previewed and cleaned (one marker / 78 bytes); no disposable diagnostics or
+retained exception. Selected review artifacts and build caches remain intentional.

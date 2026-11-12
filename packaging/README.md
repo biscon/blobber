@@ -3,16 +3,14 @@
 The manual **Desktop distribution build** workflow produces Linux x86-64 and
 Windows x86-64 packages from one selected source revision. It lives at
 `.github/workflows/windows-review.yml` to preserve the existing workflow
-registration. Until a separately instructed full merge, GitHub’s default-branch
-workflow list may still show the old `Windows review build` display name; the
-filename and selected-branch LD04 jobs identify this workflow. Commits, PRs, merges,
-tags and Releases do not start it.
+registration. The accepted WD01/LD04 implementation is integrated into `main`.
+Commits, PRs, merges, tags and Releases do not start it.
 
 From an authenticated `gh` client with repository/workflow access:
 
 ```sh
-gh workflow run windows-review.yml --ref distribution/ld04
-gh run list --workflow windows-review.yml --branch distribution/ld04 --limit 5
+gh workflow run windows-review.yml --ref main
+gh run list --workflow windows-review.yml --branch main --limit 5
 gh run watch RUN_ID
 gh run view RUN_ID --log-failed
 ```
@@ -79,6 +77,8 @@ The Linux job builds in the accepted pinned baseline container. On a prepared-ca
 miss it bakes once in that same build. An exact validated hit imports the portable
 publication; Windows restores that same key and never silently rebakes. Cache
 branch/version restrictions can cause the first build on a new branch to miss.
+The first manual `main` run after review-branch integration may miss those
+branch-scoped caches and prepare once; the merge itself does not dispatch a build.
 The shared owned namespace retains at most current/previous entries, 1 GiB each;
 players are capped at 1 GiB and each evidence/transport bundle at 32 MiB. No build
 trees, compiler cache, production-publication artifact or Docker-layer cache is
