@@ -97,7 +97,7 @@ def platform_evidence(platform, bundle, run):
     if platform == 'windows':
         require(verification.get('depth_copy') == 'passed', 'Required Windows depth test did not pass')
     else:
-        from verify_package import verification_record
+        from distribution.verify_package import verification_record
         verification_record(verification['archive_sha256'], verification['runtimes'])
     suffix = '.zip' if platform == 'windows' else '.tar.gz'
     name = 'blobber-' + info['project_version'] + '-' + platform + '-x86_64' + suffix

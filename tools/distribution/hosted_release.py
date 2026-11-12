@@ -62,7 +62,6 @@ def check_linux_import(run, build, cache, publication, already_imported):
 
 def linux(run):
     import linux_release
-    from distribution.verify_package import verify_package
     evidence.check_source()
     cache = ROOT/'output/wd01-prepared'
     hit = os.environ.get('PREPARED_CACHE_HIT') == 'true'
@@ -91,6 +90,19 @@ def linux(run):
             total += len(compressor.flush())
     require(total <= 1024**3, 'Prepared compressed transfer estimate exceeds 1 GiB')
     check_linux_import(run, build, cache, publication, hit)
+    evidence.atomic_json(run/'linux-build.json', {'context':evidence.context(),
+        'build':str(build),'bundle':str(bundle),'cache':{'hit':hit,
+        'key':'wd01-prepared-v1-'+publication['input_digest'],
+        'producer_revision':publication['producer_revision'],'deflate_estimate':total}})
+
+
+def linux_verify(run):
+    import linux_release
+    from distribution.verify_package import verify_package
+    evidence.check_source()
+    state = evidence.read_json(run/'linux-build.json')
+    require(state['context'] == evidence.context(), 'Stale Linux build handoff')
+    build, bundle = Path(state['build']), Path(state['bundle'])
     # A new marked run gives extraction/user data a fresh lifetime, separate from build.
     verify_run = Path(subprocess.check_output([sys.executable, ROOT/'tools/agent_artifacts.py','create'], text=True).strip())
     with Path(os.environ['GITHUB_ENV']).open('a') as stream:
@@ -104,8 +116,7 @@ def linux(run):
         evidence.copy_file(path, transport/'compatibility-linux'/path.name)
     evidence.seal(transport)
     evidence.platform_evidence('linux', bundle, run)
-    evidence.atomic_json(run/'evidence/cache.json', {'hit':hit,'key':'wd01-prepared-v1-'+publication['input_digest'],
-        'producer_revision':publication['producer_revision'],'deflate_estimate':total})
+    evidence.atomic_json(run/'evidence/cache.json', state['cache'])
     for path in sorted((verify_run/'package-verification/ubuntu22/smoke').glob('*.png'))[:6]:
         evidence.copy_file(path, run/'evidence/captures'/path.name)
     evidence.seal(run/'evidence')
@@ -239,7 +250,7 @@ def cleanup():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation',choices=('linux','windows','verify','cleanup','diagnostics'))
+    parser.add_argument('operation',choices=('linux','linux-verify','windows','verify','cleanup','diagnostics'))
     parser.add_argument('--run-dir',type=Path)
     parser.add_argument('--transport',type=Path)
     args = parser.parse_args()
@@ -259,6 +270,7 @@ def main():
     require(run.parent == ROOT/'output/agent-runs' and not run.is_symlink() and
             (run/'.agent-run.json').is_file(), 'Marked owned run required')
     if args.operation == 'linux':linux(run)
+    elif args.operation == 'linux-verify':linux_verify(run)
     elif args.operation == 'windows':windows(run,args.transport)
     else:verify(run)
 

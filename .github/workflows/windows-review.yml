@@ -55,7 +55,7 @@ jobs:
           path: output/wd01-prepared
           key: ${{ steps.key.outputs.key }}
           enableCrossOsArchive: true
-      - name: Baseline package, shared preparation and two userspaces
+      - name: Baseline build, package and shared preparation
         id: build
         env:
           PREPARED_CACHE_HIT: ${{ steps.publication.outputs.cache-hit }}
@@ -72,17 +72,20 @@ jobs:
           PREPARED_KEY: ${{ steps.key.outputs.key }}
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: python3 tools/distribution/manage_cache.py "$PREPARED_KEY" --verify
+      - name: Ubuntu and Debian extracted verification and evidence
+        id: verified
+        run: nice -n 15 ionice -c 3 python3 tools/distribution/hosted_release.py linux-verify --run-dir "$RUN_DIR"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         id: player
         with:
-          path: ${{ steps.build.outputs.player }}
+          path: ${{ steps.verified.outputs.player }}
           archive: false
           if-no-files-found: error
           retention-days: 7
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         id: checksum
         with:
-          path: ${{ steps.build.outputs.checksum }}
+          path: ${{ steps.verified.outputs.checksum }}
           archive: false
           if-no-files-found: error
           retention-days: 7
@@ -90,7 +93,7 @@ jobs:
         id: evidence
         with:
           name: linux-review-evidence
-          path: ${{ steps.build.outputs.evidence }}
+          path: ${{ steps.verified.outputs.evidence }}
           if-no-files-found: error
           retention-days: 7
           compression-level: 0
@@ -98,7 +101,7 @@ jobs:
         id: transport
         with:
           name: linux-format-transport
-          path: ${{ steps.build.outputs.transport }}
+          path: ${{ steps.verified.outputs.transport }}
           if-no-files-found: error
           retention-days: 1
       - name: Failure diagnostics

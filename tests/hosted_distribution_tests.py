@@ -70,10 +70,23 @@ class HostedTests(unittest.TestCase):
             checksum.write_text('0'*64+'  '+player.name+'\n')
             with self.assertRaisesRegex(ValueError,'checksum'):
                 h.verify_player(player,checksum,report,directory)
+
             checksum.write_text(report['player']['sha256']+'  '+player.name+'\n')
             data = bytearray(player.read_bytes());data[-2] ^= 1;player.write_bytes(data)
             with self.assertRaisesRegex(ValueError,'hash'):
                 h.verify_player(player,checksum,report,directory)
+
+    @unittest.skipIf(os.name == 'nt', 'Linux platform evidence boundary')
+    def test_linux_platform_evidence_creation_and_seal(self):
+        bundle,player,checksum,_=self.make_player('linux')
+        run=self.root/'run';run.mkdir()
+        (run/'focused-tests.log').write_text('Owned fixture suites passed')
+        (run/'linux-import.json').write_bytes(archive.encoded({'status':'passed','publication_sha256':'d'*64}))
+        with patch.dict(os.environ,{'GITHUB_OUTPUT':str(self.root/'step-outputs')}):
+            result=e.platform_evidence('linux',bundle,run)
+        self.assertEqual(result['player']['sha256'],archive.digest(player))
+        self.assertEqual(result['prepared_import']['publication_sha256'],'d'*64)
+        e.validate_transfer(run/'evidence')
 
     def test_unavailable_stale_and_incomplete_smoke_rejected(self):
         directory,player,checksum,report = self.make_player('windows')

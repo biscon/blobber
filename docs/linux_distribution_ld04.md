@@ -436,3 +436,19 @@ and added a fixture asserting those directories exist before container invocatio
 The focused hosted suite now passes all 14 local cases. Windows was correctly
 skipped; combined verification rejected incomplete producers and scratch cleanup
 completed. The next serial dispatch verifies this wrapper correction.
+
+Run [43234513066](https://github.com/biscon/blobber/actions/runs/43234513066),
+source `841ac2bbe70d4103850c026d1f1181786e9bfb3b`, passed all 19 Linux suites,
+production preparation/typed validation, stage/ELF audit/archive, real Git-free
+CMake import/data validation, and Ubuntu 22.04 plus Debian 13 extracted smoke.
+It failed afterward collecting review evidence: `hosted_evidence.py` imported
+`verify_package` outside its package, causing a relative-import error. Correct the
+import and add a tiny actual platform-evidence creation fixture.
+
+Separate the Linux helper into build/preparation and runtime/evidence steps within
+the same serial job. Atomically record a context-bound build handoff after typed
+publication/import validation. Save and check the bounded prepared cache then,
+before userspace verification/report collection. A later failure still blocks
+player upload/Windows/combined success, but does not discard a valid costly
+publication. This also makes build versus runtime progress visible through CLI
+job status, without extra builds, bakes or a generic scheduler.
