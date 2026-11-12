@@ -857,3 +857,15 @@ checks new-file/overwrite denial, readable RX data, nested read denial, policy
 restoration and subsequent writes. Python compilation, eight tooling tests and
 whitespace checks pass; these native permission prerequisites still require the
 next hosted preflight. No C++/prepared-input changes were made.
+
+
+Run [43152072174](https://github.com/biscon/blobber/actions/runs/43152072174), source
+`706505f`, stopped in the expanded preflight before compilation: the combined
+icacls grant did not actually prevent new-file creation. Replace CLI permission
+editing with the same module-independent .NET DACL boundary used for restoration.
+The install receives a protected DACL containing only the current SID's inheritable
+file-generic read/execute allow rule; source/build policies add a native inheritable
+ReadAndExecute deny rule to their existing descriptor. Snapshot first, restore in
+finally and verify policy/access. Keep all probes; do not treat grant command
+success as evidence that permissions are effective. This affects only verifier
+sandbox directories and temporary CI source/build ACLs, not player behavior.
