@@ -4,7 +4,7 @@ Created: 2026-11-11.
 Status: **LD01 and LD02 accepted and closed by the user, 2026-11-11.
 LD03 accepted and closed by the user, 2026-11-11.
 WD01 accepted and closed by the user, 2026-11-12.
-LD04 is In progress — implementation, authorized 2026-11-12.**
+LD04 is implemented, mechanically verified and Ready for review, 2026-11-12.**
 
 Deliver downloadable desktop packages containing the executable and only required
 runtime content: the accepted Linux x86-64 `.tar.gz`, followed by a Windows x86-64
@@ -20,12 +20,12 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | LD04 — In progress — implementation, authorized 2026-11-12; [design](linux_distribution_ld04.md) |
-| Next eligible slice | Complete LD04 and stop at Ready for review; acceptance remains with the user |
-| Implemented distribution support | Accepted Linux stage/archive/smoke; native Windows port, validated prepared import, ZIP/PE, extracted smoke and manual hosted workflow verified on the review branch |
-| Awaiting user review | No LD04 implementation handoff yet; WD01 remains accepted and closed |
+| Active slice | LD04 — Ready for review, 2026-11-12; [design/handoff](linux_distribution_ld04.md#selected-review-artifacts) |
+| Next eligible slice | LD04 user review/acceptance; no automatic advancement or publication |
+| Implemented distribution support | Combined manual Linux/Windows workflow; exact downloaded archives/checksums, Ubuntu/Debian and native Windows smoke, shared prepared cache and reverse format checks verified on the review branch |
+| Awaiting user review | LD04 selected downloads and combined evidence; hardware/audio limits explicit; LD01–LD03/WD01 remain accepted and closed |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Implement and verify the approved LD04 plan; public publication remains separate |
+| Next action | Review the linked LD04 artifacts; acceptance, full merge and public publication remain separate |
 
 **Approved roadmap revision, 2026-11-11:** insert WD01 before LD04 and expand LD04
 to automate both supported packages. WD01 introduces the minimum manual Windows
@@ -173,7 +173,7 @@ source revision, toolchain and content identity so results can be reproduced.
 | LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Accepted and closed — 2026-11-11 |
 | LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Accepted and closed — 2026-11-11 |
 | WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | Accepted and closed — 2026-11-12; [artifact/evidence](linux_distribution_wd01.md#selected-review-artifact) |
-| LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | In progress — implementation, authorized 2026-11-12; [design](linux_distribution_ld04.md) |
+| LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | Ready for review — implemented and mechanically verified, 2026-11-12; [handoff](linux_distribution_ld04.md#selected-review-artifacts) |
 
 ### LD01 — Runtime content and clean staging
 
@@ -399,8 +399,26 @@ Stop at Ready for review. Only user acceptance closes WD01 and makes LD04 eligib
 
 ### LD04 — Hosted automation and compatibility evidence
 
-**In progress — implementation, authorized 2026-11-12;
-[approved detailed implementation design](linux_distribution_ld04.md).**
+**Implemented, mechanically verified, Ready for review — 2026-11-12;
+[design/handoff and selected artifacts](linux_distribution_ld04.md#selected-review-artifacts).**
+
+Complete manual [run 43238079282](https://github.com/biscon/blobber/actions/runs/43238079282)
+passes serial Linux, Windows and exact-download/reverse-format jobs at
+`ea222d653be760dd2f05b6f978e1673a1a6b2543`. Download the
+[Linux archive](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13952989492)
+or [Windows ZIP](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13955996289).
+Linux passes 19 selected suites, real prepared import and read-only extracted smoke
+on Ubuntu 22.04 / Debian 13. Windows passes 26 suites with one audio-device skip,
+GUI PE/ZIP and Unicode read-only extracted/depth checks. Final downloaded bytes,
+common identities/provenance and both format directions pass. Local selected
+players/checksums/evidence are retained in the linked handoff. Software GL and
+prior WD01 play acceptance do not establish new hardware/audio coverage.
+
+The baseline compiler transport now uses SHA-256-pinned exact debs after snapshot
+503s; its accepted 251-package inventory/compiler/glibc floor remain unchanged.
+The validated publication is cached before runtime/report work. Other failures,
+focused regression checks, identities, commands and cleanup are recorded in the
+handoff. **LD04 acceptance is pending; no full merge, tag or public Release.**
 
 Implementation sequence:
 
@@ -645,3 +663,11 @@ Implementation awaits the user's separate instruction.
 LD04 implementation authorized, 2026-11-12: the user instructed “implement the plan.”
 Branch implementation, focused checks, push/manual dispatch and exact artifact
 verification proceed in the approved scope. No publication or full merge is authorized.
+
+LD04 implementation handoff, 2026-11-12: complete selected run 43238079282 and exact
+local raw downloads pass. Recorded source/tool/runner/cache/runtime identities,
+three failed attempts and fixes, focused checks, selected locations and explicit
+hardware/audio/warm-producer limits in the LD04 design. Updated checkpoint/tracker/
+system overview to Ready for review. No automatic acceptance, full implementation
+merge, tag or public Release. Owned disposable output is cleaned at handoff;
+selected review packages/evidence and intentional compiler cache remain.

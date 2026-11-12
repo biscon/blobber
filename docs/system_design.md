@@ -7,8 +7,8 @@ runtime inventory, CPU-only build helper and clean `dist-stage` ownership. Debug
 source paths and content identities remain unchanged. Nine focused suites and a
 388-file / 1,334,576,722-byte production stage pass; native host dependencies and
 notice gaps remain explicit. LD02 is accepted and closed by the user, 2026-11-11;
-LD03 now supplies a mechanically verified archive; hosted automation remains
-planned in LD04. Runtime coverage and limits are recorded separately below;
+LD03 supplies a mechanically verified archive; LD04 now adds verified hosted
+automation. Runtime coverage and limits are recorded separately below;
 no automatic advancement. The user reports working content and clean folders and
 accepts the audit's 1.5 MB (0.114%) of existing repeated material/sound data. The
 stage excludes original world artwork alongside the packed publication; its main
@@ -57,18 +57,29 @@ Physical-GPU/audio coverage beyond the reported play review remains explicit.
 The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflow scope; access
 was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.
-[LD04 proposed implementation design](linux_distribution_ld04.md), 2026-11-12:
-**In progress — implementation; authorized by the user, 2026-11-12.**
-Reuse the registered manual workflow with serial Linux, Windows and final download/
-format-verification jobs. The Linux baseline build owns one native preparation on
-cache miss or a checked import on hit; Windows consumes the same publication.
-Platform drivers retain package/audit/smoke ownership. A bounded combined record
-binds exact source, publication, player hashes and downloaded artifact IDs only
-after both platforms and reverse format checks pass. Planned Linux plain player
-names match Windows; exact revisions stay in metadata. Cache/storage limits,
-failure states, focused checks and future CLI operations are specified in the
-design. Implementation follows the user’s separate instruction. Accepted LD01–LD03/WD01
-history remains unchanged; no automatic implementation or public publication.
+[LD04 design/handoff](linux_distribution_ld04.md#selected-review-artifacts),
+2026-11-12: **implemented, mechanically verified, Ready for review; user acceptance
+pending.** The registered dispatch-only workflow serializes Linux, Windows and
+final download/format verification. Complete [run 43238079282](https://github.com/biscon/blobber/actions/runs/43238079282)
+passes at `ea222d653be760dd2f05b6f978e1673a1a6b2543`: 19 Linux suites and
+Ubuntu 22.04/Debian 13 extracted smoke; 26 Windows suites with one audio-device skip,
+GUI PE/ZIP, read-only Unicode extracted smoke and depth/resource checks. Exact raw
+player/checksum downloads and both campaign/library/scenario format directions pass.
+A bounded atomic combined record binds source/workflow/run, publication and artifact
+hashes. Linux owns native preparation or checked import; Windows restores that
+same publication. Real Linux import/typed data/game-graph checks pass without a
+second game build. The complete warm Linux-producer path was not rerun.
+
+Compiler image transport uses signed-index-derived, SHA-256-pinned debs after
+snapshot 503s; the accepted 251-package inventory, GCC 11/glibc 2.35 floor, source
+pins and static/generic-CPU policy remain unchanged. Prepared cache is saved after
+typed publication/import checks and before runtime/evidence work; only current/
+previous bounded entries remain. Player names are plain version/platform archives,
+with exact revisions in metadata and separate review evidence. Selected raw players,
+checksums and compact evidence are retained locally in a marked review bundle.
+Full run identities, corrections, limits and operator instructions are linked above.
+Existing LD01–LD03/WD01 acceptance remains unchanged. Software GL does not establish
+new physical-GPU/audio review; no full merge, tag or public publication occurred.
 
 [Local group alerts](goblin_ai_design.md#local-group-alerts--2026-11-11): implemented
 and headless verified; user play review pending. Direct sight and hostile impacts share one radius-three,

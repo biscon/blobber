@@ -1,14 +1,16 @@
 # LD04 — Combined hosted builds and compatibility evidence
 
 Created: 2026-11-12.
-Status: **In progress — implementation, authorized by the user, 2026-11-12.**
-The user instructed “implement the plan.” The design below is the approved scope;
-actual implementation and verification are recorded in the handoff when complete.
+Status: **Implemented, mechanically verified, Ready for review — 2026-11-12.**
+Implementation was authorized by “implement the plan.” The complete selected hosted
+run, exact downloads, corrections and limitations are recorded below. User
+acceptance is pending; this status does not close LD04.
 
 Dependencies: accepted [LD03](linux_distribution_ld03.md) and
 [WD01](linux_distribution_wd01.md). The [roadmap](linux_distribution_plan.md)
-owns slice status. Preserve their accepted artifacts and evidence; this design
-describes future changes, not additional successful builds or user acceptance.
+owns slice status. Their accepted artifacts and evidence remain preserved. The
+approved design is implemented, with recorded adaptations and actual evidence
+below; LD04 user acceptance remains separate.
 
 ## Outcome and scope
 
@@ -28,7 +30,7 @@ the build workflow itself has no publication action or `contents: write` permiss
 ## Inspected starting point
 
 Planning inspected branch `distribution/wd01` at `3946e09`, with a clean tree.
-The current code provides:
+At that planning checkpoint, code provided:
 
 | Entry point | Existing responsibility / LD04 gap |
 | --- | --- |
@@ -93,7 +95,7 @@ in YAML. Packaging allocates outside gameplay and adds no frame-path work.
    only the exact owned cache namespace. Restore at the existing relative path
    `output/wd01-prepared`, with cross-OS archives and no restore-key fallback.
 2. On an exact valid hit, run the baseline distribution with that bundle imported.
-   Add an optional **proposed** `--prepared-input PATH` to the Linux `dist` driver;
+   Add an optional `--prepared-input PATH` to the Linux `dist` driver;
    validate on the host, mount it read-only into the pinned container, configure
    `BLOBBER_PREPARED_INPUT`, run the typed validator and preserve producer provenance.
    Extend build ownership/environment identity to distinguish native/import mode
@@ -129,7 +131,7 @@ both packages record their actual consumer revision and matching publication has
 After Linux succeeds, restore its exact prepared key and verify its digest/file
 ledger again. A missing/evicted transfer fails clearly; Windows never rebakes it.
 Download current-run Linux format fixtures by artifact ID. Add an optional
-**proposed** `--compatibility-input PATH` to `windows_release.py`, defaulting to
+`--compatibility-input PATH` to `windows_release.py`, defaulting to
 the existing bundle fixtures for backward compatibility. The combined workflow
 always passes the current-run directory without modifying the immutable cache.
 
@@ -194,7 +196,7 @@ the tar; Windows remains one ZIP download with no extra wrapper. Current v7 raw
 uploads derive the artifact name from the file, so require exactly one selected
 file per upload. Fail on absent files. Keep review metadata/captures separate.
 
-| Storage class | Proposed bound and lifetime |
+| Storage class | Bound and lifetime |
 | --- | --- |
 | Prepared cache | Keep existing `wd01-prepared-v1-DIGEST` schema/path; at most two actual owned entries total, current and previous, each at most 1 GiB compressed, owned total at most 2 GiB. No compiler/build/Docker-layer cache. |
 | Player artifacts/checksums | Seven-day retention; one player per platform per attempt, each at most 1 GiB, with its small adjacent checksum. Fail before upload if exceeded. |
@@ -346,7 +348,7 @@ to `prepared.py` inside the read-only source mount. Input files are still hashed
 and compared; host source identity is checked again after the build. This avoids
 changing the accepted compiler image/package inventory merely to enumerate files.
 
-## Implementation verification in progress — 2026-11-12
+## Implementation verification and corrections — 2026-11-12
 
 Implemented the registered three-job manual workflow, optional Linux import/source
 ledger, plain Linux package name, current-run format transport, bounded cache
@@ -452,3 +454,144 @@ before userspace verification/report collection. A later failure still blocks
 player upload/Windows/combined success, but does not discard a valid costly
 publication. This also makes build versus runtime progress visible through CLI
 job status, without extra builds, bakes or a generic scheduler.
+
+## Selected review artifacts
+
+The complete manual [run 43238079282](https://github.com/biscon/blobber/actions/runs/43238079282),
+attempt 1, **passed all three serial jobs**, pinned to source/workflow commit
+`ea222d653be760dd2f05b6f978e1673a1a6b2543` on `distribution/ld04`.
+The selected run spans 2026-11-12 14:31:32–14:58:53 UTC.
+
+- [Linux game archive](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13952989492) and [checksum](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13954436748).
+- [Windows game ZIP](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13955996289) and [checksum](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13956535533).
+- Optional [Linux evidence](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13954940115), [Windows evidence](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13954394207) and [combined verification](https://github.com/biscon/blobber/actions/runs/43238079282/artifacts/13956560935).
+
+These are single raw player archives with plain version/platform names, not
+public Release assets. Reports/captures are separate. Player/review artifacts
+expire 2026-11-19; internal format transport 13955090070 (1,452,860 bytes) expires
+2026-11-13. Accepted LD03/WD01 artifacts remain separate and unchanged.
+
+| Player | Archive bytes | Extracted files / bytes | SHA-256 |
+| --- | --- | --- | --- |
+| blobber-0.1.0-linux-x86_64.tar.gz | 566,494,428 | 394 / 1,337,380,925 | `f12913565e87dad1cb33f0afce77d2fc905de7c6e11ae64d436f4f064052f77a` |
+| blobber-0.1.0-windows-x86_64.zip | 564,904,241 | 392 / 1,331,447,658 | `84de3c93d7b4891797a1f3295ba3bead96a5409c3e9a073e10f967ce3ae64d38` |
+
+### Actual verification and environment
+
+[Linux job 131250760837](https://github.com/biscon/blobber/actions/runs/43238079282/job/131250760837)
+passes **19 selected CTest suites in 2.30 s**, typed production-data validation,
+curated stage/ELF audit and archive integrity. One shipped ELF has a maximum GLIBC
+requirement of **2.35**. The accepted generic-CPU/static compiler/raylib/yaml-cpp
+policy remains enforced. Real Git-free Linux import and the game dependency graph
+pass without another game compilation or bake. Source/data identity, read-only
+installation, unrelated CWD/default assets and isolated writable user paths pass
+for this same extracted archive on both runtimes:
+
+| Runtime | Actual userspace/graphics | Result |
+| --- | --- | --- |
+| Ubuntu 22.04 | glibc 2.35; Mesa 23.2.1, llvmpipe LLVM 15.0.7, OpenGL 4.5 Core | New Campaign/town/dialogue/inn/dungeon/save and fresh-process Continue passed; 27.440 s |
+| Debian 13 | glibc 2.41; Mesa 25.0.7, llvmpipe LLVM 19.1.7, OpenGL 4.5 Core | Same route/Continue passed; 25.602 s |
+
+The compiler image is
+`sha256:e5797bea66a1524a2aac09c48f56a3433c364009b2805a8ba7246676396cefb2`,
+recipe SHA-256
+`7e5669fd006e4b9a2e83df875adb5e56f959b2a01a52182629a9a478525617cb`.
+It retains GCC/G++ 11.4.0, CMake 3.31.12, Ninja 1.10.1, Python 3.10.12 and
+binutils 2.38. The unchanged installed inventory hash is
+`a7d18868e90d8e0f58fc7213c1bc9f84a768aed804533e00df5c960ddaa9a8f7`.
+Linux/final runner image: `ubuntu22` / `20261101.347.1`, X64. The two runtime
+image IDs and full provider/tool details are retained in the evidence JSON.
+
+[Windows job 131258970478](https://github.com/biscon/blobber/actions/runs/43238079282/job/131258970478)
+passes **26 selected CTest suites, 1 audio-device skip**, 27 selected / 9.44 s.
+The `path_stream_decode` skip reflects no audio device. The shared tooling fixture
+suite has 15 cases; Windows deliberately skips its five Linux-specific cases.
+MSVC 14.44.35207 / SDK 10.0.22621.0, CMake 3.31.6, Ninja 1.13.2 and Python 3.12.10
+run on `win22` / `20261101.353.1`. The full compiler `/Bv` and OS identities are
+in build metadata. Typed prepared validation, forward format import/re-encode,
+curated stage, AMD64 / **Windows GUI** PE audit and ZIP integrity pass. There are
+no shipped compiler/third-party DLLs; the seven imports are OS libraries.
+The source/build-denied, read-only Unicode install and isolated LocalAppData test
+passes 48 create-route actions then 3 fresh-process Continue actions.
+Mesa 26.2.6 / llvmpipe LLVM 23.1.4 / OpenGL 4.6 Core is loaded from the external
+owned provider directory. Hidden bidirectional depth copy, readback and resource
+cleanup pass. Player executable SHA-256:
+`0986a39ee8f7bddc5835d976a433ae7e262669291f1494be6621b16350f5ce84`.
+
+The exact shared prepared publication hash is
+`b768d66c7a62973d3baa3993eff0bf96e4188de168d63da965fb27b890a5ff2b`.
+Cache `wd01-prepared-v1-c9da3964f6ce03dfb8eaacc4c2aff9e4a6b3e5d781241bae66b1962aa14d62ff`
+was produced once in the selected Linux run and restored/validated on Windows.
+Its actual stored size is **218,297,778 bytes**, under the 1 GiB bound; the
+conservative deflate estimate is 228,595,922 bytes. Cache API inspection confirms
+only this entry and the previous accepted WD01 entry remain (both well under
+1 GiB), with the expected cross-OS version. The producer and both consumers
+record the exact selected source/provenance; all five accepted content identities
+remain unchanged. A second complete warm Linux-producer run was not executed.
+The actual production-data import/graph check and the Windows exact-cache restore
+provide narrower evidence; no full warm-run success is claimed.
+
+[Final job 131266246236](https://github.com/biscon/blobber/actions/runs/43238079282/job/131266246236)
+downloads exact raw players/checksums and bounded evidence by artifact ID, checks
+API transport digests, full archive CRC/hash ledgers, clean single roots, embedded
+source/metadata/common identities, required runtime/import/depth evidence and
+prepared provenance. It runs the already-built, hash-checked Linux verifier on
+the Windows-written campaign/library/scenario fixtures. Reverse import/re-encode
+passes. The atomic combined record reports both directions passed and binds this
+run/attempt/source, both raw players and their evidence; no rebuild occurs in the
+final job. Local inspection of the downloaded platform evidence also confirms
+matching run/source/provenance and all five content identities.
+
+### Review, limitations and ownership
+
+Use the [operator guide](../packaging/README.md) for exact dispatch/download and
+separately authorized Release attachment instructions. To review, extract each
+complete player into a new folder, launch the executable, exercise New Campaign,
+save, quit and Continue, and report machine graphics/audio behavior separately.
+No local Windows development setup or administrator installation is needed.
+
+Software OpenGL does not establish a physical-GPU matrix or playback/listening.
+The Windows Server runner is distinct from the Windows 11 client minimum; WD01's
+accepted prior human play report remains prior evidence. Containers share the
+runner kernel. Existing font/music/audio notice gaps remain; no project license
+or publication clearance is introduced. No desktop input/focus automation, tag,
+public Release, paid service or full implementation merge was performed.
+
+The three failed attempts and their fixes are recorded above; they do not count
+as passing combined runs. Two production preparations occurred across those
+attempts and the selected run: the valid 841ac2b publication was lost after its
+reporting failure, and ea222d6 prepared the selected publication. Saving the typed
+publication before runtime/evidence now prevents that repeated bake after a later
+failure. No production game build/bake was run locally. The local checked
+compiler image is an intentional build cache; original CLion/baseline trees,
+accepted artifacts, captures and user saves remain preserved.
+
+Local review collection completed into the marked intentional bundle:
+
+```text
+build-distribution-review/43238079282-attempt1-ea222d653be7/
+```
+
+It retains **8 files / 1,148,854,268 bytes**: both exact raw players and checksums,
+two compact evidence ZIPs, `combined.json` and `review-origin.json`. Each download
+matches the immutable API digest/byte count and the combined record. Local
+checksum text pairs, source/run/attempt and evidence limits pass. Hosted final
+verification owns the complete archive/extracted-game checks; no redundant local
+production extraction/smoke was run. One dungeon capture from each platform was
+inspected and shows the expected world textures, portraits, icons and fixed UI.
+Each optional evidence ZIP has six captures. Existing accepted permanent galleries
+were preserved; no duplicate permanent gallery or new acceptance is inferred.
+
+After the collector exited successfully, previewed and applied
+`python3 tools/agent_artifacts.py clean output/agent-runs/20261112T124759Z-734a30d5e7f74f399df7461ed18fc174 [--apply]`.
+Removed **22 disposable files / 28,403,012 bytes**, including downloaded validator,
+raw job logs, metadata copies, probes and temporary PNGs. No diagnostic exception,
+extract, active collector or temporary container remains. The selected marked
+review bundle and intentional old/new build/image caches are preserved. No other
+active run, accepted artifact/gallery or save was removed.
+
+Final `git diff --check`, local document links, slice-heading/order, Ready state,
+selected-run and system-index checks pass. Post-verification changes affect only
+this handoff, the roadmap and system overview: player/build/tool/workflow bytes
+match the tested `ea222d6` source. No passing production matrix was rerun for these
+documentation changes. **LD04 stops at Ready for review; acceptance is pending.**
