@@ -56,6 +56,7 @@ def linux(run):
     verify_run = Path(subprocess.check_output([sys.executable, ROOT/'tools/agent_artifacts.py','create'], text=True).strip())
     with Path(os.environ['GITHUB_ENV']).open('a') as stream:
         stream.write('VERIFY_RUN_DIR='+str(verify_run)+'\n')
+    linux_release.check_resources()
     verify_package(verify_run, bundle)
     transport = run/'transport'
     transport.mkdir()

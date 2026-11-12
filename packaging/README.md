@@ -3,7 +3,10 @@
 The manual **Desktop distribution build** workflow produces Linux x86-64 and
 Windows x86-64 packages from one selected source revision. It lives at
 `.github/workflows/windows-review.yml` to preserve the existing workflow
-registration. Commits, PRs, merges, tags and Releases do not start it.
+registration. Until a separately instructed full merge, GitHub’s default-branch
+workflow list may still show the old `Windows review build` display name; the
+filename and selected-branch LD04 jobs identify this workflow. Commits, PRs, merges,
+tags and Releases do not start it.
 
 From an authenticated `gh` client with repository/workflow access:
 
