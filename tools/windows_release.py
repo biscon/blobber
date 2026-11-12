@@ -20,10 +20,10 @@ from windows_archive import package
 from windows_smoke import smoke
 
 ROOT=Path(__file__).resolve().parents[1]
-TESTS=['rules','ai','campaign_save','agent_artifacts_tools','rng_portability','platform_io','platform_io_process','library','arena','campaign_save_smoke','options','packaged_options',
+TESTS=['rules','ai','campaign_save','agent_artifacts_tools','rng_portability','platform_io','platform_io_process','path_decode','path_stream_decode','library','arena','campaign_save_smoke','options','packaged_options',
        'runtime_inventory','dist_staging','npc_metadata','dialogue','audio','music','menu','gameplay_startup',
        'distribution_smoke','buttons','windows_distribution_tools','creator_art','portraits']
-TARGETS=['blobber_rules_tests','blobber_ai_tests','blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
+TARGETS=['blobber_rules_tests','blobber_ai_tests','blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_path_decode_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
          'blobber_options_tests','blobber_packaged_options_tests','blobber_distribution_tests','blobber_npc_metadata_tests',
          'blobber_dialogue_tests','blobber_audio_tests','blobber_music_tests','blobber_menu_tests','blobber_gameplay_startup_tests',
          'blobber_distribution_smoke_tests','blobber_buttons_tests','blobber_distribution_compatibility','blobber_validate_prepared',
@@ -33,13 +33,12 @@ TARGETS=['blobber_rules_tests','blobber_ai_tests','blobber_bake_world','blobber_
 def capture(args):return subprocess.check_output(list(map(str,args)),text=True,stderr=subprocess.STDOUT).strip()
 
 
-def source_identity():
-    names=capture(['git','ls-files','-z']).split('\0')
-    ledger={n:digest(regular(ROOT/n)) for n in sorted(names) if n}
-    status=capture(['git','status','--porcelain','--untracked-files=normal'])
-    return {'revision':capture(['git','rev-parse','HEAD']),'dirty':bool(status),'source_status':status.splitlines(),
+def source_identity(source=ROOT):
+    ledger=prepared.source_files(source)
+    status=capture(['git','-C',source,'status','--porcelain','--untracked-files=normal'])
+    return {'revision':capture(['git','-C',source,'rev-parse','HEAD']),'dirty':bool(status),'source_status':status.splitlines(),
             'source_fingerprint':hashlib.sha256(encoded(ledger)).hexdigest(),
-            'source_epoch':int(capture(['git','show','-s','--format=%ct','HEAD']))}
+            'source_epoch':int(capture(['git','-C',source,'show','-s','--format=%ct','HEAD']))}
 
 
 @contextmanager
@@ -56,7 +55,18 @@ def build_release(run,bundle,build,allow_dirty):
     require(sys.platform=='win32','Native Windows environment required')
     require(run.is_dir() and (run/'.agent-run.json').is_file(),'Owned run directory required')
     require(shutil.disk_usage(run).free>=8*1024**3,'Insufficient scratch space')
-    ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(),0x4000)
+    class MemoryStatus(ctypes.Structure):
+        _fields_=[('length',ctypes.c_ulong),('load',ctypes.c_ulong),
+                  *[(name,ctypes.c_ulonglong) for name in
+                    ['total','available','total_page','available_page','total_virtual','available_virtual','extended']]]
+    kernel=ctypes.WinDLL('kernel32',use_last_error=True)
+    memory=MemoryStatus();memory.length=ctypes.sizeof(memory)
+    kernel.GlobalMemoryStatusEx.argtypes=[ctypes.POINTER(MemoryStatus)]
+    require(kernel.GlobalMemoryStatusEx(ctypes.byref(memory)),'Cannot inspect available memory')
+    require(memory.available>=3*1024**3,'Insufficient physical memory')
+    kernel.GetCurrentProcess.restype=ctypes.c_void_p
+    kernel.SetPriorityClass.argtypes=[ctypes.c_void_p,ctypes.c_ulong]
+    require(kernel.SetPriorityClass(kernel.GetCurrentProcess(),0x4000),'Cannot lower build priority')
     build.mkdir(exist_ok=True)
     owner=build/'.windows-build-owner.json'
     ownership={'version':1,'source':str(ROOT),'platform':'native-msvc-x64'}
@@ -80,12 +90,16 @@ def build_release(run,bundle,build,allow_dirty):
     tools['compiler']=compiler.stdout+compiler.stderr
     tools['sdk']=os.environ.get('WindowsSDKVersion','').rstrip('\\')
     tools['msvc']=os.environ.get('VCToolsVersion','')
-    require(tools['msvc'].startswith('14.44.') and tools['sdk']=='10.0.22621.0','Unexpected MSVC/SDK selection')
+    require(tools['msvc'].startswith('14.44.') and tools['sdk']=='10.0.22621.0',
+            'Unexpected MSVC/SDK selection: '+tools['msvc']+' / '+tools['sdk'])
     require(tools['cmake'].startswith('cmake version 3.31.') and tools['ninja'].startswith('1.13.') and
-            tools['python'].startswith('Python 3.12.'),'Unexpected CMake/Ninja/Python family')
+            tools['python'].startswith('Python 3.12.'),'Unexpected tool family: '+
+            ' / '.join(tools[k] for k in ['cmake','ninja','python']))
     environment.update({'tools':tools,'runner_image':os.environ.get('ImageVersion'),
+        'available_memory_bytes':memory.available,'free_scratch_bytes':shutil.disk_usage(run).free,
         'runner_os':capture(['cmd','/c','ver']),'dependency_lock_sha256':digest(ROOT/'packaging/linux/lock.json')})
     def command(args,name):
+        print('Windows phase: '+name,flush=True)
         with (run/name).open('w',encoding='utf-8') as log:
             result=subprocess.run(list(map(str,args)),stdout=log,stderr=subprocess.STDOUT)
         if result.returncode:raise RuntimeError(name+' failed:\n'+(run/name).read_text(encoding='utf-8',errors='replace')[-14000:])

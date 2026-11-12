@@ -10,7 +10,7 @@ void MusicPlayer::prepare(const std::filesystem::path& root, const std::filesyst
     auto candidates = audio::loadMusicTracks(root, warning);
     tracks_.reserve(audio::musicCapacity);
     for (auto& track : candidates) {
-        const auto path = (root / track.path).u8string();
+        const auto path = (root / std::filesystem::u8path(track.path)).u8string();
         auto stream = LoadMusicStream(path.c_str());
         const float duration = IsMusicValid(stream) ? GetMusicTimeLength(stream) : 0;
         if (!std::isfinite(duration) || duration <= 0) {

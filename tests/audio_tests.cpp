@@ -5,6 +5,7 @@
 #include "game/session.hpp"
 #include "support/check.hpp"
 #include "support/hybrid_fixtures.hpp"
+#include "support/temp_directory.hpp"
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -169,9 +170,7 @@ int main() {
     check(walking.audioEvents().count == 0, "Dead walker has no arrival");
     for (unsigned i = 0; i < unsigned(rules::SpellKind::Count); ++i)
         check(audio::spellFamily(rules::SpellKind(i))[0], "Every spell maps");
-    const auto tmp = std::filesystem::temp_directory_path() /
-                     ("blobber-audio-policy-" + std::to_string(session.actors().snapshot().world));
-    std::filesystem::create_directories(tmp);
+    const auto tmp = testDirectory();
     audio::Settings settings;
     settings.values[4] = 0;
     settings.borderlessFullscreen = true;
@@ -229,6 +228,24 @@ int main() {
         }
         check(!audio::loadBank(tmp).warning.empty(), "Malformed/excessive mix gain is diagnosed");
     }
+#ifdef _WIN32
+    std::filesystem::remove(tmp / "overrides.json");
+    for (const auto* invalid : {R"({"cues":{"test":{"variants":[{"id":"01","path":"C:base.wav"}]}}})",
+                                R"({"cues":{"test":{"variants":[{"id":"01","path":"\\base.wav"}]}}})"}) {
+        {
+            std::ofstream file(tmp / "bank.json");
+            file << invalid;
+        }
+        const auto rejected = audio::loadBank(tmp);
+        check(rejected.cues.empty() && !rejected.warning.empty(), "Rooted Windows audio paths reject");
+        {
+            std::ofstream overrides(tmp / "overrides.json");
+            overrides << R"({"cues":{"test":{"variant_overrides":{"01":{"path":"missing.wav"}}}}})";
+        }
+        check(audio::loadBank(tmp).cues.empty(), "Missing override cannot restore a rooted base path");
+        std::filesystem::remove(tmp / "overrides.json");
+    }
+#endif
     std::filesystem::remove_all(tmp);
     std::cout << "Audio policy and events passed\n";
 }

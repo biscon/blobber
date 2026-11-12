@@ -21,7 +21,7 @@ void openArena(MenuView& v, const Options& o, ArenaScenarioStore& store) {
     for (std::uint16_t i = 0; i < v.catalog.monsterCount(); ++i)
         a.available[i] = std::find(definitions.types.begin(), definitions.types.end(),
                                    monsterAppearance(v.catalog.monster({i})->id)) != definitions.types.end();
-    std::snprintf(a.folder.data(), a.folder.size(), "%s", store.directory().c_str());
+    std::snprintf(a.folder.data(), a.folder.size(), "%s", store.directory().u8string().c_str());
     a.filter(v.catalog);
     a.blur();
     v.model.screen = MenuScreen::Arena;

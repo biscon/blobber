@@ -2,13 +2,15 @@
 #define NOMINMAX
 #include "platform/file_io.hpp"
 #include <algorithm>
-#include <bcrypt.h>
 #include <cstdlib>
-#include <shlobj.h>
 #include <system_error>
 #include <utility>
 #include <vector>
 #include <windows.h>
+
+// These SDK headers require the Win32 declarations above.
+#include <bcrypt.h>
+#include <shlobj.h>
 namespace blobber::disk {
 namespace {
 HANDLE h(std::intptr_t value) {

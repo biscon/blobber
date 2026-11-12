@@ -20,8 +20,8 @@ float number(const Json& j, const char* key, float def, float low, float high) {
     return v;
 }
 bool safePath(const std::string& s) {
-    const std::filesystem::path p(s);
-    if (s.empty() || p.is_absolute())
+    const auto p = std::filesystem::u8path(s);
+    if (s.empty() || p.has_root_path())
         return false;
     for (const auto& part : p)
         if (part == "..")
@@ -87,7 +87,7 @@ Bank loadBank(const std::filesystem::path& root) {
                     Variant a{v.at("id"), v.at("path"), number(v, "gain", 1, 0, 2)};
                     if (!ids.insert(a.id).second || !safePath(a.path))
                         throw std::runtime_error("Invalid variant identity/path");
-                    if (!std::filesystem::is_regular_file(root / a.path)) {
+                    if (!std::filesystem::is_regular_file(root / std::filesystem::u8path(a.path))) {
                         for (const auto& b : original.at("variants"))
                             if (b.at("id") == a.id) {
                                 bank.warning += "Missing " + a.path + "; using generated base\n";
@@ -95,6 +95,8 @@ Bank loadBank(const std::filesystem::path& root) {
                                 break;
                             }
                     }
+                    if (!safePath(a.path))
+                        throw std::runtime_error("Invalid base variant path");
                     c.variants.push_back(std::move(a));
                 }
                 bank.cues.push_back(std::move(c));

@@ -22,7 +22,7 @@ acceptance retain their existing status.
 | --- | --- |
 | Active slice | WD01 — Windows readiness and manual build; In progress — implementation |
 | Next eligible slice | LD04 only after implemented WD01 is accepted; no automatic advancement |
-| Implemented distribution support | Curated baseline stage/audit, versioned archive and passing Ubuntu/Debian relocated smoke; no CI |
+| Implemented distribution support | Accepted Linux stage/archive/smoke; Windows native I/O, prepared import, ZIP/PE and manual workflow on the review branch, hosted verification in progress |
 | Awaiting user review | None while WD01 implementation/verification is in progress; its design was reviewed and continuation authorized |
 | Known environment | Public repository on github.com, confirmed by the user |
 | Next action | Implement reviewed WD01 design and verify its native hosted artifact; stop at Ready for review |
@@ -30,8 +30,9 @@ acceptance retain their existing status.
 **Approved roadmap revision, 2026-11-11:** insert WD01 before LD04 and expand LD04
 to automate both supported packages. WD01 introduces the minimum manual Windows
 build workflow; LD04 consolidates release automation. Preserve accepted LD01–LD03
-history and identifiers. This instruction updates the roadmap, not authorization
-to implement WD01, push commits/workflows, dispatch runs or publish anything now.
+history and identifiers. This roadmap revision initially authorized planning only;
+the user subsequently reviewed the WD01 design and authorized implementation.
+Public Release/tag publication still requires an explicit instruction.
 No local Windows checkout, development tools or agent installation is required
 for WD01: use the hosted Windows runner for builds/tests and give the user a ZIP
 for dual-boot play review. Local Linux-to-Windows cross-compilation is deferred.
@@ -43,7 +44,8 @@ and agent-managed merging of the narrow workflow bootstrap PR during the later
 authorized implementation. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`; no normal commit/PR/merge, tag or Release event
 starts builds. Public Release publication stays a separate explicit action. This
-handoff writes planning documents and local commits only; no port or remote setup.
+planning handoff wrote documents and local commits only. Implementation was
+subsequently authorized and is recorded in the linked WD01 handoff.
 
 Update this checkpoint, the tracker and the active slice's handoff together.
 Implementation completion and user acceptance are separate states. Only the user
@@ -290,9 +292,11 @@ build distribution location; clean disposable intermediate copies and extracts.
 
 ### WD01 — Windows readiness and manual build
 
-**In progress — planning; [proposed detailed design](linux_distribution_wd01.md),
-2026-11-12, awaiting review and a separate implementation instruction.**
-Roadmap scope was approved 2026-11-11. No Windows code/workflow is implemented.
+**In progress — implementation; [reviewed design and progress](linux_distribution_wd01.md),
+2026-11-12. The user reviewed the design and instructed continuation.**
+Native platform I/O, prepared import, ZIP/PE tooling and the manual workflow are
+implemented on the review branch. Hosted verification is in progress; no playable
+Windows package success is claimed until its checks complete.
 The design records native I/O/Unicode paths, Windows 11 x64, static MSVC/dependencies,
 prepared-publication import/cache, ZIP/PE checks, manual dispatch/bootstrap and
 focused verification. The user chose Linux preparation followed by native Windows

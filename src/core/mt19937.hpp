@@ -15,7 +15,7 @@ class Mt19937 {
         words_[0] = value;
         for (std::uint32_t i = 1; i < words_.size(); ++i)
             words_[i] = 1812433253u * (words_[i - 1] ^ (words_[i - 1] >> 30)) + i;
-        index_ = words_.size();
+        index_ = static_cast<unsigned>(words_.size());
     }
     static constexpr result_type min() noexcept { return 0; }
     static constexpr result_type max() noexcept { return UINT32_MAX; }

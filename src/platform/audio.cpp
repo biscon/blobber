@@ -65,8 +65,9 @@ void AudioRuntime::prepare(const std::filesystem::path& assets, bool disabled,
                 }
                 Sample sample;
                 sample.path = v.path;
-                const auto path = (root_ / v.path).u8string();
-                if (!std::filesystem::is_regular_file(path)) {
+                const auto file = root_ / std::filesystem::u8path(v.path);
+                const auto path = file.u8string();
+                if (!std::filesystem::is_regular_file(file)) {
                     warning_ += "Missing " + path + "\n";
                     continue;
                 }
@@ -110,7 +111,8 @@ void AudioRuntime::prepare(const std::filesystem::path& assets, bool disabled,
         s.cue = cue(i < 2 ? "ambience" : i < 6 ? "web.loop" : "spiritual.loop");
         if (s.cue == bank_.cues.size())
             continue;
-        const auto path = (root_ / bank_.cues[s.cue].variants.front().path).u8string();
+        const auto path =
+            (root_ / std::filesystem::u8path(bank_.cues[s.cue].variants.front().path)).u8string();
         s.music = LoadMusicStream(path.c_str());
         s.valid = IsMusicValid(s.music);
         if (s.valid)

@@ -30,7 +30,7 @@ void AudioRuntime::prepareDialogue(const std::vector<std::string>& files) {
     unsigned loaded = unsigned(samples_.size());
     for (unsigned i = 0; i < files.size() && i < dialogueSounds_.size(); ++i) {
         const auto& path = files[i];
-        if (loaded == 512 || !std::filesystem::is_regular_file(path)) {
+        if (loaded == 512 || !std::filesystem::is_regular_file(std::filesystem::u8path(path))) {
             warning_ += "Unavailable dialogue sound: " + path + "\n";
             std::cerr << "Unavailable dialogue sound: " << path << '\n';
             continue;

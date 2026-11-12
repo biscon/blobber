@@ -27,8 +27,8 @@ std::vector<MusicTrack> loadMusicTracks(const std::filesystem::path& root, std::
             try {
                 MusicTrack t{entry.at("id"), entry.at("path"), entry.at("title"), entry.at("artist")};
                 const float db = entry.value("gain_db", 0.f);
-                const std::filesystem::path path(t.path);
-                bool safe = !path.empty() && !path.is_absolute();
+                const auto path = std::filesystem::u8path(t.path);
+                bool safe = !path.empty() && !path.has_root_path();
                 for (const auto& part : path)
                     safe &= part != "..";
                 if (!safe || t.id.empty() || t.id.size() > 128 || t.title.empty() || t.title.size() > 180 ||

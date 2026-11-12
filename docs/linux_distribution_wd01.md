@@ -37,7 +37,7 @@ unchanged in prerequisite commit `08217e6` before these planning edits. Do not a
 that snapshot to introduce WD01 code or rewrite LD03 package provenance: the
 accepted LD03 archive remains the recorded dirty build of its historical revision.
 
-### Current code findings
+### Findings before implementation
 
 - `CampaignDisk` uses POSIX descriptors, blocking `flock`, bounded regular-file
   reads, a checked temporary write, two observed-revision checks, rename and
@@ -69,7 +69,7 @@ Windows implementations selected by CMake. It has no raylib, gameplay, JSON or Y
 dependency. Persistence and audio I/O borrow its functions at existing loading/save
 boundaries. Do not introduce a virtual filesystem or injectable service hierarchy.
 
-The proposed interface provides move-only file/lock ownership, bounded regular-file
+The implemented interface provides move-only file/lock ownership, bounded regular-file
 reads with explicit missing-file results, exclusive temporary creation, checked
 write-all/flush/close, replace-or-create publication, publication confirmation and
 secure entropy. File owners close on every exit; temporary owners delete only files
@@ -177,7 +177,7 @@ The concrete dependency difference is visible in Microsoft's
 ### Native Windows build policy
 
 Use `windows-2022`, VS 2022/v143, the MSVC 14.44 compiler family and Windows SDK
-10.0.22621.0 in a dedicated single-config Ninja Release tree, proposed
+10.0.22621.0 in a dedicated single-config Ninja Release tree,
 `build-windows-release/`. Initialize the x64 native environment explicitly; validate
 the selected family/SDK and fail clearly if missing. Use CMake 3.31.x, Ninja 1.13.x
 and Python 3.12.x, recording exact versions/paths, `cl /Bv`, linker/SDK identities,
@@ -199,7 +199,7 @@ in `packaging/linux/lock.json` as the shared pin source rather than floating pac
 resolution. Keep compiler-runtime flags consistent across game, tests and tools.
 Windows OS/graphics libraries remain host-provided. No Linux library is copied.
 
-Add proposed Windows release policy/orchestration and PE-audit helpers alongside
+Windows release policy/orchestration and PE-audit helpers sit alongside
 the current distribution tooling. Their responsibilities are native environment
 validation, a single build writer, source capture, ordered selected tests/staging/
 audit/package and evidence promotion. Read CMAKE_COMMAND and CMAKE_MAKE_PROGRAM
@@ -216,7 +216,7 @@ static-runtime package. Inspect the actual PE and linkage before making that cla
 
 ### Prepared-asset import and transfer
 
-Proposed CMake input: `BLOBBER_PREPARED_INPUT`, default empty. Empty retains native
+CMake input: `BLOBBER_PREPARED_INPUT`, default empty. Empty retains native
 world/portrait/creator preparation. Nonempty imports a validated prepared publication
 into marked build-owned storage; it must not mutate the input bundle or silently
 fall back to baking if validation fails. Provide a cohesive preparation-only target
@@ -315,9 +315,9 @@ No installer, signing or public Release target is added in this slice.
 
 ## Manual workflow and bootstrap
 
-Proposed workflow filename: `.github/workflows/windows-review.yml`. Its sole trigger
+Workflow filename: `.github/workflows/windows-review.yml`. Its sole trigger
 is `workflow_dispatch`. Dispatch selects the source branch/ref using the standard
-Run workflow selector or this future command, **not available at this checkpoint**:
+Run workflow selector or this command:
 
 ```sh
 gh workflow run windows-review.yml --ref distribution/wd01
@@ -345,7 +345,7 @@ production publication artifact, build tree or large raw log archive is uploaded
 Keep failure evidence compact and marked failed; never label an older package as
 the result of a failed attempt. Infrastructure-unavailable smoke is recorded separately.
 
-### Authorized later Git/GitHub sequence
+### Authorized Git/GitHub sequence
 
 1. Recheck account/access, remote/default branch and current working tree without
    reading credential values. `gh auth status` already confirmed `workflow` scope;
@@ -375,9 +375,9 @@ the result of a failed attempt. Infrastructure-unavailable smoke is recorded sep
 
 The default branch must contain a dispatch workflow for registration; see
 [manual dispatch prerequisites](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/manually-run-a-workflow).
-This planning turn performs no push, PR, merge, workflow creation or dispatch.
-The explicit future bootstrap authorization removes an unnecessary later approval
-gate; it does not authorize public publication, paid services or unrelated settings.
+The original planning turn performed no remote mutation. The authorized bootstrap
+merge and implementation dispatches are recorded below. That authorization does
+not extend to public publication, paid services or unrelated settings.
 
 ## Verification and handoff contract
 
@@ -481,7 +481,7 @@ than creating another permanent per-run report. Close runners, restore ACLs, pre
 and apply cleanup of owned extracts/logs/downloads even after failures. Preserve
 build caches, existing evidence, unrelated active runs and user saves.
 
-Later implementation stops at **Ready for review**. Only explicit user acceptance
+Implementation stops at **Ready for review**. Only explicit user acceptance
 closes WD01 and makes LD04 eligible. No combined Linux/Windows release automation,
 public publication or automatic advancement is part of this documentation handoff.
 
@@ -498,7 +498,8 @@ untracked files were byte-hashed into the owned run, then committed as `08217e6`
 Documentation verification checks local links, heading/checkpoint consistency,
 manual-only trigger policy and unchanged prerequisite source bytes. No gameplay
 build/test, bake, Windows execution, archive or hosted workflow is claimed by this
-planning step. The current deliverable is the proposed design for review.
+planning step. That planning deliverable was the proposed design for review; the implementation
+handoff below records subsequent work.
 
 Executed planning checks, 2026-11-12: `git diff --check` passed; a focused Python
 check resolved **283 local Markdown links** across the three planning/overview
@@ -515,7 +516,8 @@ Owned planning run
 and cleaned with `tools/agent_artifacts.py clean RUN_DIRECTORY` and `--apply`:
 three disposable files / 4,303 bytes removed. No runner, capture, retained diagnostic
 exception or temporary extract remains. Existing LD03 captures/build caches and
-user data were preserved. No public/remote operation occurred; stop for design review.
+user data were preserved. No public/remote operation occurred in the planning step;
+the user then reviewed the design and authorized implementation.
 
 ## Implementation progress — 2026-11-12
 
@@ -549,7 +551,70 @@ Ordinary completed/failed commands are awaited, then the marked run is previewed
 and cleaned by the helper. This avoids deleting logs while an orphan still writes.
 
 Second [hosted run](https://github.com/biscon/blobber/actions/runs/43122551224),
-source `24df8662887e49fdf022abe6bac65621e9949e43`, is the corrected attempt. Its outcome,
-native tool identities, downloaded artifact, remaining corrections and cleanup are
-pending and must replace this in-progress note before Ready for review. Neither
-Windows execution nor extracted-package success is claimed yet.
+source `24df8662887e49fdf022abe6bac65621e9949e43`, compiled the native preparation
+tools, baked the publication and passed full typed validation. Export then failed
+because the intentionally minimal accepted compiler image contains no Git. The
+fix in `9931f7e` keeps that image unchanged and performs source provenance/export
+with host Git/Python; native baking/validation remain in the pinned container.
+Windows was skipped and no package was produced by this failed run.
+
+Third [hosted run](https://github.com/biscon/blobber/actions/runs/43124549100),
+source `9931f7ea17d143c67dc61eccfa9641865f2d5a46`, passed preparation and cached the
+validated transfer as `wd01-prepared-v1-8f86f441597591f5fb79c74b77f2490399a9eb1edbd922440b798b33ea05dc7d`
+(218,297,446 compressed cache bytes; deflate estimate 228,595,513). Its cold compiler
+image build took about 22 minutes; native baking itself took 53 seconds. Windows
+selected the required tool families and compiled 147/343 build steps before the
+missing Windows declarations in the BCrypt header stopped compilation. The native
+header ordering has been corrected. No Windows tests/package were produced by this
+failed attempt; the next corrected hosted run remains pending.
+
+
+### Additional verification corrections
+
+Source capture now includes tracked and untracked nonignored files and records
+tracked deletions. The final source check therefore catches byte changes to an
+untracked input even when Git status text is unchanged. The prepared envelope
+uses the same file listing, filtered to its preparation inputs; a clean checkout
+retains its previous digest. Six focused Python packaging/cache/import tests pass,
+including added/deleted/modified input rejection and invalid-import preservation.
+
+Portable temporary fixtures now use spaces and non-ASCII characters. The owned
+`path_decode` test exports a tiny WAV and decodes WAV/MP3 through real raylib filename
+APIs. `path_stream_decode` opens those filenames through `LoadMusicStream` without
+playing sound; CTest marks it skipped (77) when no audio device is available.
+The dedicated 522-byte MP3 fixture was generated once with:
+
+```sh
+ffmpeg -f lavfi -i sine=frequency=440:sample_rate=22050:duration=0.06 \
+  -ac 1 -c:a libmp3lame -b:a 32k -map_metadata -1 -write_xing 0 \
+  -id3v2_version 0 -threads 1 tests/fixtures/path-tone.mp3
+```
+
+The configured CLion CMake/Ninja pair rebuilt the affected graphics/application
+libraries and selected fixtures with two workers at low CPU/I/O priority. A prior
+dry run confirmed no production bakers were scheduled. Twelve selected suites
+passed in 0.97 s: `path_decode|path_stream_decode|creator_art|portraits|audio|music|audio_runtime|dialogue|library|arena|platform_io|platform_io_process`
+(anchored CTest expression, one test process). Both audio decode checks ran locally;
+streaming was not skipped and no sound was played. Native Windows execution of
+these corrections remains pending. No Linux production bake or desktop control ran.
+The same path audit corrected the arena folder display to UTF-8 and kept native
+paths until audio API boundaries. Audio/music/dialogue paths reject Windows drive/
+root-relative forms; a missing audio override cannot restore an unsafe base path.
+The drivers now check at least 3 GiB available RAM plus their scratch-space bound
+before costly work and record the Windows resource preflight in build metadata.
+
+### Windows 11 play review
+
+1. Back up existing `%LOCALAPPDATA%\blobber` before launching this review build.
+2. Compare `Get-FileHash -Algorithm SHA256 .\PACKAGE.zip` with the adjacent
+   `.zip.sha256` text, then extract the entire ZIP. Keep `blobber.exe`, `assets/`
+   and `notices/` together. No build tools or VC redistributable installer are
+   required by the static-runtime package; a working OpenGL 3.3 driver is required.
+3. Put the extracted directory in a path with spaces/non-ASCII characters. From a
+   different working directory, launch the executable by its full path without
+   asset overrides. Review menu text, scaling, graphics, sound/music and dialogue.
+4. Start New Campaign, travel through town/inn/dungeon, Save and Main Menu, exit,
+   then restart and Continue. Check that the restored location/party are correct.
+   User state belongs beneath `%LOCALAPPDATA%\blobber`, outside the install.
+5. Report physical-GPU/audio issues and acceptance separately. Hosted Windows
+   Server/software OpenGL evidence does not replace this Windows 11 review.

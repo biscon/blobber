@@ -5,6 +5,7 @@
 #include "game/combat.hpp"
 #include "support/allocations.hpp"
 #include "support/check.hpp"
+#include "support/temp_directory.hpp"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -175,10 +176,7 @@ int main() {
     journal.combat(event);
     check(journal.encounter == 2, "New episode gets new identity");
 
-    const auto root =
-        std::filesystem::temp_directory_path() /
-        ("blobber-music-test-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-    std::filesystem::create_directories(root);
+    const auto root = testDirectory();
     struct Cleanup {
         std::filesystem::path p;
         ~Cleanup() { std::filesystem::remove_all(p); }

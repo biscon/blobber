@@ -6,7 +6,8 @@ inline std::filesystem::path testDirectory() {
     std::random_device entropy;
     for (unsigned attempt = 0; attempt < 64; ++attempt) {
         auto path = std::filesystem::temp_directory_path() /
-                    ("blobber-test-" + std::to_string(entropy()) + "-" + std::to_string(entropy()));
+                    std::filesystem::u8path(u8"blobber-test æ 日本-" + std::to_string(entropy()) + "-" +
+                                            std::to_string(entropy()));
         std::error_code error;
         if (std::filesystem::create_directory(path, error))
             return path;

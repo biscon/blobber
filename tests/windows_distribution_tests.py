@@ -13,6 +13,10 @@ import prepared
 import windows_archive as archive
 import pe_audit
 import manage_cache
+driver_spec=importlib.util.spec_from_file_location('windows_release',
+    Path(__file__).resolve().parents[1]/'tools/windows_release.py')
+driver=importlib.util.module_from_spec(driver_spec)
+driver_spec.loader.exec_module(driver)
 
 
 class Distribution(unittest.TestCase):
@@ -90,6 +94,19 @@ class Distribution(unittest.TestCase):
             with self.assertRaises(ValueError):prepared.import_prepared(bundle,output,source)
             self.assertEqual((output/'creator.qoi').read_bytes(),b'fixture')
             (source/'assets/file').write_bytes(b'changed')
+            with self.assertRaises(ValueError):prepared.validate(bundle,source)
+            (source/'assets/file').write_bytes(b'input')
+            added=source/'assets/new';added.write_bytes(b'new untracked input')
+            with self.assertRaises(ValueError):prepared.validate(bundle,source)
+            first=prepared.source_files(source)
+            first_identity=driver.source_identity(source)
+            added.write_bytes(b'changed untracked input')
+            self.assertNotEqual(first,prepared.source_files(source))
+            second_identity=driver.source_identity(source)
+            self.assertEqual(first_identity['source_status'],second_identity['source_status'])
+            self.assertNotEqual(first_identity['source_fingerprint'],second_identity['source_fingerprint'])
+            added.unlink();(source/'assets/file').unlink()
+            self.assertIsNone(prepared.inputs(source)['assets/file'])
             with self.assertRaises(ValueError):prepared.validate(bundle,source)
 
 

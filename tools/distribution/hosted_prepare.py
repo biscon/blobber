@@ -70,6 +70,11 @@ def _prepare(run):
 def prepare(run):
     import fcntl
     if not shutil.which('git'):raise RuntimeError('Git is required on the Linux orchestration host')
+    available=int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines()
+                       if line.startswith('MemAvailable:')))*1024
+    free=shutil.disk_usage(ROOT).free
+    if available<3*1024**3 or free<12*1024**3:raise RuntimeError('Insufficient preparation memory/scratch')
+    print(json.dumps({'available_memory_bytes':available,'free_scratch_bytes':free}),flush=True)
     build=ROOT/'build-wd01-prepare'
     build.mkdir(exist_ok=True)
     owner=build/'.wd01-prepare-owner.json'

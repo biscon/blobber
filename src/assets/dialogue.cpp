@@ -89,8 +89,8 @@ unsigned participant(const Node& n, const DialogueCharacter& c) {
 unsigned asset(const Node& n, const std::filesystem::path& directory, std::vector<std::string>& files,
                unsigned capacity) {
     const auto name = text(n, 240);
-    const std::filesystem::path relative(name);
-    if (relative.is_absolute() || relative.has_root_name())
+    const auto relative = std::filesystem::u8path(name);
+    if (relative.has_root_path())
         throw std::runtime_error("Asset path must be relative");
     const auto root = std::filesystem::weakly_canonical(directory);
     const auto path = std::filesystem::weakly_canonical(root / relative);

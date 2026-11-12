@@ -15,14 +15,25 @@ ROOT = Path(__file__).resolve().parents[2]
 MAX_BYTES = 2 * 1024**3
 
 
+def source_files(root):
+    names = subprocess.check_output(['git', '-C', str(root), 'ls-files', '-z', '--cached',
+                                     '--others', '--exclude-standard']).decode('utf-8').split('\0')
+    ledger = {}
+    for name in sorted(set(names) - {''}):
+        path = root / name
+        require(not path.is_symlink() and not getattr(path, 'is_junction', lambda: False)(), 'Source link')
+        ledger[name] = digest(regular(path)) if path.exists() else None
+    return ledger
+
+
 def inputs(root):
     # Conservative transitive source envelope: no independent artwork allowlist.
     # CMake/tool edits invalidate the envelope, including added/deleted bake inputs.
-    names = subprocess.check_output(['git', '-C', str(root), 'ls-files', '-z']).decode().split('\0')
-    selected = [n for n in names if n and (n.startswith(('assets/', 'src/', 'cmake/')) or
+    names = source_files(root)
+    selected = [n for n in names if (n.startswith(('assets/', 'src/', 'cmake/')) or
                 n == 'CMakeLists.txt' or n == 'packaging/linux/lock.json' or
                 n.startswith(('tools/bake', 'tools/prepare', 'tests/support/')) or n == 'tools/distribution_compatibility.cpp')]
-    return {n: digest(regular(root / n)) for n in sorted(selected)}
+    return {n: names[n] for n in selected}
 
 
 def input_digest(root):
