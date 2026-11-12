@@ -21,9 +21,9 @@ acceptance retain their existing status.
 | Field | Current value |
 | --- | --- |
 | Active slice | WD01 — Windows readiness and manual build; In progress — implementation |
-| Next eligible slice | WD01 implementation after detailed-design review and explicit instruction; LD04 remains gated on WD01 acceptance |
+| Next eligible slice | LD04 only after implemented WD01 is accepted; no automatic advancement |
 | Implemented distribution support | Curated baseline stage/audit, versioned archive and passing Ubuntu/Debian relocated smoke; no CI |
-| Awaiting user review | [Proposed WD01 detailed design](linux_distribution_wd01.md); LD01–LD03 remain accepted and closed |
+| Awaiting user review | None while WD01 implementation/verification is in progress; its design was reviewed and continuation authorized |
 | Known environment | Public repository on github.com, confirmed by the user |
 | Next action | Implement reviewed WD01 design and verify its native hosted artifact; stop at Ready for review |
 
@@ -163,7 +163,7 @@ source revision, toolchain and content identity so results can be reproduced.
 | LD01 | Runtime inventory and clean dist-stage target | Existing game and asset pipeline | Accepted and closed — 2026-11-11 |
 | LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Accepted and closed — 2026-11-11 |
 | LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Accepted and closed — 2026-11-11 |
-| WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | In progress — planning; [proposed design](linux_distribution_wd01.md) awaiting review |
+| WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | In progress — implementation; [reviewed design/progress](linux_distribution_wd01.md) |
 | LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | Planned — after WD01 acceptance |
 
 ### LD01 — Runtime content and clean staging

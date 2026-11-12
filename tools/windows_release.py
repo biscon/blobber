@@ -20,10 +20,10 @@ from windows_archive import package
 from windows_smoke import smoke
 
 ROOT=Path(__file__).resolve().parents[1]
-TESTS=['agent_artifacts_tools','rng_portability','platform_io','platform_io_process','library','arena','campaign_save_smoke','options','packaged_options',
+TESTS=['rules','ai','campaign_save','agent_artifacts_tools','rng_portability','platform_io','platform_io_process','library','arena','campaign_save_smoke','options','packaged_options',
        'runtime_inventory','dist_staging','npc_metadata','dialogue','audio','music','menu','gameplay_startup',
        'distribution_smoke','buttons','windows_distribution_tools','creator_art','portraits']
-TARGETS=['blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
+TARGETS=['blobber_rules_tests','blobber_ai_tests','blobber_bake_world','blobber_bake_creator','blobber_bake_portraits','blobber_rng_portability_tests','blobber_platform_io_tests','blobber_library_tests','blobber_arena_tests','blobber_campaign_save_tests',
          'blobber_options_tests','blobber_packaged_options_tests','blobber_distribution_tests','blobber_npc_metadata_tests',
          'blobber_dialogue_tests','blobber_audio_tests','blobber_music_tests','blobber_menu_tests','blobber_gameplay_startup_tests',
          'blobber_distribution_smoke_tests','blobber_buttons_tests','blobber_distribution_compatibility','blobber_validate_prepared',
@@ -57,9 +57,24 @@ def build_release(run,bundle,build,allow_dirty):
     require(run.is_dir() and (run/'.agent-run.json').is_file(),'Owned run directory required')
     require(shutil.disk_usage(run).free>=8*1024**3,'Insufficient scratch space')
     ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(),0x4000)
+    build.mkdir(exist_ok=True)
+    owner=build/'.windows-build-owner.json'
+    ownership={'version':1,'source':str(ROOT),'platform':'native-msvc-x64'}
+    if owner.exists():require(json.loads(owner.read_text())==ownership,'Windows build ownership mismatch')
+    else:
+        require(not any(build.iterdir()),'Refusing unowned nonempty build')
+        owner.write_bytes(encoded(ownership))
+    cache_path=build/'CMakeCache.txt'
+    existing=dict(line.split('=',1) for line in cache_path.read_text().splitlines()
+                  if '=' in line and not line.startswith(('#','//'))) if cache_path.is_file() else {}
+    configured_cmake=regular(existing.get('CMAKE_COMMAND:INTERNAL',shutil.which('cmake') or ''))
+    configured_ninja=regular(existing.get('CMAKE_MAKE_PROGRAM:FILEPATH',
+                            existing.get('CMAKE_MAKE_PROGRAM:UNINITIALIZED',shutil.which('ninja') or '')))
     environment=source_identity()
     require(not environment['dirty'] or allow_dirty,'Dirty source requires --allow-dirty')
-    tools={name:capture([name,'--version']).splitlines()[0] for name in ['cmake','ninja','python']}
+    tools={'cmake':capture([configured_cmake,'--version']).splitlines()[0],
+           'ninja':capture([configured_ninja,'--version']).splitlines()[0],
+           'python':capture([sys.executable,'--version']).splitlines()[0]}
     # cl reports its version to stderr; preserve both streams, regardless of no-input exit code.
     compiler=subprocess.run(['cl','/Bv'],capture_output=True,text=True)
     tools['compiler']=compiler.stdout+compiler.stderr
@@ -74,13 +89,6 @@ def build_release(run,bundle,build,allow_dirty):
         with (run/name).open('w',encoding='utf-8') as log:
             result=subprocess.run(list(map(str,args)),stdout=log,stderr=subprocess.STDOUT)
         if result.returncode:raise RuntimeError(name+' failed:\n'+(run/name).read_text(encoding='utf-8',errors='replace')[-14000:])
-    build.mkdir(exist_ok=True)
-    owner=build/'.windows-build-owner.json'
-    ownership={'version':1,'source':str(ROOT),'platform':'native-msvc-x64'}
-    if owner.exists():require(json.loads(owner.read_text())==ownership,'Windows build ownership mismatch')
-    else:
-        require(not any(build.iterdir()),'Refusing unowned nonempty build')
-        owner.write_bytes(encoded(ownership))
     with writer(build):
         manifest=prepared.validate(bundle,ROOT)
         environment['prepared']={k:manifest[k] for k in ['producer_revision','input_digest','producer_environment','identities']}
@@ -95,7 +103,7 @@ def build_release(run,bundle,build,allow_dirty):
             with tarfile.open(archive) as tar:tar.extractall(destination,filter='data')
             roots=list(destination.iterdir());require(len(roots)==1 and roots[0].is_dir(),'Dependency root mismatch')
             overrides.append('-DFETCHCONTENT_SOURCE_DIR_'+name.upper()+'='+str(roots[0]))
-        command(['cmake','-S',ROOT,'-B',build,'-G','Ninja','-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',
+        command([configured_cmake,'-S',ROOT,'-B',build,'-G','Ninja','-DCMAKE_MAKE_PROGRAM='+str(configured_ninja),'-DCMAKE_BUILD_TYPE=Release','-DBUILD_TESTING=ON',
                  '-DBLOBBER_WINDOWS_DISTRIBUTION=ON','-DBLOBBER_PREPARED_INPUT='+str(bundle),*overrides],'windows-configure.log')
         cache=dict(line.split('=',1) for line in (build/'CMakeCache.txt').read_text().splitlines() if '=' in line and not line.startswith(('#','//')))
         cmake=regular(cache['CMAKE_COMMAND:INTERNAL'])

@@ -12,9 +12,22 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools/distribution'))
 import prepared
 import windows_archive as archive
 import pe_audit
+import manage_cache
 
 
 class Distribution(unittest.TestCase):
+    def test_owned_cache_bound(self):
+        key='wd01-prepared-v1-'+'a'*64
+        records=[{'id':i,'key':'wd01-prepared-v1-'+str(i)*64,'size_in_bytes':500*1024**2,
+                  'created_at':str(i)} for i in range(1,5)]
+        records.append({'id':99,'key':'unrelated-cache','size_in_bytes':3*1024**3,'created_at':'9'})
+        self.assertEqual(set(manage_cache.removals(records,key)),{1,2,3})
+        records.append({'id':5,'key':key,'size_in_bytes':500*1024**2,'created_at':'5'})
+        self.assertEqual(set(manage_cache.removals(records,key)),{1,2,3})
+        records[-1]['size_in_bytes']=2*1024**3
+        self.assertIn(5,manage_cache.removals(records,key))
+        self.assertNotIn(99,manage_cache.removals(records,key))
+
     def test_path_rejection(self):
         for n in ['../escape','C:/file','a\\b','a/CON.txt','a/x:ads','a/file.','a/file ','/absolute','a/NUL']:
             with self.subTest(n=n), self.assertRaises(ValueError): archive.windows_path(n)

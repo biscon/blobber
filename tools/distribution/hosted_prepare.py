@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -46,9 +47,12 @@ def _prepare(run):
     command(base+['python3','-c',
         'import json,pathlib,sys; d=json.loads(pathlib.Path("/build/baseline-build.json").read_text()); d["image_id"]=sys.argv[1]; print(json.dumps(d))',
         image_id],'producer-environment.json')
-    command(base+['python3','/src/tools/distribution/prepared.py','export','--source','/src','--prepared','/build/assets/prepared',
-                 '--output','/transfer/wd01-prepared','--environment','/run-output/producer-environment.json',
-                 '--validation','/run-output/prepare-validation.log'],'prepare-export.log')
+    # The accepted compiler image deliberately has no Git. Provenance/export run
+    # on the host; only native bakers and loaders run inside the image.
+    command([sys.executable,str(ROOT/'tools/distribution/prepared.py'),'export',
+             '--source',str(ROOT),'--prepared',str(build/'assets/prepared'),
+             '--output',str(ROOT/'output/wd01-prepared'),'--environment',str(run/'producer-environment.json'),
+             '--validation',str(run/'prepare-validation.log')],'prepare-export.log')
     command(base+['/build/blobber_distribution_compatibility','export','/transfer/wd01-prepared/compatibility'],'prepare-compatibility.log')
     # Bound compressed transfer conservatively before requesting remote cache storage.
     import zlib
@@ -65,6 +69,7 @@ def _prepare(run):
 
 def prepare(run):
     import fcntl
+    if not shutil.which('git'):raise RuntimeError('Git is required on the Linux orchestration host')
     build=ROOT/'build-wd01-prepare'
     build.mkdir(exist_ok=True)
     owner=build/'.wd01-prepare-owner.json'

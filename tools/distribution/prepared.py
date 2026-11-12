@@ -49,8 +49,9 @@ def files(root):
 
 def validate(bundle, source):
     manifest = json.loads(regular(bundle / 'prepared.json').read_text())
+    observed = inputs(source)
     require(manifest.get('version') == 1, 'Unsupported prepared input')
-    require(manifest['inputs'] == inputs(source) and manifest['input_digest'] == input_digest(source),
+    require(manifest['inputs'] == observed and manifest['input_digest'] == __import__('hashlib').sha256(encoded(observed)).hexdigest(),
             'Prepared source inputs differ')
     require(manifest['files'] == files(bundle / 'prepared'), 'Prepared file ledger differs')
     return manifest
@@ -59,13 +60,16 @@ def validate(bundle, source):
 def export(prepared, output, source, environment=None, identities=None):
     require(not output.exists(), 'Export output already exists')
     ledger = files(prepared)
+    # Fail before copying the large publication if host provenance is unavailable.
+    revision = subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip()
+    observed = inputs(source)
+    manifest = {'version': 1, 'producer_revision': revision,
+                'input_digest': __import__('hashlib').sha256(encoded(observed)).hexdigest(),
+                'inputs': observed, 'files': ledger,
+                'producer_environment': environment or {}, 'identities': identities or {}}
     output.mkdir(parents=True)
     try:
         shutil.copytree(prepared, output / 'prepared')
-        manifest = {'version': 1, 'producer_revision': subprocess.check_output(
-            ['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),
-            'input_digest': input_digest(source), 'inputs': inputs(source), 'files': ledger,
-            'producer_environment': environment or {}, 'identities': identities or {}}
         (output / 'prepared.json').write_bytes(encoded(manifest))
         validate(output, source)
     except BaseException:

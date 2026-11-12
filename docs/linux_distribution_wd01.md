@@ -3,9 +3,9 @@
 Status: **In progress — implementation, 2026-11-12. Design reviewed; the user
 instructed continuation. Mechanical verification and user acceptance pending.**
 
-This document implements the documentation handoff from the conversation plan,
-not the Windows port. No interfaces, targets, scripts or workflow described as
-proposed below exist yet. Accepted LD01–LD03 behavior and acceptance remain in the
+This document records the reviewed WD01 design and its implementation progress.
+Requirements below remain the target contract; the handoff records which checks
+actually ran. Accepted LD01–LD03 behavior and acceptance remain in the
 [roadmap](linux_distribution_plan.md) and [LD03 handoff](linux_distribution_ld03.md).
 The user approved this design and authorized WD01 implementation after the planning
 handoff. Complete WD01 and stop at Ready for review; do not start LD04 or publish.
@@ -269,6 +269,12 @@ runners finish, without sweeping other repository caches. GitHub cache retention
 is separate from artifact retention; cache availability is not a correctness promise.
 See [cross-OS caching and key behavior](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching).
 
+The manager now runs on the Linux preparation job before cache restoration, after
+previous runs have finished through workflow concurrency. That job alone requests
+`actions: write` for cache deletion; its token is exposed only to the manager step.
+It matches the exact WD01 digest-key namespace, reserves space for a cache miss and
+preserves unrelated caches. Windows retains read-only repository permissions.
+
 ### Curated Windows ZIP
 
 Extend the current curated runtime inventory/stage contract for native Windows x64
@@ -510,3 +516,40 @@ and cleaned with `tools/agent_artifacts.py clean RUN_DIRECTORY` and `--apply`:
 three disposable files / 4,303 bytes removed. No runner, capture, retained diagnostic
 exception or temporary extract remains. Existing LD03 captures/build caches and
 user data were preserved. No public/remote operation occurred; stop for design review.
+
+## Implementation progress — 2026-11-12
+
+The user reviewed the design and instructed continuation. Work is on
+`distribution/wd01`; prerequisite commits `08217e6` and `e48505d` remain unchanged.
+Core port/package/workflow work is in `9abc9fa`, provider evidence in `fcb81b5`, and
+the portable RNG/verification correction in `24df866` (later handoff commits may follow).
+
+Native Linux focused checks passed before hosting: library/arena/campaign-save
+smoke (3 suites, 1.03 s), 16 selected content/options/menu/package/controller suites
+(1.23 s), and extended campaign persistence (2.96 s). The RNG correction then passed
+10 selected rules/AI/allocation/persistence/I/O suites in 7.54 s. Its golden-state
+check compares the owned engine's outputs and text to the previous Linux library
+representation across twist boundaries; the new code also imports the campaign/
+library/scenario fixtures exported by the pre-correction build. No production bake
+or benchmark was run locally for those checks. Actionlint 1.7.12 passes.
+
+The narrow [bootstrap PR #4](https://github.com/biscon/blobber/pull/4) added only the
+manual workflow and was merged as authorized, registering it on `main`. The full
+Windows code remains on the review branch. No push/PR/merge/tag/Release event builds
+are enabled, and no public Release/tag was published.
+
+First [hosted run](https://github.com/biscon/blobber/actions/runs/43119803791),
+source `fcb81b50dbf318662f02d7077fc0f1eaeb9b03fc`, was deliberately canceled during
+Linux preparation after the portability audit exposed the incompatible native
+MSVC RNG stream contract. It did not execute Windows or produce an accepted package.
+Its ephemeral runner was closed; the recorded cleanup ran during cancellation before
+the platform's final orphan termination. Cancellation cleanup now skips filesystem deletion while writers may still be
+active: GitHub terminates the canceled ephemeral runner and disposes its storage.
+Ordinary completed/failed commands are awaited, then the marked run is previewed
+and cleaned by the helper. This avoids deleting logs while an orphan still writes.
+
+Second [hosted run](https://github.com/biscon/blobber/actions/runs/43122551224),
+source `24df8662887e49fdf022abe6bac65621e9949e43`, is the corrected attempt. Its outcome,
+native tool identities, downloaded artifact, remaining corrections and cleanup are
+pending and must replace this in-progress note before Ready for review. Neither
+Windows execution nor extracted-package success is claimed yet.

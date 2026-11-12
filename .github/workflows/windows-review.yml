@@ -14,6 +14,9 @@ jobs:
   prepare:
     runs-on: ubuntu-22.04
     timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: write # Delete only the owned prepared-cache namespace before a manual build.
     outputs:
       prepared-key: ${{ steps.key.outputs.key }}
     env:
@@ -35,6 +38,11 @@ jobs:
           python3 -c 'import shutil; assert shutil.disk_usage(".").free >= 12*1024**3'
           echo "key=$(python3 tools/distribution/prepared.py key)" >> "$GITHUB_OUTPUT"
           echo "RUN_DIR=$(python3 tools/agent_artifacts.py create)" >> "$GITHUB_ENV"
+      - name: Bound owned prepared cache storage
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PREPARED_KEY: ${{ steps.key.outputs.key }}
+        run: python3 tools/distribution/manage_cache.py "$PREPARED_KEY"
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         id: publication
         with:
@@ -47,7 +55,7 @@ jobs:
       - name: Check portable transfer
         run: python3 tools/distribution/prepared.py verify --bundle output/wd01-prepared
       - name: Clean owned diagnostics
-        if: always()
+        if: always() && !cancelled()
         run: |
           if test -n "$RUN_DIR"; then
             python3 tools/agent_artifacts.py clean "$RUN_DIR"
@@ -110,7 +118,7 @@ jobs:
             }
           }
       - name: Clean owned diagnostics
-        if: always()
+        if: always() && !cancelled()
         shell: pwsh
         run: |
           if ($env:RUN_DIR) {

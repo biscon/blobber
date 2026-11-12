@@ -43,8 +43,9 @@ game on Windows. [WD01 detailed design](linux_distribution_wd01.md) is **In prog
 — implementation; reviewed and authorized, 2026-11-12**. It specifies Windows 11 x64,
 native hosted MSVC/static dependencies, small native I/O and Unicode-path boundaries,
 validated Linux-prepared publication import/cache, ZIP/PE checks and the narrow
-agent-managed registration PR during later authorized implementation. No Windows
-code/workflow has been implemented. The user added the `gh` workflow scope; access
+agent-managed registration PR. Native I/O, prepared import, ZIP/PE helpers and the
+manual workflow are implemented on the review branch; hosted Windows verification
+is in progress. The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflow scope; access
 was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.
 LD04 consolidates Linux and Windows automation only after WD01 acceptance. Accepted
