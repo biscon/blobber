@@ -3,7 +3,7 @@
 Created: 2026-11-11.
 Status: **LD01 and LD02 accepted and closed by the user, 2026-11-11.
 LD03 accepted and closed by the user, 2026-11-11.
-WD01 is In progress — implementation, following user review of its detailed design.
+WD01 is Ready for review — implemented and mechanically verified; user acceptance pending.
 LD04 remains planned, after WD01 acceptance.**
 
 Deliver downloadable desktop packages containing the executable and only required
@@ -20,12 +20,12 @@ acceptance retain their existing status.
 
 | Field | Current value |
 | --- | --- |
-| Active slice | WD01 — Windows readiness and manual build; In progress — implementation |
+| Active slice | WD01 — Windows readiness and manual build; Ready for review |
 | Next eligible slice | LD04 only after implemented WD01 is accepted; no automatic advancement |
-| Implemented distribution support | Accepted Linux stage/archive/smoke; Windows native I/O, prepared import, ZIP/PE and manual workflow on the review branch, hosted verification in progress |
-| Awaiting user review | None while WD01 implementation/verification is in progress; its design was reviewed and continuation authorized |
+| Implemented distribution support | Accepted Linux stage/archive/smoke; native Windows port, validated prepared import, ZIP/PE, extracted smoke and manual hosted workflow verified on the review branch |
+| Awaiting user review | WD01 Windows ZIP; native Windows 11 physical-GPU/audio play review and explicit acceptance |
 | Known environment | Public repository on github.com, confirmed by the user |
-| Next action | Implement reviewed WD01 design and verify its native hosted artifact; stop at Ready for review |
+| Next action | Review the selected WD01 ZIP using its linked Windows 11 recipe; stop until explicit acceptance |
 
 **Approved roadmap revision, 2026-11-11:** insert WD01 before LD04 and expand LD04
 to automate both supported packages. WD01 introduces the minimum manual Windows
@@ -165,7 +165,7 @@ source revision, toolchain and content identity so results can be reproduced.
 | LD01 | Runtime inventory and clean dist-stage target | Existing game and asset pipeline | Accepted and closed — 2026-11-11 |
 | LD02 | Controlled Linux baseline build and dependency/ABI checks | Accepted LD01 content contract | Accepted and closed — 2026-11-11 |
 | LD03 | Versioned archive, checksums and relocated-package verification | Accepted LD02 release build | Accepted and closed — 2026-11-11 |
-| WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | In progress — implementation; [reviewed design/progress](linux_distribution_wd01.md) |
+| WD01 | Windows port, native hosted build, ZIP and manual review artifact | Accepted LD03 content/package contract | Ready for review — [implementation/evidence](linux_distribution_wd01.md#selected-review-artifact) |
 | LD04 | Combined Linux/Windows hosted automation and compatibility evidence | Accepted LD03 and WD01 package/verification commands | Planned — after WD01 acceptance |
 
 ### LD01 — Runtime content and clean staging
@@ -292,11 +292,17 @@ build distribution location; clean disposable intermediate copies and extracts.
 
 ### WD01 — Windows readiness and manual build
 
-**In progress — implementation; [reviewed design and progress](linux_distribution_wd01.md),
-2026-11-12. The user reviewed the design and instructed continuation.**
-Native platform I/O, prepared import, ZIP/PE tooling and the manual workflow are
-implemented on the review branch. Hosted verification is in progress; no playable
-Windows package success is claimed until its checks complete.
+**Ready for review — implemented and mechanically verified, 2026-11-12;
+[design and handoff](linux_distribution_wd01.md#selected-review-artifact). User acceptance pending.**
+Native hosted run [43153009429](https://github.com/biscon/blobber/actions/runs/43153009429)
+passed: 26 suites, one audio-device skip, prepared/import/stage/PE/ZIP validation,
+read-only Unicode extracted New Campaign/save/fresh-process Continue under software
+OpenGL, and depth-copy/readback/cleanup. The downloaded 538.75 MiB ZIP also passed
+local full-ledger/checksum/fresh PE and Windows-to-Linux format checks. Six inspected
+captures and the intentional local bundle are linked in the handoff. Physical-GPU
+and audio playback/listening on Windows 11 remain user review. The full port stays
+on `distribution/wd01`; only the authorized manual-workflow bootstrap was merged
+to main. No public Release/tag or LD04 work was created.
 The design records native I/O/Unicode paths, Windows 11 x64, static MSVC/dependencies,
 prepared-publication import/cache, ZIP/PE checks, manual dispatch/bootstrap and
 focused verification. The user chose Linux preparation followed by native Windows
@@ -561,3 +567,9 @@ the 36 existing changed/untracked files in local prerequisite commit `08217e6` b
 documentation edits. No Windows code, workflow, build/bake, push, PR, merge, run,
 tag or Release was created. Planning checks/cleanup are recorded in the WD01 design;
 review and implementation remain separate, with LD04 gated on accepted WD01.
+
+WD01 implementation handoff, 2026-11-12: native Windows port/package/manual workflow
+and exact hosted/downloaded artifact verification are complete. The checkpoint,
+tracker, system overview and linked handoff are Ready for review, with six selected
+captures and explicit Windows 11/audio limits. Prior working-tree changes remain in
+`08217e6`. Only explicit user acceptance closes WD01; LD04 remains gated.

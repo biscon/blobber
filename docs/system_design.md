@@ -39,13 +39,17 @@ claim; notice gaps remain.
 **WD01 before LD04**. WD01 covers Windows platform I/O/user paths, dependency and
 prepared-asset portability, a versioned ZIP and a minimal manual hosted build/test
 workflow managed from Linux with `gh`. User review requires only the downloaded
-game on Windows. [WD01 detailed design](linux_distribution_wd01.md) is **In progress
-— implementation; reviewed and authorized, 2026-11-12**. It specifies Windows 11 x64,
-native hosted MSVC/static dependencies, small native I/O and Unicode-path boundaries,
-validated Linux-prepared publication import/cache, ZIP/PE checks and the narrow
-agent-managed registration PR. Native I/O, prepared import, ZIP/PE helpers and the
-manual workflow are implemented on the review branch; hosted Windows verification
-is in progress. The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflow scope; access
+game on Windows. [WD01 design/handoff](linux_distribution_wd01.md#selected-review-artifact)
+is **Ready for review — implemented and mechanically verified, 2026-11-12;
+user acceptance pending**. Native Windows I/O/Unicode paths, fixed-storage portable
+MT19937 save state, validated Linux-prepared import/cache, curated ZIP/PE checks
+and a manual hosted workflow are implemented on the review branch. The exact native
+MSVC artifact passes 26 selected suites (one audio-device skip), complete data/import
+validation, read-only Unicode extracted New Campaign/save/fresh-process Continue
+under software OpenGL, and hidden depth-copy/readback/cleanup. Local download checks
+and Windows-to-Linux save interchange pass; six inspected captures are retained.
+Windows 11 physical-GPU/audio playback/listening remain user review.
+The narrow workflow-only bootstrap PR is merged. The user added the `gh` workflow scope; access
 was confirmed read-only. Both WD01 and final LD04 builds are manual-only through
 Run workflow or `gh workflow run`, without push/PR/merge/tag/Release-event triggers.
 LD04 consolidates Linux and Windows automation only after WD01 acceptance. Accepted

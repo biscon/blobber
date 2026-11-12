@@ -1,14 +1,18 @@
 # WD01 — Windows readiness and manual review build
 
-Status: **In progress — implementation, 2026-11-12. Design reviewed; the user
-instructed continuation. Mechanical verification and user acceptance pending.**
+Status: **Ready for review — implemented and mechanically verified, 2026-11-12.
+Windows 11 play review and explicit user acceptance pending.**
 
-This document records the reviewed WD01 design and its implementation progress.
+This document records the reviewed WD01 design and implementation handoff.
+The [selected Windows ZIP and evidence](#selected-review-artifact) passed native
+hosted verification and local download checks. Six [inspected captures](screenshots/windows-distribution/wd01/README.md)
+are retained; physical-GPU/audio listening remain user review.
 Requirements below remain the target contract; the handoff records which checks
 actually ran. Accepted LD01–LD03 behavior and acceptance remain in the
 [roadmap](linux_distribution_plan.md) and [LD03 handoff](linux_distribution_ld03.md).
 The user approved this design and authorized WD01 implementation after the planning
-handoff. Complete WD01 and stop at Ready for review; do not start LD04 or publish.
+handoff. Implementation stops at Ready for review; LD04 and public publication
+have not started.
 
 ## Decisions and existing constraints
 
@@ -345,6 +349,16 @@ production publication artifact, build tree or large raw log archive is uploaded
 Keep failure evidence compact and marked failed; never label an older package as
 the result of a failed attempt. Infrastructure-unavailable smoke is recorded separately.
 
+The optional `code_check` dispatch input defaults to false. For native port
+iteration, `-f code_check=true` compiles/links the real application entry point and
+libraries, native bakers and selected miniature/CPU tests without preparing assets
+or producing a ZIP. `blobber_code_check` shares the application's source, manifest,
+static-runtime policy and libraries; it has no runtime asset dependencies. It runs
+`--help` and the PE audit, and claims no playable-package verification. Normal
+manual dispatch still requires the complete preparation/import/package/smoke path.
+Ninja `-k 0` collects independent compilation failures with two workers; bounded
+compiler diagnostics avoid another full attempt just to expose the next error.
+
 ### Authorized Git/GitHub sequence
 
 1. Recheck account/access, remote/default branch and current working tree without
@@ -361,8 +375,9 @@ the result of a failed attempt. Infrastructure-unavailable smoke is recorded sep
    authorized. Do not merge the full Windows implementation to register the trigger,
    bypass repository rules or force-push. Keep SSH if it works; an authentication
    fallback must use the `gh` credential helper without printing/storing a token.
-5. Push the full WD01 branch and dispatch it by `--ref distribution/wd01`. Capture
-   the source SHA before dispatch. The workflow file must exist both on default
+5. Push the full WD01 branch and dispatch it by `--ref distribution/wd01`. Verify
+   the pushed remote branch SHA before dispatch and immediately check the actual
+   run SHA; push visibility can lag. Capture the source SHA before dispatch. The workflow file must exist both on default
    `main` for registration and on the dispatched branch; `--ref` alone does not
    register a new workflow. No event-triggered build runs when the bootstrap merges.
 6. Resolve the exact run by workflow, branch/source SHA, actor and dispatch time;
@@ -444,7 +459,13 @@ and GL vendor/renderer/version. A PATH edit alone cannot override normal system 
 search order. See [provider](https://github.com/pal1000/mesa-dist-win/releases/tag/26.2.6)
 and [launcher behavior](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-setdlldirectoryw).
 
-Copy the minimal verifier/launcher inputs into the owned run before isolation.
+Keep verifier/launcher scripts outside the denied asset roots. Before compilation,
+preflight the same restrictions/restoration on an owned Unicode directory: deny
+new-file creation and nested-file overwrite under RX, preserve readable contents,
+deny nested reads under the asset policy, then prove restored policy and access.
+Use built-in Windows PowerShell and .NET Framework DACL APIs without module
+autoload; save only Access sections, preserve owner/group/audit metadata, and
+normalize only the computed AI header marker when comparing ordered policies.
 Temporarily deny read access to source assets and original build asset roots;
 verify access denial using the same child identity. Save/restore original ACLs in
 `finally`, including on timeout/failure; do not rename the user's checkout. Leave
@@ -489,104 +510,78 @@ Implementation stops at **Ready for review**. Only explicit user acceptance
 closes WD01 and makes LD04 eligible. No combined Linux/Windows release automation,
 public publication or automatic advancement is part of this documentation handoff.
 
-## Planning verification and current handoff
+## Implementation and verification — 2026-11-12
 
-The planning work read AGENTS.md, system_design.md, the roadmap, accepted LD03
-handoff and relevant persistence/path/content/build/packaging/smoke/test code. The
-read-only GitHub check confirmed `biscon/blobber`, public `main`, admin access,
-Actions enabled, zero registered workflows and OAuth `repo` plus `workflow` scopes.
-No credential values were read; no authentication refresh or remote mutation ran.
+Implementation is on `distribution/wd01`. The user's 36 preexisting changed or
+untracked files were preserved unchanged in prerequisite commit `08217e6`; planning
+is `e48505d`. The full port has not been merged to main. The authorized narrow
+[bootstrap PR #4](https://github.com/biscon/blobber/pull/4) registered only the manual
+workflow on main. Merging that bootstrap into the review branch (`36cc467`) left
+the whole file tree identical to the preceding verified `302b5d0` commit. The clean
+bootstrap worktree was removed; its branch/history remain. No public Release/tag
+or LD04 implementation was created.
 
-Before planning edits, `git diff --check` passed and the 36 existing changed/
-untracked files were byte-hashed into the owned run, then committed as `08217e6`.
-Documentation verification checks local links, heading/checkpoint consistency,
-manual-only trigger policy and unchanged prerequisite source bytes. No gameplay
-build/test, bake, Windows execution, archive or hosted workflow is claimed by this
-planning step. That planning deliverable was the proposed design for review; the implementation
-handoff below records subsequent work.
+### Implemented boundaries and portability corrections
 
-Executed planning checks, 2026-11-12: `git diff --check` passed; a focused Python
-check resolved **283 local Markdown links** across the three planning/overview
-documents, confirmed exactly LD01/LD02/LD03/WD01/LD04 in slice order, checked active
-WD01/review status, current scope notes and the manual-only trigger policy, and
-confirmed there is no `.github/workflows` directory. The prerequisite byte ledger
-matches all 36 files in `08217e6`; 34 remain byte-identical in the working tree and
-only the two intended existing planning/overview documents changed. The third
-changed document is this newly authored design. Staged whitespace and final Git
-scope are checked before the documentation commit.
+- `blobber_os` owns native file handles, locks, secure entropy, temporary-file
+  cleanup, publication and default user/executable paths. Stores retain their own
+  schemas, limits, revisions, backup ordering and failure outcomes. Settings/music
+  share only the publication primitive. Windows uses wide APIs and the application
+  converts wide arguments once; UTF-8 manifests and explicit path conversions
+  cover filename-based dependency APIs.
+- The owned fixed-storage MT19937 preserves the existing Linux state text and
+  sequence on MSVC. Its separate default/explicit-seeded constructors also support
+  existing aggregate initialization. No save/content version changed.
+- Imported prepared data is source/hash/identity checked; the game graph does not
+  schedule production bakers. Native bakers still compile and miniature loaders
+  run on Windows. No Linux executable is executed there.
+- Inventory roots reject original link/reparse ancestors before canonicalizing
+  Windows short/long path aliases. Dialogue and output names use UTF-8 explicitly;
+  audio/music/dialogue references reject drive/root-relative escapes. A campaign
+  fixture now closes its old reader before atomic replacement, matching the real
+  store's ownership contract and Windows delete-sharing rules.
+- Windows packaging uses the existing curated inventory, a transactional ZIP,
+  complete file ledger/CRC checks and a bounded PE import audit. Tools, Mesa,
+  original packed-world artwork and dynamic compiler-runtime DLLs are excluded.
+- Verification isolation uses native DACL rules and proves their effects before
+  compilation. A protected current-user read/execute allow rule makes the install
+  read-only; inherited ReadAndExecute deny rules hide source/build assets. Every
+  saved root is restored and checked in finally, even if another restoration fails.
 
-Owned planning run
-`output/agent-runs/20261111T225731Z-512e707955934866896ddfbd1f03f4a5/` was previewed
-and cleaned with `tools/agent_artifacts.py clean RUN_DIRECTORY` and `--apply`:
-three disposable files / 4,303 bytes removed. No runner, capture, retained diagnostic
-exception or temporary extract remains. Existing LD03 captures/build caches and
-user data were preserved. No public/remote operation occurred in the planning step;
-the user then reviewed the design and authorized implementation.
+### Focused local checks
 
-## Implementation progress — 2026-11-12
+Only affected targets/configurations ran, with at most two low-priority build
+workers and one test process. No local production rebake, benchmark, desktop input
+or physical-GPU run was performed. Configured tools came from each existing cache:
+CLion CMake/Ninja for `cmake-build-release`, `/usr/bin/cmake` and `/usr/bin/ninja`
+for `cmake-build-headless-release`; no cache was switched to another toolchain.
 
-The user reviewed the design and instructed continuation. Work is on
-`distribution/wd01`; prerequisite commits `08217e6` and `e48505d` remain unchanged.
-Core port/package/workflow work is in `9abc9fa`, provider evidence in `fcb81b5`, and
-the portable RNG/verification correction in `24df866` (later handoff commits may follow).
+| Selection and purpose | Observed result |
+| --- | --- |
+| Library/arena/campaign smoke; content/options/menu/package/controllers; full campaign persistence | 3 suites / 1.03 s; 16 / 1.23 s; campaign / 2.96 s |
+| RNG golden state/sequence, rules/AI/allocation/persistence/native I/O | 10 suites / 7.54 s; existing GCC state text and pre-correction interchange fixtures retained |
+| Unicode path decode/streaming, creator/portraits, audio/music/runtime/dialogue, stores and process contention | 12 suites / 0.97 s; both decode checks ran, no sound played |
+| Campaign reader lifetime, canonical inventory aliases and stage integration | 3 suites / 2.87 s |
+| Imported production graph | Fresh import graph and configured dry run schedule no production bake |
+| Python packaging/cache/import/PE/classifier/DACL policy | 8 focused checks pass, about 0.04 s |
+| Workflow/source hygiene | Actionlint 1.7.12, Python compilation and `git diff --check` pass |
 
-Native Linux focused checks passed before hosting: library/arena/campaign-save
-smoke (3 suites, 1.03 s), 16 selected content/options/menu/package/controller suites
-(1.23 s), and extended campaign persistence (2.96 s). The RNG correction then passed
-10 selected rules/AI/allocation/persistence/I/O suites in 7.54 s. Its golden-state
-check compares the owned engine's outputs and text to the previous Linux library
-representation across twist boundaries; the new code also imports the campaign/
-library/scenario fixtures exported by the pre-correction build. No production bake
-or benchmark was run locally for those checks. Actionlint 1.7.12 passes.
+Representative executed commands (not a matrix to rerun for documentation edits):
 
-The narrow [bootstrap PR #4](https://github.com/biscon/blobber/pull/4) added only the
-manual workflow and was merged as authorized, registering it on `main`. The full
-Windows code remains on the review branch. No push/PR/merge/tag/Release event builds
-are enabled, and no public Release/tag was published.
+```sh
+nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest \
+  --test-dir cmake-build-release \
+  -R '^(path_decode|path_stream_decode|creator_art|portraits|audio|music|audio_runtime|dialogue|library|arena|platform_io|platform_io_process)$' \
+  --parallel 1 --output-on-failure --no-tests=error
+nice -n 15 ionice -c 3 /usr/bin/ctest --test-dir cmake-build-headless-release \
+  -R '^(campaign_save|runtime_inventory|dist_staging)$' \
+  --parallel 1 --output-on-failure --no-tests=error
+python3 tests/windows_distribution_tests.py
+```
 
-First [hosted run](https://github.com/biscon/blobber/actions/runs/43119803791),
-source `fcb81b50dbf318662f02d7077fc0f1eaeb9b03fc`, was deliberately canceled during
-Linux preparation after the portability audit exposed the incompatible native
-MSVC RNG stream contract. It did not execute Windows or produce an accepted package.
-Its ephemeral runner was closed; the recorded cleanup ran during cancellation before
-the platform's final orphan termination. Cancellation cleanup now skips filesystem deletion while writers may still be
-active: GitHub terminates the canceled ephemeral runner and disposes its storage.
-Ordinary completed/failed commands are awaited, then the marked run is previewed
-and cleaned by the helper. This avoids deleting logs while an orphan still writes.
-
-Second [hosted run](https://github.com/biscon/blobber/actions/runs/43122551224),
-source `24df8662887e49fdf022abe6bac65621e9949e43`, compiled the native preparation
-tools, baked the publication and passed full typed validation. Export then failed
-because the intentionally minimal accepted compiler image contains no Git. The
-fix in `9931f7e` keeps that image unchanged and performs source provenance/export
-with host Git/Python; native baking/validation remain in the pinned container.
-Windows was skipped and no package was produced by this failed run.
-
-Third [hosted run](https://github.com/biscon/blobber/actions/runs/43124549100),
-source `9931f7ea17d143c67dc61eccfa9641865f2d5a46`, passed preparation and cached the
-validated transfer as `wd01-prepared-v1-8f86f441597591f5fb79c74b77f2490399a9eb1edbd922440b798b33ea05dc7d`
-(218,297,446 compressed cache bytes; deflate estimate 228,595,513). Its cold compiler
-image build took about 22 minutes; native baking itself took 53 seconds. Windows
-selected the required tool families and compiled 147/343 build steps before the
-missing Windows declarations in the BCrypt header stopped compilation. The native
-header ordering has been corrected. No Windows tests/package were produced by this
-failed attempt; the next corrected hosted run remains pending.
-
-
-### Additional verification corrections
-
-Source capture now includes tracked and untracked nonignored files and records
-tracked deletions. The final source check therefore catches byte changes to an
-untracked input even when Git status text is unchanged. The prepared envelope
-uses the same file listing, filtered to its preparation inputs; a clean checkout
-retains its previous digest. Six focused Python packaging/cache/import tests pass,
-including added/deleted/modified input rejection and invalid-import preservation.
-
-Portable temporary fixtures now use spaces and non-ASCII characters. The owned
-`path_decode` test exports a tiny WAV and decodes WAV/MP3 through real raylib filename
-APIs. `path_stream_decode` opens those filenames through `LoadMusicStream` without
-playing sound; CTest marks it skipped (77) when no audio device is available.
-The dedicated 522-byte MP3 fixture was generated once with:
+Tests own small generated fixtures under exclusive temporary directories containing
+spaces, æ and 日本. The dedicated 522-byte MP3 filename-decoding fixture was generated
+once; streaming opens it without playing and returns CTest skip 77 without a device:
 
 ```sh
 ffmpeg -f lavfi -i sine=frequency=440:sample_rate=22050:duration=0.06 \
@@ -594,18 +589,128 @@ ffmpeg -f lavfi -i sine=frequency=440:sample_rate=22050:duration=0.06 \
   -id3v2_version 0 -threads 1 tests/fixtures/path-tone.mp3
 ```
 
-The configured CLion CMake/Ninja pair rebuilt the affected graphics/application
-libraries and selected fixtures with two workers at low CPU/I/O priority. A prior
-dry run confirmed no production bakers were scheduled. Twelve selected suites
-passed in 0.97 s: `path_decode|path_stream_decode|creator_art|portraits|audio|music|audio_runtime|dialogue|library|arena|platform_io|platform_io_process`
-(anchored CTest expression, one test process). Both audio decode checks ran locally;
-streaming was not skipped and no sound was played. Native Windows execution of
-these corrections remains pending. No Linux production bake or desktop control ran.
-The same path audit corrected the arena folder display to UTF-8 and kept native
-paths until audio API boundaries. Audio/music/dialogue paths reject Windows drive/
-root-relative forms; a missing audio override cannot restore an unsafe base path.
-The drivers now check at least 3 GiB available RAM plus their scratch-space bound
-before costly work and record the Windows resource preflight in build metadata.
+### Hosted verification and resolved failures
+
+The successful native [code-check run 43139052241](https://github.com/biscon/blobber/actions/runs/43139052241)
+(source `302b5d0e3ddf86682a40bf0580cfe1473bba1bf5`) compiled/linked all selected
+application, tool and test targets, passed 26 suites and skipped only audio-device
+streaming (27 selected, 15.02 s). Entry-point `--help` and the AMD64/static-runtime
+PE audit passed. This mode produced no player artifact.
+
+Earlier full attempts exposed real integration issues and were corrected rather
+than counted as passing: the Linux image intentionally has no Git (export moved to
+host Git/Python), Windows header order and explicit includes, MSVC RNG construction,
+the retained campaign reader and Windows path aliases. One dispatch resolved the
+previous push; its exact SHA mismatch was caught and it was canceled before the
+native driver. Subsequent dispatches check the remote and actual run revisions.
+Canceled ephemeral runners are disposed by GitHub; cleanup skips deletion while
+canceled orphan writers may still be active.
+
+Full [run 43140724828](https://github.com/biscon/blobber/actions/runs/43140724828)
+(source `36cc467`) passed native suites, complete typed prepared validation,
+Linux-to-Windows interchange, staging and the actual player PE audit. Its first ZIP
+also passed local checksum/full manifest/CRC/metadata/fresh PE checks and native
+Windows-to-Linux fixture import. Graphics was honestly unverified before game
+launch: the hash-correct Mesa MSVC archive omitted WGL, as documented in the
+[26.2.6 upstream release](https://github.com/pal1000/mesa-dist-win/releases/tag/26.2.6).
+The selected same-version MinGW x64 verification provider has the WGL closure;
+its 55,815,794 bytes were independently hash-checked against the official digest.
+Only opengl32.dll, libgallium_wgl.dll and libdlclose-skip.dll are extracted with one
+7z thread, outside the player. The game remains native MSVC/static runtime.
+
+The next [provider run 43146739319](https://github.com/biscon/blobber/actions/runs/43146739319)
+reached that closure but Windows PowerShell module autoload failed before permission
+changes/game launch. Direct .NET Framework DACL APIs remove that dependency. Early
+preflight retries exposed only an auto-inherited AI descriptor marker and an
+ineffective CLI permission grant; regression coverage preserves all ordered ACE
+bytes/protection flags, and native DACL construction now replaces the CLI grant.
+The preflight keeps actual write/read-denial and restoration probes; success of a
+permission-setting command alone is never accepted as isolation evidence.
+
+The superseded artifact from 43140724828 (ID 13910881488) was deleted only after
+its downloaded backup passed full validation and its exact run/source/name were
+confirmed. Other artifacts, caches and accepted Linux evidence were preserved.
+
+### Selected review artifact
+
+Complete manual [run 43153009429](https://github.com/biscon/blobber/actions/runs/43153009429)
+**passed**, pinned to `03159b3fc29f3a2bfbca8abab982d8802c12f8c2`. Its native
+Windows job is [130966972316](https://github.com/biscon/blobber/actions/runs/43153009429/job/130966972316).
+The final handoff changes only documents/selected captures after that tested source;
+player, test, tool, CMake and workflow bytes remain identical.
+
+The selected local bundle is intentionally retained at:
+
+```text
+build-windows-review/dist/blobber-0.1.0-g03159b3fc29f-windows-x86_64/
+```
+
+It contains the player ZIP and adjacent SHA-256, `build.json`, `verification.json`,
+`focused-tests.txt`, `depth-copy.txt`, three Windows-written interchange fixtures
+and six captures. The parent `.blobber-review-owner.json` records this selection.
+The ZIP itself contains only the player/runtime content/notices and player metadata.
+
+| Evidence | Exact result |
+| --- | --- |
+| ZIP | `blobber-0.1.0-g03159b3fc29f-windows-x86_64.zip`; **564,915,073 bytes** (538.75 MiB) |
+| SHA-256 | `b8c90c9eff720cf4ee313ae3f37f347e93a72195cecb0f1500fb783241adabc5` |
+| Extracted package | **392 files / 1,331,447,256 bytes**, one game directory |
+| Source fingerprint | `36e2511005db213c0ba005e28eef9bfb4975ce73aa235f2ee7c4bebafc31a58d`; clean tested source |
+| Native selected suites | **26 passed, 1 skipped**, 27 selected / 14.29 s; `path_stream_decode` lacks an audio device |
+| Production data | Complete typed prepared validation, curated stage and Linux-to-Windows campaign/library/scenario import/re-encode passed |
+| Extracted runtime | **Passed**: 48 create-route actions, New Campaign/town/dialogue/inn/dungeon/save, then 3 fresh-process Continue actions |
+| Isolation | Checked RX install; denied source/build assets; unrelated CWD; isolated LocalAppData/TEMP; spaces/æ/日本 paths; restored DACL policies/access |
+| Graphics | Mesa 26.2.6 OpenGL 4.6 Core; llvmpipe LLVM 23.1.4 / 256 bits; actual loaded module in the external owned Mesa directory |
+| GPU integration | Bidirectional depth copy, readback and resource cleanup passed in a hidden context |
+| Local download | SHA-256, full manifest/CRC, embedded BUILD metadata, producer/consumer identity comparison and fresh AMD64 PE audit passed |
+| Reverse interchange | Exact downloaded Windows-written campaign/library/scenario imported and re-encoded successfully by the native Linux verifier |
+
+Fresh player PE SHA-256:
+`43559feef0b3673426da3fa27dfe1d104c733d80b3455735948c5f621d06c9c1`.
+Imports are only bcrypt, gdi32, kernel32, ole32, shell32, user32 and winmm DLLs.
+No dynamic MSVC/UCRT or third-party DLL is shipped. The recorded exact toolchain is
+CMake 3.31.6, Ninja 1.13.2, Python 3.12.10, MSVC tools 14.44.35207 / compiler
+19.44.35229, Windows SDK 10.0.22621.0; runner image 20261101.353.1 and Windows
+Server 10.0.20348.5773. Full tool paths/compiler pass versions remain in `build.json`.
+
+The exact prepared cache hit is
+`wd01-prepared-v1-57a198d470b11b52fb61d7f05781e8257ce4e3bbc75c7fc5c19551c176307850`,
+produced at `36cc467c3009255414b19152c0ff0352810a1209` (218,297,335 compressed cache
+bytes). Producer: accepted Linux recipe, GNU 11.4.0 / CMake 3.31.12, image
+`sha256:dc2d79e83f8d2eade94e39129d85615aa0d468a2d7383b14b8deef365cdf962a`.
+Verifier-only changes leave prepared inputs unchanged; producer and consumer
+revisions remain distinct in provenance. Only current/previous owned cache keys
+remain (218,297,335 + 218,297,345 bytes), at most 1 GiB each, without broad restores
+or unrelated deletion. The imported game graph schedules no production bake.
+
+| Preserved content identity | Value |
+| --- | --- |
+| Rules | `16064805046093731371` |
+| Blueprints | `11177173040059835938` |
+| NPC definitions | `16167988745088981044` |
+| World publication | `16850201644598948673` |
+| World payload | `162051066310005404` |
+
+The exact hosted artifact is [13915456178](https://github.com/biscon/blobber/actions/runs/43153009429/artifacts/13915456178),
+`windows-review-03159b3fc29f3a2bfbca8abab982d8802c12f8c2`, 573,669,141 outer
+artifact bytes, seven-day retention (expires 2026-11-19). The selected local bundle
+has no automatic expiry. Download was performed with `gh run download 43153009429`
+and that exact artifact name, with TMPDIR inside the owned disk run; its internal
+transfer ZIP was automatically removed. Full ZIP inspection used
+`windows_archive.inspect_zip`; the fresh audit extracted only `blobber.exe` locally.
+The configured Linux verifier, already built from the unchanged C++ code, ran:
+
+```sh
+nice -n 15 ionice -c 3 cmake-build-headless-release/blobber_distribution_compatibility \
+  import SELECTED_BUNDLE/compatibility-windows OWNED_RUN/final-windows-roundtrip-linux
+```
+
+Six [selected screenshots](screenshots/windows-distribution/wd01/README.md) were
+inspected for loaded content/layout. The partial dialogue text is intentional.
+Windows 11 physical-GPU behavior, audio-device streaming/playback and human
+listening remain **unverified**. Existing font/music/audio attribution gaps remain
+as documented in the accepted LD03 handoff. No project-license change, signing,
+installer, public Release/tag or full implementation merge is claimed.
 
 ### Windows 11 play review
 
@@ -623,249 +728,25 @@ before costly work and record the Windows resource preflight in build metadata.
 5. Report physical-GPU/audio issues and acceptance separately. Hosted Windows
    Server/software OpenGL evidence does not replace this Windows 11 review.
 
+### Ownership and cleanup
 
-Corrected verification attempt: [manual run 43129185992](https://github.com/biscon/blobber/actions/runs/43129185992),
-source `624ff9d7900c85cb226bfc7a9d424793123652bf`. Preparation passed with at least
-15,290,556,416 available RAM bytes and 89,553,797,120 free scratch bytes. The exact
-prepared cache key is `wd01-prepared-v1-45c112d366752c2be9f04f31437f3965e8ae5beab7bd325e01243a346a8d428d`
-(218,297,352 compressed bytes). Windows compiled and linked the native OS library,
-then stopped at 182/345 build steps: MSVC rejects an aggregate reset containing
-the owned RNG when its only constructor is explicit with a default argument.
-Separate a nonexplicit default constructor and an explicit seeded constructor,
-matching the standard engine interface; retain the exact seed/state/output behavior.
-The configured headless CMake compiled the affected campaign codec object and RNG
-test, and the golden-state/sequence suite passed again. The Windows suites/package
-remain unexecuted; another corrected manual attempt is required.
-The focused local command was:
+The planning run was previewed/cleaned (three files / 4,303 bytes); the unchanged
+preexisting file snapshot was verified before its commit. After closing all local
+runners, selecting the final bundle and promoting six inspected captures, cleanup
+was previewed and applied to implementation run
+`output/agent-runs/20261111T230536Z-27f016fffc0545899b52fe94526f9985/`:
+**121 disposable files / 773,843,948 bytes removed**. This includes the superseded
+unverified ZIP, provider downloads/extracts, copied executable, temporary graph,
+interchange outputs and raw logs. No unresolved diagnostic exception remains.
+The selected final bundle and gallery are intentional retained evidence.
 
-```sh
-nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest \
-  --test-dir cmake-build-release \
-  -R '^(path_decode|path_stream_decode|creator_art|portraits|audio|music|audio_runtime|dialogue|library|arena|platform_io|platform_io_process)$' \
-  --parallel 1 --output-on-failure --no-tests=error
-python3 tests/windows_distribution_tests.py
-```
-
-The configured CMake and Ninja paths were read from `cmake-build-release/CMakeCache.txt`;
-configuration and builds used that CLion pair. No existing build cache was switched
-to another toolchain. Local font path coverage remains in the packaged smoke rather
-than a newly copied TTF fixture; physical text rendering/audio listening remain user
-review, independently of these filename/codec tests.
-
-
-The smoke classifier now uses the application's fatal window-construction message
-rather than any earlier WGL warning. A content/shader failure with a working context
-must fail instead of becoming an unavailable-context result. Seven local Python
-packaging/cache/import/classification tests pass (0.04 s); this helper correction
-changes no player payload or prepared input.
-
-
-Fifth [manual run](https://github.com/biscon/blobber/actions/runs/43131715951),
-source `9c61adb5b60d36ebea050094a23c28683de483da`, is in progress with the separate
-RNG constructors and strict smoke failure classification. Native Windows results,
-package/interchange review and cleanup remain pending.
-
-A focused Python correction also rejects the superscript COM/LPT device names
-listed by [Microsoft's Windows naming rules](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file).
-The existing path-rejection test covers these names (seven tooling tests pass in
-0.04 s). It changes no player files or preparation identity; the downloaded archive
-will be checked with this stricter validator too.
-
-
-### Manual code-check mode — implementation adjustment
-
-Repeated native compiler stops exposed an avoidable verification cost: each
-conservative source-key change restarts a 9–22 minute cold compiler-image build
-before Windows can diagnose another C++ error. Add an optional `code_check`
-workflow-dispatch boolean (default false) and matching `--code-check` driver flag.
-The serial Linux job still captures the selected source/key but skips prepared
-cache mutation and baking in this mode. Windows compiles/links the application,
-bakers and selected tests, runs the owned CPU/miniature fixtures and an entry-point
-`--help` check. It publishes no review ZIP and claims no prepared/gameplay smoke.
-
-Use a small `blobber_code_check` executable target sharing the real `main.cpp`,
-application libraries, native entry point, UTF-8 manifest and static-runtime policy;
-it has no runtime asset dependencies. The full `blobber` target keeps its validated
-import dependencies. The code-check driver selects the former and a dummy import
-path whose target is never run. Both modes retain two workers/one test and the same
-native tool/dependency/source checks. Keep independent compilation going after
-errors (`Ninja -k 0`) and print bounded compiler diagnostics so one failure does not
-hide other port errors. The normal manual build remains the complete preparation,
-validation/staging/ZIP/smoke path, required before Ready for review.
-
-Fifth hosted attempt compiled through the earlier RNG failure, then stopped at the
-portable fixture header's missing explicit `<string>` include. Fix that dependency;
-use code-check mode to collect remaining native issues before the next full bake.
-This adjustment changes verification orchestration, not game behavior or acceptance.
-
-
-Code-check run [43136582454](https://github.com/biscon/blobber/actions/runs/43136582454),
-source `b0ca294bcd49a7e477a878708e8b54d79579570f`, proved the preparation/cache
-steps were skipped and all application/test/tool targets compiled and linked.
-Twenty-four of 27 selected suites passed, audio-device streaming was skipped, and
-two suites failed in 15.97 s. The old-save fixture retained an `ifstream` across
-replacement; Windows correctly refuses a move when an existing reader has not
-shared delete access. Close that fixture reader before mutation. Inventory paths
-mixed a short `RUNNER~1` temporary root with the dialogue loader's canonical long
-path; lexical subtraction then escaped the root. After rejecting each original
-ancestor's links/reparse points, normalize checked roots with `weakly_canonical`
-before comparisons/subtraction and use explicit UTF-8 path conversions. Preserve
-escape/link rejection and the original campaign replacement rules.
-
-
-Configured headless CMake/Ninja rebuilt the affected targets with two low-priority
-workers. `ctest --test-dir cmake-build-headless-release -R '^(campaign_save|runtime_inventory|dist_staging)$' --parallel 1 --output-on-failure --no-tests=error`
-passed all three suites in 2.87 s (full campaign 2.82 s). No production bake,
-graphics window or unrelated matrix ran. Native code-check retry remains required.
-
-
-Code-check retry [43138720185](https://github.com/biscon/blobber/actions/runs/43138720185)
-resolved the just-pushed branch to the previous `b0ca294` revision. Its SHA mismatch
-was caught and the obsolete attempt canceled during Windows checkout; the native
-driver and upload were skipped. The ephemeral runner/storage were disposed by
-GitHub. Subsequent dispatches verify the remote branch SHA before dispatch and the
-actual run SHA immediately afterward, rather than assuming push visibility.
-
-Correct retry [43139052241](https://github.com/biscon/blobber/actions/runs/43139052241),
-source `302b5d0e3ddf86682a40bf0580cfe1473bba1bf5`, passed: 26 suites passed and
-`path_stream_decode` was skipped because no audio device was available (27 selected,
-15.02 s). Native compilation/linking, AMD64/static-runtime PE audit and the real
-entry-point `--help` check passed. The code-check executable imports only bcrypt,
-gdi32, kernel32, ole32, shell32, user32 and winmm; this is not yet an audit of a
-shipped ZIP. No review artifact or prepared/graphics smoke is claimed by this mode.
-
-Observed native environment: CMake 3.31.6, Ninja 1.13.2, Python 3.12.10, MSVC tools
-14.44.35207 / compiler 19.44.35229, SDK 10.0.22621.0; runner image 20261101.353.1,
-Windows Server version 10.0.20348.5773. The driver binds CTest to the configured
-CMake installation, passes its validated Python to CMake and records exact tool
-paths, memory and scratch availability. Normal full builds use the same policy.
-
-The clean owned bootstrap worktree was removed after verifying its exact commit and
-clean status; branch/history remain. Remote main contained only the authorized
-workflow bootstrap. It was merged into the review branch as `36cc467`, resolving
-only the workflow add/add conflict with the reviewed branch version. `git diff
---exit-code 302b5d0 HEAD` proved the complete file tree unchanged; no implementation
-was merged to main by this reconciliation.
-
-Full manual run [43140724828](https://github.com/biscon/blobber/actions/runs/43140724828)
-was dispatched and immediately verified at source
-`36cc467c3009255414b19152c0ff0352810a1209`. Its complete preparation/import,
-player ZIP, extracted smoke, reverse interchange and final cleanup remain pending.
-
-
-Full run 43140724828 produced the Windows ZIP and passed native suites, complete
-prepared validation, Linux-to-Windows interchange, staging and the exact game PE
-audit. Its extracted smoke was **unverified at provider setup**, before game launch:
-the hash-correct MSVC Mesa archive has no WGL/OpenGL driver. Inspection of that
-archive confirmed the missing DLL; [upstream 26.2.6 notes](https://github.com/pal1000/mesa-dist-win/releases/tag/26.2.6)
-document the MSVC regression and recommend MinGW x64 for the affected functionality.
-Select that same version's hash-locked MinGW x64 provider, inspect its actual layout
-and rerun extracted verification. No MinGW compiler/runtime enters the player ZIP;
-the game remains native MSVC. Record the provider archive hash, driver/module path
-and llvmpipe identity. A working-context render/content failure still fails the run.
-
-The initial downloaded package is not the selected review evidence yet:
-`blobber-0.1.0-g36cc467c3009-windows-x86_64.zip`, 564,914,993 bytes, SHA-256
-`85d49b86736c5e9d82e3e638197f973ee88eb03b5d7cc5d509594c6858eb83a8`;
-1,331,447,171 unpacked bytes / 392 files. Its code-check and complete game imports
-are the seven allowed Windows DLLs. The download CLI's internal temporary archive
-was automatically removed after transfer; subsequent transfers set TMPDIR to the
-owned disk run explicitly. The superseded package/remote artifact will be removed
-when final evidence is selected.
-
-
-Local verification of the downloaded 36cc467 ZIP passed its SHA-256/checksum file,
-complete manifest/CRC and source/prepared metadata comparison. Extracting only the
-player executable into the owned run and performing a fresh PE audit reproduced
-the recorded executable hash/imports. The configured headless CMake rebuilt
-`blobber_distribution_compatibility`; importing the Windows-reencoded campaign,
-library and scenario fixtures passed and wrote the Linux roundtrip into the owned
-run. Thus both format-interchange directions passed before graphics verification.
-
-The replacement Mesa archive is 55,815,794 bytes and its locally computed hash
-matches the official release digest above. `7z l` and selected extraction/PE import
-inspection confirmed the x64 WGL closure: opengl32.dll, libgallium_wgl.dll and
-libdlclose-skip.dll. Extract only these three files with one decompression thread;
-record their hashes in the smoke result. The provider consumes Windows system/UCRT
-APIs and is kept entirely outside the player install. Seven focused tooling tests
-and Python compilation pass. The prepared key remains
-`wd01-prepared-v1-57a198d470b11b52fb61d7f05781e8257ce4e3bbc75c7fc5c19551c176307850`;
-this verifier-only change can reuse the validated 36cc467 publication.
-
-Only this task's superseded unverified artifact (13910881488, run 43140724828) is
-eligible for remote pruning before replacement upload. Its verified downloaded ZIP
-remains in the owned run until the replacement is selected. Preserve all other
-artifacts/caches/history and the accepted Linux deliverable/evidence.
-
-
-Corrected-provider run [43146739319](https://github.com/biscon/blobber/actions/runs/43146739319),
-source `4506e5ff8f6db337e573f9c41f7b3b3896eaf8f1`, restored/validated the exact
-prepared cache, passed native suites and full prepared/interchange/staging checks,
-and reached the now-present WGL closure. ACL setup then failed before any game
-launch or permission mutation: Windows PowerShell could not autoload
-Microsoft.PowerShell.Security. No artifact was uploaded; the superseded remote
-artifact had already been pruned after validating its local backup.
-
-Use Windows PowerShell's .NET Framework Directory.GetAccessControl/SetAccessControl
-APIs directly, avoiding cmdlet-module autoload. Save/restore only the DACL through
-AccessControlSections.Access so owner/group/audit metadata remain untouched. Restore
-from the saved DirectorySecurity descriptor without reading a deliberately denied
-path. Add a snapshot/restore preflight on an owned Unicode directory before costly
-compilation; the actual smoke still enforces/tests its read-only install and denied
-source/build asset trees. This is a verifier-only correction; reuse the same
-prepared key and keep graphics pending until the real extracted smoke runs.
-
-
-The verifier binds the built-in Windows PowerShell executable under SystemRoot and
-uses the .NET Framework [DACL setter](https://learn.microsoft.com/en-us/dotnet/api/system.io.directory.setaccesscontrol?view=netframework-4.8.1)
-and [section-specific SDDL setter](https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.objectsecurity.setsecuritydescriptorsddlform?view=netframework-4.8.1).
-The preflight snapshots/restores/rereads the descriptor and requires equality.
-Python compilation, seven focused tooling checks and `git diff --check` pass;
-the next native full run must exercise these Windows APIs and real smoke.
-
-
-DACL preflight run [43148885907](https://github.com/biscon/blobber/actions/runs/43148885907)
-(source `5d675a1`) and diagnostic [43149779226](https://github.com/biscon/blobber/actions/runs/43149779226)
-(source `5f2981c`) stopped before compilation. The framework APIs worked; Windows
-added only the computed `AI` auto-inherited flag, with all eight ordered ACEs,
-rights masks and per-ACE inheritance flags unchanged. Compare DACL policy while
-normalizing only that header marker; preserve protection/request flags and every
-ordered ACE byte. See Microsoft's [descriptor flags](https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptor-string-format).
-The new regression test accepts that observed normalization and rejects protection,
-rights, inherited-ACE or order changes (eight tooling tests pass in 0.04 s).
-Actual smoke restoration now attempts all saved roots, verifies each restored
-policy and clears DLL selection even when another restoration reports an error.
-
-
-Run [43150651693](https://github.com/biscon/blobber/actions/runs/43150651693), source
-`5151ea4`, passed the normalized DACL preflight, native build/suites and prepared/
-interchange/staging checks. Its actual ACL grant failed before game launch with
-icacls exit 1332: numeric SID arguments require the documented leading `*`.
-The saved root policy was restored and verified; no artifact was uploaded.
-
-Prefix numeric SIDs correctly and share the exact restriction/restore operations
-between preflight and real smoke. Extend the owned Unicode preflight to assert new
-file and existing nested-file write denial under RX, nested-file read denial under
-the source policy, and restored access/policy after each case. This moves actual
-NTFS permission prerequisites before compilation and preserves the full smoke's
-independent install/source/build probes. No player/source/prepared data changes.
-
-
-The shared icacls wrapper now follows the [documented numeric SID syntax](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/icacls).
-The Unicode preflight uses those same restrict/restore functions as real smoke and
-checks new-file/overwrite denial, readable RX data, nested read denial, policy
-restoration and subsequent writes. Python compilation, eight tooling tests and
-whitespace checks pass; these native permission prerequisites still require the
-next hosted preflight. No C++/prepared-input changes were made.
-
-
-Run [43152072174](https://github.com/biscon/blobber/actions/runs/43152072174), source
-`706505f`, stopped in the expanded preflight before compilation: the combined
-icacls grant did not actually prevent new-file creation. Replace CLI permission
-editing with the same module-independent .NET DACL boundary used for restoration.
-The install receives a protected DACL containing only the current SID's inheritable
-file-generic read/execute allow rule; source/build policies add a native inheritable
-ReadAndExecute deny rule to their existing descriptor. Snapshot first, restore in
-finally and verify policy/access. Keep all probes; do not treat grant command
-success as evidence that permissions are effective. This affects only verifier
-sandbox directories and temporary CI source/build ACLs, not player behavior.
+Both final hosted jobs completed cleanup; the Windows owned run removed 2,290 files /
+1,642,615,828 bytes after DACL restoration and compact artifact upload. Only the
+selected seven-day hosted artifact and two bounded owned prepared caches remain.
+Build caches, user saves, accepted LD03 captures, other task runs and Git history
+were preserved. The clean bootstrap worktree is gone; branches/commits remain.
+Final checks passed: 292 local Markdown links resolve, checkpoint/evidence counts
+match, the manual-only policy is intact, selected ZIP size matches, scratch is
+absent and `git diff --check` is clean. Source/test/tool/CMake/workflow bytes are
+unchanged from the exact tested artifact revision; no new gameplay matrix ran.
+WD01 stops **Ready for review**; acceptance and LD04 remain user-controlled.
