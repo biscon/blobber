@@ -21,8 +21,12 @@ def context_unavailable(message):
     return 'Graphics unavailable: cannot open an OpenGL window' in message
 
 
+def powershell():
+    return str(Path(os.environ['SystemRoot'])/'System32/WindowsPowerShell/v1.0/powershell.exe')
+
+
 def saved_acl(operation, path, sddl=None):
-    args=['powershell','-NoProfile','-NonInteractive','-File',str(Path(__file__).with_name('windows_acl.ps1')),
+    args=[powershell(),'-NoProfile','-NonInteractive','-File',str(Path(__file__).with_name('windows_acl.ps1')),
           '-Operation',operation,'-Target',str(path)]
     if sddl is not None:args+=['-Sddl',sddl]
     return subprocess.check_output(args,text=True).strip()
@@ -57,7 +61,7 @@ def smoke(bundle, source, build, run):
     kernel.SetDllDirectoryW.argtypes=[ctypes.c_wchar_p]
     require(kernel.SetDllDirectoryW(str(provider.resolve())), 'Cannot set verification DLL directory')
     saved=[]
-    sid=subprocess.check_output(['powershell','-NoProfile','-Command','[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value'],text=True).strip()
+    sid=subprocess.check_output([powershell(),'-NoProfile','-Command','[System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value'],text=True).strip()
     def acl(path, mode):
         sddl=saved_acl('get',path);saved.append((path,sddl))
         if mode=='install':

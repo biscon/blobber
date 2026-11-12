@@ -17,7 +17,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent/'distribution'))
 from archive import digest,encoded,regular,require
 import prepared
 from windows_archive import package
-from windows_smoke import smoke
+from windows_smoke import smoke, saved_acl
 from pe_audit import inspect as inspect_pe
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -102,6 +102,12 @@ def build_release(run,bundle,build,allow_dirty,code_check=False):
     environment.update({'tools':tools,'runner_image':os.environ.get('ImageVersion'),
         'available_memory_bytes':memory.available,'free_scratch_bytes':shutil.disk_usage(run).free,
         'runner_os':capture(['cmd','/c','ver']),'dependency_lock_sha256':digest(ROOT/'packaging/linux/lock.json')})
+    print('Windows phase: DACL preflight',flush=True)
+    acl_probe=run/'DACL preflight æ 日本';acl_probe.mkdir()
+    original_acl=saved_acl('get',acl_probe)
+    saved_acl('restore',acl_probe,original_acl)
+    require(saved_acl('get',acl_probe)==original_acl,'DACL preflight did not preserve the descriptor')
+    environment['acl_preflight']='Unicode directory DACL snapshot/restore passed'
     def command(args,name):
         print('Windows phase: '+name,flush=True)
         with (run/name).open('w',encoding='utf-8') as log:

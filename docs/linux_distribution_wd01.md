@@ -796,3 +796,29 @@ Only this task's superseded unverified artifact (13910881488, run 43140724828) i
 eligible for remote pruning before replacement upload. Its verified downloaded ZIP
 remains in the owned run until the replacement is selected. Preserve all other
 artifacts/caches/history and the accepted Linux deliverable/evidence.
+
+
+Corrected-provider run [43146739319](https://github.com/biscon/blobber/actions/runs/43146739319),
+source `4506e5ff8f6db337e573f9c41f7b3b3896eaf8f1`, restored/validated the exact
+prepared cache, passed native suites and full prepared/interchange/staging checks,
+and reached the now-present WGL closure. ACL setup then failed before any game
+launch or permission mutation: Windows PowerShell could not autoload
+Microsoft.PowerShell.Security. No artifact was uploaded; the superseded remote
+artifact had already been pruned after validating its local backup.
+
+Use Windows PowerShell's .NET Framework Directory.GetAccessControl/SetAccessControl
+APIs directly, avoiding cmdlet-module autoload. Save/restore only the DACL through
+AccessControlSections.Access so owner/group/audit metadata remain untouched. Restore
+from the saved DirectorySecurity descriptor without reading a deliberately denied
+path. Add a snapshot/restore preflight on an owned Unicode directory before costly
+compilation; the actual smoke still enforces/tests its read-only install and denied
+source/build asset trees. This is a verifier-only correction; reuse the same
+prepared key and keep graphics pending until the real extracted smoke runs.
+
+
+The verifier binds the built-in Windows PowerShell executable under SystemRoot and
+uses the .NET Framework [DACL setter](https://learn.microsoft.com/en-us/dotnet/api/system.io.directory.setaccesscontrol?view=netframework-4.8.1)
+and [section-specific SDDL setter](https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.objectsecurity.setsecuritydescriptorsddlform?view=netframework-4.8.1).
+The preflight snapshots/restores/rereads the descriptor and requires equality.
+Python compilation, seven focused tooling checks and `git diff --check` pass;
+the next native full run must exercise these Windows APIs and real smoke.
