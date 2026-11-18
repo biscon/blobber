@@ -107,6 +107,21 @@ void CommandController::refreshCharacterSheet() noexcept {
         if (c->build.level >= 2) feature("Divine Smite", "Two mana on a melee hit; critical doubles dice.", "+2d8 radiant");
         if (c->build.level >= 3) feature("Devotion / Sacred Weapon", "+CHA to weapon attacks for 60 seconds.", c->channelDivinity ? "1 / 1 use" : "0 / 1 use");
     }
+    if (cls.progression == rules::ProgressionClass::Barbarian) {
+        char uses[48];
+        std::snprintf(uses, sizeof(uses), "%u / %d uses", party_.rageUses(i.character),
+                      c->build.level >= 3 ? 3 : 2);
+        feature("Rage", "One minute. Long rest restores uses.", uses);
+        feature("Unarmored Defense", "Unarmored AC uses Dexterity and Constitution.", "Shield allowed");
+        if (c->build.level >= 2) {
+            feature("Reckless Attack", "Gain advantage on Strength melee attacks and expose yourself.",
+                    "First attack");
+            feature("Danger Sense", "Advantage on Dexterity saves against visible dangers.", "Automatic");
+        }
+        if (c->build.level >= 3)
+            feature("Frenzy Strike", "One bonus-action melee swing per Rage after its first turn.",
+                    "Berserker");
+    }
     if (cls.progression == rules::ProgressionClass::Bard) {
         char uses[32];
         std::snprintf(uses, sizeof(uses), "%d / %d uses", party_.inspirationUses(i.character),

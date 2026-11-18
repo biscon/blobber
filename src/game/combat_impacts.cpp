@@ -396,12 +396,15 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
         out.damage = 0;
     } else if (out.hit) {
         if (out.enemyAttack) {
-            const auto resolved = rules::resolveDamage(out.damage, out.damageType);
-            out.rawDamage = resolved.raw;
-            out.damage = resolved.damage;
-            out.damageAdjustment = resolved.adjustment;
-            const bool conscious = party_.character(out.recipient)->life == rules::Life::Conscious;
-            out.died = party_.damage(out.recipient, out.damage, out.critical).died;
+            const bool conscious = recipient->life == rules::Life::Conscious;
+            const auto result =
+                damageParty(party_, out.recipient, rules::DamagePacket::single(out.damage, out.damageType),
+                            out.critical, state_.gameplayMs);
+            out.rawDamage = result.total.raw;
+            out.damage = result.total.damage;
+            out.damageAdjustment = result.total.adjustment;
+            out.damageComponents = result.components;
+            out.died = result.health.died;
             out.downed =
                 conscious && !out.died && party_.character(out.recipient)->life != rules::Life::Conscious;
             if (party_.character(out.recipient)->life != rules::Life::Conscious)

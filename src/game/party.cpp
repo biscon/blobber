@@ -79,6 +79,9 @@ rules::SpellAccess Party::spellAccess(rules::CharacterId id, rules::SpellId spel
 void Party::commitStats(rules::CharacterId id, const rules::CharacterStats& stats) noexcept {
     auto& c = state_.characters[id.index];
     c.stats = stats;
+    const auto* armor = equipped(id, EquipmentSlot::Body);
+    if (armor && armor->armor == rules::ArmorType::Heavy)
+        c.barbarian.endRage();
     const auto* cls = catalog_->characterClass(c.build.characterClass);
     c.maxMana = rules::maximumMana(cls->casting, cls->spellProgression, c.build.level) + stats.maxManaBonus;
     c.hitPoints = std::min(c.hitPoints, stats.maxHitPoints);
@@ -178,6 +181,8 @@ bool Party::swapFormation(FormationSlot a, FormationSlot b) noexcept {
 rules::HealthResult Party::commit(rules::CharacterId id, rules::HealthResult result) noexcept {
     if (result && result.changed) {
         static_cast<rules::HealthState&>(state_.characters[id.index]) = result.state;
+        if (result.state.life != rules::Life::Conscious)
+            state_.characters[id.index].barbarian.endRage();
         if (result.state.life == rules::Life::Dead)
             clearInspiration(id);
     }
@@ -224,6 +229,12 @@ bool Party::grantTemporary(rules::CharacterId id, int amount, std::uint64_t unti
     c.temporaryHitPoints = std::max(c.temporaryHitPoints, amount);
     c.temporaryUntilMs = until;
     return true;
+}
+unsigned Party::rageUses(rules::CharacterId id) const noexcept {
+    if (progressionClass(id) != rules::ProgressionClass::Barbarian)
+        return 0;
+    const auto& c = *character(id);
+    return (c.build.level >= 3 ? 3u : 2u) - c.barbarian.spent;
 }
 int Party::inspirationUses(rules::CharacterId id) const noexcept {
     if (!character(id) || progressionClass(id) != rules::ProgressionClass::Bard)

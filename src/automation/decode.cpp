@@ -280,7 +280,9 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     if (j.contains("spell"))
         c.spell = spell(j.at("spell"), cat);
     if (j.contains("feature")) {
-        const std::array<const char*, 16> names{"none",
+        if (c.action != PartyAction::Feature)
+            throw std::invalid_argument("Features require a feature action");
+        const std::array<const char*, 22> names{"none",
                                                 "second_wind",
                                                 "arcane_recovery",
                                                 "dismiss_concentration",
@@ -295,7 +297,13 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
                                                 "sacred_weapon",
                                                 "dismiss_sacred_weapon",
                                                 "divine_smite",
-                                                "bardic_inspiration"};
+                                                "bardic_inspiration",
+                                                "rage",
+                                                "end_rage",
+                                                "weapon_strike",
+                                                "reckless_attack",
+                                                "frenzy_strike",
+                                                "reckless_frenzy"};
         bool matched = false;
         for (unsigned i = 1; i < names.size(); ++i)
             if (j.at("feature") == names[i]) {

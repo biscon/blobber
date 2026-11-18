@@ -36,6 +36,8 @@ struct HudCard {
     std::optional<StatusEntry> concentration;
     bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
     bool incomingShot = false;
+    bool barbarian = false, reckless = false, frenzy = false, frenzyReady = false;
+    unsigned rageUses = 0, rageSeconds = 0;
     const char* inspirationSource = nullptr;
     std::uint64_t inspirationRemaining = 0;
     std::uint8_t successes = 0, failures = 0;
@@ -51,9 +53,21 @@ struct HudCard {
          castHovered = false;
     const char* castPreview = "";
 };
-enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration, Travel, Inspiration };
+enum class HoverKind {
+    None,
+    Enemy,
+    Action,
+    Portrait,
+    Rest,
+    Status,
+    Concentration,
+    Travel,
+    Inspiration,
+    Barbarian
+};
 constexpr bool statusHoverKind(HoverKind k) noexcept {
-    return k == HoverKind::Status || k == HoverKind::Concentration || k == HoverKind::Inspiration;
+    return k == HoverKind::Status || k == HoverKind::Concentration || k == HoverKind::Inspiration ||
+           k == HoverKind::Barbarian;
 }
 struct HudHover {
     bool tooltipVisible = true;
@@ -95,7 +109,9 @@ enum class PassiveFeature : std::uint8_t {
     Archery,
     ColossusSlayer,
     SongOfRest,
-    CuttingWords
+    CuttingWords,
+    UnarmoredDefense,
+    DangerSense
 };
 struct SpellBookEntry {
     rules::SpellId spell;

@@ -48,6 +48,7 @@ void CommandController::refreshMagic() noexcept {
                            int cost) {
         auto command = state_.selection;
         command.targetCount = 0;
+        command.target.reset();
         command.spell = spell;
         command.feature = feature;
         command.action = feature == rules::Feature::None ? PartyAction::Spell : PartyAction::Feature;
@@ -56,6 +57,8 @@ void CommandController::refreshMagic() noexcept {
                             : feature == rules::Feature::ActionSurge       ? int(c->actionSurge)
                             : feature == rules::Feature::PreserveLife      ? int(c->channelDivinity)
                             : feature == rules::Feature::ArcaneRecovery    ? int(c->arcaneRecovery)
+                            : feature == rules::Feature::Rage              ? int(party_.rageUses(caster))
+                            : rules::frenzyStrike(feature)                 ? int(c->barbarian.frenzy)
                             : feature == rules::Feature::BardicInspiration ? party_.inspirationUses(caster)
                             : feature == rules::Feature::LayOnHands        ? c->layOnHands
                             : feature == rules::Feature::SacredWeapon      ? int(c->channelDivinity)
@@ -75,6 +78,28 @@ void CommandController::refreshMagic() noexcept {
                                 feature == rules::Feature::None ? PickerEntryKind::Spell
                                                                 : PickerEntryKind::ActivatedFeature};
     };
+    if (cls->progression == rules::ProgressionClass::Barbarian) {
+        using F = rules::Feature;
+        const bool raging = party_.raging(caster, state_.combat.gameplayMs);
+        auto ability = [&](F f, const char* desc) { entry({}, f, rules::featureName(f), desc, 0); };
+        if (raging)
+            ability(F::EndRage, "End Rage early. Costs your bonus action.");
+        else
+            ability(F::Rage,
+                    "Bonus action. For 60s, gain +2 Strength melee damage, resist physical hits and gain "
+                    "advantage on Strength checks and saves. Ends concentration and blocks casting.");
+        if (c->build.level >= 2) {
+            ability(F::WeaponStrike, "Make a normal melee attack with your equipped weapon.");
+            ability(F::RecklessAttack, "Gain advantage on Strength melee attacks this turn. Enemies have "
+                                       "advantage against you until your next turn.");
+        }
+        if (c->build.level >= 3 && raging) {
+            ability(F::FrenzyStrike, "Spend your extra swing for this Rage. Choose any legal melee target.");
+            if (!c->barbarian.attacked)
+                ability(F::RecklessFrenzy, "Spend Frenzy as your first swing with advantage. Enemies have "
+                                           "advantage against you until your next turn.");
+        }
+    }
     if (cls->progression == rules::ProgressionClass::Bard)
         entry({}, rules::Feature::BardicInspiration, "Bardic Inspiration",
               "Give another companion a d6 for an attack or save. Bonus action; lasts one hour.", 0);
@@ -161,6 +186,13 @@ void CommandController::refreshMagic() noexcept {
         if (m.count < m.entries.size())
             m.entries[m.count++] = e;
     };
+    if (cls->progression == rules::ProgressionClass::Barbarian) {
+        passive(PassiveFeature::UnarmoredDefense, "Unarmored Defense",
+                "Use 10 + Dexterity and Constitution modifiers while unarmored. Shields work.");
+        if (c->build.level >= 2)
+            passive(PassiveFeature::DangerSense, "Danger Sense",
+                    "Gain advantage on Dexterity saves against dangers you can see.");
+    }
     if (c->build.defense ||
         (cls->progression == rules::ProgressionClass::Paladin && c->build.level >= 2))
         passive(PassiveFeature::Defense, "Defense",
@@ -225,7 +257,7 @@ void CommandController::refreshMagic() noexcept {
         m.maximum = 1;
         m.single = true;
     }
-    if (m.pending.feature == rules::Feature::DivineSmite) {
+    if (rules::meleeFeature(m.pending.feature)) {
         m.hostile = true; m.single = true; m.maximum = 1;
     }
     if (m.pending.feature == rules::Feature::LayOnHands) {
@@ -536,7 +568,7 @@ CommandReason CommandController::magicEligibility(ActorId id) const noexcept {
     if (!visible(id))
         return CommandReason::NotVisible;
     auto c = m.pending;
-    if (c.feature == rules::Feature::DivineSmite) {
+    if (rules::meleeFeature(c.feature)) {
         c.targetCount = 1; c.enemies[0] = id; c.target = id;
         return session_.combat().validate(c, session_.movement().player);
     }

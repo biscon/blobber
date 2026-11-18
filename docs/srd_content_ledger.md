@@ -1,5 +1,9 @@
 # SRD 5.1 source and adaptation ledger
 
+## Path of the Berserker through level four
+
+The Barbarian’s Hit Die, proficiencies, Rage, Unarmored Defense, Reckless Attack, Danger Sense and Berserker progression use SRD 5.1 as their baseline. Blobber uses a fixed minute of gameplay for Rage and adapts Frenzy to one player-timed bonus-action swing per Rage, with no exhaustion. The shared grid and normal melee reach govern target selection. [Berserker mechanics](barbarian_design.md) and [shipping attribution](../assets/rules/ATTRIBUTION.md).
+
 ## College of Lore Bard through level four
 
 The Bard uses the SRD 5.1 class, College of Lore, Song of Rest and Vicious Mockery

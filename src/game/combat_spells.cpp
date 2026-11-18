@@ -190,8 +190,9 @@ bool CombatController::safeRecovery(Player pose) const noexcept {
     return true;
 }
 CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose) const noexcept {
-    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DivineSmite) {
-        auto melee = c; melee.action = PartyAction::Smite;
+    if (c.action == PartyAction::Feature && rules::meleeFeature(c.feature)) {
+        auto melee = c;
+        melee.action = c.feature == rules::Feature::DivineSmite ? PartyAction::Smite : PartyAction::Melee;
         if (c.targetCount == 1) melee.target = c.enemies[0];
         if (c.targetCount > 1) return CommandReason::InvalidTargets;
         return validate(melee, pose);
@@ -201,8 +202,12 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         return CommandReason::InvalidCharacter;
     if (c.world != state_.world || c.turn != state_.turn)
         return CommandReason::StaleTurn;
+    if (c.action == PartyAction::Spell && c.feature != rules::Feature::None)
+        return CommandReason::InvalidAction;
     if (!effects_.canAct(c.character))
         return CommandReason::CannotAct;
+    if (c.action == PartyAction::Spell && party_.raging(c.character, state_.gameplayMs))
+        return CommandReason::Unavailable;
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissSacredWeapon)
         return effects_.sacredWeapon(c.character).serial ? CommandReason::Ready : CommandReason::Unavailable;
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissSpiritualWeapon)
@@ -251,6 +256,23 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
             if (c.targetCount && (!target || !(target->npc.cell == *destination)))
                 return CommandReason::InvalidTarget;
             return c.targetCount ? spellRecipient(c, pose, 0) : CommandReason::Ready;
+        }
+        if (c.feature == rules::Feature::Rage || c.feature == rules::Feature::EndRage) {
+            if (party_.progressionClass(c.character) != rules::ProgressionClass::Barbarian)
+                return CommandReason::FeatureRequired;
+            if (c.targetCount)
+                return CommandReason::InvalidTargets;
+            if (cunningReady_[c.character.index] > state_.gameplayMs)
+                return CommandReason::Cooldown;
+            const bool active = party_.raging(c.character, state_.gameplayMs);
+            if (c.feature == rules::Feature::EndRage)
+                return active ? CommandReason::Ready : CommandReason::Unavailable;
+            if (active)
+                return CommandReason::Unavailable;
+            const auto* armor = party_.equipped(c.character, EquipmentSlot::Body);
+            if (armor && armor->armor == rules::ArmorType::Heavy)
+                return CommandReason::Unavailable;
+            return party_.rageUses(c.character) ? CommandReason::Ready : CommandReason::NoCharges;
         }
         if (c.feature == rules::Feature::BardicInspiration) {
             if (party_.progressionClass(c.character) != rules::ProgressionClass::Bard)
@@ -436,6 +458,8 @@ const char* CombatController::attackWarning(const PartyCommand& c, ActorId targe
     const auto* actor = actors_.actor(target);
     if (!party_.character(c.character) || !actor || !actor->hostile() || actor->life != ActorLife::Alive)
         return nullptr;
+    if (rules::recklessStrike(c.feature))
+        return "Reckless: enemies gain advantage against you.";
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::SpiritualWeapon)
         return spellAttackRoll(c.character, target, pose, SpellKind::SpiritualWeapon).warning;
     if (c.action == PartyAction::Spell) {
@@ -450,13 +474,18 @@ const char* CombatController::attackWarning(const PartyCommand& c, ActorId targe
                     return spellAttackRoll(c.character, target, pose, spell->kind, false).warning;
         return nullptr;
     }
-    if (c.action != PartyAction::Melee && c.action != PartyAction::BackMelee && c.action != PartyAction::Ranged &&
-        c.action != PartyAction::Smite && !(c.action == PartyAction::Feature && c.feature == rules::Feature::DivineSmite))
+    if (c.action != PartyAction::Melee && c.action != PartyAction::BackMelee &&
+        c.action != PartyAction::Ranged && c.action != PartyAction::Smite &&
+        !(c.action == PartyAction::Feature && rules::meleeFeature(c.feature)))
         return nullptr;
     const bool ranged = c.action == PartyAction::Ranged;
     const auto* w = weapon(c.character, ranged);
     return w ? partyAttackRoll(c.character, target, pose, ranged, w->heavyDisadvantage,
-                               effects_.guiding(target)).warning : nullptr;
+                               effects_.guiding(target) ||
+                                   (!ranged && w->ability == rules::Ability::Strength &&
+                                    party_.character(c.character)->barbarian.recklessUntil))
+                   .warning
+             : nullptr;
 }
 bool CombatController::sneakEligible(rules::CharacterId id, ActorId target, rules::RollMode mode, bool ranged,
                                      Player pose) const noexcept {
@@ -484,10 +513,11 @@ bool CombatController::sneakEligible(rules::CharacterId id, ActorId target, rule
 }
 CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, std::uint64_t now,
                                             CombatEvents& events) noexcept {
-    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DivineSmite) {
+    if (c.action == PartyAction::Feature && rules::meleeFeature(c.feature)) {
         const auto reason = validateMagic(c, pose);
         if (reason != CommandReason::Ready) { CombatOutcome rejected; rejected.reason = reason; return rejected; }
-        auto melee = c; melee.action = PartyAction::Smite;
+        auto melee = c;
+        melee.action = c.feature == rules::Feature::DivineSmite ? PartyAction::Smite : PartyAction::Melee;
         if (c.targetCount == 1) melee.target = c.enemies[0];
         return submit(melee, pose, now, events);
     }
@@ -542,7 +572,19 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         auto result = out;
         result.recipient = c.character;
         result.hit = true;
-        if (c.feature == rules::Feature::BardicInspiration) {
+        if (c.feature == rules::Feature::Rage || c.feature == rules::Feature::EndRage) {
+            auto& rage = party_.state_.characters[c.character.index].barbarian;
+            if (c.feature == rules::Feature::Rage) {
+                ++rage.spent;
+                rage.rageUntil = state_.gameplayMs + 60000;
+                rage.frenzy = ch->build.level >= 3;
+                const auto held = effects_.concentration(c.character);
+                if (held.serial)
+                    effects_.remove(held, now, events);
+            } else
+                rage.endRage();
+            result.event = CombatEvent::None;
+        } else if (c.feature == rules::Feature::BardicInspiration) {
             party_.giveInspiration(c.character, c.allies[0], state_.gameplayMs + 3600000);
             result.recipient = c.allies[0];
             result.event = CombatEvent::Recovery;

@@ -2,7 +2,7 @@
 #include "creation_fixtures.hpp"
 #include "game/session.hpp"
 namespace blobber::test {
-inline rules::Catalog bardCatalog(const rules::Catalog& world = creationCatalog(true)) {
+inline rules::Catalog supportMartialCatalog(const rules::Catalog& world, bool addBarbarian) {
     using namespace rules;
     const auto base = creationCatalog(true);
     std::vector<RaceDefinition> races;
@@ -46,12 +46,55 @@ inline rules::Catalog bardCatalog(const rules::Catalog& world = creationCatalog(
     cfg.characterClass = bard;
     cfg.recommended = {8, 14, 14, 10, 10, 15};
     creation.push_back(cfg);
+    const ClassId barbarian{std::uint16_t(classes.size())};
+    if (addBarbarian) {
+        auto warrior = classes[0];
+        warrior.id = "barbarian";
+        warrior.name = "Barbarian";
+        warrior.hitDie = 12;
+        warrior.progression = ProgressionClass::Barbarian;
+        warrior.features = 0;
+        warrior.allowsDefense = false;
+        classes.push_back(warrior);
+        auto kit = creation[0];
+        kit.characterClass = barbarian;
+        kit.recommended = {15, 14, 15, 8, 10, 8};
+        kit.groupCount = 1;
+        kit.groups[0].options[1] = kit.groups[0].options[0];
+        kit.groups[0].options[1].id = "shield_kit";
+        kit.groups[0].options[1].items[1] = creation[0].groups[2].options[0].items[0];
+        kit.groups[0].options[1].count = 2;
+        creation.push_back(kit);
+        monsters.front().hitPoints = 100;
+    }
     Catalog staging(attacks, monsters, races, classes, items, {}, spells, creation);
     auto preset = *base.preset();
     auto draft = recommendedDraft(staging, {0}, bard);
     std::snprintf(draft.name.data(), draft.name.size(), "Lyra");
     preset.characters[0] = finishBuild(staging, draft, "bard.fixture");
+    if (addBarbarian) {
+        preset.characters[1] = preset.characters[0];
+        auto berserker = recommendedDraft(staging, {0}, barbarian);
+        std::snprintf(berserker.name.data(), berserker.name.size(), "Ulf");
+        preset.characters[0] = finishBuild(staging, berserker, "barbarian.fixture");
+    }
     return {attacks, monsters, races, classes, items, preset, spells, creation};
+}
+inline rules::Catalog bardCatalog(const rules::Catalog& world = creationCatalog(true)) {
+    return supportMartialCatalog(world, false);
+}
+inline rules::Catalog barbarianCatalog(const rules::Catalog& world = creationCatalog(true)) {
+    return supportMartialCatalog(world, true);
+}
+inline void advanceBarbarian(Party& party, int level) {
+    while (party.character({0})->build.level < level) {
+        party.grantNextLevelExperience();
+        auto request = party.advancementRequest({0});
+        if (request.level == 3)
+            request.choices.abilityImprovement.increases[0] = 2;
+        if (!party.advance(request))
+            throw std::runtime_error("Barbarian advancement failed");
+    }
 }
 inline PartyCommand inspire(GameSession& game, unsigned target) {
     auto command = featureCommand(game, 0, rules::Feature::BardicInspiration);

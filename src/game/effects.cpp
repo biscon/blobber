@@ -103,7 +103,9 @@ int EffectController::armorClass(EffectTarget t) const noexcept {
         const auto& c = *party_.character(t.character);
         ac = c.stats.armorClass;
         if (unarmored(t.character) && has(t, EffectKind::MageArmor))
-            ac += 3; // Current unarmored base is 10 + Dex; preserve the shield.
+            ac += party_.progressionClass(t.character) == rules::ProgressionClass::Barbarian
+                      ? std::max(0, 3 - std::max(0, c.stats.modifiers[2]))
+                      : 3;
     }
     return ac + (has(t, EffectKind::ShieldOfFaith) ? 2 : 0);
 }
@@ -181,9 +183,13 @@ rules::SaveResult EffectController::save(EffectTarget target, rules::Ability abi
                          actors_.catalog().monster(actors_.actor(target.enemy)->monster)->abilities, ability)
                          .value
                    : party_.character(target.character)->stats.saves[index];
-    result.roll = rng_.d20(ability == rules::Ability::Dexterity && has(target, EffectKind::Restrained)
-                               ? rules::RollMode::Disadvantage
-                               : rules::RollMode::Normal)
+    const bool danger = !target.npc && ability == rules::Ability::Dexterity && sees(target) &&
+                        party_.progressionClass(target.character) == rules::ProgressionClass::Barbarian &&
+                        party_.character(target.character)->build.level >= 2;
+    const bool strength =
+        !target.npc && ability == rules::Ability::Strength && party_.raging(target.character, gameplayMs_);
+    result.roll = rng_.d20(rules::rollMode(danger || strength, ability == rules::Ability::Dexterity &&
+                                                                   has(target, EffectKind::Restrained)))
                       .value;
     result.total = std::int64_t(result.roll.selected) + bonus + saveModifier(target);
     if (!target.npc)
@@ -376,6 +382,9 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     return {EffectError::None, candidate.id};
 }
 void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexcept {
+    for (auto id : party_.snapshot().formation)
+        if (party_.character(id)->barbarian.rageUntil && has(id, EffectKind::Sleep))
+            party_.state_.characters[id.index].barbarian.endRage();
     bindEvents(events, now);
     reconcileWeb(now, events);
     reconcileAid();
@@ -480,6 +489,12 @@ void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool r
             e.retryMs += retryIntervalMs;
     }
     gameplayMs_ = goal;
+    for (auto& c : party_.state_.characters) {
+        if (c.barbarian.rageUntil && c.barbarian.rageUntil <= goal)
+            c.barbarian.endRage();
+        if (!turns_ && c.barbarian.recklessUntil <= goal)
+            c.barbarian.recklessUntil = 0;
+    }
     for (auto id : party_.snapshot().formation) {
         const auto until = party_.character(id)->inspirationUntil;
         if (until && until <= goal)

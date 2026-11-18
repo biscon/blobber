@@ -1,8 +1,17 @@
 #pragma once
 #include "game/actors.hpp"
+#include "rules/health.hpp"
 
 namespace blobber {
 class EffectController;
+class Party;
+struct PartyHitResult {
+    rules::HealthResult health;
+    rules::DamageResolution total;
+    std::array<rules::DamageResolution, 2> components{};
+};
+PartyHitResult damageParty(Party&, rules::CharacterId, const rules::DamagePacket&, bool critical,
+                           std::uint64_t gameplayMs) noexcept;
 enum class FortitudeStatus : std::uint8_t { None, Saved, Failed, RadiantBypass, CriticalBypass };
 struct FortitudeResult {
     FortitudeStatus status = FortitudeStatus::None;

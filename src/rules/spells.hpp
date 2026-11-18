@@ -68,8 +68,26 @@ enum class Feature : std::uint8_t {
     SacredWeapon,
     DismissSacredWeapon,
     DivineSmite,
-    BardicInspiration
+    BardicInspiration,
+    Rage,
+    EndRage,
+    WeaponStrike,
+    RecklessAttack,
+    FrenzyStrike,
+    RecklessFrenzy
 };
+constexpr bool frenzyStrike(Feature f) noexcept {
+    return f == Feature::FrenzyStrike || f == Feature::RecklessFrenzy;
+}
+constexpr bool recklessStrike(Feature f) noexcept {
+    return f == Feature::RecklessAttack || f == Feature::RecklessFrenzy;
+}
+constexpr bool barbarianStrike(Feature f) noexcept {
+    return f == Feature::WeaponStrike || recklessStrike(f) || frenzyStrike(f);
+}
+constexpr bool meleeFeature(Feature f) noexcept {
+    return f == Feature::DivineSmite || barbarianStrike(f);
+}
 enum class ClassFeature : std::uint8_t {
     SecondWind = 1,
     LifeDomain = 2,

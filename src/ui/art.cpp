@@ -98,11 +98,11 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
         SetTextureFilter(resources_.texture(equipment_), TEXTURE_FILTER_BILINEAR);
     }
     {
-        OwnedImage atlas(GenImageColor(1024, 768, BLANK));
+        OwnedImage atlas(GenImageColor(1024, 1024, BLANK));
         if (!atlas.value.data)
             throw std::runtime_error("Class ability atlas allocation failed");
         unsigned i = 0;
-        for (const auto& row : {paladinArtNames, rangerArtNames, bardArtNames})
+        for (const auto& row : {paladinArtNames, rangerArtNames, bardArtNames, barbarianArtNames})
             for (const auto* name : row) {
                 OwnedImage icon(preparedImage(directory / (std::string(name) + ".png")));
                 if (!icon.value.data)
@@ -177,6 +177,14 @@ unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
     return 9;
 }
 unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcept {
+    if (feature == rules::Feature::Rage || feature == rules::Feature::EndRage)
+        return rageIcon;
+    if (rules::frenzyStrike(feature))
+        return frenzyIcon;
+    if (rules::recklessStrike(feature))
+        return recklessIcon;
+    if (feature == rules::Feature::WeaponStrike)
+        return 5;
     if (feature == rules::Feature::LayOnHands) return 192;
     if (feature == rules::Feature::DivineSmite) return 193;
     if (feature == rules::Feature::SacredWeapon || feature == rules::Feature::DismissSacredWeapon) return 194;
@@ -223,7 +231,7 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     }
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
-    if (index >= 192 && index <= cuttingWordsIcon) {
+    if (index >= 192 && index <= dangerSenseIcon) {
         const auto tile = index - 192;
         DrawTexturePro(resources_.texture(classAbilities_),
                        {float(tile % 4 * 256), float(tile / 4 * 256), 256, 256}, destination, {0, 0}, 0, tint);

@@ -1430,3 +1430,7 @@ The [Bard design](bard_design.md) covers level-four progression, Inspiration,
 interruptible rolls, Cutting Words, Song of Rest and Vicious Mockery. A Bard
 party can pause a single combat operation before its consequences and answer
 through the HUD or the headless protocol.
+
+## Barbarian
+
+The [Berserker design](barbarian_design.md) covers Rage, alternate melee attacks, defenses and campaign state.

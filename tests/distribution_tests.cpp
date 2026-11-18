@@ -110,6 +110,8 @@ void selection() {
         f.asset(std::string("ui/") + name + ".png");
     for (const auto* name : bardArtNames)
         f.asset(std::string("ui/") + name + ".png");
+    for (const auto* name : barbarianArtNames)
+        f.asset(std::string("ui/") + name + ".png");
     for (const auto* id : equipmentIconIds)
         f.asset(std::string("ui/items/") + id + ".png");
     f.fixed("blueprints/underkeep.json");
@@ -136,6 +138,9 @@ void selection() {
     for (const auto* name : bardArtNames)
         check(names.count(std::string("assets/ui/") + name + ".png"),
               "Bard icons are included in shipping inventory");
+    for (const auto* name : barbarianArtNames)
+        check(names.count(std::string("assets/ui/") + name + ".png"),
+              "Barbarian icons are included in shipping inventory");
     check(names.size() == inventory.files.size(), "Identical entries deduplicate");
     check(!names.count("assets/prepared/fixture.bin") &&
               paths(d::resolve(f.s, true)).count("assets/prepared/fixture.bin"),

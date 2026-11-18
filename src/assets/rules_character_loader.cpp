@@ -143,14 +143,16 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         if (version >= 9)
             cls.progression = static_cast<ProgressionClass>(
                 choice(c.at("progression"), p + ".progression",
-                       std::array<const char*, 8>{"none", "fighter", "cleric", "rogue", "wizard", "paladin",
-                                                  "ranger", "bard"}));
+                       std::array<const char*, 9>{"none", "fighter", "cleric", "rogue", "wizard", "paladin",
+                                                  "ranger", "bard", "barbarian"}));
         if (version >= 17) {
             cls.spellList = static_cast<SpellList>(
                 choice(c.at("spell_list"), p + ".spell_list",
                        std::array<const char*, 6>{"none", "cleric", "wizard", "paladin", "ranger", "bard"}));
             cls.spellProgression = static_cast<SpellProgression>(choice(c.at("spell_progression"), p + ".spell_progression", std::array<const char*, 2>{"full", "half"}));
         }
+        if (version < 20 && cls.progression == ProgressionClass::Barbarian)
+            fail(p, "barbarian requires schema version 20");
         if (version < 19 && (cls.progression == ProgressionClass::Bard || cls.spellList == SpellList::Bard))
             fail(p, "bard requires schema version 19");
         if (version < 18 && (cls.progression == ProgressionClass::Ranger || cls.spellList == SpellList::Ranger))

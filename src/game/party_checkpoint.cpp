@@ -71,6 +71,7 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
         c.stats = stats.value;
         c.stats.maxHitPoints += c.aidBonus;
         c.maxMana = rules::maximumMana(cls->casting, cls->spellProgression, c.build.level) + c.stats.maxManaBonus;
+        const auto* body = equipped({i}, EquipmentSlot::Body);
         if (!rules::validHealth(c, c.stats.maxHitPoints) || c.mana < 0 || c.mana > c.maxMana ||
             c.temporaryUntilMs > UINT64_MAX / 2 || c.availableHitDice < 0 ||
             c.availableHitDice > c.build.level || c.experience > rules::experienceCap ||
@@ -82,6 +83,16 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
             (c.channelDivinity &&
              !((c.build.level >= 2 && c.build.lifeDomain) ||
                (c.build.level >= 3 && cls->progression == rules::ProgressionClass::Paladin))) ||
+            c.barbarian.spent > (cls->progression == rules::ProgressionClass::Barbarian
+                                     ? (c.build.level >= 3 ? 3u : 2u)
+                                     : 0u) ||
+            c.barbarian.rageUntil > UINT64_MAX / 2 || c.barbarian.recklessUntil > UINT64_MAX / 2 ||
+            (cls->progression != rules::ProgressionClass::Barbarian &&
+             (c.barbarian.rageUntil || c.barbarian.recklessUntil || c.barbarian.attacked)) ||
+            (c.barbarian.frenzy && (!c.barbarian.rageUntil || c.build.level < 3)) ||
+            (c.barbarian.recklessUntil && c.build.level < 2) ||
+            (c.barbarian.rageUntil && (c.life != rules::Life::Conscious || !c.barbarian.spent ||
+                                       (body && body->armor == rules::ArmorType::Heavy))) ||
             c.inspirationSpent < 0 ||
             c.inspirationSpent >
                 (cls->progression == rules::ProgressionClass::Bard ? std::max(1, c.stats.modifiers[5]) : 0) ||

@@ -208,6 +208,8 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
         return fail(CharacterError::InvalidEquipment);
     if (items[3] && (items[3]->kind != ItemKind::Weapon || !items[3]->ranged || items[2]))
         return fail(CharacterError::InvalidEquipment);
+    if (!items[0] && cls->progression == ProgressionClass::Barbarian)
+        stats.armorClass += std::max(0, stats.modifiers[2]);
     if (items[0]) {
         const auto& armor = *items[0];
         if (validateArmorTraining &&

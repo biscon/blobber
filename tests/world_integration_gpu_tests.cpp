@@ -6,6 +6,7 @@
 #include "rlgl.h"
 #include "support/allocations.hpp"
 #include "support/arena_preparation_review.hpp"
+#include "support/barbarian_review.hpp"
 #include "support/bard_review.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "support/campaign_save_review.hpp"
@@ -204,6 +205,10 @@ int main(int argc, char** argv) {
         }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--paladin-review") {
             test::paladinReview(argv[1], argv[2], argc == 5 ? argv[4] : "");
+            return 0;
+        }
+        if (argc == 5 && std::string_view(argv[3]) == "--barbarian-review") {
+            test::barbarianReview(argv[1], argv[2], argv[4]);
             return 0;
         }
         if (argc == 5 && std::string_view(argv[3]) == "--bard-review") {

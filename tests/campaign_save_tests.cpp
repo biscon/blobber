@@ -598,6 +598,33 @@ void paladinPersistence() {
     rejects([&] { CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*corrupt), d.timings); },
             "Campaign rejects malformed healing pool");
 }
+void barbarianPersistence() {
+    const auto c = blobber::test::barbarianCatalog(catalog());
+    const auto d = definitions();
+    auto run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, *c.preset(), d.types,
+                                             d.timings, 5);
+    blobber::test::advanceBarbarian(run->party(), 3);
+    check(run->game().submit(featureCommand(run->game(), 0, rules::Feature::Rage)).reason ==
+              CommandReason::Resolved,
+          "Rage before travel");
+    run->game().update(7, false);
+    run = copy(c, d, *run);
+    const auto remaining = [&] {
+        return run->party().character({0})->barbarian.rageUntil - run->game().combat().snapshot().gameplayMs;
+    };
+    check(run->party().rageUses({0}) == 2 && remaining() == 53000 &&
+              run->party().character({0})->barbarian.frenzy,
+          "Campaign restores active Rage and unspent Frenzy");
+    travel(*run, FixtureKind::Downstairs);
+    check(remaining() == 53000 && run->party().rageUses({0}) == 2,
+          "Floor travel preserves exact Rage duration");
+    auto invalid = run->party().checkpoint();
+    invalid.state.characters[0].barbarian.rageUntil = 0;
+    rejects([&] { Party restored(c, invalid); }, "Frenzy requires a live Rage");
+    invalid = run->party().checkpoint();
+    invalid.state.characters[0].barbarian.spent = 4;
+    rejects([&] { Party restored(c, invalid); }, "Reject out-of-range daily uses");
+}
 void bardPersistence() {
     const auto c = blobber::test::bardCatalog(catalog());
     const auto d = definitions();
@@ -670,7 +697,7 @@ void rangerPersistence() {
     const CampaignContent content{"fixture", 0, &blueprints};
     auto current = run->checkpoint();
     auto legacy = blobber::automation::Json::parse(encodeCampaign(c, d, content, *current));
-    check(legacy["schema"] == 26 && legacy["simulation"] == 28, "Ranger campaigns carry the new versions");
+    check(legacy["schema"] == 27 && legacy["simulation"] == 29, "Ranger campaigns carry the new versions");
     legacy["schema"] = 24;
     legacy["simulation"] = 26;
     rejects([&] { decodeCampaign(c, d, content, legacy.dump()); }, "Pre-Ranger campaigns require their original build");
@@ -1711,6 +1738,10 @@ int main(int argc, char** argv) {
             std::cout << "paladin campaign persistence passed\n";
             return 0;
         }
+        if (argc == 2 && std::string(argv[1]) == "--barbarian") {
+            barbarianPersistence();
+            return 0;
+        }
         if (argc == 2 && std::string(argv[1]) == "--bard") {
             bardPersistence();
             return 0;
@@ -1721,6 +1752,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (argc == 2 && std::string(argv[1]) == "--progression") {
+            barbarianPersistence();
             progressionAndFloors();
             std::cout << "campaign progression save tests passed\n";
             return 0;
@@ -1747,6 +1779,7 @@ int main(int argc, char** argv) {
         ignoredCampaigns();
         environmentRoundtrip();
         roundtrip();
+        barbarianPersistence();
         std::cerr << "progression/floors\n";
         progressionAndFloors();
         std::cerr << "chest containers\n";

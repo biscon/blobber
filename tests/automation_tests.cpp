@@ -59,6 +59,29 @@ void paladinWire() {
     const auto event = encodeEvent(impact, cat, true);
     check(event["damage_components"].size() == 2 && event["damage_components"][1]["type"] == "radiant", "Wire feedback keeps damage types separate");
 }
+void barbarianWire() {
+    auto cat = blobber::test::barbarianCatalog();
+    auto arena = defaultArena(cat);
+    arena.adjust({0}, 1);
+    arenaLevel(cat, arena, 4);
+    auto defs = definitions();
+    const auto play = [&] {
+        Session s(blobber::test::campaignBlueprints(), cat, defs, decodeArena(cat, encodeArena(cat, arena)),
+                  Mode::Diagnostic);
+        const auto rage = decodeAction(
+            {{"kind", "combat"}, {"character", 0}, {"action", "feature"}, {"feature", "rage"}}, s.game());
+        check(s.action(rage, true).accepted && s.game().party().rageUses({0}) == 3,
+              "Rage preview preserves uses");
+        check(s.action(rage, false).accepted && !s.action(rage, false).accepted, "Rage commits once");
+        Observation o;
+        s.observe(o);
+        const auto hero = encodeObservation(o).at("party")[0];
+        check(hero.at("rage_uses") == 2 && hero.at("rage_until_ms") == "60000" && hero.at("frenzy_unspent"),
+              "Headless prepared Berserker observes Rage");
+        return hero;
+    };
+    check(play() == play(), "Fresh seeded Barbarian sessions reproduce the same state");
+}
 void bardWire() {
     const auto cat = blobber::test::bardCatalog();
     const auto defs = definitions();
@@ -793,6 +816,7 @@ int main(int argc, char** argv) {
         }
         paladinWire();
         rangerWire();
+        barbarianWire();
         bardWire();
         preciseAimProtocol();
         coveredObservations();

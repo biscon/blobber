@@ -34,6 +34,10 @@ constexpr UiRect portrait(int i) {
     const auto r = card(i);
     return {r.x + 5, r.y + 4, 46, 56};
 }
+constexpr UiRect rageBadge(int i) {
+    const auto p = portrait(i);
+    return {p.x + 1, p.y + 12, p.width - 2, 9};
+}
 constexpr UiRect concentration(int cardIndex) {
     const auto p = portrait(cardIndex);
     return {p.x + p.width - 11, p.y + 1, 10, 10};

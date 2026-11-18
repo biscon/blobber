@@ -310,7 +310,10 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
             const bool paladin = cls->progression == ProgressionClass::Paladin;
             const bool ranger = cls->progression == ProgressionClass::Ranger;
             wrap(p,
-                 cls->progression == ProgressionClass::Bard
+                 cls->progression == ProgressionClass::Barbarian
+                     ? "Rage hardens you against physical hits and strengthens melee attacks. Fight "
+                       "recklessly or time a second swing as a Berserker."
+                 : cls->progression == ProgressionClass::Bard
                      ? "Inspire companions and cast Charisma spells. Song of Rest improves healing at camp. "
                        "College of Lore grants Cutting Words at level three."
                  : ranger  ? "Bow specialist. At level two, Archery sharpens ranged attacks and Wisdom fuels "
@@ -328,13 +331,14 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
                  {174, 218, 448, 44});
             std::snprintf(line, sizeof(line), "Hit Die d%d / Primary ability: %s / Armor training: %s",
                           cls->hitDie,
-                          cls->progression == ProgressionClass::Bard ? "Charisma"
-                          : ranger                                   ? "Dexterity / Wisdom"
-                          : paladin                                  ? "Strength / Charisma"
-                          : cleric                                   ? "Wisdom"
-                          : fighter                                  ? "Strength"
-                          : rogue                                    ? "Dexterity"
-                                                                     : "Intelligence",
+                          cls->progression == ProgressionClass::Barbarian ? "Strength / Constitution"
+                          : cls->progression == ProgressionClass::Bard    ? "Charisma"
+                          : ranger                                        ? "Dexterity / Wisdom"
+                          : paladin                                       ? "Strength / Charisma"
+                          : cleric                                        ? "Wisdom"
+                          : fighter                                       ? "Strength"
+                          : rogue                                         ? "Dexterity"
+                                                                          : "Intelligence",
                           cls->armor ? "Class proficiencies" : "None");
             p.text(line, 174, 273, muted);
         } else
@@ -487,9 +491,14 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
         case FlowAction::Class: {
             p.box(b.rect, m.draft.characterClass.index == b.value ? teal : i == w.focus ? gold : edge);
             const auto cls = c.characterClass({std::uint16_t(b.value)})->progression;
-            if (b.rect.height > 45) {
-                const UiRect icon{b.rect.x + (b.rect.width - 56) / 2, b.rect.y + 4, 56, 56};
-                if (cls == ProgressionClass::Bard)
+            const bool compact = b.rect.height <= 45;
+            {
+                const UiRect icon = compact
+                                        ? UiRect{b.rect.x + 4, b.rect.y + 6, 30, 30}
+                                        : UiRect{b.rect.x + (b.rect.width - 56) / 2, b.rect.y + 4, 56, 56};
+                if (cls == ProgressionClass::Barbarian)
+                    p.picture(UiArt::rageIcon, icon);
+                else if (cls == ProgressionClass::Bard)
                     p.picture(UiArt::inspirationIcon, icon);
                 else if (cls == ProgressionClass::Ranger)
                     p.picture(UiArt::archeryIcon, icon);
@@ -497,7 +506,9 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
                 else if (b.value < 4) art.creator(32 + unsigned(b.value), icon);
             }
             p.centered(c.characterClass({std::uint16_t(b.value)})->name.c_str(),
-                       {b.rect.x, b.rect.y + b.rect.height - 22, b.rect.width, 18}, gold, UiTextStyle::Heading);
+                       compact ? UiRect{b.rect.x + 34, b.rect.y + 4, b.rect.width - 36, b.rect.height - 8}
+                               : UiRect{b.rect.x, b.rect.y + b.rect.height - 22, b.rect.width, 18},
+                       gold, UiTextStyle::Heading);
             break;
         }
         case FlowAction::Minus:

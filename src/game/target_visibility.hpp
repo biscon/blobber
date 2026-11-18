@@ -25,7 +25,7 @@ inline CommandReason targetVisibility(const PartyCommand& command, const rules::
          command.action == PartyAction::Ranged || command.action == PartyAction::Smite) &&
         command.target && !visible(*command.target))
         return CommandReason::NotVisible;
-    if (command.action == PartyAction::Feature && command.feature == rules::Feature::DivineSmite) {
+    if (command.action == PartyAction::Feature && rules::meleeFeature(command.feature)) {
         if (command.target && !visible(*command.target)) return CommandReason::NotVisible;
         for (std::size_t i = 0; i < command.targetCount; ++i)
             if (!visible(command.enemies[i])) return CommandReason::NotVisible;

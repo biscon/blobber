@@ -1,5 +1,6 @@
 #include "persistence/library_codec.hpp"
 #include "platform/file_io.hpp"
+#include "support/bard_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
@@ -67,10 +68,31 @@ void rangerBlueprint() {
     CharacterLibrary reloaded(cat, path);
     check(bool(reloaded.load()), "Ranger library reloads");
     const auto* record = reloaded.snapshot().find(created.id);
-    check(record && cat.characterClass(record->draft.characterClass)->progression == rules::ProgressionClass::Ranger &&
+    check(record &&
+              cat.characterClass(record->draft.characterClass)->progression ==
+                  rules::ProgressionClass::Ranger &&
               record->draft.gear[2] == 1 && record->draft.spells.racial && !record->draft.spells.learned &&
               nlohmann::json::parse(read(path))["schema_version"] == 1,
           "Ranger blueprint preserves the bow choice and racial cantrip in library schema one");
+}
+void barbarianBlueprint() {
+    const auto cat = blobber::test::barbarianCatalog();
+    Temp temp;
+    const auto path = temp.path / "barbarian.json";
+    CharacterLibrary library(cat, path);
+    check(bool(library.initialize()), "Barbarian library initializes");
+    auto draft = rules::recommendedDraft(cat, cat.findRace("high_elf"), cat.findClass("barbarian"));
+    draft.gear[0] = 1;
+    std::snprintf(draft.name.data(), draft.name.size(), "Ulf");
+    const auto created = library.create(draft, library.snapshot().revision);
+    check(created && created.committed, "Save Barbarian blueprint");
+    CharacterLibrary loaded(cat, path);
+    check(bool(loaded.load()), "Reload Barbarian blueprint");
+    const auto* record = loaded.snapshot().find(created.id);
+    check(record && record->draft.characterClass.index == draft.characterClass.index &&
+              record->draft.gear == draft.gear && record->draft.spells.racial == draft.spells.racial &&
+              record->draft.spells.racial && !record->draft.spells.learned,
+          "Barbarian library round trip preserves shield choice and racial spell");
 }
 void tolerantLoading() {
     const auto cat = creationCatalog();
@@ -133,6 +155,7 @@ int main() {
     try {
         paladinBlueprint();
         rangerBlueprint();
+        barbarianBlueprint();
         tolerantLoading();
         const auto cat = creationCatalog();
         Temp temp;

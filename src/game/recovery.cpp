@@ -170,8 +170,8 @@ RestError Party::recoveryBenefits(const RestRequest& r) const noexcept {
                     (progressionClass({i}) == rules::ProgressionClass::Paladin && c.build.level >= 3 && !c.channelDivinity));
         benefit |= r.dice[i] || (hasFeature({i}, rules::ClassFeature::SecondWind) && !c.secondWind);
         if (r.kind == RestKind::Long)
-            benefit |= c.inspirationSpent || c.hitPoints < c.stats.maxHitPoints || c.mana < c.maxMana ||
-                       c.availableHitDice < c.build.level ||
+            benefit |= c.barbarian.spent || c.inspirationSpent || c.hitPoints < c.stats.maxHitPoints ||
+                       c.mana < c.maxMana || c.availableHitDice < c.build.level ||
                        (hasFeature({i}, rules::ClassFeature::ArcaneRecovery) && !c.arcaneRecovery) ||
                        (progressionClass({i}) == rules::ProgressionClass::Paladin &&
                         c.layOnHands < 5 * c.build.level);
@@ -222,6 +222,7 @@ RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRn
         } else {
             heal({i}, c.stats.maxHitPoints);
             c.mana = c.maxMana;
+            c.barbarian = {};
             c.inspirationSpent = 0;
             if (progressionClass({i}) == rules::ProgressionClass::Paladin)
                 c.layOnHands = 5 * c.build.level;

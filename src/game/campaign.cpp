@@ -335,6 +335,8 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
                 c.untilMs = rebase(c.untilMs, from, to);
         local.conditions[i] = {};
         ticket.temporaryUntil[i] = rebase(party_.state_.characters[i].temporaryUntilMs, from, to);
+        ticket.rageUntil[i] = rebase(party_.state_.characters[i].barbarian.rageUntil, from, to);
+        ticket.recklessUntil[i] = rebase(party_.state_.characters[i].barbarian.recklessUntil, from, to);
         ticket.inspirationUntil[i] = rebase(party_.state_.characters[i].inspirationUntil, from, to);
     }
     const auto transfer = [&](auto& dest, const auto& source) {
@@ -379,6 +381,11 @@ bool CampaignRun::commitTravel(PreparedTravel& ticket) noexcept {
     }
     for (unsigned i = 0; i < 4; ++i) {
         party_.state_.characters[i].temporaryUntilMs = ticket.temporaryUntil[i];
+        auto& b = party_.state_.characters[i].barbarian;
+        b.rageUntil = ticket.rageUntil[i];
+        b.recklessUntil = ticket.recklessUntil[i];
+        if (!b.rageUntil)
+            b.frenzy = false;
         party_.state_.characters[i].inspirationUntil = ticket.inspirationUntil[i];
         if (!ticket.inspirationUntil[i])
             party_.state_.characters[i].inspirationSource = {};
@@ -393,8 +400,8 @@ bool CampaignRun::commitTravel(PreparedTravel& ticket) noexcept {
     game().clearPending();
     return true;
 }
-std::array<std::uint64_t, 100> CampaignRun::partyStamp() const noexcept {
-    std::array<std::uint64_t, 100> out{};
+std::array<std::uint64_t, 120> CampaignRun::partyStamp() const noexcept {
+    std::array<std::uint64_t, 120> out{};
     std::size_t n = 0;
     out[n++] = party_.inventory().revision();
     out[n++] = party_.preparationRevision();
@@ -402,15 +409,30 @@ std::array<std::uint64_t, 100> CampaignRun::partyStamp() const noexcept {
     out[n++] = party_.questKeys();
     for (unsigned i = 0; i < 4; ++i) {
         const auto& c = *party_.character({std::uint16_t(i)});
-        for (auto value :
-             {std::uint64_t(c.hitPoints), std::uint64_t(c.life), std::uint64_t(c.temporaryHitPoints),
-              std::uint64_t(c.successes), std::uint64_t(c.failures), std::uint64_t(c.mana),
-              std::uint64_t(c.availableHitDice), std::uint64_t(c.experience),
-              std::uint64_t(c.experienceFraction), std::uint64_t(c.secondWind),
-              std::uint64_t(c.arcaneRecovery), std::uint64_t(c.actionSurge), std::uint64_t(c.channelDivinity),
-              std::uint64_t(c.aidBonus), c.temporaryUntilMs, std::uint64_t(c.inspirationSpent),
-              std::uint64_t(c.inspirationSource.index), c.inspirationUntil,
-              std::uint64_t(party_.snapshot().formation[i].index)})
+        for (auto value : {std::uint64_t(c.hitPoints),
+                           std::uint64_t(c.life),
+                           std::uint64_t(c.temporaryHitPoints),
+                           std::uint64_t(c.successes),
+                           std::uint64_t(c.failures),
+                           std::uint64_t(c.mana),
+                           std::uint64_t(c.availableHitDice),
+                           std::uint64_t(c.experience),
+                           std::uint64_t(c.experienceFraction),
+                           std::uint64_t(c.secondWind),
+                           std::uint64_t(c.arcaneRecovery),
+                           std::uint64_t(c.actionSurge),
+                           std::uint64_t(c.channelDivinity),
+                           std::uint64_t(c.aidBonus),
+                           c.temporaryUntilMs,
+                           std::uint64_t(c.inspirationSpent),
+                           std::uint64_t(c.barbarian.spent),
+                           c.barbarian.rageUntil,
+                           c.barbarian.recklessUntil,
+                           std::uint64_t(c.barbarian.attacked),
+                           std::uint64_t(c.barbarian.frenzy),
+                           std::uint64_t(c.inspirationSource.index),
+                           c.inspirationUntil,
+                           std::uint64_t(party_.snapshot().formation[i].index)})
             out[n++] = value;
     }
     return out;

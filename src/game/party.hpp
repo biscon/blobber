@@ -6,6 +6,15 @@
 
 namespace blobber {
 enum class FormationSlot : std::uint8_t { FrontLeft, FrontRight, BackLeft, BackRight };
+struct BarbarianState {
+    unsigned spent = 0;
+    std::uint64_t rageUntil = 0, recklessUntil = 0;
+    bool frenzy = false, attacked = false;
+    void endRage() noexcept {
+        rageUntil = 0;
+        frenzy = false;
+    }
+};
 struct PartyCharacter : rules::HealthState {
     rules::CharacterIdentity build;
     rules::CharacterStats stats;
@@ -16,6 +25,7 @@ struct PartyCharacter : rules::HealthState {
     int aidBonus = 0;
     std::uint8_t experienceFraction = 0;
     bool actionSurge = false, channelDivinity = false;
+    BarbarianState barbarian;
     int layOnHands = 0, inspirationSpent = 0;
     rules::CharacterId inspirationSource{};
     std::uint64_t inspirationUntil = 0;
@@ -65,6 +75,11 @@ class Party {
     bool useFeature(rules::CharacterId, rules::Feature) noexcept;
     bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;
     int castingModifier(rules::CharacterId) const noexcept;
+    unsigned rageUses(rules::CharacterId) const noexcept;
+    bool raging(rules::CharacterId id, std::uint64_t now) const noexcept {
+        const auto* c = character(id);
+        return c && c->barbarian.rageUntil > now;
+    }
     int inspirationUses(rules::CharacterId) const noexcept;
     bool spendInspiration(rules::CharacterId) noexcept;
     void giveInspiration(rules::CharacterId, rules::CharacterId, std::uint64_t until) noexcept;
@@ -97,6 +112,8 @@ class Party {
     std::uint64_t progressionRevision() const noexcept { return progressionRevision_; }
 
   private:
+    friend class CombatController;
+    friend class EffectController;
     friend class GameSession;
     friend class CampaignRun;
     std::uint8_t questKeys_ = 0;

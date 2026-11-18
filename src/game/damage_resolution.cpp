@@ -4,6 +4,29 @@
 #include <limits>
 
 namespace blobber {
+PartyHitResult damageParty(Party& party, rules::CharacterId id, const rules::DamagePacket& packet,
+                           bool critical, std::uint64_t now) noexcept {
+    PartyHitResult out;
+    if (!packet.count || packet.count > packet.components.size()) {
+        out.health.error = rules::HealthError::InvalidAmount;
+        return out;
+    }
+    for (unsigned i = 0; i < packet.count; ++i) {
+        const auto component = packet.components[i];
+        if (component.amount < 0 || unsigned(component.type) >= rules::damageTypeCount) {
+            out.health.error = rules::HealthError::InvalidAmount;
+            return out;
+        }
+        const auto part = rules::partyDamage(component.amount, component.type, party.raging(id, now));
+        out.components[i] = part;
+        out.total.raw += std::min(part.raw, INT64_MAX - out.total.raw);
+        out.total.damage += std::min(part.damage, INT64_MAX - out.total.damage);
+        if (part.adjustment == rules::DamageAdjustment::Resistant)
+            out.total.adjustment = part.adjustment;
+    }
+    out.health = party.damage(id, out.total.damage, critical);
+    return out;
+}
 NpcDamageResult damageNpc(ActorWorld& actors, EffectController& effects, ActorId id, std::int64_t amount,
                           rules::DamageType type, bool critical, std::uint64_t when) noexcept {
     rules::DamagePacket packet;

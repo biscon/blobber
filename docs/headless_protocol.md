@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 26/28 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 27/29 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -51,7 +51,7 @@ the save format. The legacy `door_opening` field covers both opening and closing
 
 Party purse observations include `party_gold` as a lossless uint64 decimal string
 in both diagnostic and player modes. Gold is shared and does not appear in
-character inventory entries. Campaign saves require schema 26/simulation 28. The authored smithy is location
+character inventory entries. Campaign saves require schema 27/simulation 29. The authored smithy is location
 5 at depth zero, with identity `sanctuary-smithy-v1`. Arcane Emporium is location 6 at depth zero, with identity
 `sanctuary-emporium-v1`. City doorway requests resolve the inn, smithy or emporium
 by the current cell/facing; the existing `doorway` action is unchanged.
@@ -694,3 +694,9 @@ A successful spend updates `last_inspiration` with its serial and die face.
 Inspect the next observation after resolving because another target or ray of
 the same action can immediately require a decision. Party observations expose
 remaining uses, held-die source and expiration on the active floor's gameplay clock.
+
+## Barbarian actions
+
+Use a combat action with `action:"feature"` and one of `rage`, `end_rage`, `weapon_strike`, `reckless_attack`, `frenzy_strike` or `reckless_frenzy`. Pass the usual enemy `target` for a swing. A preview checks the same turn, formation, weapon and target rules as submission and preserves uses. Rage and its dismissal cost a bonus action. A Berserker can spend one bonus action on a Frenzy swing on a later turn of the same Rage.
+
+The character observation exposes `rage_uses`, the decimal gameplay-clock timestamp `rage_until_ms`, `reckless_exposure`, `frenzy_unspent` and `frenzy_bonus_ready`. An available bonus action still requires the character's turn and a legal melee target. Passive features identify `unarmored_defense` and, from level two, `danger_sense`. Incoming physical damage events use `damage_adjustment:"resisted"` and report raw and applied damage. [Berserker rules](barbarian_design.md)

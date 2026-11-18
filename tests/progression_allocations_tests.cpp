@@ -130,7 +130,19 @@ int main() {
         }
         check(bardSeed <= 64, "Allocation fixture reaches an Inspiration prompt");
         auto bard = std::make_unique<GameSession>(map, bardCatalog, places, bardSeed, spellSpawn, false);
+        const auto barbarianCatalog = blobber::test::barbarianCatalog();
+        auto berserker =
+            std::make_unique<GameSession>(map, barbarianCatalog, paladinNear, 5, spellSpawn, false);
+        blobber::test::advanceBarbarian(berserker->party(), 3);
+        levelReady(*berserker, 0);
         tracking = true;
+        okay &=
+            berserker->submit(featureCommand(*berserker, 0, Feature::Rage)).reason == CommandReason::Resolved;
+        levelReady(*berserker, 0);
+        auto reckless = featureCommand(*berserker, 0, Feature::RecklessAttack);
+        reckless.target = berserker->actors().id(0);
+        okay &= berserker->submit(reckless).reason == CommandReason::Resolved;
+        berserker->update(.5, false);
         okay &= bard->submit(blobber::test::inspire(*bard, 2)).reason == CommandReason::Resolved;
         okay &= bard->submit(blobber::test::inspiredShot(*bard)).reason == CommandReason::Resolved;
         const auto roll = bard->pendingRollDecision();

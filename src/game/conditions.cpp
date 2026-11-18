@@ -77,6 +77,10 @@ bool EffectController::metalArmor(EffectTarget t) const noexcept {
 }
 rules::RollMode EffectController::attackMode(EffectTarget attacker, EffectTarget target, bool close,
                                              bool advantage, bool disadvantage) const noexcept {
+    if (attacker.npc && !target.npc && party_.character(target.character)) {
+        const auto until = party_.character(target.character)->barbarian.recklessUntil;
+        advantage |= until && (turns_ || until > gameplayMs_);
+    }
     advantage |= has(target, EffectKind::Restrained) || helpless(target) || has(target, EffectKind::Blind) ||
                  (close && has(target, EffectKind::Knockdown));
     disadvantage |= has(attacker, EffectKind::Restrained) || has(attacker, EffectKind::Blind) ||

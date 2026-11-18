@@ -432,6 +432,11 @@ template <class A> void visit(A& a, PartyCharacter& v, const PartyCharacter& bas
     a("layOnHands", v.layOnHands, base.layOnHands);
     a("inspirationSpent", v.inspirationSpent, base.inspirationSpent);
     a("inspirationSource", v.inspirationSource.index, base.inspirationSource.index);
+    a("ragesSpent", v.barbarian.spent, base.barbarian.spent);
+    a("rageUntil", v.barbarian.rageUntil, base.barbarian.rageUntil);
+    a("recklessUntil", v.barbarian.recklessUntil, base.barbarian.recklessUntil);
+    a("frenzy", v.barbarian.frenzy, base.barbarian.frenzy);
+    a("attacked", v.barbarian.attacked, base.barbarian.attacked);
     a("inspirationUntil", v.inspirationUntil, base.inspirationUntil);
     a("temporaryUntilMs", v.temporaryUntilMs, base.temporaryUntilMs);
 }

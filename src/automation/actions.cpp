@@ -55,7 +55,13 @@ Json describeActions(const GameSession& g, const Observation& o) {
                              "sacred_weapon",
                              "dismiss_sacred_weapon",
                              "divine_smite",
-                             "bardic_inspiration"};
+                             "bardic_inspiration",
+                             "rage",
+                             "end_rage",
+                             "weapon_strike",
+                             "reckless_attack",
+                             "frenzy_strike",
+                             "reckless_frenzy"};
     const char* names[]{"melee", "back_melee", "defend", "ranged", "spell", "item", "aid", "feature", "smite"};
     const auto eligibility = [&](const PartyCommand& c) {
         auto reason = g.actionBusy() ? CommandReason::Moving : g.combat().validate(c, g.movement().player);
@@ -118,8 +124,11 @@ Json describeActions(const GameSession& g, const Observation& o) {
         }
         c.spell = {};
         c.action = PartyAction::Feature;
-        for (unsigned f = 1; f <= unsigned(rules::Feature::BardicInspiration); ++f) {
+        for (unsigned f = 1; f <= unsigned(rules::Feature::RecklessFrenzy); ++f) {
             c.feature = rules::Feature(f);
+            if (f >= unsigned(rules::Feature::Rage) &&
+                g.party().progressionClass({i}) != rules::ProgressionClass::Barbarian)
+                continue;
             c.spell = {};
             if (c.feature == rules::Feature::SpiritualWeapon)
                 for (std::uint16_t s = 0; s < cat.spellCount(); ++s)

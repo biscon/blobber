@@ -18,6 +18,11 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
                "Existing class features remain available.";
     }
     switch (cls) {
+    case C::Barbarian:
+        return level == 2 ? "Reckless Attack grants advantage on Strength melee attacks and exposes you. "
+                            "Danger Sense grants advantage on Dexterity saves against visible dangers."
+                          : "Path of the Berserker. Three Rages per long rest. Choose one extra melee swing "
+                            "per Rage after the activation turn.";
     case C::Fighter:
         return level == 2 ? "Action Surge: one extra normal action. One charge, restored on a Short or Long "
                             "Rest. Activate before or after your normal action."

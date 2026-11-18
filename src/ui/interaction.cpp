@@ -300,6 +300,10 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
                 commands.hover(HoverKind::Inspiration, int(c), {}, input.pointer->x, input.pointer->y);
                 return true;
             }
+            if (state.cards[c].barbarian && inside(hudLayout::rageBadge(int(c)))) {
+                commands.hover(HoverKind::Barbarian, int(c), {}, input.pointer->x, input.pointer->y);
+                return true;
+            }
             if (state.cards[c].concentration && inside(hudLayout::concentration(int(c)))) {
                 commands.hover(HoverKind::Concentration, int(c), {}, input.pointer->x, input.pointer->y);
                 return true;

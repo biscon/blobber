@@ -19,6 +19,12 @@ struct DamageComponent {
 struct DamagePacket {
     std::array<DamageComponent, 2> components{};
     unsigned count = 0;
+    static DamagePacket single(std::int64_t amount, DamageType type) noexcept {
+        DamagePacket packet;
+        packet.count = 1;
+        packet.components[0] = {amount, type};
+        return packet;
+    }
 };
 struct DamageProfile {
     DamageMask immunities = 0, vulnerabilities = 0;
@@ -26,7 +32,7 @@ struct DamageProfile {
 constexpr bool validDamageProfile(DamageProfile p) noexcept {
     return !((p.immunities | p.vulnerabilities) & ~allDamageTypes) && !(p.immunities & p.vulnerabilities);
 }
-enum class DamageAdjustment : std::uint8_t { Normal, Immune, Vulnerable };
+enum class DamageAdjustment : std::uint8_t { Normal, Immune, Vulnerable, Resistant };
 struct DamageResolution {
     std::int64_t raw = 0, damage = 0;
     DamageAdjustment adjustment = DamageAdjustment::Normal;
@@ -39,6 +45,15 @@ inline DamageResolution resolveDamage(std::int64_t amount, DamageType type,
     if (profile.vulnerabilities & damageBit(type))
         return {raw, raw > INT64_MAX / 2 ? INT64_MAX : raw * 2, DamageAdjustment::Vulnerable};
     return {raw, raw, DamageAdjustment::Normal};
+}
+inline DamageResolution partyDamage(std::int64_t amount, DamageType type, bool raging) noexcept {
+    auto result = resolveDamage(amount, type);
+    if (raging &&
+        (type == DamageType::Slashing || type == DamageType::Bludgeoning || type == DamageType::Piercing)) {
+        result.damage /= 2;
+        result.adjustment = DamageAdjustment::Resistant;
+    }
+    return result;
 }
 inline const char* damageTypeName(DamageType type) noexcept {
     constexpr const char* names[]{"bludgeoning", "piercing", "slashing", "acid",    "fire",
@@ -54,6 +69,8 @@ inline std::optional<DamageType> findDamageType(std::string_view name) noexcept 
 }
 inline const char* damageAdjustmentName(DamageAdjustment value) noexcept {
     switch (value) {
+    case DamageAdjustment::Resistant:
+        return "resisted";
     case DamageAdjustment::Normal:
         return "normal";
     case DamageAdjustment::Immune:

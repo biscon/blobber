@@ -144,6 +144,19 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, c
         fill({portrait.x + 1, portrait.y + 1, 33, 10}, background);
         text("LEVEL UP", portrait.x + 2, portrait.y + 2, gold, UiTextStyle::Small);
     }
+    if (c.barbarian && c.status == DisplayStatus::Ready) {
+        if (c.rageSeconds)
+            std::snprintf(line, sizeof(line), "Rage %us", c.rageSeconds);
+        else
+            std::snprintf(line, sizeof(line), "Rages %u", c.rageUses);
+        fill(hudLayout::rageBadge(i), background);
+        text(line, portrait.x + 2, portrait.y + 12, gold, UiTextStyle::Small);
+        if (c.reckless)
+            picture(UiArt::recklessIcon, {portrait.x + 30, portrait.y + 23, 14, 14});
+        if (c.frenzy)
+            picture(UiArt::frenzyIcon, {portrait.x + 30, portrait.y + 35, 12, 12},
+                    c.frenzyReady ? WHITE : GRAY);
+    }
     if (c.inspirationSource)
         picture(UiArt::inspirationIcon, rollLayout::heldDie(i));
     if (c.concentration) {

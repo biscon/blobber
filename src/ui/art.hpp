@@ -18,7 +18,8 @@ class UiArt {
     static constexpr unsigned classFeaturesIcon = 28, silhouetteIcon = 44, restIcon = 48;
     static constexpr unsigned archeryIcon = 198, colossusSlayerIcon = 199;
     static constexpr unsigned inspirationIcon = 200, mockeryIcon = 201, songIcon = 202,
-                              cuttingWordsIcon = 203;
+                              cuttingWordsIcon = 203, rageIcon = 204, recklessIcon = 205, frenzyIcon = 206,
+                              dangerSenseIcon = 207;
     static unsigned effectIcon(EffectKind) noexcept;
     static constexpr unsigned holdPersonIcon = 59, quarterstaffIcon = 60, travelIcon = 61,
                               skeletonPortraitIcon = 62, bugbearPortraitIcon = 63,

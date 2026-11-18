@@ -201,12 +201,21 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                                        : "miss",
                           out.roll, disadvantage, static_cast<long long>(out.damage), out.died ? ", dead" : "", pack);
         } else
-            std::snprintf(line, sizeof(line), "%s -> %s #%u: %s (d20 %d%s), %lld damage%s.", name, species,
+            std::snprintf(line, sizeof(line), "%s%s%s -> %s #%u: %s (d20 %d%s), %lld damage%s.", name,
+                          rules::barbarianStrike(out.feature) ? " / " : "",
+                          rules::barbarianStrike(out.feature) ? rules::featureName(out.feature) : "", species,
                           unsigned(out.enemy.slot) + 1,
                           out.critical ? "critical"
                           : out.hit    ? "hit"
                                        : "miss",
-                          out.roll, disadvantage, static_cast<long long>(out.damage), out.died ? ", dead" : "");
+                          out.roll, disadvantage, static_cast<long long>(out.damage),
+                          out.died ? ", dead" : "");
+        if (out.damageAdjustment == rules::DamageAdjustment::Resistant) {
+            appendLog(line);
+            std::snprintf(line, sizeof(line), "%s resists %s damage (%lld reduced to %lld).", target,
+                          rules::damageTypeName(out.damageType), (long long)out.rawDamage,
+                          (long long)out.damage);
+        }
         if (out.smiteDamage && out.hit) {
             appendLog(line);
             std::snprintf(line, sizeof(line), "Divine Smite: %lld weapon + %lld radiant damage (%lld + %lld before mitigation).",
@@ -814,6 +823,16 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card = {};
         card.id = id;
         card.name = member.build.name.c_str();
+        card.barbarian = party_.progressionClass(id) == rules::ProgressionClass::Barbarian;
+        if (card.barbarian) {
+            const auto now = session_.combat().snapshot().gameplayMs;
+            card.rageUses = party_.rageUses(id);
+            if (member.barbarian.rageUntil > now)
+                card.rageSeconds = unsigned((member.barbarian.rageUntil - now + 999) / 1000);
+            card.reckless = member.barbarian.recklessUntil != 0;
+            card.frenzy = member.barbarian.frenzy;
+            card.frenzyReady = card.frenzy && session_.combat().bonusReady(id);
+        }
         if (member.inspirationUntil > session_.combat().snapshot().gameplayMs) {
             card.inspirationSource = party_.character(member.inspirationSource)->build.name.c_str();
             card.inspirationRemaining = member.inspirationUntil - session_.combat().snapshot().gameplayMs;

@@ -49,6 +49,20 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         return CommandReason::StaleTurn;
     if (!effects_.canAct(c.character))
         return CommandReason::CannotAct;
+    const bool frenzy = rules::frenzyStrike(c.feature);
+    if (rules::barbarianStrike(c.feature)) {
+        if (c.action != PartyAction::Melee ||
+            party_.progressionClass(c.character) != rules::ProgressionClass::Barbarian)
+            return CommandReason::FeatureRequired;
+        if (frenzy && (!ch->barbarian.frenzy || !party_.raging(c.character, state_.gameplayMs) ||
+                       cunningReady_[c.character.index] > state_.gameplayMs))
+            return CommandReason::Unavailable;
+        if (rules::recklessStrike(c.feature)) {
+            const auto* w = weapon(c.character, false);
+            if (ch->build.level < 2 || ch->barbarian.attacked || !w || w->ability != rules::Ability::Strength)
+                return CommandReason::Unavailable;
+        }
+    }
     const bool ranged = c.action == PartyAction::Ranged;
     if (realTime(state_.phase)) {
         if (!ranged && c.action != PartyAction::Aid)
@@ -64,7 +78,7 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         if (!(pose == origin_))
             return CommandReason::Moving;
     }
-    if (!normalAction(c.character))
+    if (!frenzy && !normalAction(c.character))
         return CommandReason::Cooldown;
     if (c.action == PartyAction::Defend)
         return CommandReason::Ready;
@@ -149,6 +163,8 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     }
     out.reason = CommandReason::Resolved;
     out.character = c.character;
+    if (rules::barbarianStrike(c.feature))
+        out.feature = c.feature;
     if (c.action == PartyAction::Smite) out.feature = rules::Feature::DivineSmite;
     const bool turn = state_.phase == CombatPhase::Turns;
     spendAction(c);
@@ -175,11 +191,21 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const bool ranged = c.action == PartyAction::Ranged;
         out.kind = ranged ? rules::AttackKind::Ranged : rules::AttackKind::Melee;
         const auto& w = *weapon(c.character, ranged);
+        if (party_.progressionClass(c.character) == rules::ProgressionClass::Barbarian && turn) {
+            auto& state = party_.state_.characters[c.character.index].barbarian;
+            state.attacked = true;
+            if (rules::recklessStrike(c.feature))
+                state.recklessUntil = state_.gameplayMs + combatRoundMs;
+        }
+        const bool strengthMelee = !ranged && w.ability == rules::Ability::Strength;
         out.damageType = w.damageType;
         const auto* a = actors_.actor(out.enemy);
         const bool held = effects_.helpless(out.enemy);
-        out.attackRollMode = partyAttackRoll(c.character, out.enemy, pose, ranged, w.heavyDisadvantage,
-                                             effects_.guiding(out.enemy)).mode;
+        out.attackRollMode =
+            partyAttackRoll(c.character, out.enemy, pose, ranged, w.heavyDisadvantage,
+                            effects_.guiding(out.enemy) ||
+                                (strengthMelee && party_.character(c.character)->barbarian.recklessUntil))
+                .mode;
         const auto roll = rng_.d20(out.attackRollMode).value;
         effects_.consumeGuiding(out.enemy, now, events);
         out.roll = roll.selected;
@@ -195,6 +221,8 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         out.hit |= out.critical;
         if (out.hit) {
             out.damage = rng_.damage(w.damage, out.critical).value.total;
+            if (strengthMelee && party_.raging(c.character, state_.gameplayMs))
+                out.damage += 2;
             if (c.action == PartyAction::Smite) {
                 const auto type = actors_.catalog().monster(a->monster)->creatureType;
                 const int dice = type == rules::CreatureType::Undead || type == rules::CreatureType::Fiend ? 3 : 2;

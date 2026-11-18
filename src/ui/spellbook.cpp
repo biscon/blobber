@@ -5,6 +5,8 @@ namespace blobber {
 using namespace hudInk;
 namespace {
 unsigned entryIcon(const SpellBookEntry& e) noexcept {
+    if (e.passive == PassiveFeature::DangerSense)
+        return UiArt::dangerSenseIcon;
     if (e.passive == PassiveFeature::Archery)
         return UiArt::archeryIcon;
     if (e.passive == PassiveFeature::SongOfRest)
@@ -20,7 +22,8 @@ void usesLabel(char* output, std::size_t size, int charges) {
     std::snprintf(output, size, "%d %s remaining", charges, charges == 1 ? "use" : "uses");
 }
 const char* featureAction(rules::Feature feature, CombatPhase phase) {
-    if (feature == rules::Feature::BardicInspiration)
+    if (feature == rules::Feature::BardicInspiration || feature == rules::Feature::Rage ||
+        feature == rules::Feature::EndRage || rules::frenzyStrike(feature))
         return "Bonus action";
     if (feature == rules::Feature::ActionSurge || feature == rules::Feature::CunningAction ||
         feature == rules::Feature::SpiritualWeapon)
@@ -104,13 +107,18 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
                 available ? WHITE : Color{100, 108, 106, 255});
         border({r.x + 2, r.y + 2, r.height - 4, r.height - 4}, {29, 36, 33, 255});
         const bool spell = e.category == PickerEntryKind::Spell;
-        clipped(e.name, r.x + 21, r.y + 4, spell ? 89 : 62, available ? gold : muted, UiTextStyle::Label);
+        const char* rowName = e.feature == rules::Feature::RecklessFrenzy ? "Reckless Frenzy" : e.name;
+        clipped(rowName, r.x + 21, r.y + 4, spell ? 89 : 62, available ? gold : muted, UiTextStyle::Label);
         if (automatic)
             std::snprintf(line, sizeof(line), "Automatic");
         else if (spell)
             std::snprintf(line, sizeof(line), "%d", e.cost);
         else if (e.feature == rules::Feature::LayOnHands)
             std::snprintf(line, sizeof(line), "%d HP", e.charges);
+        else if (e.feature == rules::Feature::EndRage)
+            std::snprintf(line, sizeof(line), "Bonus");
+        else if (e.feature == rules::Feature::WeaponStrike || e.feature == rules::Feature::RecklessAttack)
+            std::snprintf(line, sizeof(line), "Action");
         else if (e.cost)
             std::snprintf(line, sizeof(line), "%d mana", e.cost);
         else if (e.charges >= 0)

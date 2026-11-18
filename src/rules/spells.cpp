@@ -505,7 +505,13 @@ const char* featureName(Feature f) noexcept {
                                   "Sacred Weapon",
                                   "Dismiss Sacred Weapon",
                                   "Divine Smite",
-                                  "Bardic Inspiration"};
+                                  "Bardic Inspiration",
+                                  "Rage",
+                                  "End Rage",
+                                  "Attack",
+                                  "Reckless Attack",
+                                  "Frenzy Strike",
+                                  "Reckless Frenzy Strike"};
     return unsigned(f) < std::size(names) ? names[unsigned(f)] : "Ability";
 }
 int spellManaCost(int level) noexcept {

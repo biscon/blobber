@@ -191,6 +191,9 @@ class CombatController {
     CombatOutcome submit(const PartyCommand&, Player, std::uint64_t now, CombatEvents&) noexcept;
     bool continueExploring() noexcept;
     void previewTurns(CombatSnapshot&) const noexcept;
+    bool bonusReady(rules::CharacterId id) const noexcept {
+        return id.index < cunningReady_.size() && cunningReady_[id.index] <= state_.gameplayMs;
+    }
     bool member(ActorId) const noexcept;
     bool exposed(rules::CharacterId) const noexcept;
     bool exposed(ActorId) const noexcept;

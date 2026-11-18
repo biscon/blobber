@@ -1,5 +1,6 @@
 #include "game/commands.hpp"
 #include "game/session.hpp"
+#include "support/barbarian_checks.hpp"
 #include "support/bard_checks.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
@@ -595,6 +596,7 @@ int main() {
         blobber::test::rangerProgression();
         blobber::test::rangerGoodberry();
         blobber::test::bardProgressionAndRecovery();
+        blobber::test::barbarianChecks();
         blobber::test::bardAttackDecisions();
         blobber::test::bardSavesAndMockery();
         blobber::test::bardDeathAndRayDecisions();

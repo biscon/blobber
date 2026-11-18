@@ -351,6 +351,9 @@ void CombatController::selectTurn() noexcept {
             if (processedCasterRound_[e.index] != state_.round) {
                 processedCasterRound_[e.index] = state_.round;
                 reactionReady_[e.index] = 0;
+                auto& barbarian = party_.state_.characters[e.index].barbarian;
+                barbarian.attacked = false;
+                barbarian.recklessUntil = 0;
                 if (currentEvents_)
                     effects_.casterTurn({e.index}, noticeTime_, *currentEvents_);
             }

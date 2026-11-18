@@ -117,8 +117,8 @@ class CampaignRun {
         unsigned landing = 0;
         unsigned from = 0, to = 0;
         std::uint64_t mutation = 0, actorRevision = 0;
-        std::array<std::uint64_t, 100> partyStamp{};
-        std::array<std::uint64_t, 4> temporaryUntil{}, inspirationUntil{};
+        std::array<std::uint64_t, 120> partyStamp{};
+        std::array<std::uint64_t, 4> temporaryUntil{}, inspirationUntil{}, rageUntil{}, recklessUntil{};
     };
     CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&,
                 const rules::PresetParty&, const std::vector<std::string>& types,
@@ -175,6 +175,6 @@ class CampaignRun {
     std::shared_ptr<const CampaignDefinitions> baseline_, definitions_;
     void configureDoorways();
     std::unique_ptr<GameSession> prepare(unsigned, Player, bool validate = false);
-    std::array<std::uint64_t, 100> partyStamp() const noexcept;
+    std::array<std::uint64_t, 120> partyStamp() const noexcept;
 };
 } // namespace blobber

@@ -14,8 +14,11 @@ bool CombatController::cunningAvailable(rules::CharacterId id) const noexcept {
            cunningReady_[id.index] <= state_.gameplayMs;
 }
 bool CombatController::freeAction(const PartyCommand& c) const noexcept {
+    if (c.action == PartyAction::Melee && rules::frenzyStrike(c.feature))
+        return true;
     if (c.action == PartyAction::Feature)
-        return c.feature == rules::Feature::BardicInspiration || c.feature == rules::Feature::ActionSurge ||
+        return c.feature == rules::Feature::Rage || c.feature == rules::Feature::EndRage ||
+               c.feature == rules::Feature::BardicInspiration || c.feature == rules::Feature::ActionSurge ||
                c.feature == rules::Feature::CunningAction || c.feature == rules::Feature::SpiritualWeapon ||
                c.feature == rules::Feature::EndTurn;
     return c.action == PartyAction::Item && party_.character(c.character)->build.level >= 3 &&
@@ -49,12 +52,18 @@ bool CombatController::hasActions(rules::CharacterId id) const noexcept {
                              return ally.index != id.index && effects_.conscious(ally) &&
                                     !party_.character(ally)->inspirationUntil;
                          })) ||
+            (party_.progressionClass(id) == rules::ProgressionClass::Barbarian &&
+             cunningReady_[id.index] <= state_.gameplayMs &&
+             (c->barbarian.rageUntil || party_.rageUses(id))) ||
             c->actionSurge || cunningAvailable(id) || (weapon && weapon->readyMs <= state_.gameplayMs));
 }
 void CombatController::spendAction(const PartyCommand& c) noexcept {
     if (freeAction(c)) {
-        if (c.feature == rules::Feature::BardicInspiration || c.action == PartyAction::Item ||
-            c.feature == rules::Feature::CunningAction)
+        if (rules::frenzyStrike(c.feature))
+            party_.state_.characters[c.character.index].barbarian.frenzy = false;
+        if (rules::frenzyStrike(c.feature) || c.feature == rules::Feature::Rage ||
+            c.feature == rules::Feature::EndRage || c.feature == rules::Feature::BardicInspiration ||
+            c.action == PartyAction::Item || c.feature == rules::Feature::CunningAction)
             cunningReady_[c.character.index] = actionReadyMs();
         return;
     }

@@ -231,6 +231,20 @@ void CommandController::updateHover() noexcept {
     auto put = [&](int line, const char* text) {
         std::snprintf(h.lines[line].data(), h.lines[line].size(), "%s", text);
     };
+    if (h.kind == HoverKind::Barbarian && unsigned(h.index) < state_.cards.size()) {
+        const auto& card = state_.cards[h.index];
+        put(0, "Rage");
+        std::snprintf(h.lines[1].data(), h.lines[1].size(), "%u uses until long rest", card.rageUses);
+        if (card.rageSeconds)
+            std::snprintf(h.lines[2].data(), h.lines[2].size(), "%u seconds remaining", card.rageSeconds);
+        if (card.rageSeconds && card.level >= 3)
+            put(3, card.frenzyReady ? "Frenzy swing ready"
+                   : card.frenzy    ? "Frenzy ready next bonus action"
+                                    : "Frenzy swing spent");
+        if (card.reckless)
+            put(4, "Enemies have advantage against you.");
+        return;
+    }
     if (h.kind == HoverKind::Inspiration) {
         if (unsigned(h.index) >= state_.cards.size() || !state_.cards[h.index].inspirationSource) {
             h.kind = HoverKind::None;
@@ -318,6 +332,12 @@ void CommandController::updateHover() noexcept {
                 put(2, commandMessage(h.reason));
             else if (m.single) {
                 const auto* spell = rules::spellRules(m.kind);
+                if (rules::barbarianStrike(m.pending.feature)) {
+                    put(2, "Click to attack.");
+                    if (const auto* warning = session_.combat().attackWarning(m.pending, *h.enemy, pose))
+                        put(5, warning);
+                    return;
+                }
                 const auto profile = actors_.catalog().monster(a.monster)->damageProfile;
                 put(2, m.kind != rules::SpellKind::HuntersMark && spell &&
                                (profile.immunities & rules::damageBit(spell->damage))
@@ -351,11 +371,17 @@ void CommandController::updateHover() noexcept {
             const auto i = static_cast<unsigned>(slot);
             const auto& weapon = c->stats.weapons[i];
             const auto& dice = weapon.damage;
+            const int rageBonus = command.action != PartyAction::Ranged &&
+                                          weapon.ability == rules::Ability::Strength &&
+                                          party_.raging(command.character, state_.combat.gameplayMs)
+                                      ? 2
+                                      : 0;
             const auto profile = actors_.catalog().monster(a.monster)->damageProfile;
-            const auto low =
-                rules::resolveDamage(dice.count + std::int64_t(dice.modifier), weapon.damageType, profile);
-            const auto high = rules::resolveDamage(std::int64_t(dice.count) * dice.sides + dice.modifier,
-                                                   weapon.damageType, profile);
+            const auto low = rules::resolveDamage(dice.count + std::int64_t(dice.modifier) + rageBonus,
+                                                  weapon.damageType, profile);
+            const auto high =
+                rules::resolveDamage(std::int64_t(dice.count) * dice.sides + dice.modifier + rageBonus,
+                                     weapon.damageType, profile);
             std::snprintf(h.lines[1].data(), h.lines[1].size(), "%s: %lld-%lld damage%s", item->name.c_str(),
                           static_cast<long long>(low.damage), static_cast<long long>(high.damage),
                           low.adjustment == rules::DamageAdjustment::Vulnerable ? " (vulnerable)"

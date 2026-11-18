@@ -19,6 +19,8 @@ const char* subclassName(ProgressionClass cls, int level, bool life) noexcept {
         return "Hunter";
     if (cls == ProgressionClass::Bard && level >= 3)
         return "College of Lore";
+    if (cls == ProgressionClass::Barbarian && level >= 3)
+        return "Path of the Berserker";
     return "None yet";
 }
 SpellSelectionContext advancementChoices(const Catalog& cat, const CharacterIdentityView& source,

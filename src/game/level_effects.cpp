@@ -264,7 +264,8 @@ bool EffectController::escapeWeb(EffectTarget t, std::uint64_t now, CombatEvents
                                        rules::Ability::Strength)
                     .value
               : party_.character(t.character)->stats.modifiers[0];
-    const auto roll = rng_.d20().value.selected;
+    const auto roll =
+        rng_.d20(rules::rollMode(!t.npc && party_.raging(t.character, gameplayMs_), false)).value.selected;
     const int total = roll + modifier + oneShot(t, EffectKind::Guidance);
     CombatOutcome out;
     out.event = CombatEvent::SpellSave;
@@ -362,11 +363,14 @@ void EffectController::burnWeb(std::uint64_t now, CombatEvents& events) noexcept
                 out.fortitude = result.fortitude;
                 out.died = result.actor.died;
             } else {
-                const auto resolved = rules::resolveDamage(damage, out.damageType);
-                out.rawDamage = resolved.raw;
-                out.damage = resolved.damage;
-                out.damageAdjustment = resolved.adjustment;
-                out.died = party_.damage(t.character, out.damage).died;
+                const auto result =
+                    damageParty(party_, t.character, rules::DamagePacket::single(damage, out.damageType),
+                                false, gameplayMs_);
+                out.rawDamage = result.total.raw;
+                out.damage = result.total.damage;
+                out.damageAdjustment = result.total.adjustment;
+                out.damageComponents = result.components;
+                out.died = result.health.died;
             }
             events.append(out);
             if (out.damage > 0)

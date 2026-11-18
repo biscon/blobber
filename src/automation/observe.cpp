@@ -185,6 +185,16 @@ Json encodeObservation(const Observation& o) {
             {"domain", spellList(cat, p.build.spells.domain)},
             {"racial", spellList(cat, p.build.spells.racial)},
             {"inventory", Json::array()}};
+        if (g.party().progressionClass({i}) == rules::ProgressionClass::Barbarian) {
+            c["rage_uses"] = g.party().rageUses({i});
+            c["rage_until_ms"] = u(p.barbarian.rageUntil);
+            c["reckless_exposure"] = bool(p.barbarian.recklessUntil);
+            c["frenzy_unspent"] = p.barbarian.frenzy;
+            c["frenzy_bonus_ready"] = p.barbarian.frenzy && g.combat().bonusReady({i});
+            c["passive_features"] = Json::array({"unarmored_defense"});
+            if (p.build.level >= 2)
+                c["passive_features"].push_back("danger_sense");
+        }
         if (g.party().progressionClass({i}) == rules::ProgressionClass::Bard) {
             auto& passives = c["passive_features"] = Json::array();
             if (p.build.level >= 2)

@@ -1,5 +1,5 @@
 {
-  "schema_version": 19,
+  "schema_version": 20,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -985,6 +985,31 @@
       ],
       "progression": "bard",
       "spell_list": "bard",
+      "spell_progression": "full"
+    },
+    {
+      "id": "barbarian",
+      "name": "Barbarian",
+      "hit_die": 12,
+      "saves": [
+        "strength",
+        "constitution"
+      ],
+      "weapons": [
+        "simple",
+        "martial"
+      ],
+      "armor": [
+        "light",
+        "medium",
+        "shield"
+      ],
+      "allows_defense": false,
+      "casting": "none",
+      "features": [],
+      "spells": [],
+      "progression": "barbarian",
+      "spell_list": "none",
       "spell_progression": "full"
     }
   ],
@@ -2760,6 +2785,65 @@
         }
       ],
       "class": "bard"
+    },
+    {
+      "recommended": {
+        "strength": 15,
+        "dexterity": 14,
+        "constitution": 15,
+        "intelligence": 8,
+        "wisdom": 10,
+        "charisma": 8
+      },
+      "groups": [
+        [
+          {
+            "id": "greatsword",
+            "name": "Greatsword",
+            "items": [
+              {
+                "item": "greatsword",
+                "quantity": 1,
+                "slot": "main_hand"
+              }
+            ]
+          },
+          {
+            "id": "battleaxe_shield",
+            "name": "Battleaxe and shield",
+            "items": [
+              {
+                "item": "battleaxe",
+                "quantity": 1,
+                "slot": "main_hand"
+              },
+              {
+                "item": "shield",
+                "quantity": 1,
+                "slot": "off_hand"
+              }
+            ]
+          }
+        ]
+      ],
+      "supplies": [
+        {
+          "item": "shortbow",
+          "quantity": 1,
+          "slot": "bag"
+        },
+        {
+          "item": "arrow",
+          "quantity": 20,
+          "slot": "bag"
+        },
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "slot": "bag"
+        }
+      ],
+      "class": "barbarian"
     }
   ]
 }
