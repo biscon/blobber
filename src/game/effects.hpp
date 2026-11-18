@@ -27,6 +27,7 @@ enum class EffectKind : std::uint8_t {
     SpiritualWeapon,
     ProtectionFromEvilAndGood,
     SacredWeapon,
+    HuntersMark,
     Count
 };
 enum class StatusClock : std::uint8_t { Seconds, Turns, CasterTurn, Standing, Escape };
@@ -47,6 +48,8 @@ struct StatusSummary {
 };
 rules::SpellKind effectSpell(EffectKind) noexcept;
 bool harmfulEffect(EffectKind) noexcept;
+bool concentrates(EffectKind) noexcept;
+constexpr std::uint64_t huntersMarkDurationMs = 3600000;
 void statusDuration(const StatusEntry&, char* output, std::size_t bytes) noexcept;
 struct EffectId {
     std::uint64_t world = 0, serial = 0;
@@ -229,6 +232,7 @@ class EffectController {
     int oneShot(EffectTarget, EffectKind) noexcept;
     int sacredWeaponBonus(rules::CharacterId) const noexcept;
     EffectId sacredWeapon(rules::CharacterId) const noexcept;
+    bool markedBy(rules::CharacterId, ActorId) const noexcept;
     int saveModifier(EffectTarget t) noexcept { return rollModifier(t) + oneShot(t, EffectKind::Resistance); }
     void breakWard(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
     bool wardAllows(EffectTarget attacker, EffectTarget target, std::uint64_t, CombatEvents&) noexcept;

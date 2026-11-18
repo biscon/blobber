@@ -71,10 +71,14 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                 throw std::runtime_error("races." + r.id + ".ability_increases: expected 0..2");
     }
     for (const auto& c : classes_) {
-        if (c.spellList > SpellList::Paladin || c.spellProgression > SpellProgression::Half ||
-            (c.progression == ProgressionClass::Paladin && (c.casting != Casting::Charisma || c.spellProgression != SpellProgression::Half || c.spellList != SpellList::Paladin)))
+        const bool ranger = c.progression == ProgressionClass::Ranger;
+        if (c.spellList > SpellList::Ranger || c.spellProgression > SpellProgression::Half ||
+            (c.progression == ProgressionClass::Paladin && (c.casting != Casting::Charisma || c.spellProgression != SpellProgression::Half || c.spellList != SpellList::Paladin)) ||
+            (ranger != (c.spellList == SpellList::Ranger)) ||
+            (ranger && (c.casting != Casting::Wisdom || c.spellProgression != SpellProgression::Half ||
+                        c.spellCount != 3 || c.features || c.allowsDefense)))
             throw std::runtime_error("Invalid casting profile");
-        if (unsigned(c.progression) > unsigned(ProgressionClass::Paladin))
+        if (unsigned(c.progression) > unsigned(ProgressionClass::Ranger))
             throw std::runtime_error("Invalid class progression");
         if (static_cast<unsigned>(c.casting) > static_cast<unsigned>(Casting::Charisma) ||
             (c.features & ~15u) || c.spellCount > c.spells.size() ||
@@ -86,7 +90,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
             if (!s || !spellClass(s->kind, c.spellList != SpellList::None ? c.spellList : c.casting == Casting::Wisdom ? SpellList::Cleric : c.casting == Casting::Intelligence ? SpellList::Wizard : SpellList::None))
                 throw std::runtime_error("classes: invalid spell reference or class eligibility");
             for (std::size_t j = 0; j < i; ++j)
-                if (c.spells[j].index == c.spells[i].index)
+                if (c.spells[j].index == c.spells[i].index ||
+                    (ranger && spell(c.spells[j])->kind == s->kind))
                     throw std::runtime_error("classes: duplicate spell reference");
         }
 

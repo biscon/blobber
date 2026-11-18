@@ -138,7 +138,7 @@ void summaryAndPose() {
     effects.condition(id, EffectKind::Sleep, {3}, 0, events);
     auto statuses = effects.statuses(id);
     check(statuses.count == 1 && statuses.entries[0].spell == rules::SpellKind::Sleep &&
-              statuses.entries[0].remainingMs == 60000,
+              statuses.entries[0].remainingMs == 12000,
           "Sleep icon and lifetime come from active condition");
     animator.setTime(10, &effects);
     check(animator.snapshot().frames[0].clip == NpcAnimation::Prone &&
@@ -230,7 +230,7 @@ void durationModes() {
     label(effects.statuses(rules::CharacterId{3}).entries[0], "10 turns remaining");
     label(*effects.concentrationStatus(rules::CharacterId{1}), "10 turns remaining");
     effects.condition(actors.id(0), EffectKind::Sleep, {3}, 1, events);
-    label(effects.statuses(actors.id(0)).entries[0], "10 turns remaining");
+    label(effects.statuses(actors.id(0)).entries[0], "2 turns remaining");
     effects.guide(actors.id(0), 1, events);
     label(effects.statuses(actors.id(0)).entries[1], "1 turn remaining");
     party.grantTemporary({3}, 5, 3600001);
@@ -277,6 +277,16 @@ void badgeLayout() {
             for (const auto& row : status)
                 if (row)
                     check(!badgesOverlap(*cast, *row), "Casting badges cannot cover status badges");
+    hud.hover.kind = HoverKind::Enemy;
+    hud.hover.tooltipVisible = true;
+    hud.hover.enemy = hud.targets.ids[0];
+    hud.targets.anchors[0].top = hud.targets.anchors[0].badgeTop;
+    hud.conditions[0] = 1u << unsigned(EffectKind::HuntersMark);
+    const auto health = hoveredEnemyHealthBar(hud);
+    const auto marked = statusMarkerLayout(hud);
+    check(health && marked[0] && marked[0]->y < health->y && !badgesOverlap(*health, *marked[0]),
+          "The hovered health bar leaves the Hunter's Mark badge visible above it");
+    hud.hover = {};
     PickingBuffer depth;
     hud.targets.count = 1;
     hud.magic.affectedCount = 1;

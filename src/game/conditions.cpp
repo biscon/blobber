@@ -42,7 +42,8 @@ const char* effectName(EffectKind kind) noexcept {
     constexpr const char* names[]{
         "Bless",     "Bane",       "Shield of Faith", "Mage Armor", "Hold Person", "Guidance", "Resistance",
         "Sanctuary", "Sleep",      "Blind",           "Slow",       "Knockdown",   "Aid",      "Mirror Image",
-        "Web",       "Restrained", "Spiritual Weapon", "Protection from Evil and Good", "Sacred Weapon"};
+        "Web",       "Restrained", "Spiritual Weapon", "Protection from Evil and Good", "Sacred Weapon",
+        "Hunter's Mark"};
     return unsigned(kind) < std::size(names) ? names[unsigned(kind)] : "Effect";
 }
 std::size_t EffectController::conditionIndex(EffectTarget t) const noexcept {

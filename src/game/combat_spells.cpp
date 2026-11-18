@@ -6,11 +6,44 @@
 namespace blobber {
 namespace {
 using rules::SpellKind;
+rules::AttackKind spellAttackKind(SpellKind kind) noexcept {
+    return kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp ||
+                   kind == SpellKind::SpiritualWeapon
+               ? rules::AttackKind::Melee : rules::AttackKind::Ranged;
+}
 bool effectSpell(SpellKind k) {
     return k == SpellKind::Bless || k == SpellKind::Bane || k == SpellKind::ShieldOfFaith ||
            k == SpellKind::MageArmor || k == SpellKind::Guidance || k == SpellKind::Resistance ||
            k == SpellKind::Sanctuary || k == SpellKind::Aid || k == SpellKind::HoldPerson ||
-           k == SpellKind::MirrorImage || k == SpellKind::ProtectionFromEvilAndGood;
+           k == SpellKind::MirrorImage || k == SpellKind::ProtectionFromEvilAndGood ||
+           k == SpellKind::HuntersMark;
+}
+std::array<int, rules::partySize> goodberryHealing(const Party& party,
+                                                  const EffectController& effects) noexcept {
+    std::array<int, rules::partySize> healing{};
+    std::array<int, rules::partySize> current{}, maximum{};
+    for (std::uint16_t i = 0; i < rules::partySize; ++i) {
+        const rules::CharacterId id{i};
+        if (effects.conscious(id)) {
+            const auto& ally = *party.character(id);
+            current[i] = ally.hitPoints;
+            maximum[i] = ally.stats.maxHitPoints;
+        }
+    }
+    for (int point = 0; point < 10; ++point) {
+        auto best = healing.size();
+        for (std::size_t i = 0; i < healing.size(); ++i) {
+            if (current[i] < maximum[i] &&
+                (best == healing.size() ||
+                 std::int64_t(current[i]) * maximum[best] < std::int64_t(current[best]) * maximum[i]))
+                best = i;
+        }
+        if (best == healing.size())
+            break;
+        ++healing[best];
+        ++current[best];
+    }
+    return healing;
 }
 bool delayed(SpellKind k) {
     return k == SpellKind::FireBolt || k == SpellKind::GuidingBolt || k == SpellKind::MagicMissile ||
@@ -119,7 +152,8 @@ EffectRequest CombatController::spellEffect(const PartyCommand& c, SpellKind kin
     request.world = c.world;
     request.caster = c.character;
     request.count = c.targetCount;
-    request.kind = kind == SpellKind::ProtectionFromEvilAndGood ? EffectKind::ProtectionFromEvilAndGood
+    request.kind = kind == SpellKind::HuntersMark ? EffectKind::HuntersMark
+                   : kind == SpellKind::ProtectionFromEvilAndGood ? EffectKind::ProtectionFromEvilAndGood
                    : kind == SpellKind::Aid               ? EffectKind::Aid
                    : kind == SpellKind::HoldPerson      ? EffectKind::HoldPerson
                    : kind == SpellKind::MirrorImage     ? EffectKind::MirrorImage
@@ -134,7 +168,7 @@ EffectRequest CombatController::spellEffect(const PartyCommand& c, SpellKind kin
     request.difficulty = 8 + party_.character(c.character)->stats.proficiency +
                          party_.spellAccess(c.character, c.spell).modifier;
     for (std::size_t i = 0; i < std::min(c.targetCount, request.targets.size()); ++i)
-        request.targets[i] = (kind == SpellKind::Bane || kind == SpellKind::HoldPerson)
+        request.targets[i] = rules::spellRules(kind)->hostile
                                  ? EffectTarget(c.enemies[i])
                                  : EffectTarget(c.allies[i]);
     if (kind == SpellKind::MirrorImage || kind == SpellKind::SpiritualWeapon) {
@@ -291,6 +325,13 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         return CommandReason::InsufficientMana;
     if (c.aimedSubcell && (!r.area || !r.ground))
         return CommandReason::InvalidTargets;
+    if (definition->kind == SpellKind::Goodberry) {
+        if (c.targetCount || c.aimedCell)
+            return CommandReason::InvalidTargets;
+        const auto healing = goodberryHealing(party_, effects_);
+        return std::any_of(healing.begin(), healing.end(), [](int amount) { return amount > 0; })
+                   ? CommandReason::Ready : CommandReason::FullHealth;
+    }
     if (r.self && state_.gameplayMs > UINT64_MAX - 3600000)
         return CommandReason::EffectCapacity;
     if (r.self) {
@@ -359,16 +400,48 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
 }
 bool CombatController::sneakPreview(rules::CharacterId id, ActorId target, bool ranged,
                                     Player pose) const noexcept {
-    const auto* a = actors_.actor(target);
-    if (!a)
+    const auto* w = weapon(id, ranged);
+    if (!w || !actors_.actor(target))
         return false;
-    const bool opening = ranged && realTime(state_.phase) && !ai_.aware(target) &&
-                         !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
-    return sneakEligible(id, target,
-                         effects_.attackMode(id, target, combatAdjacent(map_, pose.cell, a->npc.cell),
-                                             opening || effects_.guiding(target),
-                                             ranged && adjacent(pose.cell)),
-                         ranged, pose);
+    const auto roll = partyAttackRoll(id, target, pose, ranged, w->heavyDisadvantage, effects_.guiding(target));
+    return sneakEligible(id, target, roll.mode, ranged, pose);
+}
+CombatController::PartyAttackRoll CombatController::spellAttackRoll(
+    rules::CharacterId caster, ActorId target, Player pose, SpellKind kind, bool useGuiding) const noexcept {
+    if (kind == SpellKind::SpiritualWeapon) {
+        const auto mode = effects_.attackMode(caster, target, true);
+        return {mode, mode == rules::RollMode::Disadvantage ? "Disadvantage" : nullptr};
+    }
+    const bool advantage = (useGuiding && effects_.guiding(target)) ||
+                           (kind == SpellKind::ShockingGrasp && effects_.metalArmor(target));
+    return partyAttackRoll(caster, target, pose, spellAttackKind(kind) == rules::AttackKind::Ranged,
+                           false, advantage);
+}
+const char* CombatController::attackWarning(const PartyCommand& c, ActorId target, Player pose) const noexcept {
+    const auto* actor = actors_.actor(target);
+    if (!party_.character(c.character) || !actor || !actor->hostile() || actor->life != ActorLife::Alive)
+        return nullptr;
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::SpiritualWeapon)
+        return spellAttackRoll(c.character, target, pose, SpellKind::SpiritualWeapon).warning;
+    if (c.action == PartyAction::Spell) {
+        const auto* spell = party_.catalog().spell(c.spell);
+        if (!spell || !rules::spellRules(spell->kind)->attack)
+            return nullptr;
+        if (const auto* warning = spellAttackRoll(c.character, target, pose, spell->kind).warning)
+            return warning;
+        if (spell->kind == SpellKind::ScorchingRay)
+            for (std::size_t i = 0; i < c.targetCount && i < c.enemies.size(); ++i)
+                if (sameActor(c.enemies[i], target) && c.darts[i] > 1)
+                    return spellAttackRoll(c.character, target, pose, spell->kind, false).warning;
+        return nullptr;
+    }
+    if (c.action != PartyAction::Melee && c.action != PartyAction::BackMelee && c.action != PartyAction::Ranged &&
+        c.action != PartyAction::Smite && !(c.action == PartyAction::Feature && c.feature == rules::Feature::DivineSmite))
+        return nullptr;
+    const bool ranged = c.action == PartyAction::Ranged;
+    const auto* w = weapon(c.character, ranged);
+    return w ? partyAttackRoll(c.character, target, pose, ranged, w->heavyDisadvantage,
+                               effects_.guiding(target)).warning : nullptr;
 }
 bool CombatController::sneakEligible(rules::CharacterId id, ActorId target, rules::RollMode mode, bool ranged,
                                      Player pose) const noexcept {
@@ -527,6 +600,19 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 cue.occurredMs = now;
                 events.supportJournal->emit(cue);
             }
+        } else if (kind == SpellKind::Goodberry) {
+            const auto healing = goodberryHealing(party_, effects_);
+            for (std::uint16_t i = 0; i < healing.size(); ++i) {
+                if (!healing[i])
+                    continue;
+                party_.heal({i}, healing[i]);
+                auto result = out;
+                result.event = CombatEvent::Healing;
+                result.recipient = {i};
+                result.damage = healing[i];
+                result.hit = true;
+                events.append(result);
+            }
         } else if (kind == SpellKind::FalseLife) {
             const auto amount = int(rng_.roll({1, 4, 4}).value.total);
             party_.grantTemporary(c.character, amount, state_.gameplayMs + 3600000);
@@ -662,21 +748,12 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                 result.event = CombatEvent::Attack;
                 result.damageType = r.damage;
                 result.enemy = id;
-                result.kind = (kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp)
-                                  ? rules::AttackKind::Melee
-                                  : rules::AttackKind::Ranged;
+                result.kind = spellAttackKind(kind);
                 result.hit = true;
                 if (r.attack) {
-                    const bool ranged = result.kind == rules::AttackKind::Ranged;
-                    const bool opening = ranged && realTime(state_.phase) && !ai_.aware(id) &&
-                                         !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
                     const bool held = effects_.helpless(id);
-                    const auto mode =
-                        effects_.attackMode(c.character, id, combatAdjacent(map_, pose.cell, a->npc.cell),
-                                            opening || effects_.guiding(id) ||
-                                                (kind == SpellKind::ShockingGrasp && effects_.metalArmor(id)),
-                                            ranged && adjacent(pose.cell));
-                    const auto roll = rng_.d20(mode).value;
+                    result.attackRollMode = spellAttackRoll(c.character, id, pose, kind).mode;
+                    const auto roll = rng_.d20(result.attackRollMode).value;
                     effects_.consumeGuiding(id, now, events);
                     result.roll = roll.selected;
                     const auto hit =

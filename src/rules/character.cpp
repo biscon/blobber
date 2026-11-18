@@ -260,6 +260,8 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
             (item.finesse ? dexterity > strength : item.ranged) ? Ability::Dexterity : Ability::Strength;
         const int modifier = stats.modifiers[static_cast<std::size_t>(preview.ability)];
         preview.attackBonus = modifier + (preview.proficient ? stats.proficiency : 0) + item.enchantment;
+        if (item.ranged && cls->progression == ProgressionClass::Ranger && b.level >= 2)
+            preview.attackBonus += 2;
         preview.heavyDisadvantage = item.heavy && race->size == CreatureSize::Small;
         preview.damage = item.damage;
         preview.damage.modifier = modifier + item.enchantment + (item.ranged ? 0 : meleeDamage);

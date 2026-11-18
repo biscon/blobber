@@ -55,12 +55,13 @@ unsigned spellCount(SpellMask) noexcept;
 SpellMask spellBit(SpellId) noexcept;
 SpellMask classSpells(const Catalog&, ClassId, int level) noexcept;
 SpellMask eligibleLeveledSpells(const Catalog&, const CharacterIdentityView&) noexcept;
+SpellMask rangerMarkGrant(const Catalog&, const CharacterIdentityView&) noexcept;
 SpellMask domainSpells(const Catalog&, const CharacterIdentityView&) noexcept;
 int preparationLimit(const Catalog&, const CharacterIdentityView&) noexcept;
 bool recommendSpells(const Catalog&, const CharacterIdentityView&, SpellGrants&) noexcept;
 BuildError validateGrants(const Catalog&, const CharacterIdentityView&, const SpellGrants&,
                           bool counts = true) noexcept;
-enum class SpellSource : std::uint8_t { None, Class, Domain, Racial, Oath };
+enum class SpellSource : std::uint8_t { None, Class, Domain, Racial, Oath, Known };
 struct SpellAccess {
     SpellSource source = SpellSource::None;
     Casting casting = Casting::None;

@@ -10,7 +10,8 @@ CombatOutcome CombatController::spectralAttack(const PartyCommand& c, Player pos
     out.damageType = rules::DamageType::Force;
     out.kind = rules::AttackKind::Melee;
     const auto* ch = party_.character(c.character);
-    const auto roll = rng_.d20(effects_.attackMode(c.character, out.enemy, true, false, false)).value;
+    out.attackRollMode = spellAttackRoll(c.character, out.enemy, pose, out.spell).mode;
+    const auto roll = rng_.d20(out.attackRollMode).value;
     effects_.consumeGuiding(out.enemy, now, events);
     out.roll = roll.selected;
     const auto hit = rules::resolveAttack(roll,

@@ -8,12 +8,14 @@ rules::SpellKind effectSpell(EffectKind kind) noexcept {
     constexpr S spells[]{S::Bless,      S::Bane,           S::ShieldOfFaith, S::MageArmor,   S::HoldPerson,
                          S::Guidance,   S::Resistance,     S::Sanctuary,     S::Sleep,       S::ColorSpray,
                          S::RayOfFrost, S::Grease,         S::Aid,           S::MirrorImage, S::Web,
-                         S::Web,        S::SpiritualWeapon, S::ProtectionFromEvilAndGood, S::Count};
+                         S::Web,        S::SpiritualWeapon, S::ProtectionFromEvilAndGood, S::Count,
+                         S::HuntersMark};
     return unsigned(kind) < std::size(spells) ? spells[unsigned(kind)] : S::Count;
 }
 bool harmfulEffect(EffectKind kind) noexcept {
     return kind == EffectKind::Bane || kind == EffectKind::HoldPerson ||
-           (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) || kind == EffectKind::Restrained;
+           (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) || kind == EffectKind::Restrained ||
+           kind == EffectKind::HuntersMark;
 }
 void statusDuration(const StatusEntry& s, char* output, std::size_t bytes) noexcept {
     if (s.clock == StatusClock::Escape)
@@ -91,6 +93,7 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
             : kind == EffectKind::SacredWeapon ? "Ends on incapacitation, weapon change, or dismissal."
             : kind == EffectKind::ProtectionFromEvilAndGood ? "Concentration; supernatural attackers have disadvantage."
             : kind == EffectKind::HoldPerson  ? "A successful repeat save ends it early."
+            : kind == EffectKind::HuntersMark ? "The caster's weapon hits deal +1d6. Ends if the target dies."
                                               : "";
         result.entries[result.count++] = status;
     }

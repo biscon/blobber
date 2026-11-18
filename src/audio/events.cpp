@@ -26,6 +26,7 @@ const char* spellFamily(rules::SpellKind s) noexcept {
         return "thunder";
     case S::Sleep:
     case S::HoldPerson:
+    case S::HuntersMark:
         return "control";
     case S::Grease:
     case S::Web:
@@ -40,6 +41,7 @@ const char* spellFamily(rules::SpellKind s) noexcept {
     case S::SpareTheDying:
     case S::LesserRestoration:
     case S::Aid:
+    case S::Goodberry:
         return "healing";
     case S::SacredFlame:
     case S::Bless:
@@ -49,6 +51,7 @@ const char* spellFamily(rules::SpellKind s) noexcept {
     case S::Resistance:
     case S::Sanctuary:
         return "radiant";
+    case S::ProtectionFromEvilAndGood:
     case S::Count:
         return "arcane";
     }

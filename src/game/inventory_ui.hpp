@@ -6,7 +6,7 @@ enum class CharacterPage : std::uint8_t { Inventory, Character };
 struct CharacterFeatureRow {
     const char* name = "";
     const char* detail = "";
-    std::array<char, 32> value{};
+    std::array<char, 64> value{};
 };
 struct CharacterSheet {
     rules::Abilities modifiers{}, saves{};

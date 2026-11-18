@@ -93,12 +93,15 @@ void CommandController::refreshTargetPicker() noexcept {
         std::snprintf(row.name.data(), row.name.size(), "%s #%u",
                       monsterName(actors_.catalog().monster(a.monster)->id), unsigned(id.slot) + 1);
         row.reason = enemyEligibility(id);
-        const auto direction = forward(session_.movement().player.heading);
+        const auto pose = session_.movement().player;
+        const auto direction = forward(pose.heading);
         const bool rear =
             (2 * a.npc.subcell.x - 1) * direction.x + (2 * a.npc.subcell.y - 1) * direction.y > 0;
+        const auto* warning = row.reason == CommandReason::Ready
+                                  ? session_.combat().attackWarning(c, id, pose) : nullptr;
         std::snprintf(row.detail.data(), row.detail.size(), "%s%s / %s", rear ? "Rear" : "Front",
                       state_.targets.anchors[id.slot].valid ? "" : " / Obscured",
-                      row.reason == CommandReason::Ready ? "Ready" : commandMessage(row.reason));
+                      warning ? warning : row.reason == CommandReason::Ready ? "Ready" : commandMessage(row.reason));
         row.selected = c.target && sameActor(*c.target, id);
     };
     for (std::size_t i = state_.targetPage * 4; i < p.candidateCount && p.count < 4; ++i)

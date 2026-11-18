@@ -15,6 +15,8 @@ const char* subclassName(ProgressionClass cls, int level, bool life) noexcept {
         return "Thief";
     if (cls == ProgressionClass::Paladin && level >= 3)
         return "Oath of Devotion";
+    if (cls == ProgressionClass::Ranger && level >= 3)
+        return "Hunter";
     return "None yet";
 }
 SpellSelectionContext advancementChoices(const Catalog& cat, const CharacterIdentityView& source,
@@ -52,6 +54,11 @@ SpellSelectionContext advancementChoices(const Catalog& cat, const CharacterIden
         if (cls && cls->progression == ProgressionClass::Wizard) {
             out.available = eligibleLeveledSpells(cat, next) & ~out.locked;
             out.minimum = out.maximum = 2;
+        } else if (cls && cls->progression == ProgressionClass::Ranger && next.level == 2) {
+            out.granted = rangerMarkGrant(cat, next);
+            out.locked |= out.granted;
+            out.available = eligibleLeveledSpells(cat, next) & ~out.locked;
+            out.minimum = out.maximum = 1;
         }
     } else {
         out.locked = baseline.prepared | grants.domain;
@@ -100,6 +107,12 @@ AdvancementPreview previewAdvancement(const Catalog& cat, const CharacterIdentit
     out.spells = baseline;
     out.spells.cantrips |= choices.cantrips;
     out.spells.learned |= choices.learned;
+    if (cls->progression == ProgressionClass::Ranger) {
+        if (next.level == 2)
+            out.spells.learned |= learned.granted;
+        else if (next.level == 3)
+            out.spells.learned = eligibleLeveledSpells(cat, next);
+    }
     out.spells.prepared |= choices.prepared;
     out.spells.domain = domainSpells(cat, next);
     if (validateGrants(cat, next, out.spells) != BuildError::None)

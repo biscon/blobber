@@ -156,6 +156,8 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                        : out.attackRollMode == rules::RollMode::Advantage
                            ? " Pack Tactics: advantage."
                            : " Pack Tactics: canceled by disadvantage.";
+    const char* disadvantage = out.roll && out.attackRollMode == rules::RollMode::Disadvantage
+                                   ? " at disadvantage" : "";
     switch (out.event) {
     case CombatEvent::Started:
         std::snprintf(line, sizeof(line),
@@ -187,24 +189,24 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             break;
         }
         if (out.damageAdjustment == rules::DamageAdjustment::Immune) {
-            std::snprintf(line, sizeof(line), "%s #%u: immune to %s.", species, unsigned(out.enemy.slot) + 1,
-                          rules::damageTypeName(out.damageType));
+            std::snprintf(line, sizeof(line), "%s #%u: immune to %s%s.", species, unsigned(out.enemy.slot) + 1,
+                          rules::damageTypeName(out.damageType), *disadvantage ? " (attack at disadvantage)" : "");
             break;
         }
         if (out.enemyAttack) {
-            std::snprintf(line, sizeof(line), "%s #%u -> %s: %s (d20 %d), %lld damage%s.%s", species,
+            std::snprintf(line, sizeof(line), "%s #%u -> %s: %s (d20 %d%s), %lld damage%s.%s", species,
                           unsigned(out.enemy.slot) + 1, target,
                           out.critical ? "critical"
                           : out.hit    ? "hit"
                                        : "miss",
-                          out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "", pack);
+                          out.roll, disadvantage, static_cast<long long>(out.damage), out.died ? ", dead" : "", pack);
         } else
-            std::snprintf(line, sizeof(line), "%s -> %s #%u: %s (d20 %d), %lld damage%s.", name, species,
+            std::snprintf(line, sizeof(line), "%s -> %s #%u: %s (d20 %d%s), %lld damage%s.", name, species,
                           unsigned(out.enemy.slot) + 1,
                           out.critical ? "critical"
                           : out.hit    ? "hit"
                                        : "miss",
-                          out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "");
+                          out.roll, disadvantage, static_cast<long long>(out.damage), out.died ? ", dead" : "");
         if (out.smiteDamage && out.hit) {
             appendLog(line);
             std::snprintf(line, sizeof(line), "Divine Smite: %lld weapon + %lld radiant damage (%lld + %lld before mitigation).",

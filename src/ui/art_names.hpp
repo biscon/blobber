@@ -4,6 +4,8 @@ namespace blobber {
 inline constexpr std::array<const char*, 4> paladinArtNames{{
     "spells/lay_on_hands", "spells/divine_smite", "spells/sacred_weapon",
     "spells/protection_from_evil_and_good"}};
+inline constexpr std::array<const char*, 4> rangerArtNames{{
+    "spells/hunters_mark", "spells/goodberry", "spells/archery", "spells/colossus_slayer"}};
 // UI region order is part of the existing atlas mapping. First four use prepared portraits.
 inline constexpr std::array<const char*, 64> interfaceArtNames{{
     "alden",

@@ -303,8 +303,11 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
                        cleric = hasFeature(cls->features, ClassFeature::LifeDomain),
                        rogue = hasFeature(cls->features, ClassFeature::SneakAttack);
             const bool paladin = cls->progression == ProgressionClass::Paladin;
+            const bool ranger = cls->progression == ProgressionClass::Ranger;
             wrap(p,
-                 paladin ? "Armored holy warrior. Lay on Hands heals allies. At level two, Charisma spells and Divine Smite share mana. Oath of Devotion unlocks at level three."
+                 ranger ? "Bow specialist. At level two, Archery sharpens ranged attacks and Wisdom fuels "
+                          "Hunter's Mark and healing magic. Become a Hunter at level three."
+                 : paladin ? "Armored holy warrior. Lay on Hands heals allies. At level two, Charisma spells and Divine Smite share mana. Oath of Devotion unlocks at level three."
                  : fighter  ? "Armored front line. Defense adds 1 AC while armored. Second Wind spends an "
                             "action to heal; rests refresh its charge."
                  : cleric ? "Healing and protection. Life Domain grants Bless and Cure Wounds. Disciple of "
@@ -316,7 +319,8 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
                  {174, 218, 448, 44});
             std::snprintf(line, sizeof(line), "Hit Die d%d / Primary ability: %s / Armor training: %s",
                           cls->hitDie,
-                          paladin ? "Strength / Charisma"
+                          ranger ? "Dexterity / Wisdom"
+                          : paladin ? "Strength / Charisma"
                           : cleric    ? "Wisdom"
                           : fighter ? "Strength"
                           : rogue   ? "Dexterity"
@@ -418,8 +422,12 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
                           wpn.damage.sides, wpn.damage.modifier);
             p.clipped(line, 466, 254, 148, gold, UiTextStyle::Small);
         }
-        wrap(p, "Three party camp kits are added once at dungeon launch.", {466, 274, 148, 27}, muted,
-             UiTextStyle::Small);
+        const auto ranged = load.equipment.ranged.index;
+        const bool heavyDisadvantage = ranged < m.preview.stats.weapons.size() &&
+                                      m.preview.stats.weapons[ranged].heavyDisadvantage;
+        wrap(p, heavyDisadvantage ? "Small wielders have disadvantage with this heavy bow."
+                                 : "Three party camp kits are added once at dungeon launch.",
+             {466, 274, 148, 27}, heavyDisadvantage ? red : muted, UiTextStyle::Small);
         break;
     }
     case CreatorStep::Review:
@@ -468,10 +476,11 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
             break;
         case FlowAction::Class: {
             p.box(b.rect, m.draft.characterClass.index == b.value ? teal : i == w.focus ? gold : edge);
-            const bool paladin = c.characterClass({std::uint16_t(b.value)})->progression == ProgressionClass::Paladin;
+            const auto cls = c.characterClass({std::uint16_t(b.value)})->progression;
             if (b.rect.height > 45) {
                 const UiRect icon{b.rect.x + (b.rect.width - 56) / 2, b.rect.y + 4, 56, 56};
-                if (paladin) p.picture(UiArt::spellIcon(SpellKind::Count, Feature::SacredWeapon), icon);
+                if (cls == ProgressionClass::Ranger) p.picture(UiArt::archeryIcon, icon);
+                else if (cls == ProgressionClass::Paladin) p.picture(UiArt::spellIcon(SpellKind::Count, Feature::SacredWeapon), icon);
                 else if (b.value < 4) art.creator(32 + unsigned(b.value), icon);
             }
             p.centered(c.characterClass({std::uint16_t(b.value)})->name.c_str(),
@@ -583,6 +592,7 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
     if (h.choosing()) {
         const bool cantrip = h.step == AdvancementStep::Cantrips;
         const bool learning = h.step == AdvancementStep::Learned;
+        const bool ranger = cls->progression == ProgressionClass::Ranger;
         drawSelection(p, *h.catalog, h.selection, h.searchEdit, controls,
                       cantrip    ? "Choose a new cantrip"
                       : learning ? "Learn new spells"
@@ -592,9 +602,13 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
             std::snprintf(line, sizeof(line), "%u class cantrips unchanged; racial magic stays separate.",
                           spellCount(h.baseline.cantrips));
         } else if (learning) {
-            p.text("Learn 2 spells for your spellbook", 174, 66, gold, UiTextStyle::Heading);
-            std::snprintf(line, sizeof(line), "%u known spells stay in your spellbook.",
-                          spellCount(h.baseline.learned));
+            p.text(ranger ? "Learn one healing spell" : "Learn 2 spells for your spellbook",
+                   174, 66, gold, UiTextStyle::Heading);
+            if (ranger)
+                std::snprintf(line, sizeof(line), "Hunter's Mark is granted automatically.");
+            else
+                std::snprintf(line, sizeof(line), "%u known spells stay in your spellbook.",
+                              spellCount(h.baseline.learned));
         } else {
             const auto slots = h.selection.context.maximum;
             std::snprintf(line, sizeof(line), "You gained %u preparation slot%s", slots,
@@ -614,7 +628,8 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
         wrap(p, line, {174, 289, 266, 18}, text, UiTextStyle::Small, 0, 9);
         wrap(p,
              cantrip    ? "Your new cantrip is permanent. Existing cantrips cannot be replaced."
-             : learning ? "Only new choices are listed; preparation comes next."
+             : learning ? (ranger ? "You can cast known spells as soon as you learn them."
+                                  : "Only new choices are listed; preparation comes next.")
                         : "Only new choices are listed. Swap preparations during Long Rest.",
              {174, 307, 266, 18}, muted, UiTextStyle::Small, 0, 9);
     } else {

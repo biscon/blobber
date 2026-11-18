@@ -18,7 +18,7 @@ inline void highSpellRewardProfile() {
         spells.push_back({r.id, r.name, r.description, SpellKind(i)});
     }
     const auto& fire = *spellRules(SpellKind::FireBolt);
-    spells.push_back({fire.id, fire.name, fire.description, SpellKind::FireBolt});
+    spells.insert(spells.begin() + 32, {fire.id, fire.name, fire.description, SpellKind::FireBolt});
     RaceDefinition race; race.id = "fixture"; race.name = "Fixture";
     ClassDefinition cls; cls.id = "martial"; cls.name = "Martial";
     cls.saves[0] = cls.saves[2] = true;

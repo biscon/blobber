@@ -225,19 +225,12 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                         p.line({left, top + 1}, {left + 1, top + 1}, color);
                 }
             }
-        if (h->hover.tooltipVisible && h->hover.kind == HoverKind::Enemy && h->hover.enemy &&
-            h->hover.enemy->slot < picking->targets().anchors.size()) {
-            const auto anchor = picking->targets().anchors[h->hover.enemy->slot];
-            if (anchor.valid) {
-                const UiRect r{viewX + std::clamp(anchor.badgeX - 23, 0, viewWidth - 46),
-                               viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6};
-                forEachDepthClip(*picking, h->hover.enemy->slot, r, [&](UiRect clip) {
-                    world.clip(clip);
-                    p.health(r, h->hover.health);
-                    world.viewportClip();
-                });
-            }
-        }
+        if (const auto health = hoveredEnemyHealthBar(*h))
+            forEachDepthClip(*picking, h->hover.enemy->slot, *health, [&](UiRect clip) {
+                world.clip(clip);
+                p.health(*health, h->hover.health);
+                world.viewportClip();
+            });
     }
     if (!h->suspended && combat.phase == CombatPhase::Turns && combat.upcomingCount) {
         const int width = 27 + int(combat.upcomingCount) * 15;

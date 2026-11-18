@@ -74,7 +74,7 @@ SpellMask racialCantrips(const Catalog& c) noexcept {
 SpellMask preparationOptions(const Catalog& c, const CharacterIdentityView& b,
                                  const SpellGrants& g) noexcept {
     const auto* cls = c.characterClass(b.characterClass);
-    if (!cls || cls->casting == Casting::None)
+    if (!cls || cls->casting == Casting::None || cls->progression == ProgressionClass::Ranger)
         return 0;
     const auto eligible = eligibleLeveledSpells(c, b);
     return (cls->casting == Casting::Intelligence ? eligible & g.learned : eligible) & ~g.domain;

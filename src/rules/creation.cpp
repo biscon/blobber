@@ -151,6 +151,15 @@ SpellMask eligibleLeveledSpells(const Catalog& c, const CharacterIdentityView& b
         mask |= classSpells(c, b.characterClass, level);
     return mask;
 }
+SpellMask rangerMarkGrant(const Catalog& c, const CharacterIdentityView& b) noexcept {
+    const auto* cls = c.characterClass(b.characterClass);
+    if (!cls || cls->progression != ProgressionClass::Ranger || b.level < 2)
+        return 0;
+    for (std::size_t i = 0; i < cls->spellCount; ++i)
+        if (c.spell(cls->spells[i])->kind == SpellKind::HuntersMark)
+            return spellBit(cls->spells[i]);
+    return 0;
+}
 SpellMask domainSpells(const Catalog& c, const CharacterIdentityView& b) noexcept {
     const auto* cls = c.characterClass(b.characterClass);
     if (cls && cls->progression == ProgressionClass::Paladin)
@@ -165,7 +174,8 @@ SpellMask domainSpells(const Catalog& c, const CharacterIdentityView& b) noexcep
 int preparationLimit(const Catalog& c, const CharacterIdentityView& b) noexcept {
     const auto* cls = c.characterClass(b.characterClass);
     const auto* race = c.race(b.race);
-    if (!cls || !race || cls->casting == Casting::None || b.level < 1 || b.level > 20)
+    if (!cls || !race || cls->casting == Casting::None || cls->progression == ProgressionClass::Ranger ||
+        b.level < 1 || b.level > 20)
         return 0;
     const auto i = castingAbilityIndex(cls->casting);
     const auto scores = effectiveAbilities(c, b, false);
@@ -183,7 +193,13 @@ bool recommendSpells(const Catalog& c, const CharacterIdentityView& b, SpellGran
     if (!cls || !race)
         return false;
     const auto can = classSpells(c, b.characterClass, 0), leveled = classSpells(c, b.characterClass, 1);
-    if (cls->casting == Casting::Wisdom) {
+    if (cls->progression == ProgressionClass::Ranger) {
+        if (b.level == 2) {
+            const auto mark = rangerMarkGrant(c, b);
+            s.learned = mark | choose(c, leveled & ~mark, 1, {SpellKind::CureWounds});
+        } else if (b.level >= 3)
+            s.learned = eligibleLeveledSpells(c, b);
+    } else if (cls->casting == Casting::Wisdom) {
         s.cantrips =
             choose(c, can, 3, {SpellKind::SacredFlame, SpellKind::SpareTheDying, SpellKind::Guidance});
         if (b.lifeDomain)
@@ -218,21 +234,29 @@ BuildError validateGrants(const Catalog& c, const CharacterIdentityView& b, cons
     if (!cls || !race)
         return BuildError::Content;
     const bool caster = maximumSpellLevel(cls->spellProgression, b.level) && cls->casting != Casting::None;
+    const bool ranger = cls->progression == ProgressionClass::Ranger;
     const bool wizard = cls->progression == ProgressionClass::Wizard || (cls->progression == ProgressionClass::None && cls->casting == Casting::Intelligence);
     const bool classCantrips = cls->spellProgression == SpellProgression::Full && cls->casting != Casting::None;
     if ((s.cantrips & ~classSpells(c, b.characterClass, 0)) || (!caster && s.cantrips) ||
         (counts && classCantrips && spellCount(s.cantrips) != unsigned(b.level >= 4 ? 4 : 3)))
         return BuildError::Cantrips;
-    if ((s.learned & ~eligibleLeveledSpells(c, b)) || (!wizard && s.learned) ||
+    if ((s.learned & ~eligibleLeveledSpells(c, b)) || (!wizard && !ranger && s.learned) ||
         (counts && wizard && spellCount(s.learned) != unsigned(4 + 2 * b.level)))
         return BuildError::Learned;
+    if (ranger) {
+        const auto mark = rangerMarkGrant(c, b);
+        const unsigned expected = b.level >= 3 ? 3 : b.level >= 2 ? 2 : 0;
+        if ((s.learned & mark) != mark || spellCount(s.learned) != expected)
+            return BuildError::Learned;
+    }
     const auto domain = domainSpells(c, b);
     if (s.domain != domain ||
         (counts && b.lifeDomain && spellCount(domain) != unsigned(b.level >= 3 ? 4 : 2)))
         return BuildError::Domain;
     const auto available = wizard ? s.learned : eligibleLeveledSpells(c, b);
-    if ((s.prepared & ~available) || (s.prepared & s.domain) || (!caster && s.prepared) ||
-        (counts && caster && (!s.prepared || spellCount(s.prepared) > unsigned(preparationLimit(c, b)))))
+    if ((s.prepared & ~available) || (s.prepared & s.domain) || ((!caster || ranger) && s.prepared) ||
+        (counts && caster && !ranger &&
+         (!s.prepared || spellCount(s.prepared) > unsigned(preparationLimit(c, b)))))
         return BuildError::Prepared;
     if ((s.racial & ~wizardCantrips(c)) || (s.racial & s.cantrips) || (!race->wizardCantrip && s.racial) ||
         (race->wizardCantrip && spellCount(s.racial) != 1))
@@ -256,6 +280,10 @@ SpellAccess spellAccess(const Catalog& cat, const CharacterIdentity& b, const Ch
         out.casting = Casting::Intelligence;
     } else if ((b.spells.domain & bit) && (domainSpells(cat, b.view()) & bit)) {
         out.source = cls->progression == ProgressionClass::Paladin ? SpellSource::Oath : SpellSource::Domain;
+        out.casting = cls->casting;
+    } else if (cls->progression == ProgressionClass::Ranger && r.level &&
+               (classSpells(cat, b.characterClass, r.level) & b.spells.learned & bit)) {
+        out.source = SpellSource::Known;
         out.casting = cls->casting;
     } else if ((classSpells(cat, b.characterClass, r.level) & bit) &&
                ((!r.level && (b.spells.cantrips & bit)) ||

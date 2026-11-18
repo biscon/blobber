@@ -16,6 +16,7 @@ enum class FeedbackBackdrop : unsigned;
 class UiArt {
   public:
     static constexpr unsigned classFeaturesIcon = 28, silhouetteIcon = 44, restIcon = 48;
+    static constexpr unsigned archeryIcon = 198, colossusSlayerIcon = 199;
     static unsigned effectIcon(EffectKind) noexcept;
     static constexpr unsigned holdPersonIcon = 59, quarterstaffIcon = 60, travelIcon = 61,
                               skeletonPortraitIcon = 62, bugbearPortraitIcon = 63,
@@ -42,7 +43,7 @@ class UiArt {
   private:
     GpuResources& resources_;
     TextureHandle equipment_, creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_,
-        portraitEffects_, feedback_, supportEffects_, paladin_;
+        portraitEffects_, feedback_, supportEffects_, classAbilities_;
     std::array<Rectangle, 64> regions_{};
     GpuLease<TextureHandle> menuTitle_;
     GpuLease<ShaderHandle> menuTitleShader_;

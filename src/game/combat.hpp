@@ -72,7 +72,7 @@ struct CombatOutcome {
     std::array<rules::DamageResolution, 2> damageComponents{};
     FortitudeResult fortitude; // Resolved impact only; never an accepted/saved roll.
     int roll = 0;
-    // Accepted NPC weapon-roll context, published only with the resolved attack.
+    // Accepted attack-roll context, published only with the resolved attack.
     bool packTactics = false;
     rules::RollMode attackRollMode = rules::RollMode::Normal;
     CombatPhase phase = CombatPhase::Exploration;
@@ -210,6 +210,7 @@ class CombatController {
     CombatOutcome submitItem(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     bool casterResolving(rules::CharacterId id) const noexcept;
     bool sneakPreview(rules::CharacterId, ActorId, bool ranged, Player) const noexcept;
+    const char* attackWarning(const PartyCommand&, ActorId, Player) const noexcept;
 
     // Preparation-only owned values; no borrowed pointers or navigation workspace.
     struct Saved {
@@ -268,6 +269,14 @@ class CombatController {
     CommandReason validateMagic(const PartyCommand&, Player) const noexcept;
     CombatOutcome submitMagic(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     EffectRequest spellEffect(const PartyCommand&, rules::SpellKind) const noexcept;
+    struct PartyAttackRoll {
+        rules::RollMode mode = rules::RollMode::Normal;
+        const char* warning = nullptr;
+    };
+    PartyAttackRoll partyAttackRoll(rules::CharacterId, ActorId, Player, bool ranged, bool heavy,
+                                   bool advantage) const noexcept;
+    PartyAttackRoll spellAttackRoll(rules::CharacterId, ActorId, Player, rules::SpellKind,
+                                   bool useGuiding = true) const noexcept;
     CombatOutcome spectralAttack(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     void shatter(const PartyCommand&, Player, std::uint64_t, CombatEvents&) noexcept;
     bool sneakEligible(rules::CharacterId, ActorId, rules::RollMode, bool ranged, Player) const noexcept;

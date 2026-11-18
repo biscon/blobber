@@ -11,6 +11,22 @@ const rules::WeaponPreview* CombatController::weapon(rules::CharacterId id, bool
     const auto& w = c->stats.weapons[i];
     return w.available && w.ranged == ranged ? &w : nullptr;
 }
+CombatController::PartyAttackRoll CombatController::partyAttackRoll(
+    rules::CharacterId caster, ActorId target, Player pose, bool ranged, bool heavy,
+    bool advantage) const noexcept {
+    const auto* enemy = actors_.actor(target);
+    const bool opening = ranged && realTime(state_.phase) && !ai_.aware(target) &&
+                         !npcSees(map_, enemy->npc.cell, enemy->npc.facing, pose.cell);
+    const bool pressured = ranged && partyExposed(caster) && adjacent(pose.cell);
+    const auto mode = effects_.attackMode(caster, target, combatAdjacent(map_, pose.cell, enemy->npc.cell),
+                                          opening || advantage, heavy || pressured);
+    const char* warning = nullptr;
+    if (mode == rules::RollMode::Disadvantage)
+        warning = pressured ? "Disadvantage: enemy in melee reach"
+                  : heavy   ? "Disadvantage: heavy weapon"
+                            : "Disadvantage";
+    return {mode, warning};
+}
 CommandReason CombatController::validate(const PartyCommand& c, Player pose) const noexcept {
     const auto* ch = party_.character(c.character);
     if (!ch)
@@ -161,13 +177,10 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const auto& w = *weapon(c.character, ranged);
         out.damageType = w.damageType;
         const auto* a = actors_.actor(out.enemy);
-        const bool advantage = ranged && realTime(state_.phase) && !ai_.aware(out.enemy) &&
-                               !npcSees(map_, a->npc.cell, a->npc.facing, pose.cell);
         const bool held = effects_.helpless(out.enemy);
-        const auto mode = effects_.attackMode(
-            c.character, out.enemy, combatAdjacent(map_, pose.cell, a->npc.cell),
-            advantage || effects_.guiding(out.enemy), w.heavyDisadvantage || (ranged && adjacent(pose.cell)));
-        const auto roll = rng_.d20(mode).value;
+        out.attackRollMode = partyAttackRoll(c.character, out.enemy, pose, ranged, w.heavyDisadvantage,
+                                             effects_.guiding(out.enemy)).mode;
+        const auto roll = rng_.d20(out.attackRollMode).value;
         effects_.consumeGuiding(out.enemy, now, events);
         out.roll = roll.selected;
         const auto hit = rules::resolveAttack(roll, w.attackBonus + (!ranged ? effects_.sacredWeaponBonus(c.character) : 0) + effects_.rollModifier(c.character),
@@ -188,7 +201,13 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
                 out.smiteDamage = rng_.damage({dice, 8, 0}, out.critical).value.total;
                 party_.spendMana(c.character, 2);
             }
-            if (sneakEligible(c.character, out.enemy, mode, ranged, pose)) {
+            if (party_.progressionClass(c.character) == rules::ProgressionClass::Ranger) {
+                if (effects_.markedBy(c.character, out.enemy))
+                    out.damage += rng_.damage({1, 6, 0}, out.critical).value.total;
+                if (party_.character(c.character)->build.level >= 3 && a->hitPoints < a->maxHitPoints)
+                    out.damage += rng_.damage({1, 8, 0}, out.critical).value.total;
+            }
+            if (sneakEligible(c.character, out.enemy, out.attackRollMode, ranged, pose)) {
                 out.damage +=
                     rng_.damage({party_.character(c.character)->build.level >= 3 ? 2 : 1, 6, 0}, out.critical)
                         .value.total;

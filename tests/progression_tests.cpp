@@ -4,6 +4,7 @@
 #include "support/creation_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
 #include "support/paladin_checks.hpp"
+#include "support/ranger_checks.hpp"
 #include <cstring>
 #include <iostream>
 using namespace blobber;
@@ -590,6 +591,9 @@ void earnedLevelAudio() {
 int main() {
     try {
         blobber::test::paladinChecks();
+        blobber::test::rangerProgression();
+        blobber::test::rangerGoodberry();
+        blobber::test::rangerMarkAndDamage();
         identities();
         levelFourChoices();
         equippedAdvancement();

@@ -23,6 +23,7 @@
 #include "support/layout_review.hpp"
 #include "support/level_four_review.hpp"
 #include "support/paladin_review.hpp"
+#include "support/ranger_review.hpp"
 #include "support/map_review.hpp"
 #include "support/melee_swipe_review.hpp"
 #include "support/pc072_review.hpp"
@@ -202,6 +203,14 @@ int main(int argc, char** argv) {
         }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--paladin-review") {
             test::paladinReview(argv[1], argv[2], argc == 5 ? argv[4] : "");
+            return 0;
+        }
+        if (argc == 5 && std::string_view(argv[3]) == "--ranger-review") {
+            test::rangerReview(argv[1], argv[2], argv[4]);
+            return 0;
+        }
+        if (argc == 5 && std::string_view(argv[3]) == "--ranged-screening-review") {
+            test::rangedScreeningReview(argv[1], argv[2], argv[4]);
             return 0;
         }
         if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--level-four-review") {

@@ -4,13 +4,16 @@
 #include <limits>
 
 namespace blobber {
-namespace {
-bool concentrates(EffectKind kind) {
+bool concentrates(EffectKind kind) noexcept {
     return kind == EffectKind::Bless || kind == EffectKind::Bane || kind == EffectKind::ShieldOfFaith ||
            kind == EffectKind::Web || kind == EffectKind::HoldPerson || kind == EffectKind::Guidance ||
-           kind == EffectKind::Resistance || kind == EffectKind::ProtectionFromEvilAndGood;
+           kind == EffectKind::Resistance || kind == EffectKind::ProtectionFromEvilAndGood ||
+           kind == EffectKind::HuntersMark;
 }
+namespace {
 std::uint64_t duration(EffectKind kind) {
+    if (kind == EffectKind::HuntersMark)
+        return huntersMarkDurationMs;
     return kind == EffectKind::Web                                      ? 3600000
            : (kind == EffectKind::MageArmor || kind == EffectKind::Aid) ? 28800000
            : (kind == EffectKind::ShieldOfFaith || kind == EffectKind::ProtectionFromEvilAndGood) ? 600000
@@ -117,6 +120,10 @@ int EffectController::sacredWeaponBonus(rules::CharacterId id) const noexcept {
     const auto handle = party_.inventory().at({id, static_cast<std::uint16_t>(EquipmentSlot::MainHand)});
     return handle && handle.slot == e->weaponSlot && handle.generation == e->weaponGeneration
                ? std::max(1, party_.character(id)->stats.modifiers[5]) : 0;
+}
+bool EffectController::markedBy(rules::CharacterId caster, ActorId target) const noexcept {
+    const auto* mark = find(concentration(caster));
+    return mark && mark->kind == EffectKind::HuntersMark && mark->targets[0] == EffectTarget(target);
 }
 int EffectController::rollModifier(EffectTarget t) noexcept {
     int bonus = 0;
@@ -226,6 +233,13 @@ EffectError EffectController::validate(const EffectRequest& request) const noexc
     }
     if (request.kind == EffectKind::ProtectionFromEvilAndGood && (request.count != 1 || request.targets[0].npc))
         return EffectError::InvalidTargets;
+    if (request.kind == EffectKind::HuntersMark) {
+        const auto& caster = party_.character(request.caster.character)->build;
+        if (!(rules::rangerMarkGrant(party_.catalog(), caster.view()) & caster.spells.learned))
+            return EffectError::InvalidCaster;
+        if (request.count != 1 || !request.targets[0].npc)
+            return EffectError::InvalidTargets;
+    }
     const auto maxTargets = request.kind == EffectKind::Bless || request.kind == EffectKind::Bane ||
                                     request.kind == EffectKind::Aid
                                 ? 3u

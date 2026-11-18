@@ -5,6 +5,7 @@
 #include "persistence/character_library.hpp"
 #include "support/campaign_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
+#include "support/ranger_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
 #include "support/generation_blueprints.hpp"
 #include "ui/interaction.hpp"
@@ -212,7 +213,7 @@ void environmentRoundtrip() {
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Pre-architecture schema rejects");
-    bad["schema"] = 24;
+    bad = blobber::automation::Json::parse(text);
     savedLocation(bad, 1)["world"]["buildings"] = {{"size", buildingCapacity + 1},
                                                    {"entries", blobber::automation::Json::array()}};
     rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
@@ -595,6 +596,62 @@ void paladinPersistence() {
     corrupt->party.state.characters[0].layOnHands = 21;
     rejects([&] { CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*corrupt), d.timings); },
             "Campaign rejects malformed healing pool");
+}
+void rangerPersistence() {
+    using namespace rules;
+    const auto c = blobber::test::rangerCatalog(catalog());
+    const auto d = definitions();
+    const auto& blueprints = blobber::test::campaignBlueprints();
+    auto run = std::make_unique<CampaignRun>(blueprints, c, *c.preset(), d.types, d.timings, 5);
+    blobber::test::advanceRanger(run->party(), 4);
+    travel(*run, FixtureKind::Downstairs);
+    run->party().spendMana({0}, 2);
+    check(!run->saveSafety(), "Ranger checkpoint fixture is safe to save");
+    const auto& actors = run->game().actors().snapshot();
+    const auto end = actors.actors.begin() + actors.count;
+    const auto target = std::find_if(actors.actors.begin(), end,
+                                     [](const auto& actor) {
+                                         return actor.hostile() && actor.life == ActorLife::Alive;
+                                     });
+    check(target != end, "Ranger save fixture has a live target");
+    const auto slot = std::uint16_t(target - actors.actors.begin());
+    // Stage a mark on an unalerted actor so the checkpoint exercises the safe-save path.
+    EffectRequest mark;
+    mark.world = actors.world;
+    mark.kind = EffectKind::HuntersMark;
+    mark.caster = CharacterId{0};
+    mark.targets[0] = run->game().actors().id(slot);
+    mark.count = 1;
+    check(bool(run->game().applyEffect(mark)), "Stage a valid mark through the shared effect owner");
+    run = copy(c, d, *run);
+    auto& game = run->game();
+    check(run->party().character({0})->mana == 4 &&
+              spellCount(run->party().character({0})->build.spells.learned) == 3 &&
+              game.effects().markedBy({0}, game.actors().id(slot)),
+          "Campaign round trip preserves known spells, spent mana, and the mark across actor epoch changes");
+    const char* blocked = game.travelSafety();
+    check(blocked && std::string_view(blocked) == "Dismiss spells affecting enemies before travelling.",
+          "A safe landing still requires dismissal of an active mark");
+    auto corrupt = run->checkpoint();
+    auto& invalid = corrupt->locations[corrupt->activeLocation].state->effects.instances[0];
+    invalid.targets[0] = CharacterId{1};
+    rejects([&] { CampaignRun rejected(blueprints, c, std::move(*corrupt), d.timings); },
+            "Campaign rejects a mark attached to an ally");
+    auto nearlyExpired = run->checkpoint();
+    auto& effects = nearlyExpired->locations[nearlyExpired->activeLocation].state->effects;
+    effects.instances[0].expiresMs = effects.gameplayMs + 10;
+    auto expiring = std::make_unique<CampaignRun>(blueprints, c, std::move(*nearlyExpired), d.timings);
+    expiring->game().update(.02, false);
+    check(!expiring->game().effects().concentration({0}).serial, "Restored mark expires on the gameplay clock");
+    check(game.submit(featureCommand(game, 0, Feature::DismissConcentration)).reason == CommandReason::Resolved &&
+              !game.travelSafety(), "Dismissal releases travel admission");
+    const CampaignContent content{"fixture", 0, &blueprints};
+    auto current = run->checkpoint();
+    auto legacy = blobber::automation::Json::parse(encodeCampaign(c, d, content, *current));
+    check(legacy["schema"] == 25 && legacy["simulation"] == 27, "Ranger campaigns carry the new versions");
+    legacy["schema"] = 24;
+    legacy["simulation"] = 26;
+    rejects([&] { decodeCampaign(c, d, content, legacy.dump()); }, "Pre-Ranger campaigns require their original build");
 }
 void progressionAndFloors() {
     const auto c = catalog(false, 50, 7);
@@ -1632,6 +1689,11 @@ int main(int argc, char** argv) {
             std::cout << "paladin campaign persistence passed\n";
             return 0;
         }
+        if (argc == 2 && std::string(argv[1]) == "--ranger") {
+            rangerPersistence();
+            std::cout << "Ranger campaign persistence passed\n";
+            return 0;
+        }
         if (argc == 2 && std::string(argv[1]) == "--progression") {
             progressionAndFloors();
             std::cout << "campaign progression save tests passed\n";
@@ -1652,7 +1714,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (argc != 1)
-            throw std::invalid_argument("Expected no arguments, --smoke, --progression or --paladin");
+            throw std::invalid_argument("Expected no arguments, --smoke, --progression, --paladin or --ranger");
         terminalWorker();
         sparsePersistence();
         magicRewardPersistence();

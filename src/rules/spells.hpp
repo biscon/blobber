@@ -40,10 +40,12 @@ enum class SpellKind : std::uint8_t {
     MirrorImage,
     Web,
     ProtectionFromEvilAndGood,
+    HuntersMark,
+    Goodberry,
     Count
 };
 enum class Casting : std::uint8_t { None, Wisdom, Intelligence, Charisma };
-enum class SpellList : std::uint8_t { None, Cleric, Wizard, Paladin };
+enum class SpellList : std::uint8_t { None, Cleric, Wizard, Paladin, Ranger };
 enum class SpellProgression : std::uint8_t { Full, Half };
 constexpr unsigned castingAbilityIndex(Casting c) noexcept {
     return c == Casting::Wisdom ? 4 : c == Casting::Charisma ? 5 : 3;

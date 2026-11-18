@@ -3,6 +3,7 @@
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
+#include "support/ranger_fixtures.hpp"
 #include "support/temp_directory.hpp"
 #include <fstream>
 #include <iostream>
@@ -51,6 +52,25 @@ void paladinBlueprint() {
               !record->draft.spells.cantrips && !record->draft.spells.prepared,
           "Level-one paladin and racial cantrip survive library round trip");
     check(nlohmann::json::parse(read(path))["schema_version"] == 1, "Library schema remains one");
+}
+void rangerBlueprint() {
+    const auto cat = blobber::test::rangerCatalog();
+    Temp temp;
+    const auto path = temp.path / "ranger.json";
+    CharacterLibrary library(cat, path);
+    check(bool(library.initialize()), "Ranger library initializes");
+    auto draft = rules::recommendedDraft(cat, {3}, cat.findClass("ranger"));
+    draft.gear[2] = 1;
+    std::snprintf(draft.name.data(), draft.name.size(), "Elven Ranger");
+    const auto created = library.create(draft, library.snapshot().revision);
+    check(created && created.committed, "Ranger blueprint can be saved");
+    CharacterLibrary reloaded(cat, path);
+    check(bool(reloaded.load()), "Ranger library reloads");
+    const auto* record = reloaded.snapshot().find(created.id);
+    check(record && cat.characterClass(record->draft.characterClass)->progression == rules::ProgressionClass::Ranger &&
+              record->draft.gear[2] == 1 && record->draft.spells.racial && !record->draft.spells.learned &&
+              nlohmann::json::parse(read(path))["schema_version"] == 1,
+          "Ranger blueprint preserves the bow choice and racial cantrip in library schema one");
 }
 void tolerantLoading() {
     const auto cat = creationCatalog();
@@ -112,6 +132,7 @@ void tolerantLoading() {
 int main() {
     try {
         paladinBlueprint();
+        rangerBlueprint();
         tolerantLoading();
         const auto cat = creationCatalog();
         Temp temp;

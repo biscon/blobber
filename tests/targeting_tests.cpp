@@ -1,6 +1,7 @@
 #include "game/target_visibility.hpp"
 #include "support/allocations.hpp"
 #include "support/check.hpp"
+#include "support/ranger_fixtures.hpp"
 #include "support/spell_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
 #include "ui/interaction.hpp"
@@ -30,8 +31,8 @@ void key(CommandController& ui, UiKey k, bool shift = false) {
     input.shift = shift;
     routeHudInput(ui, input);
 }
-void choose(CommandController& ui, rules::SpellKind kind) {
-    ui.selectCharacter(3);
+void choose(CommandController& ui, rules::SpellKind kind, unsigned formation = 3) {
+    ui.selectCharacter(formation);
     ui.openSpellbook();
     for (std::size_t i = 0; i < ui.snapshot().magic.count; ++i)
         if (ui.snapshot().magic.entries[i].kind == kind) {
@@ -39,6 +40,128 @@ void choose(CommandController& ui, rules::SpellKind kind) {
             return;
         }
     throw std::runtime_error("Missing owned spell fixture");
+}
+void rangedFormation() {
+    using namespace rules;
+    const auto catalog = spellCatalog();
+    const auto map = hybridRoom();
+    const auto pose = spellSpawn;
+    const NpcWorld places(map, pose.cell, {"goblin"},
+                         {{{0}, {6, 7}, {0, 1}, Heading::South},
+                          {{0}, {6, 6}, {1, 0}, Heading::South}});
+    for (const bool spell : {false, true}) {
+        for (const unsigned state : {0u, 1u, 2u, 3u}) {
+            auto preset = *catalog.preset();
+            const std::uint16_t caster = spell ? 3 : 2;
+            const unsigned slot = state == 0 ? caster - 2 : caster;
+            std::swap(preset.formation[caster], preset.formation[slot]);
+            GameSession game(map, catalog, preset, places, 5, pose, false);
+            if (state == 2 || state == 3) {
+                const auto ally = preset.formation[state == 2 ? slot - 2 : 1 - (slot - 2)];
+                game.party().damage(ally, game.party().character(ally)->hitPoints);
+                game.party().stabilize(ally);
+            }
+            spellReady(game, caster);
+            CommandController ui(game);
+            ui.refresh(allCombatTargets(game), false, false, true);
+            const auto enemy = game.actors().id(1);
+            if (spell)
+                choose(ui, SpellKind::FireBolt, slot);
+            else {
+                ui.selectCharacter(slot);
+                ui.selectAction(PartyAction::Ranged);
+            }
+            ui.hover(HoverKind::Enemy, 0, enemy);
+            const bool pressured = state == 0 || state == 2;
+            check(std::string_view(ui.snapshot().hover.lines[5].data()) ==
+                      (pressured ? "Disadvantage: enemy in melee reach" : ""),
+                  "Hover warns if the shooter is exposed beside a different hostile");
+            ui.toggleTargetPicker();
+            const auto adjacent = game.actors().id(0);
+            bool checked = false;
+            for (unsigned index = 0; index < ui.snapshot().targetPicker.count; ++index) {
+                const auto& row = ui.snapshot().targetPicker.rows[index];
+                if (sameActor(row.id, adjacent)) {
+                    checked = true;
+                    check((std::string_view(row.detail.data()).find("Disadvantage") != std::string_view::npos) ==
+                              pressured, "Target picker matches hover disadvantage");
+                }
+            }
+            check(checked, "Picker lists the adjacent encounter target and its warning state");
+            auto action = spell ? spellCommand(game, SpellKind::FireBolt)
+                                : turnCommand(game, PartyAction::Ranged);
+            action.character = {caster};
+            if (spell) {
+                action.enemies[0] = enemy;
+                action.targetCount = 1;
+            } else
+                action.target = enemy;
+            const auto accepted = game.submit(action);
+            check(accepted.reason == CommandReason::Resolved && accepted.roll == 0,
+                  "Ranged attack accepts without showing the stored roll");
+            bool resolved = false;
+            for (unsigned frame = 0; frame < 30 && !resolved; ++frame) {
+                for (const auto& event : game.update(.05, false)) {
+                    if (event.event != CombatEvent::Attack || event.enemyAttack ||
+                        event.character.index != caster)
+                        continue;
+                    const auto expected = pressured ? RollMode::Disadvantage : RollMode::Normal;
+                    check(event.attackRollMode == expected, "Resolved ranged attack matches its preview");
+                    ui.record(event);
+                    check((std::string_view(ui.snapshot().log.newest(0)).find("at disadvantage") !=
+                           std::string_view::npos) == pressured, "Log labels only disadvantaged attacks");
+                    resolved = true;
+                }
+            }
+            check(resolved, "Ranged attack fixture reaches impact");
+        }
+    }
+}
+
+void disadvantageSources() {
+    using namespace rules;
+    const auto catalog = test::rangerCatalog();
+    auto preset = *catalog.preset();
+    auto draft = recommendedDraft(catalog, {2}, catalog.findClass("ranger"));
+    std::snprintf(draft.name.data(), draft.name.size(), "Small Ranger");
+    draft.gear[2] = 1;
+    preset.characters[0] = finishBuild(catalog, draft, "small.ranger");
+    std::swap(preset.formation[0], preset.formation[2]);
+    const auto map = hybridRoom();
+    const auto places = spellPlacements(map, 1);
+    Party party(catalog, preset);
+    ActorWorld actors(map, catalog, places);
+    NpcAiController ai(map, actors, 7);
+    DiceRng rng(7);
+    EffectController effects(party, actors, rng);
+    CombatController combat(map, party, actors, rng, ai, effects, {});
+    CombatEvents events;
+    const auto target = actors.id(0);
+    PartyCommand action;
+    action.character = {0};
+    action.action = PartyAction::Ranged;
+    const auto* heavy = combat.attackWarning(action, target, spellSpawn);
+    check(heavy && std::string_view(heavy) == "Disadvantage: heavy weapon",
+          "A screened Small Ranger still gets the longbow warning");
+    effects.guide(target, 0, events);
+    check(!combat.attackWarning(action, target, spellSpawn), "Advantage cancels the heavy weapon warning");
+    effects.consumeGuiding(target, 0, events);
+    action.action = PartyAction::Melee;
+    effects.condition(CharacterId{0}, EffectKind::Blind, {3}, 0, events);
+    const auto* blind = combat.attackWarning(action, target, spellSpawn);
+    check(blind && std::string_view(blind) == "Disadvantage",
+          "Condition penalties warn on melee attack rolls");
+    action.action = PartyAction::Spell;
+    action.spell = catalog.findSpell("magic_missile");
+    check(!combat.attackWarning(action, target, spellSpawn), "Auto-hit spells have no attack-roll warning");
+    action.spell = catalog.findSpell("scorching_ray");
+    action.targetCount = 1;
+    action.enemies[0] = target;
+    action.darts[0] = 1;
+    effects.guide(target, 0, events);
+    check(!combat.attackWarning(action, target, spellSpawn), "A guided ray cancels the caster's disadvantage");
+    action.darts[0] = 2;
+    check(combat.attackWarning(action, target, spellSpawn), "A later ray still warns after Guiding Bolt is consumed");
 }
 void encounterScope() {
     const auto map = hybridRoom();
@@ -534,6 +657,8 @@ void targeting() {
 int main() {
     try {
         playerNames();
+        rangedFormation();
+        disadvantageSources();
         encounterScope();
         explorationTargets();
         spellHoverHealth();

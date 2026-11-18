@@ -106,6 +106,8 @@ void selection() {
         f.asset(std::string("ui/") + interfaceArtNames[i] + ".png");
     for (const auto* name : paladinArtNames)
         f.asset(std::string("ui/") + name + ".png");
+    for (const auto* name : rangerArtNames)
+        f.asset(std::string("ui/") + name + ".png");
     for (const auto* id : equipmentIconIds)
         f.asset(std::string("ui/items/") + id + ".png");
     f.fixed("blueprints/underkeep.json");
@@ -127,6 +129,8 @@ void selection() {
           "Authoring artwork and prepared-only portraits excluded");
     for (const auto* name : paladinArtNames)
         check(names.count(std::string("assets/ui/") + name + ".png"), "Paladin icons are included in shipping inventory");
+    for (const auto* name : rangerArtNames)
+        check(names.count(std::string("assets/ui/") + name + ".png"), "Ranger icons are included in shipping inventory");
     check(names.size() == inventory.files.size(), "Identical entries deduplicate");
     check(!names.count("assets/prepared/fixture.bin") &&
               paths(d::resolve(f.s, true)).count("assets/prepared/fixture.bin"),

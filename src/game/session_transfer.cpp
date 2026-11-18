@@ -44,10 +44,7 @@ const char* GameSession::travelSafety() const noexcept {
             return "Dismiss Spiritual Weapon before travel.";
         if (e.kind == EffectKind::Web)
             return "Dismiss Web before travelling.";
-        const bool concentration = e.kind == EffectKind::Bless || e.kind == EffectKind::Bane ||
-                                   e.kind == EffectKind::ShieldOfFaith || e.kind == EffectKind::HoldPerson ||
-                                   e.kind == EffectKind::Guidance || e.kind == EffectKind::Resistance;
-        if (concentration)
+        if (concentrates(e.kind))
             for (std::size_t i = 0; i < e.count; ++i)
                 if (e.targets[i].npc)
                     return "Dismiss spells affecting enemies before travelling.";

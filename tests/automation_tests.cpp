@@ -3,6 +3,7 @@
 #include "support/arena_preparation_fixtures.hpp"
 #include "support/automation_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
+#include "support/ranger_fixtures.hpp"
 #include "support/generation_blueprints.hpp"
 #include <iostream>
 #include <sstream>
@@ -56,6 +57,34 @@ void paladinWire() {
     impact.damageComponents[1] = {9, 9, DamageAdjustment::Normal};
     const auto event = encodeEvent(impact, cat, true);
     check(event["damage_components"].size() == 2 && event["damage_components"][1]["type"] == "radiant", "Wire feedback keeps damage types separate");
+}
+void rangerWire() {
+    const auto cat = blobber::test::rangerCatalog();
+    const auto defs = definitions();
+    auto arena = defaultArena(cat);
+    arena.adjust({0}, 1);
+    arenaLevel(cat, arena, 3);
+    Session session(blobber::test::campaignBlueprints(), cat, defs, arena, Mode::Diagnostic);
+    session.game().party().damage({0}, 5);
+    const auto action = decodeAction({{"kind", "combat"}, {"action", "spell"}, {"character", 0},
+                                      {"spell", "goodberry"}}, session.game());
+    check(session.action(action, true).accepted && session.game().party().character({0})->mana == 6,
+          "Headless Goodberry preview does not mutate resources");
+    check(session.action(action, false).accepted && session.game().party().character({0})->mana == 4 &&
+              !session.action(action, false).accepted, "Headless Goodberry commits once");
+    Observation observation;
+    session.observe(observation);
+    const auto hero = encodeObservation(observation)["party"][0];
+    check(hero["learned"].size() == 3 && hero["prepared"].empty() &&
+              hero["passive_features"] == Json::array({"archery", "colossus_slayer"}),
+          "Headless observation exposes known spells and Ranger passive features");
+    const auto actions = describeActions(session.game(), observation);
+    bool goodberry = false, mark = false;
+    for (const auto& spell : actions["combat"][0]["spells"]) {
+        goodberry |= spell["id"] == "goodberry" && spell.value("party", false);
+        mark |= spell["id"] == "hunters_mark" && spell["hostile"] == true && spell["max_targets"] == 1;
+    }
+    check(goodberry && mark, "Headless descriptors expose the party heal and single-enemy mark");
 }
 void preciseAimProtocol() {
     const auto cat = catalog();
@@ -705,6 +734,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         paladinWire();
+        rangerWire();
         preciseAimProtocol();
         coveredObservations();
         preparedArena();

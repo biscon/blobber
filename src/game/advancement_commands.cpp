@@ -34,6 +34,12 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
     case C::Paladin:
         return level == 2 ? "Defense grants +1 AC while armored. Charisma spellcasting and Divine Smite unlock; share four mana. Lay on Hands pool rises to ten."
                           : "Oath of Devotion: Sanctuary and Protection from Evil and Good are always prepared. Sacred Weapon uses Channel Divinity, restored on rest. Mana rises to six; Lay on Hands to fifteen.";
+    case C::Ranger:
+        return level == 2
+                   ? "Archery adds +2 to ranged weapon attack rolls. Learn Hunter's Mark and one healing "
+                     "spell. Cast known spells with Wisdom and four mana."
+                   : "Hunter / Colossus Slayer: weapon hits on already wounded enemies add 1d8 once per "
+                     "turn. Learn the remaining healing spell. Mana rises to six.";
     case C::Wizard:
         return level == 2 ? "Evocation / Sculpt Spells: Shatter protects your other three companions. You "
                             "remain vulnerable to your own blast. Learn two spells."

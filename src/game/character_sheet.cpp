@@ -107,6 +107,17 @@ void CommandController::refreshCharacterSheet() noexcept {
         if (c->build.level >= 2) feature("Divine Smite", "Two mana on a melee hit; critical doubles dice.", "+2d8 radiant");
         if (c->build.level >= 3) feature("Devotion / Sacred Weapon", "+CHA to weapon attacks for 60 seconds.", c->channelDivinity ? "1 / 1 use" : "0 / 1 use");
     }
+    if (cls.progression == rules::ProgressionClass::Ranger && c->build.level >= 2) {
+        feature("Archery", "Included in ranged weapon attack rolls.", "+2 ranged attack");
+        if (c->build.level >= 3)
+            feature("Colossus Slayer", "Weapon hits against wounded enemies.", "+1d8 once per turn");
+        auto& known = out.features[out.featureCount++];
+        known.name = "Known Spells";
+        known.detail = "Cast directly with Wisdom.";
+        for (std::uint16_t n = 0; n < party_.catalog().spellCount(); ++n)
+            if (c->build.spells.learned & rules::spellBit({n}))
+                append(known.value, party_.catalog().spell({n})->name.c_str());
+    }
     if (c->build.level == 4) {
         char summary[64]{};
         constexpr const char* scores[]{"STR", "DEX", "CON", "INT", "WIS", "CHA"};
@@ -124,8 +135,9 @@ void CommandController::refreshCharacterSheet() noexcept {
         for (unsigned n = 0; n < unsigned(EffectKind::Count); ++n)
             if (session_.effects().has(i.character, static_cast<EffectKind>(n)))
                 append(out.effects, effectName(static_cast<EffectKind>(n)));
-        if (session_.effects().concentration(i.character).serial)
-            append(out.effects, "Concentrating");
+        if (const auto concentration = session_.effects().concentrationStatus(i.character))
+            append(out.effects, concentration->effect == EffectKind::HuntersMark
+                                    ? "Concentrating on Hunter's Mark" : "Concentrating");
     }
     if (!out.effects[0])
         append(out.effects, "None");

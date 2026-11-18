@@ -157,11 +157,7 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
         for (unsigned j = 0; j < i; ++j)
             if (s.effects.instances[j].active && s.effects.instances[j].id.serial == e.id.serial)
                 reject("effect state");
-        const bool concentration = e.kind == EffectKind::Bless || e.kind == EffectKind::Bane ||
-                                   e.kind == EffectKind::ShieldOfFaith || e.kind == EffectKind::HoldPerson ||
-                                   e.kind == EffectKind::Guidance || e.kind == EffectKind::Resistance ||
-                                   e.kind == EffectKind::Web || e.kind == EffectKind::ProtectionFromEvilAndGood;
-        if (concentration) {
+        if (concentrates(e.kind)) {
             const auto sourceIndex =
                 e.caster.npc ? rules::partySize + e.caster.enemy.slot : e.caster.character.index;
             if (concentrating[sourceIndex])
@@ -181,6 +177,17 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
         if (e.kind == EffectKind::ProtectionFromEvilAndGood &&
             (e.count != 1 || e.targets[0].npc))
             reject("Protection recipients");
+        if (e.kind == EffectKind::HuntersMark) {
+            const auto* caster = party_.character(e.caster.character);
+            if (e.caster.npc || !caster || caster->life != rules::Life::Conscious ||
+                !(rules::rangerMarkGrant(party_.catalog(), caster->build.view()) & caster->build.spells.learned) ||
+                e.count != 1 || !e.targets[0].npc || e.expiresMs <= s.effects.gameplayMs ||
+                e.expiresMs - s.effects.gameplayMs > huntersMarkDurationMs)
+                reject("Hunter's Mark state");
+            const auto& target = s.actors.actors[e.targets[0].enemy.slot];
+            if (!target.hostile() || target.life != ActorLife::Alive)
+                reject("Hunter's Mark target");
+        }
         if (e.kind == EffectKind::SacredWeapon) {
             const auto* ch = party_.character(e.caster.character);
             const auto h = party_.inventory().at({e.caster.character, static_cast<std::uint16_t>(EquipmentSlot::MainHand)});

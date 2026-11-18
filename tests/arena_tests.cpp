@@ -8,6 +8,7 @@
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
+#include "support/ranger_fixtures.hpp"
 #include "support/temp_directory.hpp"
 #include "ui/interaction.hpp"
 #include <fstream>
@@ -64,6 +65,24 @@ void paladinPreparation() {
     auto rematch = prepareArenaParty(c, decoded);
     check(rematch->character({0})->stats.abilities == paladin.stats.abilities,
           "Paladin rematch replays immutable advancement choices");
+}
+void rangerPreparation() {
+    const auto c = blobber::test::rangerCatalog();
+    auto scenario = defaultArena(c);
+    scenario.adjust({0}, 1);
+    arenaLevel(c, scenario, 4);
+    const auto berries = rules::spellBit(c.findSpell("goodberry"));
+    scenario.preparation.advancements[0][0].learned = berries;
+    const auto decoded = decodeArena(c, encodeArena(c, scenario));
+    check(decoded.preparation.advancements[0][0].learned == berries &&
+              !decoded.preparation.advancements[1][0].learned,
+          "Arena stores the level-two choice and replays the automatic level-three grant");
+    const auto party = prepareArenaParty(c, decoded);
+    const auto rematch = prepareArenaParty(c, decoded);
+    const auto& hunter = *party->character({0});
+    check(hunter.build.level == 4 && hunter.mana == 6 && rules::spellCount(hunter.build.spells.learned) == 3 &&
+              !hunter.build.spells.prepared && rematch->character({0})->build.spells.learned == hunter.build.spells.learned,
+          "Ranger arena rematch reconstructs directly cast spells and full mana");
 }
 void placement(const rules::Catalog& c, unsigned count) {
     auto s = defaultArena(c);
@@ -433,6 +452,7 @@ int main(int argc, char**) {
         picker(c);
         preparation();
         paladinPreparation();
+        rangerPreparation();
         std::cout << "Arena tests passed\n";
     } catch (const std::exception& e) {
         watching = false;

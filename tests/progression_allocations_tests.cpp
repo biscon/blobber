@@ -4,6 +4,7 @@
 #include "support/fixture_world.hpp"
 #include "support/progression_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
+#include "support/ranger_fixtures.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -110,8 +111,39 @@ int main() {
         GameSession smiting(map, paladinCatalog, paladinNear, 5, spellSpawn, false);
         blobber::test::advancePaladin(smiting.party(), 2);
         levelReady(smiting, 0);
+        const auto rangerCatalog = blobber::test::rangerCatalog();
+        GameSession ranger(map, rangerCatalog, empty, 7, spellSpawn, false);
+        GameSession hunting(map, rangerCatalog, paladinNear, 5, spellSpawn, false);
+        CommandController rangerUi(ranger);
+        blobber::test::advanceRanger(hunting.party(), 3);
+        levelReady(hunting, 0);
         bool okay = true;
         tracking = true;
+        blobber::test::advanceRanger(ranger.party(), 4);
+        ranger.party().damage({1}, 5);
+        rangerUi.refresh({}, false, false, true);
+        rangerUi.selectCharacter(0);
+        rangerUi.openSpellbook();
+        for (std::size_t i = 0; i < rangerUi.snapshot().magic.count; ++i)
+            if (rangerUi.snapshot().magic.entries[i].kind == SpellKind::Goodberry) {
+                rangerUi.chooseSpellbook(i);
+                break;
+            }
+        okay &= rangerUi.confirm() == CommandReason::Resolved;
+        auto mark = blobber::test::rangerSpell(hunting, SpellKind::HuntersMark);
+        mark.targetCount = 1;
+        mark.enemies[0] = hunting.actors().id(0);
+        okay &= hunting.submit(mark).reason == CommandReason::Resolved;
+        hunting.actors().damage(mark.enemies[0], 1, 0);
+        levelReady(hunting, 0);
+        PartyCommand shot;
+        shot.action = PartyAction::Ranged;
+        shot.character = {0};
+        shot.target = mark.enemies[0];
+        shot.world = hunting.combat().snapshot().world;
+        shot.turn = hunting.combat().snapshot().turn;
+        okay &= hunting.submit(shot).reason == CommandReason::Resolved;
+        hunting.update(.5, false);
         for (int level = 2; level <= 4; ++level)
             blobber::test::advancePaladin(paladin.party(), level);
         paladin.party().damage({1}, 10);

@@ -429,7 +429,12 @@ constexpr SpellRules spells[]{
      false},
     {"protection_from_evil_and_good", "Protection from Evil and Good",
      "One ally: listed supernatural creatures have disadvantage on attacks. Concentration: ten minutes. Charm, fear and possession are not supported.",
-     Casting::Charisma, 1, {1, 4, 0}, DamageType::Radiant, Ability::Wisdom, false, false, false, 1}};
+     Casting::Charisma, 1, {1, 4, 0}, DamageType::Radiant, Ability::Wisdom, false, false, false, 1},
+    {"hunters_mark", "Hunter's Mark",
+     "Mark one enemy. Your weapon hits deal an extra 1d6 to it. Concentration: one hour or until it dies.",
+     Casting::Wisdom, 1, {1, 6, 0}, DamageType::Piercing, Ability::Wisdom, false, true, false, 1},
+    {"goodberry", "Goodberry", "Share up to 10 HP among injured conscious companions, lowest HP percentage first.",
+     Casting::Wisdom, 1, {1, 1, 0}, DamageType::Piercing, Ability::Wisdom, false, false, false, 0, false, true}};
 static_assert(sizeof(spells) / sizeof(*spells) == static_cast<unsigned>(SpellKind::Count));
 } // namespace
 const SpellRules* spellRules(SpellKind kind) noexcept {
@@ -450,7 +455,7 @@ int spellManaCost(int level) noexcept {
 }
 bool spellClass(SpellKind kind, Casting casting) noexcept {
     const auto* rule = spellRules(kind);
-    return rule &&
+    return rule && kind != SpellKind::HuntersMark && kind != SpellKind::Goodberry &&
            (rule->casting == casting || (kind == SpellKind::HoldPerson && casting == Casting::Intelligence));
 }
 const char* castingAbilityName(Casting c) noexcept {
@@ -459,6 +464,8 @@ const char* castingAbilityName(Casting c) noexcept {
 bool spellClass(SpellKind kind, SpellList list) noexcept {
     if (list == SpellList::Paladin)
         return kind == SpellKind::Bless || kind == SpellKind::CureWounds || kind == SpellKind::ShieldOfFaith;
+    if (list == SpellList::Ranger)
+        return kind == SpellKind::HuntersMark || kind == SpellKind::CureWounds || kind == SpellKind::Goodberry;
     return spellClass(kind, list == SpellList::Cleric ? Casting::Wisdom : list == SpellList::Wizard ? Casting::Intelligence : Casting::None);
 }
 int maximumSpellLevel(SpellProgression p, int level) noexcept {

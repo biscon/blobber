@@ -4,6 +4,14 @@
 namespace blobber {
 using namespace hudInk;
 namespace {
+unsigned entryIcon(const SpellBookEntry& e) noexcept {
+    if (e.passive == PassiveFeature::Archery)
+        return UiArt::archeryIcon;
+    if (e.passive == PassiveFeature::ColossusSlayer)
+        return UiArt::colossusSlayerIcon;
+    return e.category == PickerEntryKind::AutomaticFeature ? UiArt::classFeaturesIcon
+                                                           : UiArt::spellIcon(e.kind, e.feature);
+}
 void usesLabel(char* output, std::size_t size, int charges) {
     std::snprintf(output, size, "%d %s remaining", charges, charges == 1 ? "use" : "uses");
 }
@@ -85,7 +93,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         const bool available =
             automatic || e.reason == CommandReason::Ready || e.reason == CommandReason::MissingTarget;
         box(r, index == m.cursor ? teal : edge);
-        picture(automatic ? UiArt::classFeaturesIcon : UiArt::spellIcon(e.kind, e.feature),
+        picture(entryIcon(e),
                 {r.x + 3, r.y + 3, r.height - 6, r.height - 6},
                 available ? WHITE : Color{100, 108, 106, 255});
         border({r.x + 2, r.y + 2, r.height - 4, r.height - 4}, {29, 36, 33, 255});
@@ -117,7 +125,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
     } else {
         const auto& e = m.entries[m.cursor];
         const bool automatic = e.category == PickerEntryKind::AutomaticFeature;
-        picture(automatic ? UiArt::classFeaturesIcon : UiArt::spellIcon(e.kind, e.feature), {dx, dy, 28, 28});
+        picture(entryIcon(e), {dx, dy, 28, 28});
         clipped(e.name, dx + 34, dy + 2, dw - 34, gold, UiTextStyle::Heading);
         if (automatic)
             std::snprintf(line, sizeof(line), "Automatic");
@@ -139,6 +147,7 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         const char* targeting =
             automatic                           ? "No separate action or activation."
             : e.feature != rules::Feature::None ? featureAction(e.feature, h.combat.phase)
+            : e.kind == rules::SpellKind::Goodberry ? "Party / 1 action."
             : rules && rules->ground            ? "Aim on floor / 1 action."
             : rules && rules->self              ? "Self / 1 action."
             : rules && rules->area              ? "Fixed area / 1 action."
@@ -147,7 +156,9 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
                    : e.kind == rules::SpellKind::InflictWounds ? "Exposed melee / 1 action."
                                                                : "6 cells / clear sight / 1 action.")
                 : "Ally portraits / 1 action.";
-        if (e.category == PickerEntryKind::Spell) {
+        if (e.source == rules::SpellSource::Known)
+            clipped("Known / WIS", dx, dy + 86, dw, teal, UiTextStyle::Small);
+        else if (e.category == PickerEntryKind::Spell) {
             std::snprintf(line, sizeof(line), "%s %s / Attack %+d / DC %d",
                           e.source == rules::SpellSource::Racial   ? "Racial"
                           : e.source == rules::SpellSource::Domain ? "Domain"
@@ -244,6 +255,7 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
         : m.kind == rules::SpellKind::AcidSplash ? "Choose up to 2 enemies within 1 cell of each other."
         : m.missiles ? (m.assigned == 3 ? "Remove a dart to reassign it." : "Assign all 3 darts to cast.")
         : m.ground   ? "Click floor to aim; arrows cycle; Enter casts."
+        : m.kind == rules::SpellKind::Goodberry ? "Heal injured conscious companions."
         : m.self     ? "Self / confirm to cast."
         : m.area
             ? (m.affectedCount ? "Fixed area ahead. Inspect, then Cast." : "No enemies in the affected area.")

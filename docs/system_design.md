@@ -1409,3 +1409,17 @@ Healing points remain separate from portrait mana.
 The [continuous slider follow-up](paladin_design.md#continuous-slider-feedback--2026-11-16)
 keeps fractional visual feedback during dragging while the submitted amount stays
 integer, snaps the handle on release, and paints the opaque handle over the track.
+
+## Rear-row screening for party attacks
+
+[Rear-row screening for party attacks](combat_positioning.md#rear-row-screening-for-party-attacks)
+is **implemented and mechanically verified**. It uses formation exposure to govern proximity disadvantage for
+party ranged attacks. The roll preview and combat log report disadvantage.
+
+## Ranger through level four
+
+The [Ranger design](ranger_design.md) is **implemented and mechanically verified**.
+Interactive review is pending. The
+Ranger uses existing weapon actions, directly cast Wisdom spells, and the shared
+level-four advancement flow. Effects owns Hunter’s Mark and combat resolves its
+bonus together with Colossus Slayer. Goodberry uses a bounded party healing plan.

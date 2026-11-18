@@ -85,6 +85,8 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                     spell.kind = static_cast<SpellKind>(k);
             if (!spellRules(spell.kind))
                 fail("spells[].kind", "unknown concrete spell");
+            if (version < 18 && (spell.kind == SpellKind::HuntersMark || spell.kind == SpellKind::Goodberry))
+                fail("spells[].kind", "Ranger spells require schema version 18");
             out.spells.push_back(std::move(spell));
         }
     }
@@ -139,11 +141,13 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         if (version >= 9)
             cls.progression = static_cast<ProgressionClass>(
                 choice(c.at("progression"), p + ".progression",
-                       std::array<const char*, 6>{"none", "fighter", "cleric", "rogue", "wizard", "paladin"}));
+                       std::array<const char*, 7>{"none", "fighter", "cleric", "rogue", "wizard", "paladin", "ranger"}));
         if (version >= 17) {
-            cls.spellList = static_cast<SpellList>(choice(c.at("spell_list"), p + ".spell_list", std::array<const char*, 4>{"none", "cleric", "wizard", "paladin"}));
+            cls.spellList = static_cast<SpellList>(choice(c.at("spell_list"), p + ".spell_list", std::array<const char*, 5>{"none", "cleric", "wizard", "paladin", "ranger"}));
             cls.spellProgression = static_cast<SpellProgression>(choice(c.at("spell_progression"), p + ".spell_progression", std::array<const char*, 2>{"full", "half"}));
         }
+        if (version < 18 && (cls.progression == ProgressionClass::Ranger || cls.spellList == SpellList::Ranger))
+            fail(p, "ranger requires schema version 18");
         cls.id = identifier(c.at("id"), p + ".id");
         cls.name = string(c.at("name"), p + ".name");
         cls.hitDie = integer(c.at("hit_die"), p + ".hit_die");

@@ -165,6 +165,13 @@ Json encodeObservation(const Observation& o) {
                   {"domain", spellList(cat, p.build.spells.domain)},
                   {"racial", spellList(cat, p.build.spells.racial)},
                   {"inventory", Json::array()}};
+        if (g.party().progressionClass({i}) == rules::ProgressionClass::Ranger) {
+            auto& passive = c["passive_features"] = Json::array();
+            if (p.build.level >= 2)
+                passive.push_back("archery");
+            if (p.build.level >= 3)
+                passive.push_back("colossus_slayer");
+        }
         if (auto concentration = g.effects().concentrationStatus(rules::CharacterId{i})) {
             StatusSummary s;
             s.entries[s.count++] = *concentration;
@@ -427,8 +434,9 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
     else if (e.spell != rules::SpellKind::Count && e.character.index < rules::partySize)
         j["caster_source"] = casterSource(e.character);
     if (e.event == CombatEvent::Attack) {
-        if (e.enemyAttack && e.spell == rules::SpellKind::Count) {
+        if (e.enemyAttack && e.spell == rules::SpellKind::Count)
             j["pack_tactics"] = e.packTactics;
+        if ((e.enemyAttack && e.spell == rules::SpellKind::Count) || (e.roll && !e.targetGone)) {
             j["attack_roll_mode"] = e.attackRollMode == rules::RollMode::Advantage      ? "advantage"
                                     : e.attackRollMode == rules::RollMode::Disadvantage ? "disadvantage"
                                                                                         : "normal";

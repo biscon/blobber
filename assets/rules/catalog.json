@@ -1,5 +1,5 @@
 {
-  "schema_version": 17,
+  "schema_version": 18,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -917,6 +917,35 @@
       ],
       "progression": "paladin",
       "spell_list": "paladin",
+      "spell_progression": "half"
+    },
+    {
+      "id": "ranger",
+      "name": "Ranger",
+      "hit_die": 10,
+      "saves": [
+        "strength",
+        "dexterity"
+      ],
+      "weapons": [
+        "simple",
+        "martial"
+      ],
+      "armor": [
+        "light",
+        "medium",
+        "shield"
+      ],
+      "allows_defense": false,
+      "casting": "wisdom",
+      "features": [],
+      "spells": [
+        "hunters_mark",
+        "cure_wounds",
+        "goodberry"
+      ],
+      "progression": "ranger",
+      "spell_list": "ranger",
       "spell_progression": "half"
     }
   ],
@@ -2088,6 +2117,18 @@
       "name": "Protection from Evil and Good",
       "description": "One ally: supernatural creatures have disadvantage on attacks. Concentration: ten minutes. Charm, fear and possession protections are deferred.",
       "kind": "protection_from_evil_and_good"
+    },
+    {
+      "id": "hunters_mark",
+      "name": "Hunter's Mark",
+      "description": "Mark one visible enemy. Your weapon hits deal an extra 1d6 to it. Concentration: one hour or until it dies.",
+      "kind": "hunters_mark"
+    },
+    {
+      "id": "goodberry",
+      "name": "Goodberry",
+      "description": "Share up to 10 HP among injured conscious companions, lowest HP percentage first. No berries are stored.",
+      "kind": "goodberry"
     }
   ],
   "creation": [
@@ -2508,6 +2549,97 @@
         }
       ],
       "class": "paladin"
+    },
+    {
+      "recommended": {
+        "strength": 8,
+        "dexterity": 15,
+        "constitution": 14,
+        "intelligence": 8,
+        "wisdom": 15,
+        "charisma": 10
+      },
+      "groups": [
+        [
+          {
+            "id": "shortsword",
+            "name": "Shortsword",
+            "items": [
+              {
+                "item": "shortsword",
+                "quantity": 1,
+                "slot": "main_hand"
+              }
+            ]
+          },
+          {
+            "id": "dagger",
+            "name": "Dagger",
+            "items": [
+              {
+                "item": "dagger",
+                "quantity": 1,
+                "slot": "main_hand"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "id": "leather",
+            "name": "Leather armor",
+            "items": [
+              {
+                "item": "leather",
+                "quantity": 1,
+                "slot": "body"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "id": "shortbow_kit",
+            "name": "Shortbow and 20 arrows",
+            "items": [
+              {
+                "item": "shortbow",
+                "quantity": 1,
+                "slot": "ranged"
+              },
+              {
+                "item": "arrow",
+                "quantity": 20,
+                "slot": "bag"
+              }
+            ]
+          },
+          {
+            "id": "longbow_kit",
+            "name": "Longbow and 20 arrows",
+            "items": [
+              {
+                "item": "longbow",
+                "quantity": 1,
+                "slot": "ranged"
+              },
+              {
+                "item": "arrow",
+                "quantity": 20,
+                "slot": "bag"
+              }
+            ]
+          }
+        ]
+      ],
+      "supplies": [
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "slot": "bag"
+        }
+      ],
+      "class": "ranger"
     }
   ]
 }

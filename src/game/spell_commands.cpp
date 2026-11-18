@@ -39,7 +39,9 @@ void CommandController::refreshMagic() noexcept {
     m.difficulty = 8 + m.attackBonus;
     m.attackBonus += c->stats.spellAttackBonus;
     const auto* cls = party_.catalog().characterClass(c->build.characterClass);
-    m.spellcaster = cls->casting != rules::Casting::None || c->build.spells.racial;
+    const bool ranger = cls->progression == rules::ProgressionClass::Ranger;
+    m.spellcaster = (cls->casting != rules::Casting::None && (!ranger || c->build.level >= 2)) ||
+                    c->build.spells.racial;
     static_assert(std::tuple_size<decltype(cls->spells)>::value + 10 <= MagicHud::capacity,
                   "Picker must hold all supported spells and features");
     const auto entry = [&](rules::SpellId spell, rules::Feature feature, const char* name, const char* desc,
@@ -159,6 +161,11 @@ void CommandController::refreshMagic() noexcept {
         (cls->progression == rules::ProgressionClass::Paladin && c->build.level >= 2))
         passive(PassiveFeature::Defense, "Defense",
                 "+1 Armor Class while wearing body armor. Already included in your armor class.");
+    if (ranger && c->build.level >= 2)
+        passive(PassiveFeature::Archery, "Archery", "+2 to ranged weapon attack rolls.");
+    if (ranger && c->build.level >= 3)
+        passive(PassiveFeature::ColossusSlayer, "Colossus Slayer",
+                "Weapon hits against an already wounded enemy deal an extra 1d8 once per turn.");
     if (cls->casting == rules::Casting::None) {
         if (party_.hasFeature(caster, rules::ClassFeature::SneakAttack)) {
             passive(
@@ -280,7 +287,9 @@ void CommandController::refreshMagic() noexcept {
         const auto pool = party_.preserveLifePreview(caster);
         std::snprintf(m.targets.data(), m.targets.size(), "Healing: %d / %d / %d / %d HP (character order)",
                       pool[0], pool[1], pool[2], pool[3]);
-    } else
+    } else if (m.kind == rules::SpellKind::Goodberry)
+        std::snprintf(m.targets.data(), m.targets.size(), "Party / confirm to cast");
+    else
         std::snprintf(m.targets.data(), m.targets.size(), "Self / confirm to use");
 }
 void CommandController::healingAmount(int delta, bool maximum) noexcept {

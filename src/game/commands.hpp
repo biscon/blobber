@@ -82,7 +82,7 @@ struct CombatFeedback {
     std::uint64_t startedMs = 0;
 };
 enum class PickerEntryKind : std::uint8_t { Spell, ActivatedFeature, AutomaticFeature };
-enum class PassiveFeature : std::uint8_t { None, Defense, SneakAttack, RearRowMelee };
+enum class PassiveFeature : std::uint8_t { None, Defense, SneakAttack, RearRowMelee, Archery, ColossusSlayer };
 struct SpellBookEntry {
     rules::SpellId spell;
     rules::Feature feature = rules::Feature::None;

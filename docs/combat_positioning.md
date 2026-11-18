@@ -1,5 +1,38 @@
 # Combat positioning for waiting enemies
 
+## Rear-row screening for party attacks
+
+**Implemented and mechanically verified.** A rear-row companion is screened while the front companion in
+the same column can act. The check uses the formation and action rules from
+melee exposure. A screened ranged weapon or ranged spell attack
+ignores proximity disadvantage. An exposed attacker takes that disadvantage
+when any living hostile is within combat reach of the shared party cell.
+Heavy weapons, conditions, and advantage cancellation use the existing rules.
+
+Combat evaluates roll mode through the same bounded query in preview and
+resolution. Enemy hover and the encounter target picker warn only when the
+final roll has disadvantage. The combat log labels disadvantaged rolls and
+headless events include the roll mode at impact. Pre-impact events redact roll
+details. The rule derives from current formation and effects and needs no save
+fields.
+
+All ten selected Debug suites passed. The targeting regressions cover bow and
+spell previews and impacts, both party columns, a downed front companion, heavy
+weapons, melee conditions, and Guiding Bolt consumption across multiple rays. The campaign
+save smoke and progression allocation checks passed. After strengthening the
+picker fixture, targeting passed again.
+
+```sh
+/home/bison/clion/bin/cmake/linux/x64/bin/cmake --build cmake-build-debug --parallel 2 --target blobber blobber_headless blobber_targeting_tests blobber_world_integration_gpu_tests
+/home/bison/clion/bin/cmake/linux/x64/bin/ctest --test-dir cmake-build-debug -j 1 --output-on-failure -R '^(targeting|combat|spells|level_spells|impact|progression|progression_allocations|visual_review|automation|campaign_save_smoke)$'
+cmake-build-debug/blobber_world_integration_gpu_tests assets RUN_DIRECTORY/screening-review --ranged-screening-review cmake-build-debug/assets/prepared
+```
+
+Hidden OpenGL showed the warning for the exposed Ranger and the ordinary
+tooltip for the screened Ranger. The launcher used an application-owned window
+and in-process inputs. Interactive play remains unverified. The two inspected
+captures were retained and all disposable run output was cleaned. [Review captures](screenshots/ranged-screening/README.md).
+
 ## Doorway encounter investigation — 2026-11-11
 
 Status: implemented; headless regression verified in all four headings. Interactive

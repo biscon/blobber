@@ -7,6 +7,17 @@ inline bool badgesOverlap(UiRect a, UiRect b) noexcept {
     return a.x < b.x + b.width + 2 && a.x + a.width + 2 > b.x && a.y < b.y + b.height + 2 &&
            a.y + a.height + 2 > b.y;
 }
+inline std::optional<UiRect> hoveredEnemyHealthBar(const HudSnapshot& h) noexcept {
+    const auto& hover = h.hover;
+    if (!hover.tooltipVisible || hover.kind != HoverKind::Enemy || !hover.enemy ||
+        hover.enemy->world != h.targets.world || hover.enemy->slot >= h.targets.anchors.size())
+        return {};
+    const auto& anchor = h.targets.anchors[hover.enemy->slot];
+    if (!anchor.valid)
+        return {};
+    return UiRect{viewX + std::clamp(anchor.badgeX - 23, 0, viewWidth - 46),
+                  viewY + std::clamp(anchor.top - 8, 0, viewHeight - 6), 46, 6};
+}
 // Keep indicators near their owner; reject whole rectangles obscured by geometry
 // or another body rather than leaving small misleading fragments.
 inline bool completeMarker(const PickingBuffer* picking, unsigned owner, UiRect r) noexcept {
@@ -25,12 +36,14 @@ std::optional<UiRect> placeMarker(const HudSnapshot& h, const PickingBuffer* pic
     constexpr int offsetsX[]{0, 14, -14, 28, -28};
     const int width = 54 + int(h.combat.upcomingCount) * 30;
     const UiRect initiative{viewX + viewWidth - width - 6, 24, width, 34};
+    const auto health = hoveredEnemyHealthBar(h);
     for (int dy : offsetsY)
         for (int dx : offsetsX) {
             UiRect r{std::clamp(preferred.x + dx, viewX + 1, viewX + viewWidth - preferred.width - 1),
                      std::clamp(preferred.y + dy, viewY + 1, viewY + viewHeight - 13), preferred.width, 12};
             if ((!h.suspended && h.combat.phase == CombatPhase::Turns && h.combat.upcomingCount &&
                  badgesOverlap(r, initiative)) ||
+                (health && badgesOverlap(r, *health)) ||
                 occupied(r) || !completeMarker(picking, owner, r))
                 continue;
             return r;
@@ -52,9 +65,11 @@ statusMarkerLayout(const HudSnapshot& h, const PickingBuffer* picking = nullptr)
         for (unsigned k = 0; k < unsigned(EffectKind::Count); ++k)
             count += (mask >> k) & 1;
         const int width = int(std::min(count, 6u)) * 12;
+        UiRect preferred{viewX + a.badgeX - width / 2, viewY + a.badgeTop - 14, width, 12};
+        if (const auto health = hoveredEnemyHealthBar(h); health && badgesOverlap(preferred, *health))
+            preferred.y = health->y - preferred.height - 2;
         result[id.slot] =
-            placeMarker(h, picking, id.slot,
-                        {viewX + a.badgeX - width / 2, viewY + a.badgeTop - 14, width, 12}, [&](UiRect r) {
+            placeMarker(h, picking, id.slot, preferred, [&](UiRect r) {
                             for (const auto& other : result)
                                 if (other && badgesOverlap(r, *other))
                                     return true;

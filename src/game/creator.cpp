@@ -312,7 +312,7 @@ void layoutCreator(FlowControls& w, const CreatorModel& m, const Catalog& c) noe
         break;
     case CreatorStep::Class:
         for (unsigned i = 0; i < c.classCount(); ++i) {
-            const unsigned columns = std::min<std::size_t>(5, c.classCount());
+            const unsigned columns = std::min<std::size_t>(6, c.classCount());
             const unsigned rows = (c.classCount() + columns - 1) / columns;
             const int width = 448 / int(columns), height = 94 / int(rows);
             w.add({174 + int(i % columns) * width, 92 + int(i / columns) * height, width - 4, height - 4}, FlowAction::Class, int(i));

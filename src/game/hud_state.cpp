@@ -282,6 +282,7 @@ void CommandController::updateHover() noexcept {
                       session_.guardian(*h.enemy) ? "Guardian: " : "",
                       monsterName(actors_.catalog().monster(a.monster)->id), unsigned(h.enemy->slot) + 1);
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
+        const auto pose = session_.movement().player;
         if (state_.magic.armed) {
             const auto& m = state_.magic;
             std::snprintf(h.lines[4].data(), h.lines[4].size(), "HP %d/%d", a.hitPoints, a.maxHitPoints);
@@ -305,7 +306,8 @@ void CommandController::updateHover() noexcept {
             else if (m.single) {
                 const auto* spell = rules::spellRules(m.kind);
                 const auto profile = actors_.catalog().monster(a.monster)->damageProfile;
-                put(2, spell && (profile.immunities & rules::damageBit(spell->damage))
+                put(2, m.kind != rules::SpellKind::HuntersMark && spell &&
+                               (profile.immunities & rules::damageBit(spell->damage))
                            ? "Immune to this damage. Click to cast."
                            : "Click to cast.");
             } else if (m.missiles) {
@@ -316,12 +318,18 @@ void CommandController::updateHover() noexcept {
                            : "Left: add / Right or Shift-click: remove");
             } else
                 put(2, selected ? "Click to remove." : "Click to select.");
+            if (h.reason == CommandReason::Ready)
+                if (const auto* warning = session_.combat().attackWarning(m.pending, *h.enemy, pose))
+                    put(5, warning);
             return;
         }
         command.action =
             state_.selection.action == PartyAction::Ranged ? PartyAction::Ranged : PartyAction::Melee;
         command.target = h.enemy;
         h.reason = validate(command);
+        if (h.reason == CommandReason::Ready)
+            if (const auto* warning = session_.combat().attackWarning(command, *h.enemy, pose))
+                put(5, warning);
         const auto* c = party_.character(command.character);
         const auto slot =
             command.action == PartyAction::Ranged ? EquipmentSlot::Ranged : EquipmentSlot::MainHand;
@@ -343,7 +351,7 @@ void CommandController::updateHover() noexcept {
         }
         put(2, realTime(state_.combat.phase) ? "Cost: 6-second cooldown" : "Cost: 1 action");
         if (session_.combat().sneakPreview(command.character, *h.enemy, command.action == PartyAction::Ranged,
-                                           session_.movement().player))
+                                           pose))
             put(2, "Sneak Attack: +1d6 on hit / one action");
         put(3, h.reason == CommandReason::Ready ? "Click to attack." : commandMessage(h.reason));
         if (auto concentration = session_.effects().concentrationStatus(*h.enemy)) {
@@ -354,6 +362,10 @@ void CommandController::updateHover() noexcept {
                 put(2, effectName(EffectKind(e)));
                 break;
             }
+        if (session_.effects().has(*h.enemy, EffectKind::HuntersMark))
+            put(2, session_.effects().markedBy(command.character, *h.enemy)
+                       ? "Hunter's Mark: +1d6 on your weapon hits."
+                       : "Marked by a companion.");
     } else if (h.kind == HoverKind::Action && h.index >= 0 && h.index < 6) {
         if (h.index == 4) {
             h.reason = CommandReason::Ready;
