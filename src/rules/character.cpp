@@ -2,6 +2,25 @@
 #include <algorithm>
 
 namespace blobber::rules {
+Result<Abilities> effectiveAbilities(const Catalog& catalog, const CharacterIdentityView& b,
+                                     bool complete) noexcept {
+    const auto* race = catalog.race(b.race);
+    if (!race || b.level < 1 || b.level > 4)
+        return {{}, Error::InvalidAbility};
+    const auto points = b.levelFourAsi.points();
+    if ((b.level < 4 && points) || points > 2 || (complete && b.level == 4 && points != 2))
+        return {{}, Error::InvalidScore};
+    Abilities out{};
+    for (unsigned i = 0; i < abilityCount; ++i) {
+        const auto increase = b.levelFourAsi.increases[i];
+        if (!abilityModifier(b.baseAbilities[i]) || increase > 2)
+            return {{}, Error::InvalidScore};
+        out[i] = b.baseAbilities[i] + race->abilityIncreases[i] + increase;
+        if (!abilityModifier(out[i]) || (increase && out[i] > 20))
+            return {{}, Error::InvalidScore};
+    }
+    return {out};
+}
 bool validDisplayText(std::string_view text, std::size_t maximum) noexcept {
     if (text.empty() || text.size() > maximum)
         return false;
@@ -31,7 +50,7 @@ const char* characterErrorMessage(CharacterError error) noexcept {
     case CharacterError::InvalidReference:
         return "invalid race, class, or item reference";
     case CharacterError::UnsupportedLevel:
-        return "only character levels 1 through 3 are supported";
+        return "only character levels 1 through 4 are supported";
     case CharacterError::InvalidAbilities:
         return "base and final abilities must be 1..30";
     case CharacterError::InvalidFeature:
@@ -127,7 +146,7 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
     const auto* cls = catalog.characterClass(b.characterClass);
     if (!race || !cls)
         return fail(CharacterError::InvalidReference);
-    if (b.level < 1 || b.level > 3)
+    if (b.level < 1 || b.level > 4)
         return fail(CharacterError::UnsupportedLevel);
     if (b.lifeDomain && !hasFeature(cls->features, ClassFeature::LifeDomain))
         return {{}, CharacterError::InvalidFeature};
@@ -135,10 +154,11 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
         return fail(CharacterError::InvalidFeature);
     CharacterStats stats;
     stats.proficiency = proficiencyBonus(b.level).value;
+    const auto abilities = effectiveAbilities(catalog, b);
+    if (!abilities)
+        return fail(CharacterError::InvalidAbilities);
     for (std::size_t i = 0; i < abilityCount; ++i) {
-        if (!abilityModifier(b.baseAbilities[i]))
-            return fail(CharacterError::InvalidAbilities);
-        stats.abilities[i] = b.baseAbilities[i] + race->abilityIncreases[i];
+        stats.abilities[i] = abilities.value[i];
         const auto mod = abilityModifier(stats.abilities[i]);
         if (!mod)
             return fail(CharacterError::InvalidAbilities);
@@ -198,7 +218,7 @@ CharacterResult deriveCharacter(const Catalog& catalog, const CharacterIdentityV
             stats.armorClass += dexterity;
         if (armor.armor == ArmorType::Medium)
             stats.armorClass += std::min(2, dexterity);
-        if (b.defense)
+        if (b.defense || (cls->progression == ProgressionClass::Paladin && b.level >= 2))
             ++stats.armorClass;
     }
     if (items[2]) {

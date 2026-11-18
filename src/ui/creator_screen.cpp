@@ -121,7 +121,7 @@ void drawSelection(const HudPainter& p, const Catalog& c, const SpellSelection& 
         p.box(r, selected ? teal : edge);
         if (selected)
             p.border({r.x + 1, r.y + 1, r.width - 2, r.height - 2}, teal);
-        p.art->creator(unsigned(spell.kind), {r.x + 3, r.y + 6, 33, 33});
+        p.picture(UiArt::spellIcon(spell.kind), {r.x + 3, r.y + 6, 33, 33});
         wrap(p, spell.name.c_str(), {r.x + 40, r.y + 5, 84, 28}, selected ? WHITE : gold);
         const auto* rule = spellRules(spell.kind);
         char cost[48];
@@ -144,7 +144,7 @@ void drawSelection(const HudPainter& p, const Catalog& c, const SpellSelection& 
         p.fill(thumb, teal);
     };
     if (const auto* spell = c.spell(s.inspected)) {
-        p.art->creator(unsigned(spell->kind), {492, 114, 96, 96});
+        p.picture(UiArt::spellIcon(spell->kind), {492, 114, 96, 96});
         p.clipped(spell->name.c_str(), 466, 214, 148, gold, UiTextStyle::Heading);
         const UiRect description{466, 230, 142, 27};
         const int spacing = p.fonts->lineHeight(UiTextStyle::Small);
@@ -179,7 +179,7 @@ unsigned drawBuildReview(const HudPainter& p, const Catalog& c, const CharacterD
     const auto preview = previewBuild(c, d);
     sidebar(p, c, draftIdentity(d), d.portrait);
     const auto* cls = c.characterClass(d.characterClass);
-    const int mana = cls ? maximumMana(cls->casting, 1) : 0;
+    const int mana = cls ? maximumMana(cls->casting, cls->spellProgression, 1) : 0;
     const char* labels[]{"Hit points", "Armor Class", "Mana", "Point buy"};
     const int values[]{preview.stats.maxHitPoints, preview.stats.armorClass, mana, preview.points};
     for (int i = 0; i < 4; ++i) {
@@ -216,9 +216,9 @@ unsigned drawBuildReview(const HudPainter& p, const Catalog& c, const CharacterD
     if (cls && hasFeature(cls->features, ClassFeature::ArcaneRecovery))
         detail("Wizard", "Arcane Recovery");
     if (cls && cls->casting != Casting::None) {
-        const int mod = preview.stats.modifiers[cls->casting == Casting::Wisdom ? 4 : 3];
+        const int mod = preview.stats.modifiers[castingAbilityIndex(cls->casting)];
         std::snprintf(line, sizeof(line), "%s / attack %+d / DC %d / prepare 1..%d",
-                      cls->casting == Casting::Wisdom ? "WIS" : "INT", preview.stats.proficiency + mod,
+                      castingAbilityName(cls->casting), preview.stats.proficiency + mod,
                       8 + preview.stats.proficiency + mod, preview.preparation);
         detail("Class casting", line);
     }
@@ -228,7 +228,7 @@ unsigned drawBuildReview(const HudPainter& p, const Catalog& c, const CharacterD
                       8 + preview.stats.proficiency + mod);
         detail("Racial casting", line);
     }
-    const std::uint32_t masks[]{d.spells.cantrips, d.spells.racial, d.spells.learned, d.spells.prepared,
+    const rules::SpellMask masks[]{d.spells.cantrips, d.spells.racial, d.spells.learned, d.spells.prepared,
                                 d.spells.domain};
     const char* categories[]{"Cantrip", "Racial (INT)", "Spellbook", "Prepared", "Domain grant"};
     for (unsigned category = 0; category < 5; ++category) {
@@ -302,8 +302,10 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
             const bool fighter = cls->allowsDefense,
                        cleric = hasFeature(cls->features, ClassFeature::LifeDomain),
                        rogue = hasFeature(cls->features, ClassFeature::SneakAttack);
+            const bool paladin = cls->progression == ProgressionClass::Paladin;
             wrap(p,
-                 fighter  ? "Armored front line. Defense adds 1 AC while armored. Second Wind spends an "
+                 paladin ? "Armored holy warrior. Lay on Hands heals allies. At level two, Charisma spells and Divine Smite share mana. Oath of Devotion unlocks at level three."
+                 : fighter  ? "Armored front line. Defense adds 1 AC while armored. Second Wind spends an "
                             "action to heal; rests refresh its charge."
                  : cleric ? "Healing and protection. Life Domain grants Bless and Cure Wounds. Disciple of "
                             "Life strengthens healing. Prepare spells from the cleric list."
@@ -314,7 +316,8 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
                  {174, 218, 448, 44});
             std::snprintf(line, sizeof(line), "Hit Die d%d / Primary ability: %s / Armor training: %s",
                           cls->hitDie,
-                          cleric    ? "Wisdom"
+                          paladin ? "Strength / Charisma"
+                          : cleric    ? "Wisdom"
                           : fighter ? "Strength"
                           : rogue   ? "Dexterity"
                                     : "Intelligence",
@@ -465,9 +468,14 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
             break;
         case FlowAction::Class: {
             p.box(b.rect, m.draft.characterClass.index == b.value ? teal : i == w.focus ? gold : edge);
-            art.creator(32 + unsigned(b.value), {b.rect.x + 25, b.rect.y + 6, 56, 56});
+            const bool paladin = c.characterClass({std::uint16_t(b.value)})->progression == ProgressionClass::Paladin;
+            if (b.rect.height > 45) {
+                const UiRect icon{b.rect.x + (b.rect.width - 56) / 2, b.rect.y + 4, 56, 56};
+                if (paladin) p.picture(UiArt::spellIcon(SpellKind::Count, Feature::SacredWeapon), icon);
+                else if (b.value < 4) art.creator(32 + unsigned(b.value), icon);
+            }
             p.centered(c.characterClass({std::uint16_t(b.value)})->name.c_str(),
-                       {b.rect.x, b.rect.y + 65, b.rect.width, 18}, gold, UiTextStyle::Heading);
+                       {b.rect.x, b.rect.y + b.rect.height - 22, b.rect.width, 18}, gold, UiTextStyle::Heading);
             break;
         }
         case FlowAction::Minus:
@@ -551,49 +559,63 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
         return;
     frame(p, arena ? "ARENA PREPARATION" : "LEVEL UP");
     sidebar(p, *h.catalog, h.identity, h.portrait);
-    constexpr const char* titles[]{"1 Overview", "2 Class features", "3 Spells", "4 Review"};
-    const unsigned step = h.step == AdvancementStep::Review ? 3
-                          : h.step == AdvancementStep::Learned || h.step == AdvancementStep::Prepared
-                              ? 2
-                              : unsigned(h.step);
-    for (unsigned i = 0; i < 4; ++i)
-        p.text(titles[i], 174 + int(i) * 113, 38, i == step ? gold : muted, UiTextStyle::Heading);
+    const bool fourth = h.identity.level == 3;
+    constexpr const char* titles[]{"Overview", "Features", "Abilities", "Spells", "Review"};
+    const unsigned phase = h.step == AdvancementStep::Overview    ? 0
+                           : h.step == AdvancementStep::Features  ? 1
+                           : h.step == AdvancementStep::Abilities ? 2
+                           : h.choosing()                         ? 3
+                                                                  : 4;
+    unsigned column = 0;
+    for (unsigned i = 0; i < 5; ++i) {
+        if (i == 2 && !fourth)
+            continue;
+        p.text(titles[i], 174 + int(column++) * (fourth ? 90 : 113), 38, i == phase ? gold : muted,
+               UiTextStyle::Heading);
+    }
     FlowControls controls = h.controls;
     layoutAdvancement(controls, h);
     const auto* cls = h.catalog->characterClass(h.identity.characterClass);
-    char line[192];
-    if (h.step == AdvancementStep::Learned || h.step == AdvancementStep::Prepared) {
-        drawSelection(p, *h.catalog, h.selection, h.searchEdit, controls,
-                      h.step == AdvancementStep::Learned ? "Learn new spells" : "Preparation slot");
+    char line[256];
+    constexpr const char* abilityNames[]{"Strength",     "Dexterity", "Constitution",
+                                         "Intelligence", "Wisdom",    "Charisma"};
+    constexpr const char* shortNames[]{"STR", "DEX", "CON", "INT", "WIS", "CHA"};
+    if (h.choosing()) {
+        const bool cantrip = h.step == AdvancementStep::Cantrips;
         const bool learning = h.step == AdvancementStep::Learned;
-        if (learning) {
+        drawSelection(p, *h.catalog, h.selection, h.searchEdit, controls,
+                      cantrip    ? "Choose a new cantrip"
+                      : learning ? "Learn new spells"
+                                 : "Preparation slots");
+        if (cantrip) {
+            p.text("Learn 1 additional class cantrip", 174, 66, gold, UiTextStyle::Heading);
+            std::snprintf(line, sizeof(line), "%u class cantrips unchanged; racial magic stays separate.",
+                          spellCount(h.baseline.cantrips));
+        } else if (learning) {
             p.text("Learn 2 spells for your spellbook", 174, 66, gold, UiTextStyle::Heading);
             std::snprintf(line, sizeof(line), "%u known spells stay in your spellbook.",
                           spellCount(h.baseline.learned));
         } else {
-            p.text("You gained 1 preparation slot", 174, 66, gold, UiTextStyle::Heading);
+            const auto slots = h.selection.context.maximum;
+            std::snprintf(line, sizeof(line), "You gained %u preparation slot%s", slots,
+                          slots == 1 ? "" : "s");
+            p.text(line, 174, 66, gold, UiTextStyle::Heading);
             std::snprintf(line, sizeof(line), "%u prepared spells unchanged; %u domain spells always ready.",
                           spellCount(h.baseline.prepared), spellCount(h.selection.context.granted));
         }
         p.text(line, 174, 278, muted, UiTextStyle::Small);
         const auto available = spellCount(h.selection.context.available);
-        if (!learning && available == 1) {
-            for (unsigned i = 0; i < h.catalog->spellCount(); ++i)
-                if (h.selection.context.available & spellBit({std::uint16_t(i)})) {
-                    std::snprintf(line, sizeof(line), "%s is the only remaining spell you can add.",
-                                  h.catalog->spell({std::uint16_t(i)})->name.c_str());
-                    break;
-                }
-        } else
-            std::snprintf(line, sizeof(line), "%u spells available%s", available,
-                          learning ? ". Choose 2; preparation comes next."
-                                   : "; choose up to 1, or leave the slot empty.");
+        if (cantrip || learning)
+            std::snprintf(line, sizeof(line), "%u spells available. Choose %u; existing choices are kept.",
+                          available, h.selection.context.maximum);
+        else
+            std::snprintf(line, sizeof(line), "%u spells available; choose up to %u, or leave slots empty.",
+                          available, h.selection.context.maximum);
         wrap(p, line, {174, 289, 266, 18}, text, UiTextStyle::Small, 0, 9);
         wrap(p,
-             learning ? "Only new choices are listed; known spells are kept."
-             : h.request.level == 1
-                 ? "Swap spells during Long Rest. Second-level spells unlock at character level 3."
-                 : "Only new choices are listed. Swap preparations during Long Rest.",
+             cantrip    ? "Your new cantrip is permanent. Existing cantrips cannot be replaced."
+             : learning ? "Only new choices are listed; preparation comes next."
+                        : "Only new choices are listed. Swap preparations during Long Rest.",
              {174, 307, 266, 18}, muted, UiTextStyle::Small, 0, 9);
     } else {
         std::snprintf(line, sizeof(line), "Level %d -> %d / %s", h.request.level, h.request.level + 1,
@@ -602,62 +624,111 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
         if (h.step == AdvancementStep::Features) {
             wrap(p, advancementFeatures(cls->progression, h.request.level + 1), {174, 105, 440, 170}, text,
                  UiTextStyle::Heading);
+        } else if (h.step == AdvancementStep::Abilities) {
+            const auto original = rules::effectiveAbilities(*h.catalog, h.identity);
+            const auto proposed = rules::effectiveAbilities(*h.catalog, h.candidate(), false);
+            for (unsigned i = 0; i < rules::abilityCount; ++i) {
+                const int y = 108 + int(i) * 27;
+                p.text(abilityNames[i], 174, y + 4);
+                if (original && proposed) {
+                    std::snprintf(line, sizeof(line), "%d (%+d)  ->  %d (%+d)", original.value[i],
+                                  rules::abilityModifier(original.value[i]).value, proposed.value[i],
+                                  rules::abilityModifier(proposed.value[i]).value);
+                    p.text(line, 310, y + 4);
+                }
+                std::snprintf(line, sizeof(line), "+%u",
+                              unsigned(h.request.choices.abilityImprovement.increases[i]));
+                p.text(line, 541, y + 4, teal);
+            }
+            std::snprintf(line, sizeof(line), "%u points remaining",
+                          2 - h.request.choices.abilityImprovement.points());
+            p.text(line, 174, 278, gold, UiTextStyle::Heading);
+            wrap(p, "Raise one score by 2 or two scores by 1. Maximum 20, including racial bonuses.",
+                 {174, 297, 440, 24}, muted);
+        } else if (h.step == AdvancementStep::Review) {
+            const auto scores = rules::effectiveAbilities(*h.catalog, h.candidate());
+            for (unsigned i = 0; i < rules::abilityCount; ++i) {
+                const int x = 174 + int(i) * 74;
+                p.text(shortNames[i], x, 103, gold, UiTextStyle::Small);
+                if (scores) {
+                    std::snprintf(line, sizeof(line), "%d (%+d)", scores.value[i],
+                                  rules::abilityModifier(scores.value[i]).value);
+                    p.text(line, x, 117, text, UiTextStyle::Small);
+                }
+                if (h.request.choices.abilityImprovement.increases[i]) {
+                    std::snprintf(line, sizeof(line), "+%u",
+                                  unsigned(h.request.choices.abilityImprovement.increases[i]));
+                    p.text(line, x, 131, teal, UiTextStyle::Small);
+                }
+            }
+            std::snprintf(line, sizeof(line), "Maximum HP: %d -> %d", h.oldHp,
+                          h.preview.preview.stats.maxHitPoints);
+            p.text(line, 174, 155);
+            std::snprintf(line, sizeof(line), "Maximum mana: %d -> %d", h.oldMana,
+                          rules::maximumMana(cls->casting, cls->spellProgression, h.request.level + 1) +
+                              h.preview.preview.stats.maxManaBonus);
+            p.text(line, 174, 175);
+            p.text("One additional available Hit Die; current deficits preserved.", 174, 195, muted,
+                   UiTextStyle::Small);
+            int rowY = 217;
+            const auto selections = [&](const char* prefix, rules::SpellMask mask) {
+                if (!mask)
+                    return;
+                char names[256]{};
+                std::snprintf(names, sizeof(names), "%s: ", prefix);
+                bool first = true;
+                for (std::uint16_t i = 0; i < h.catalog->spellCount(); ++i)
+                    if (mask & spellBit({i})) {
+                        const auto used = std::strlen(names);
+                        std::snprintf(names + used, sizeof(names) - used, "%s%s", first ? "" : ", ",
+                                      h.catalog->spell({i})->name.c_str());
+                        first = false;
+                    }
+                wrap(p, names, {174, rowY, 440, 24}, text, UiTextStyle::Small);
+                rowY += 26;
+            };
+            selections("Cantrip", h.request.choices.cantrips);
+            selections("Learn", h.request.choices.learned);
+            selections("Prepare", h.request.choices.prepared);
+            selections("Domain", h.preview.preview.spells.domain & ~h.baseline.domain);
+            wrap(p, advancementMessage(h.preview.error), {174, 303, 440, 23}, h.preview ? teal : red,
+                 UiTextStyle::Small);
         } else {
-            const auto* race = h.catalog->race(h.identity.race);
-            const int con =
-                rules::abilityModifier(h.identity.baseAbilities[2] + race->abilityIncreases[2]).value;
-            const int hp = std::max(1, cls->hitDie / 2 + 1 + con) + race->hitPointsPerLevel;
-            std::snprintf(line, sizeof(line), "Maximum HP: %d -> %d", h.oldHp, h.oldHp + hp);
+            if (h.preview.preview.stats.maxHitPoints)
+                std::snprintf(line, sizeof(line), "Maximum HP: %d -> %d", h.oldHp,
+                              h.preview.preview.stats.maxHitPoints);
+            else
+                std::snprintf(line, sizeof(line), "Choose ability increases to preview maximum HP.");
             p.text(line, 174, 108);
             std::snprintf(line, sizeof(line), "Maximum mana: %d -> %d", h.oldMana,
-                          rules::maximumMana(cls->casting, h.request.level + 1));
+                          rules::maximumMana(cls->casting, cls->spellProgression, h.request.level + 1) +
+                              h.preview.preview.stats.maxManaBonus);
             p.text(line, 174, 128);
             p.text("One additional available Hit Die", 174, 148);
             p.text(rules::subclassName(cls->progression, h.request.level + 1, h.identity.lifeDomain), 174,
                    170, gold);
             wrap(p,
                  "Current HP and mana rise with their maximums, preserving deficits. Existing spent charges "
-                 "stay spent. Newly earned charges start ready.",
+                 "stay spent.",
                  {174, 194, 440, 60}, muted);
-            if (h.step == AdvancementStep::Review) {
-                int rowY = 229;
-                const auto selections = [&](const char* prefix, std::uint32_t mask) {
-                    if (!mask)
-                        return;
-                    char names[192]{};
-                    std::snprintf(names, sizeof(names), "%s: ", prefix);
-                    bool first = true;
-                    for (std::uint16_t i = 0; i < h.catalog->spellCount(); ++i)
-                        if (mask & spellBit({i})) {
-                            const auto used = std::strlen(names);
-                            std::snprintf(names + used, sizeof(names) - used, "%s%s", first ? "" : ", ",
-                                          h.catalog->spell({i})->name.c_str());
-                            first = false;
-                        }
-                    wrap(p, names, {174, rowY, 440, 24}, text, UiTextStyle::Small);
-                    rowY += 15;
-                };
-                selections("Learn", h.request.choices.learned);
-                selections("Prepare", h.request.choices.prepared);
-                if (h.preview.preview.valid)
-                    selections("Domain", h.preview.preview.spells.domain & ~h.baseline.domain);
-                std::snprintf(line, sizeof(line), "%u newly learned / %u newly prepared spells",
-                              rules::spellCount(h.request.choices.learned),
-                              rules::spellCount(h.request.choices.prepared));
-                p.text(line, 174, 265, teal);
-                wrap(p, advancementMessage(h.preview.error), {174, 286, 440, 30}, h.preview ? teal : red);
-            }
+            if (fourth)
+                wrap(p,
+                     "Choose two ability points. Constitution improvements also increase HP for previous "
+                     "levels.",
+                     {174, 260, 440, 48}, gold);
         }
     }
     for (unsigned i = 0; i < controls.count; ++i) {
         const auto a = controls.entries[i].action;
+        if (a == FlowAction::Minus || a == FlowAction::Plus)
+            button(p, controls, i, a == FlowAction::Minus ? "-" : "+");
         if (a == FlowAction::Cancel || a == FlowAction::Back || a == FlowAction::Next ||
             a == FlowAction::Done)
             button(p, controls, i,
                    a == FlowAction::Cancel ? "Cancel"
                    : a == FlowAction::Back ? "Back"
                    : a == FlowAction::Next
-                       ? (h.step == AdvancementStep::Prepared && !h.selection.selected ? "Leave slot empty"
+                       ? (h.step == AdvancementStep::Prepared && !h.selection.selected ? "Leave slots empty"
                                                                                        : "Next")
                    : arena ? "Keep choices"
                            : "Confirm level up");

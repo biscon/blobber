@@ -263,6 +263,8 @@ template <class A> void visit(A& a, EffectInstance& v, const EffectInstance& bas
     a("duplicates", v.duplicates, base.duplicates);
     a("cell", v.cell, base.cell);
     a("readyMs", v.readyMs, base.readyMs);
+    a("weaponSlot", v.weaponSlot, base.weaponSlot);
+    a("weaponGeneration", v.weaponGeneration, base.weaponGeneration);
 }
 template <class A> void visit(A& a, ConditionState& v, const ConditionState& base) {
     a("active", v.active, base.active);
@@ -402,6 +404,7 @@ template <class A> void visit(A& a, rules::CharacterIdentity& v, const rules::Ch
     a("race", v.race, base.race);
     a("characterClass", v.characterClass, base.characterClass);
     a("baseAbilities", v.baseAbilities, base.baseAbilities);
+    a("levelFourAsi", v.levelFourAsi.increases, base.levelFourAsi.increases);
     a("level", v.level, base.level);
     a("defense", v.defense, base.defense);
     a("lifeDomain", v.lifeDomain, base.lifeDomain);
@@ -424,6 +427,7 @@ template <class A> void visit(A& a, PartyCharacter& v, const PartyCharacter& bas
     a("experienceFraction", v.experienceFraction, base.experienceFraction);
     a("actionSurge", v.actionSurge, base.actionSurge);
     a("channelDivinity", v.channelDivinity, base.channelDivinity);
+    a("layOnHands", v.layOnHands, base.layOnHands);
     a("temporaryUntilMs", v.temporaryUntilMs, base.temporaryUntilMs);
 }
 template <class A> void visit(A& a, PartySnapshot& v, const PartySnapshot& base) {

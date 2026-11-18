@@ -2,6 +2,7 @@
 #include "platform/file_io.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/paladin_fixtures.hpp"
 #include "support/temp_directory.hpp"
 #include <fstream>
 #include <iostream>
@@ -34,6 +35,23 @@ struct Temp {
         std::filesystem::remove_all(path, ec);
     }
 };
+void paladinBlueprint() {
+    const auto cat = blobber::test::paladinCatalog(); Temp temp;
+    const auto path = temp.path / "paladin.json";
+    CharacterLibrary library(cat, path);
+    check(bool(library.initialize()), "Paladin library initializes");
+    auto draft = rules::recommendedDraft(cat, {3}, {4});
+    std::snprintf(draft.name.data(), draft.name.size(), "Elven Paladin");
+    const auto created = library.create(draft, library.snapshot().revision);
+    check(created && created.committed, "Paladin blueprint can be saved");
+    CharacterLibrary reloaded(cat, path);
+    check(bool(reloaded.load()), "Paladin library reloads");
+    const auto* record = reloaded.snapshot().find(created.id);
+    check(record && record->draft.characterClass.index == 4 && record->draft.spells.racial &&
+              !record->draft.spells.cantrips && !record->draft.spells.prepared,
+          "Level-one paladin and racial cantrip survive library round trip");
+    check(nlohmann::json::parse(read(path))["schema_version"] == 1, "Library schema remains one");
+}
 void tolerantLoading() {
     const auto cat = creationCatalog();
     Temp temp;
@@ -93,6 +111,7 @@ void tolerantLoading() {
 } // namespace
 int main() {
     try {
+        paladinBlueprint();
         tolerantLoading();
         const auto cat = creationCatalog();
         Temp temp;

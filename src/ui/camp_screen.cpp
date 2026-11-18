@@ -60,12 +60,17 @@ void HudPainter::camp(const HudSnapshot& h) const {
                           m.maxHp, m.mana, m.maxMana);
         }
         centered(line, {x, c.playing || shortRest ? 256 : 241, 104, 11}, muted, UiTextStyle::Small);
+        if (m.healingMaximum && !shortRest && !c.playing) {
+            std::snprintf(line, sizeof(line), "Heal %d/%d%s", m.healingPool, m.healingMaximum,
+                          m.hasChannel ? (m.channelAvailable ? " | CD 1/1" : " | CD 0/1") : "");
+            centered(line, {x, 256, 104, 10}, teal, UiTextStyle::Small);
+        }
     }
     bool changedPreparation = false;
     if (c.request.preparation.enabled)
         for (unsigned i = 0; i < 4; ++i)
             changedPreparation |= c.request.preparation.prepared[i] != c.contexts[i].baseline;
-    centered(shortRest            ? "Second Wind refreshes. Mana does not recover."
+    centered(shortRest            ? "Short-rest features refresh. Mana and healing pools stay spent."
              : changedPreparation ? "Prepared spell changes will apply with this rest."
                                   : "Full HP and mana. Hit Dice and class features recover.",
              {viewX, 267, shortRest ? viewWidth : 337, 10}, gold, UiTextStyle::Small);

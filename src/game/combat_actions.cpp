@@ -19,6 +19,11 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
         return CommandReason::InvalidAction;
     if (c.action == PartyAction::Spell || c.action == PartyAction::Feature)
         return validateMagic(c, pose);
+    if (c.action == PartyAction::Smite &&
+        (party_.progressionClass(c.character) != rules::ProgressionClass::Paladin || ch->build.level < 2))
+        return CommandReason::FeatureRequired;
+    if (c.action == PartyAction::Smite && ch->mana < 2)
+        return CommandReason::InsufficientMana;
     if (c.action == PartyAction::BackMelee &&
         !party_.hasFeature(c.character, rules::ClassFeature::SneakAttack))
         return CommandReason::FeatureRequired;
@@ -128,6 +133,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     }
     out.reason = CommandReason::Resolved;
     out.character = c.character;
+    if (c.action == PartyAction::Smite) out.feature = rules::Feature::DivineSmite;
     const bool turn = state_.phase == CombatPhase::Turns;
     spendAction(c);
     if (c.action == PartyAction::Defend) {
@@ -164,7 +170,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const auto roll = rng_.d20(mode).value;
         effects_.consumeGuiding(out.enemy, now, events);
         out.roll = roll.selected;
-        const auto hit = rules::resolveAttack(roll, w.attackBonus + effects_.rollModifier(c.character),
+        const auto hit = rules::resolveAttack(roll, w.attackBonus + (!ranged ? effects_.sacredWeaponBonus(c.character) : 0) + effects_.rollModifier(c.character),
                                               effects_.armorClass(out.enemy))
                              .value;
         out.hit = hit.outcome != rules::AttackOutcome::Miss;
@@ -176,6 +182,12 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         out.hit |= out.critical;
         if (out.hit) {
             out.damage = rng_.damage(w.damage, out.critical).value.total;
+            if (c.action == PartyAction::Smite) {
+                const auto type = actors_.catalog().monster(a->monster)->creatureType;
+                const int dice = type == rules::CreatureType::Undead || type == rules::CreatureType::Fiend ? 3 : 2;
+                out.smiteDamage = rng_.damage({dice, 8, 0}, out.critical).value.total;
+                party_.spendMana(c.character, 2);
+            }
             if (sneakEligible(c.character, out.enemy, mode, ranged, pose)) {
                 out.damage +=
                     rng_.damage({party_.character(c.character)->build.level >= 3 ? 2 : 1, 6, 0}, out.critical)

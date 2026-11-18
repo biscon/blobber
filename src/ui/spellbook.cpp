@@ -95,6 +95,10 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
             std::snprintf(line, sizeof(line), "Automatic");
         else if (spell)
             std::snprintf(line, sizeof(line), "%d", e.cost);
+        else if (e.feature == rules::Feature::LayOnHands)
+            std::snprintf(line, sizeof(line), "%d HP", e.charges);
+        else if (e.cost)
+            std::snprintf(line, sizeof(line), "%d mana", e.cost);
         else if (e.charges >= 0)
             std::snprintf(line, sizeof(line), "%d %s", e.charges, e.charges == 1 ? "use" : "uses");
         else
@@ -117,6 +121,10 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         clipped(e.name, dx + 34, dy + 2, dw - 34, gold, UiTextStyle::Heading);
         if (automatic)
             std::snprintf(line, sizeof(line), "Automatic");
+        else if (e.feature == rules::Feature::LayOnHands)
+            std::snprintf(line, sizeof(line), "%d healing points remaining", e.charges);
+        else if (e.feature == rules::Feature::DivineSmite)
+            std::snprintf(line, sizeof(line), "%d mana on a hit", e.cost);
         else if (e.charges >= 0)
             usesLabel(line, sizeof(line), e.charges);
         else if (e.category == PickerEntryKind::ActivatedFeature)
@@ -143,8 +151,9 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
             std::snprintf(line, sizeof(line), "%s %s / Attack %+d / DC %d",
                           e.source == rules::SpellSource::Racial   ? "Racial"
                           : e.source == rules::SpellSource::Domain ? "Domain"
+                          : e.source == rules::SpellSource::Oath ? "Oath"
                                                                    : "Class",
-                          e.casting == rules::Casting::Wisdom ? "WIS" : "INT", e.attack, e.difficulty);
+                          rules::castingAbilityName(e.casting), e.attack, e.difficulty);
             clipped(line, dx, dy + 86, dw, teal, UiTextStyle::Small);
         }
         clipped(targeting, dx, dy + 98, dw, blue, UiTextStyle::Small);
@@ -170,6 +179,31 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
         return;
     overlayBox(hudLayout::spellTargetPanel);
     const auto& c = m.pending;
+    if (m.pending.feature == rules::Feature::LayOnHands && m.armed) {
+        const auto track = hudLayout::healingTrack;
+        const bool enabled = m.healingMaximum > 0 && !h.suspended;
+        const float shown = m.healingDragging ? m.healingDragAmount : float(c.healingAmount);
+        fill(track, background);
+        if (m.healingPool > 0) {
+            const int useful = track.width * m.healingMaximum / m.healingPool;
+            fill({track.x + useful, track.y, track.width - useful, track.height}, {45, 48, 46, 255});
+            if (enabled) {
+                rectangle({float(track.x), float(track.y), track.width * shown / m.healingPool, float(track.height)}, gold);
+                fill({track.x + useful, track.y - 2, 1, track.height + 4}, teal);
+            }
+        }
+        border(track, enabled ? gold : muted);
+        // Paint the solid handle last, covering the track border as well as its fill.
+        if (enabled && m.healingPool > 0) {
+            const float center = std::round(hudLayout::healingHandleCenter(shown, m.healingPool) * scale) / scale;
+            const Rectangle handle{center - 6, float(track.y - 4), 12, 14};
+            constexpr float inset = 1 / scale;
+            rectangle(handle, gold);
+            rectangle({handle.x + inset, handle.y + inset, handle.width - 2 * inset, handle.height - 2 * inset},
+                      m.healingDragging ? teal : bright);
+            rectangle({center - 1, handle.y + 3, 2, handle.height - 6}, background);
+        }
+    }
     if (m.kind == rules::SpellKind::LesserRestoration && m.armed) {
         box(hudLayout::restorationChoice, gold);
         label(c.restoreParalysis ? "Cure paralysis / Tab to change" : "Cure blindness / Tab to change",
@@ -186,7 +220,9 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     clipped(line, 53, 309, 229, gold, UiTextStyle::Display);
     if (c.action == PartyAction::Feature) {
         char uses[40]{};
-        if (m.charges >= 0)
+        if (c.feature == rules::Feature::LayOnHands)
+            std::snprintf(uses, sizeof(uses), "Healing pool %d/%d", m.healingPool, m.healingCapacity);
+        else if (m.charges >= 0)
             usesLabel(uses, sizeof(uses), m.charges);
         std::snprintf(line, sizeof(line), "%s%s%s", featureAction(c.feature, h.combat.phase),
                       m.charges >= 0 ? " / " : "", uses);
@@ -198,8 +234,9 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     clipped(resolving              ? "Resolving..."
             : m.single && m.ground ? "Choose an enemy or floor cell"
             : m.single             ? (m.hostile ? "Choose an enemy" : "Choose an ally")
+            : c.feature == rules::Feature::LayOnHands && m.feedback[0] ? m.feedback.data()
                                    : m.targets.data(),
-            53, 333, m.area ? 229 : 145, teal, UiTextStyle::Small);
+            53, 333, m.area || c.feature == rules::Feature::LayOnHands ? 229 : 145, teal, UiTextStyle::Small);
     const char* hint =
         m.feedback[0]                            ? m.feedback.data()
         : m.single && m.ground                   ? "Click enemy to attack; floor then Enter to move."
@@ -220,7 +257,7 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     if (resolving)
         hint = c.action == PartyAction::Feature ? "Waiting for the ability to finish."
                                                 : "Waiting for the cast to finish.";
-    if (!h.targetPicker.available)
+    if (!h.targetPicker.available && c.feature != rules::Feature::LayOnHands)
         clipped(hint, 53, 347, 229, muted, UiTextStyle::Small);
     const bool confirmEnabled = (enabled && (!m.single || m.ground)) || h.targetPicker.canConfirm;
     box(hudLayout::spellCast, confirmEnabled ? bright : edge);

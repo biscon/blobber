@@ -19,6 +19,10 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, c
     if (hud && art && c.id.index < rules::partySize) {
         const auto mask = hud->supportConditions.party[c.id.index];
         auto has = [&](EffectKind k) { return bool(mask & (1u << unsigned(k))); };
+        if (has(EffectKind::SacredWeapon))
+            picture(UiArt::spellIcon(rules::SpellKind::Count, rules::Feature::SacredWeapon), {portrait.x + portrait.width - 14, portrait.y + 2, 12, 12});
+        if (has(EffectKind::ProtectionFromEvilAndGood))
+            picture(UiArt::spellIcon(rules::SpellKind::ProtectionFromEvilAndGood), {portrait.x + 2, portrait.y + 2, 12, 12});
         // One ward, including exact duplicate bits; portrait copies are scissored to this card.
         if (has(EffectKind::MirrorImage)) {
             BeginScissorMode(portrait.x * 3, portrait.y * 3, portrait.width * 3, portrait.height * 3);

@@ -15,16 +15,16 @@ std::uint64_t revision(const Json& j) {
         fail("revision", "zero is reserved");
     return v;
 }
-Json spells(const Catalog& c, std::uint32_t mask) {
+Json spells(const Catalog& c, rules::SpellMask mask) {
     Json j = Json::array();
     for (std::uint16_t i = 0; i < c.spellCount(); ++i)
         if (mask & spellBit({i}))
             j.push_back(c.spell({i})->id);
     return j;
 }
-std::uint32_t spells(const Catalog& c, const Json& j) {
-    array(j, "spells", 32);
-    std::uint32_t out = 0;
+rules::SpellMask spells(const Catalog& c, const Json& j) {
+    array(j, "spells", rules::spellCapacity);
+    rules::SpellMask out = 0;
     for (const auto& v : j) {
         auto id = c.findSpell(identifier(v, "spell"));
         auto bit = spellBit(id);

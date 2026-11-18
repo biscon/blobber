@@ -64,7 +64,7 @@ constexpr SpellRules spells[]{
      1},
     {"cure_wounds",
      "Cure Wounds",
-     "Heal one living ally for 1d8 + Wisdom, plus the Life domain bonus.",
+     "Heal one living ally for 1d8 + casting ability, plus any Life domain bonus.",
      Casting::Wisdom,
      1,
      {1, 8, 0},
@@ -426,7 +426,10 @@ constexpr SpellRules spells[]{
      true,
      0,
      true,
-     false}};
+     false},
+    {"protection_from_evil_and_good", "Protection from Evil and Good",
+     "One ally: listed supernatural creatures have disadvantage on attacks. Concentration: ten minutes. Charm, fear and possession are not supported.",
+     Casting::Charisma, 1, {1, 4, 0}, DamageType::Radiant, Ability::Wisdom, false, false, false, 1}};
 static_assert(sizeof(spells) / sizeof(*spells) == static_cast<unsigned>(SpellKind::Count));
 } // namespace
 const SpellRules* spellRules(SpellKind kind) noexcept {
@@ -437,7 +440,8 @@ const char* featureName(Feature f) noexcept {
     constexpr const char* names[]{
         "Ability",      "Second Wind",   "Arcane Recovery",         "End concentration",
         "Action Surge", "Preserve Life", "Cunning Action",          "Spiritual Weapon",
-        "Escape Web",   "End Turn",      "Dismiss Spiritual Weapon"};
+        "Escape Web",   "End Turn",      "Dismiss Spiritual Weapon",
+        "Lay on Hands", "Sacred Weapon", "Dismiss Sacred Weapon", "Divine Smite"};
     return unsigned(f) < std::size(names) ? names[unsigned(f)] : "Ability";
 }
 int spellManaCost(int level) noexcept {
@@ -449,12 +453,27 @@ bool spellClass(SpellKind kind, Casting casting) noexcept {
     return rule &&
            (rule->casting == casting || (kind == SpellKind::HoldPerson && casting == Casting::Intelligence));
 }
+const char* castingAbilityName(Casting c) noexcept {
+    return c == Casting::Wisdom ? "WIS" : c == Casting::Charisma ? "CHA" : c == Casting::Intelligence ? "INT" : "None";
+}
+bool spellClass(SpellKind kind, SpellList list) noexcept {
+    if (list == SpellList::Paladin)
+        return kind == SpellKind::Bless || kind == SpellKind::CureWounds || kind == SpellKind::ShieldOfFaith;
+    return spellClass(kind, list == SpellList::Cleric ? Casting::Wisdom : list == SpellList::Wizard ? Casting::Intelligence : Casting::None);
+}
+int maximumSpellLevel(SpellProgression p, int level) noexcept {
+    return p == SpellProgression::Half ? (level >= 2 && level <= 4 ? 1 : 0) : maximumSpellLevel(level);
+}
+int maximumMana(Casting c, SpellProgression p, int level) noexcept {
+    constexpr int caps[]{0, 4, 6, 6};
+    return p == SpellProgression::Half ? (c != Casting::None && level >= 1 && level <= 4 ? caps[level - 1] : 0) : maximumMana(c, level);
+}
 int maximumSpellLevel(int level) noexcept {
-    return level >= 1 && level <= 3 ? (level == 3 ? 2 : 1) : 0;
+    return level >= 1 && level <= 4 ? (level >= 3 ? 2 : 1) : 0;
 }
 int maximumMana(Casting casting, int level) noexcept {
-    constexpr int caps[]{4, 6, 14};
-    return (casting == Casting::Wisdom || casting == Casting::Intelligence) && level >= 1 && level <= 3
+    constexpr int caps[]{4, 6, 14, 17};
+    return (casting == Casting::Wisdom || casting == Casting::Intelligence) && level >= 1 && level <= 4
                ? caps[level - 1]
                : 0;
 }

@@ -18,5 +18,5 @@ Json encodeEvent(const CombatOutcome&, const rules::Catalog&, bool diagnostic);
 Json describeTravel(const CampaignRun&);
 Json describeActions(const GameSession&, const Observation&);
 const char* phaseName(CombatPhase) noexcept;
-Json spellList(const rules::Catalog&, std::uint32_t);
+Json spellList(const rules::Catalog&, rules::SpellMask);
 } // namespace blobber::automation

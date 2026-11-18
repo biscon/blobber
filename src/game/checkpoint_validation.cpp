@@ -160,7 +160,7 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
         const bool concentration = e.kind == EffectKind::Bless || e.kind == EffectKind::Bane ||
                                    e.kind == EffectKind::ShieldOfFaith || e.kind == EffectKind::HoldPerson ||
                                    e.kind == EffectKind::Guidance || e.kind == EffectKind::Resistance ||
-                                   e.kind == EffectKind::Web;
+                                   e.kind == EffectKind::Web || e.kind == EffectKind::ProtectionFromEvilAndGood;
         if (concentration) {
             const auto sourceIndex =
                 e.caster.npc ? rules::partySize + e.caster.enemy.slot : e.caster.character.index;
@@ -176,6 +176,18 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
                 if (t == e.targets[k])
                     reject("effect state");
         }
+        if (e.kind >= EffectKind::Count)
+            reject("effect kind");
+        if (e.kind == EffectKind::ProtectionFromEvilAndGood &&
+            (e.count != 1 || e.targets[0].npc))
+            reject("Protection recipients");
+        if (e.kind == EffectKind::SacredWeapon) {
+            const auto* ch = party_.character(e.caster.character);
+            const auto h = party_.inventory().at({e.caster.character, static_cast<std::uint16_t>(EquipmentSlot::MainHand)});
+            if (e.caster.npc || !ch || party_.progressionClass(e.caster.character) != rules::ProgressionClass::Paladin || ch->build.level < 3 || e.count != 1 || e.targets[0].npc || e.targets[0].character.index != e.caster.character.index || !h || h.slot != e.weaponSlot || h.generation != e.weaponGeneration)
+                reject("Sacred Weapon binding");
+        } else if (e.weaponSlot != UINT16_MAX || e.weaponGeneration)
+            reject("unexpected weapon binding");
         if (e.kind == EffectKind::SpiritualWeapon && (!cell(e.cell) || map_.base().solid(e.cell)))
             reject("effect state");
     }

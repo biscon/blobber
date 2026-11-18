@@ -28,7 +28,10 @@ struct NpcDamageResult {
     ActorResult actor;
     rules::DamageResolution resolved;
     FortitudeResult fortitude;
+    std::array<rules::DamageResolution, 2> components{};
 };
+NpcDamageResult damageNpc(ActorWorld&, EffectController&, ActorId, const rules::DamagePacket&,
+                          bool critical, std::uint64_t when) noexcept;
 // One checked mitigation/save/HP commit for every gameplay NPC damage source.
 // Callers retain source-specific wake, interruption and effect reconciliation.
 NpcDamageResult damageNpc(ActorWorld&, EffectController&, ActorId, std::int64_t amount, rules::DamageType,

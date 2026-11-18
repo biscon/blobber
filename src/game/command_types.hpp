@@ -8,7 +8,7 @@ namespace blobber {
 inline bool sameActor(ActorId a, ActorId b) noexcept {
     return a.slot == b.slot && a.world == b.world;
 }
-enum class PartyAction : std::uint8_t { Melee, BackMelee, Defend, Ranged, Spell, Item, Aid, Feature, Count };
+enum class PartyAction : std::uint8_t { Melee, BackMelee, Defend, Ranged, Spell, Item, Aid, Feature, Smite, Count };
 enum class CommandReason : std::uint8_t {
     Ready = 1, // Value zero is retired; preserve persisted command result values.
     Resolved,
@@ -72,6 +72,7 @@ struct PartyCommand {
     std::optional<Cell> aimedCell;
     std::optional<SpellAim> aimedSubcell;
     bool restoreParalysis = false;
+    int healingAmount = 0;
 };
 // Body visibility and geometry-exposed targeting. Combat validates range, rank, life and turn.
 struct TargetAnchor {

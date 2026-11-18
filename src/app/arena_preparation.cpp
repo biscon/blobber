@@ -39,12 +39,14 @@ void ArenaPreparationFlow::nextMember(const rules::Catalog& c) noexcept {
             stats = next.stats;
             h.baseline = next.spells;
             ++h.identity.level;
+            h.identity.levelFourAsi = next.abilityImprovement;
         }
         h.request.level = h.identity.level;
         h.request.choices = candidate.preparation.advancements[transition][member];
         h.oldHp = stats.maxHitPoints;
-        h.oldMana = rules::maximumMana(c.characterClass(draft.characterClass)->casting, h.identity.level);
-        if (h.applicable(AdvancementStep::Learned) || h.applicable(AdvancementStep::Prepared)) {
+        h.oldMana = rules::maximumMana(c.characterClass(draft.characterClass)->casting, c.characterClass(draft.characterClass)->spellProgression, h.identity.level);
+        if (h.applicable(AdvancementStep::Abilities) || h.applicable(AdvancementStep::Cantrips) ||
+            h.applicable(AdvancementStep::Learned) || h.applicable(AdvancementStep::Prepared)) {
             h.step = AdvancementStep::Overview;
             h.sync();
             refresh();
@@ -61,7 +63,7 @@ void ArenaPreparationFlow::nextMember(const rules::Catalog& c) noexcept {
     controls = {};
 }
 void ArenaPreparationFlow::selectLevel(const rules::Catalog& c, unsigned level) noexcept {
-    if (!active || level < 1 || level > 3)
+    if (!active || level < 1 || level > 4)
         return;
     if (level != candidate.preparation.targetLevel)
         candidate.preparation = {level, {}};
@@ -85,7 +87,7 @@ void ArenaPreparationFlow::layout() noexcept {
     controls.context = {4, unsigned(step), transition, member, candidate.preparation.targetLevel, 0, 0, 0};
     controls.add({20, 320, 100, 25}, FlowAction::Cancel);
     if (step == ArenaPreparationStep::Level)
-        for (int level = 1; level <= 3; ++level)
+        for (int level = 1; level <= 4; ++level)
             controls.add({160 + (level - 1) * 110, 150, 100, 36}, FlowAction::Step, level);
     else {
         controls.add({390, 320, 100, 25}, FlowAction::Back);
@@ -130,7 +132,7 @@ void ArenaPreparationFlow::route(const rules::Catalog& c, const UiInput& input, 
     if (h.searchEdit.focused)
         routed.pressed[std::size_t(UiKey::Left)] = routed.pressed[std::size_t(UiKey::Right)] = false;
     auto action = h.controls.input(routed);
-    const bool choosing = h.step == AdvancementStep::Learned || h.step == AdvancementStep::Prepared;
+    const bool choosing = h.choosing();
     if (choosing && scrollSelection(h.selection, c, routed, action)) {
         h.searchEdit.focused = false;
         return;
@@ -167,6 +169,12 @@ void ArenaPreparationFlow::route(const rules::Catalog& c, const UiInput& input, 
         }
         break;
     }
+    case FlowAction::Minus:
+        h.ability(unsigned(action.value), -1);
+        break;
+    case FlowAction::Plus:
+        h.ability(unsigned(action.value), 1);
+        break;
     case FlowAction::Inspect:
         h.selection.inspected = {std::uint16_t(action.value)};
         h.selection.detailOffset = 0;
@@ -178,21 +186,13 @@ void ArenaPreparationFlow::route(const rules::Catalog& c, const UiInput& input, 
         h.searchEdit.focus(true, h.selection.search);
         break;
     case FlowAction::Recommend:
-        h.selection.selected = rules::recommendedChoices(
-            c, h.selection.context,
-            h.step == AdvancementStep::Learned ? rules::SpellChoice::Learned : rules::SpellChoice::Prepared);
+        h.selection.selected = rules::recommendedChoices(c, h.selection.context, h.choiceKind());
         h.selection.inspectSelected();
         break;
     default:
         break;
     }
-    if (h.step == AdvancementStep::Learned) {
-        h.request.choices.learned = h.selection.selected;
-        h.request.choices.prepared &=
-            rules::advancementChoices(c, h.identity, h.portrait, h.baseline, h.request.choices, false)
-                .available;
-    } else if (h.step == AdvancementStep::Prepared)
-        h.request.choices.prepared = h.selection.selected;
+    h.storeSelection();
     refresh();
 }
 } // namespace blobber

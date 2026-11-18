@@ -57,11 +57,12 @@ void drawArena(MenuView& v, const HudPainter& p, const UiArt& art) {
                     stats = next.stats;
                     spells = next.spells;
                     ++identity.level;
+                    identity.levelFourAsi = next.abilityImprovement;
                 }
                 const auto* cls = v.catalog.characterClass(draft.characterClass);
                 std::snprintf(text, sizeof(text), "%s / %s: HP %d, mana %d, %u prepared + %u domain",
                               draft.name.data(), cls->name.c_str(), stats.maxHitPoints,
-                              rules::maximumMana(cls->casting, identity.level),
+                              rules::maximumMana(cls->casting, cls->spellProgression, identity.level),
                               rules::spellCount(spells.prepared), rules::spellCount(spells.domain));
                 p.clipped(text, 30, 112 + int(i) * 31, 580, hudInk::text);
             }

@@ -5,7 +5,7 @@ unsigned earnedLevelMask(const Party& party) noexcept {
     unsigned mask = 0;
     for (std::uint16_t n = 0; n < rules::partySize; ++n) {
         const auto& c = *party.character({n});
-        if (c.build.level < 3 && party.progressionClass({n}) != rules::ProgressionClass::None &&
+        if (c.build.level < 4 && party.progressionClass({n}) != rules::ProgressionClass::None &&
             c.experience >= rules::nextLevelExperience(c.build.level))
             mask |= 1u << n;
     }

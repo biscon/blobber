@@ -72,14 +72,16 @@ void spellPaths() {
                 immune ? DamageProfile{damageBit(type), 0} : DamageProfile{0, damageBit(type)}, false, kind);
             const bool close = kind == SpellKind::PoisonSpray || kind == SpellKind::BurningHands ||
                                kind == SpellKind::Thunderwave;
-            const auto places = spellPlacements(map, close ? 4 : 3, close);
+            const auto places = kind == SpellKind::PoisonSpray
+                ? NpcWorld(map, spellSpawn.cell, {"goblin"}, {{{0}, {6, 7}, {0, 1}, Heading::South}})
+                : spellPlacements(map, close ? 4 : 3, close);
             GameSession s(map, catalog, places, 5, spellSpawn, false);
             levelParty(s, 3, kind);
             if (close)
                 levelReady(s, 3);
             auto c = spellCommand(s, kind);
             c.targetCount = spellRules(kind)->area ? 0 : 1;
-            c.enemies[0] = s.actors().id(close ? 2 : 0);
+            c.enemies[0] = s.actors().id(close && kind != SpellKind::PoisonSpray ? 2 : 0);
             c.darts[0] = 3;
             if (kind == SpellKind::Shatter)
                 c.aimedCell = Cell{6, 4};

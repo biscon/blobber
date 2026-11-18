@@ -25,6 +25,8 @@ enum class EffectKind : std::uint8_t {
     Web,
     Restrained,
     SpiritualWeapon,
+    ProtectionFromEvilAndGood,
+    SacredWeapon,
     Count
 };
 enum class StatusClock : std::uint8_t { Seconds, Turns, CasterTurn, Standing, Escape };
@@ -140,6 +142,8 @@ struct EffectInstance {
     std::uint8_t duplicates = 0, reserved = 0;
     Cell cell{};
     std::uint64_t readyMs = 0;
+    std::uint16_t weaponSlot = UINT16_MAX;
+    std::uint64_t weaponGeneration = 0;
 };
 struct ConditionState {
     rules::CharacterId caster{};
@@ -223,6 +227,8 @@ class EffectController {
     rules::RollMode attackMode(EffectTarget attacker, EffectTarget target, bool close, bool advantage = false,
                                bool disadvantage = false) const noexcept;
     int oneShot(EffectTarget, EffectKind) noexcept;
+    int sacredWeaponBonus(rules::CharacterId) const noexcept;
+    EffectId sacredWeapon(rules::CharacterId) const noexcept;
     int saveModifier(EffectTarget t) noexcept { return rollModifier(t) + oneShot(t, EffectKind::Resistance); }
     void breakWard(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
     bool wardAllows(EffectTarget attacker, EffectTarget target, std::uint64_t, CombatEvents&) noexcept;

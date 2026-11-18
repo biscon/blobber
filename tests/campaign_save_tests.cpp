@@ -4,6 +4,7 @@
 #include "persistence/campaign_store.hpp"
 #include "persistence/character_library.hpp"
 #include "support/campaign_fixtures.hpp"
+#include "support/paladin_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
 #include "support/generation_blueprints.hpp"
 #include "ui/interaction.hpp"
@@ -211,7 +212,7 @@ void environmentRoundtrip() {
     bad["schema"] = 7;
     rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
             "Pre-architecture schema rejects");
-    bad["schema"] = 22;
+    bad["schema"] = 24;
     savedLocation(bad, 1)["world"]["buildings"] = {{"size", buildingCapacity + 1},
                                                    {"entries", blobber::automation::Json::array()}};
     rejects([&] { decodeCampaign(c, d, {"fixture", 0, &blobber::test::campaignBlueprints()}, bad.dump()); },
@@ -536,6 +537,65 @@ void chestRoundtrip() {
               !inactive->game().loot().snapshot().stacks[slot].active,
           "Inactive floor chest survives save and revisit without reroll");
 }
+void paladinPersistence() {
+    using namespace rules;
+    const auto base = catalog(); const auto pal = blobber::test::paladinCatalog();
+    std::vector<RaceDefinition> races; std::vector<ClassDefinition> classes;
+    std::vector<ItemDefinition> items; std::vector<SpellDefinition> spells;
+    std::vector<CreationClass> creation; std::vector<MonsterDefinition> monsters;
+    std::vector<AttackDefinition> attacks;
+    for (std::uint16_t i = 0; i < pal.raceCount(); ++i) races.push_back(*pal.race({i}));
+    for (std::uint16_t i = 0; i < pal.classCount(); ++i) { classes.push_back(*pal.characterClass({i})); creation.push_back(*pal.creation({i})); }
+    for (std::uint16_t i = 0; i < base.itemCount(); ++i) items.push_back(*base.item({i}));
+    for (std::uint16_t i = 0; i < pal.spellCount(); ++i) spells.push_back(*pal.spell({i}));
+    for (std::uint16_t i = 0; i < base.monsterCount(); ++i) monsters.push_back(*base.monster({i}));
+    for (std::uint16_t i = 0; i < base.attackCount(); ++i) attacks.push_back(*base.attack({i}));
+    const Catalog c(attacks, monsters, races, classes, items, *pal.preset(), spells, creation);
+    const auto d = definitions();
+    auto run = std::make_unique<CampaignRun>(blobber::test::campaignBlueprints(), c, *c.preset(), d.types, d.timings, 5);
+    blobber::test::advancePaladin(run->party(), 4);
+    run->party().damage({1}, 5);
+    check(run->party().useLayOnHands({0}, {1}, 3), "Spent campaign healing pool");
+    auto weapon = featureCommand(run->game(), 0, Feature::SacredWeapon);
+    check(run->game().submit(weapon).reason == CommandReason::Resolved, "Campaign Sacred Weapon activation");
+    run->game().update(7, false);
+    auto protection = spellCommand(run->game(), SpellKind::ProtectionFromEvilAndGood);
+    protection.character = {0}; protection.allies[0] = {1}; protection.targetCount = 1;
+    check(run->game().submit(protection).reason == CommandReason::Resolved, "Campaign Protection activation");
+    run->game().update(2, false);
+    run = copy(c, d, *run);
+    check(run->party().character({0})->layOnHands == 17 && run->party().character({0})->mana == 4 && !run->party().character({0})->channelDivinity,
+          "Campaign round-trip preserves spent paladin resources");
+    check(run->game().effects().sacredWeaponBonus({0}) > 0 && run->game().effects().has(CharacterId{1}, EffectKind::ProtectionFromEvilAndGood),
+          "Campaign round-trip preserves bound weapon and high-bit oath effect");
+    enterInn(*run);
+    run = copy(c, d, *run);
+    check(run->game().effects().sacredWeaponBonus({0}) > 0 && run->game().effects().concentration({0}).serial,
+          "Travel rebases portable paladin effects and item binding");
+    leaveInn(*run);
+    run = copy(c, d, *run);
+    check(run->game().effects().sacredWeaponBonus({0}) > 0, "Return travel retains item generation binding");
+    auto protectionShape = run->checkpoint();
+    bool foundProtection = false;
+    for (auto& instance : protectionShape->locations[protectionShape->activeLocation].state->effects.instances)
+        if (instance.active && instance.kind == EffectKind::ProtectionFromEvilAndGood) {
+            instance.count = 2; instance.targets[1] = rules::CharacterId{2}; foundProtection = true;
+        }
+    check(foundProtection, "Saved Protection instance found");
+    rejects([&] { CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*protectionShape), d.timings); },
+            "Campaign rejects Protection with extra recipients");
+    auto binding = run->checkpoint();
+    bool changed = false;
+    for (auto& instance : binding->locations[binding->activeLocation].state->effects.instances)
+        if (instance.active && instance.kind == EffectKind::SacredWeapon) { ++instance.weaponGeneration; changed = true; }
+    check(changed, "Saved Sacred Weapon binding found");
+    rejects([&] { CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*binding), d.timings); },
+            "Campaign rejects stale weapon generation binding");
+    auto corrupt = run->checkpoint();
+    corrupt->party.state.characters[0].layOnHands = 21;
+    rejects([&] { CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*corrupt), d.timings); },
+            "Campaign rejects malformed healing pool");
+}
 void progressionAndFloors() {
     const auto c = catalog(false, 50, 7);
     const auto d = definitions();
@@ -549,6 +609,38 @@ void progressionAndFloors() {
     check(bool(run->game().advance(run->game().advancementRequest({0}))), "level-three warrior fixture");
     run = copy(c, d, *run);
     check(run->party().character({0})->build.level == 3, "restore level three");
+    run->party().grantNextLevelExperience();
+    auto levelFour = run->game().advancementRequest({0});
+    levelFour.choices.abilityImprovement.increases[0] = 1;
+    levelFour.choices.abilityImprovement.increases[2] = 1;
+    check(bool(run->game().advance(levelFour)), "level-four split ASI warrior fixture");
+    const auto levelFourStats = run->party().character({0})->stats;
+    const auto creationScores = run->party().character({0})->build.baseAbilities;
+    run = copy(c, d, *run);
+    check(run->party().character({0})->build.level == 4 &&
+              run->party().character({0})->build.levelFourAsi.increases[0] == 1 &&
+              run->party().character({0})->build.levelFourAsi.increases[2] == 1 &&
+              run->party().character({0})->stats.abilities == levelFourStats.abilities &&
+              run->party().character({0})->build.baseAbilities == creationScores,
+          "restore level four preserves earned ASI and immutable creation scores");
+    auto levelFourSave = run->checkpoint();
+    const CampaignContent content{"fixture", 0, &blobber::test::campaignBlueprints()};
+    const auto encoded = encodeCampaign(c, d, content, *levelFourSave);
+    auto missingAsi = blobber::automation::Json::parse(encoded);
+    savedEntry(missingAsi["campaign"]["party"]["state"]["characters"], 0)["build"].erase("levelFourAsi");
+    rejects(
+        [&] {
+            auto decoded = decodeCampaign(c, d, content, missingAsi.dump());
+            CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*decoded), d.timings);
+        },
+        "level-four campaign without its earned ASI rejects");
+    auto legacy = blobber::automation::Json::parse(encoded);
+    legacy["schema"] = 23;
+    legacy["simulation"] = 25;
+    const auto originalLegacy = legacy.dump();
+    rejects([&] { decodeCampaign(c, d, content, originalLegacy); },
+            "previous campaign version rejects without migration");
+    check(legacy.dump() == originalLegacy, "incompatible save remains unchanged");
     for (unsigned depth = 1; depth <= 3; ++depth) {
         travel(*run, FixtureKind::Downstairs);
         run = copy(c, d, *run);
@@ -1535,6 +1627,16 @@ int main(int argc, char** argv) {
             measureSave(argv[2]);
             return 0;
         }
+        if (argc == 2 && std::string(argv[1]) == "--paladin") {
+            paladinPersistence();
+            std::cout << "paladin campaign persistence passed\n";
+            return 0;
+        }
+        if (argc == 2 && std::string(argv[1]) == "--progression") {
+            progressionAndFloors();
+            std::cout << "campaign progression save tests passed\n";
+            return 0;
+        }
         if (argc == 2 && std::string(argv[1]) == "--smoke") {
             terminalWorker();
             sparsePersistence();
@@ -1550,7 +1652,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         if (argc != 1)
-            throw std::invalid_argument("Expected no arguments or --smoke");
+            throw std::invalid_argument("Expected no arguments, --smoke, --progression or --paladin");
         terminalWorker();
         sparsePersistence();
         magicRewardPersistence();

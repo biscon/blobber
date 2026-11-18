@@ -108,14 +108,17 @@ struct MagicHud {
     std::array<char, 128> feedback{};
     unsigned assigned = 0, maximum = 0;
     bool single = false, ground = false, self = false;
+    bool healingDragging = false;
+    float healingDragOffset = 0, healingDragAmount = 0;
+    int healingPool = 0, healingCapacity = 0, healingMaximum = 0;
     std::optional<Cell> hoverCell;
     std::optional<SpellAim> hoverAim;
     bool casting() const noexcept {
         return state == CastingState::Targeting || state == CastingState::Resolving;
     }
     bool open = false, armed = false, hostile = false, area = false, missiles = false;
-    // 32 catalog spells plus six supported feature rows; explicit bounded insertion.
-    static constexpr std::size_t capacity = 39;
+    // All catalog spells plus bounded feature rows; explicit bounded insertion.
+    static constexpr std::size_t capacity = rules::spellCapacity + 10;
     std::array<SpellBookEntry, capacity> entries{};
     static constexpr unsigned abilityTab = 10, tabCapacity = 11;
     std::array<bool, tabCapacity> tabs{};
@@ -320,6 +323,8 @@ class CommandController {
     void openAdvancement(rules::CharacterId) noexcept;
     void routeAdvancement(const UiInput&) noexcept;
     void restorationChoice() noexcept;
+    void healingAmount(int delta, bool maximum = false) noexcept;
+    bool routeHealingSlider(const UiInput&, bool allowInput) noexcept;
     void endTurn() noexcept;
     void developmentExperience() noexcept;
     void openPreparation() noexcept;
@@ -376,6 +381,7 @@ class CommandController {
     ButtonPress& pointerButtons() noexcept { return state_.buttons; }
     void cancelPointerButtons() noexcept {
         state_.buttons.cancel();
+        state_.magic.healingDragging = false;
         state_.camp.controls.buttons.cancel();
         state_.advancement.controls.buttons.cancel();
     }

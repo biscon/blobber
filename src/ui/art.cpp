@@ -97,6 +97,18 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
         equipment_ = resources_.createTexture(equipment.value);
         SetTextureFilter(resources_.texture(equipment_), TEXTURE_FILTER_BILINEAR);
     }
+    {
+        OwnedImage atlas(GenImageColor(1024, 256, BLANK));
+        if (!atlas.value.data) throw std::runtime_error("Paladin atlas allocation failed");
+        for (unsigned i = 0; i < 4; ++i) {
+            OwnedImage icon(preparedImage(directory / (std::string(paladinArtNames[i]) + ".png")));
+            if (!icon.value.data) throw std::runtime_error("Missing paladin icon");
+            ImageResize(&icon.value, 248, 248);
+            ImageDrawImage(&atlas.value, icon.value, int(i * 256 + 4), 4, WHITE);
+        }
+        paladin_ = resources_.createTexture(atlas.value);
+        SetTextureFilter(resources_.texture(paladin_), TEXTURE_FILTER_BILINEAR);
+    }
     OwnedImage atlas(GenImageColor(2048, 2048, BLANK));
     if (!atlas.value.data)
         throw std::runtime_error("Cannot allocate UI atlas");
@@ -137,7 +149,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
     atlas_ = resources_.createTexture(atlas.value);
     SetTextureFilter(resources_.texture(atlas_), TEXTURE_FILTER_BILINEAR);
 }
-static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 32,
+static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 33,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
     for (unsigned i = 0; i < equipmentIconIds.size(); ++i)
@@ -160,6 +172,10 @@ unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
     return 9;
 }
 unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcept {
+    if (feature == rules::Feature::LayOnHands) return 192;
+    if (feature == rules::Feature::DivineSmite) return 193;
+    if (feature == rules::Feature::SacredWeapon || feature == rules::Feature::DismissSacredWeapon) return 194;
+    if (kind == rules::SpellKind::ProtectionFromEvilAndGood) return 195;
     if (feature == rules::Feature::SecondWind)
         return 25;
     if (feature == rules::Feature::ArcaneRecovery)
@@ -172,6 +188,7 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
     return kind < rules::SpellKind::Count ? (k < 14 ? 11 + k : 49 + k - 14) : 8;
 }
 unsigned UiArt::effectIcon(EffectKind kind) noexcept {
+    if (kind == EffectKind::SacredWeapon) return 194;
     return kind == EffectKind::HoldPerson ? holdPersonIcon : spellIcon(effectSpell(kind));
 }
 void UiArt::mapMarker(MapMarker kind, Rectangle destination, Heading facing) const {
@@ -195,6 +212,10 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     }
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
+    if (index >= 192 && index < 196) {
+        DrawTexturePro(resources_.texture(paladin_), {float((index - 192) * 256), 0, 256, 256}, destination, {0, 0}, 0, tint);
+        return;
+    }
     if (index >= equipmentIconFirst && index < equipmentIconFirst + equipmentIconIds.size()) {
         const auto tile = index - equipmentIconFirst;
         DrawTexturePro(resources_.texture(equipment_),

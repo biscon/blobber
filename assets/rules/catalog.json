@@ -1,5 +1,5 @@
 {
-  "schema_version": 16,
+  "schema_version": 17,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -161,7 +161,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "humanoid"
     },
     {
       "id": "goblin.archer",
@@ -253,7 +254,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "humanoid"
     },
     {
       "id": "goblin.guardian.placeholder",
@@ -336,7 +338,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "humanoid"
     },
     {
       "id": "skeleton",
@@ -376,7 +379,8 @@
       "damage_vulnerabilities": [
         "bludgeoning"
       ],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "undead"
     },
     {
       "id": "bugbear",
@@ -412,7 +416,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "humanoid"
     },
     {
       "id": "giant.rat",
@@ -440,7 +445,8 @@
       "humanoid": false,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "beast"
     },
     {
       "id": "zombie",
@@ -470,7 +476,8 @@
         "poison"
       ],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "undead"
     },
     {
       "id": "goblin_shaman",
@@ -496,7 +503,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "acolyte_support"
+      "spellcasting": "acolyte_support",
+      "creature_type": "humanoid"
     },
     {
       "id": "goblin.captain",
@@ -579,7 +587,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "humanoid"
     },
     {
       "id": "bugbear.captain",
@@ -615,7 +624,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "humanoid"
     },
     {
       "id": "bugbear.commander",
@@ -651,7 +661,8 @@
       "humanoid": true,
       "damage_immunities": [],
       "damage_vulnerabilities": [],
-      "spellcasting": "none"
+      "spellcasting": "none",
+      "creature_type": "humanoid"
     }
   ],
   "races": [
@@ -759,7 +770,9 @@
         "second_wind"
       ],
       "spells": [],
-      "progression": "fighter"
+      "progression": "fighter",
+      "spell_list": "none",
+      "spell_progression": "full"
     },
     {
       "id": "cleric",
@@ -799,7 +812,9 @@
         "lesser_restoration",
         "spiritual_weapon"
       ],
-      "progression": "cleric"
+      "progression": "cleric",
+      "spell_list": "cleric",
+      "spell_progression": "full"
     },
     {
       "id": "rogue",
@@ -825,7 +840,9 @@
         "sneak_attack"
       ],
       "spells": [],
-      "progression": "rogue"
+      "progression": "rogue",
+      "spell_list": "none",
+      "spell_progression": "full"
     },
     {
       "id": "wizard",
@@ -868,7 +885,39 @@
         "mirror_image",
         "web"
       ],
-      "progression": "wizard"
+      "progression": "wizard",
+      "spell_list": "wizard",
+      "spell_progression": "full"
+    },
+    {
+      "id": "paladin",
+      "name": "Paladin",
+      "hit_die": 10,
+      "saves": [
+        "wisdom",
+        "charisma"
+      ],
+      "weapons": [
+        "simple",
+        "martial"
+      ],
+      "armor": [
+        "light",
+        "medium",
+        "heavy",
+        "shield"
+      ],
+      "allows_defense": false,
+      "casting": "charisma",
+      "features": [],
+      "spells": [
+        "bless",
+        "cure_wounds",
+        "shield_of_faith"
+      ],
+      "progression": "paladin",
+      "spell_list": "paladin",
+      "spell_progression": "half"
     }
   ],
   "items": [
@@ -1875,7 +1924,7 @@
     {
       "id": "cure_wounds",
       "name": "Cure Wounds",
-      "description": "Heal one living ally for 1d8 + Wisdom, plus the Life domain bonus.",
+      "description": "Heal one living ally for 1d8 + casting ability, plus any Life domain bonus.",
       "kind": "cure_wounds"
     },
     {
@@ -2033,6 +2082,12 @@
       "kind": "web",
       "name": "Web",
       "description": "Aim a 20-foot square within 60 feet: difficult terrain and Dexterity saves against restraint. Escape with a Strength action. Affects allies, burns in fire; concentration, one hour."
+    },
+    {
+      "id": "protection_from_evil_and_good",
+      "name": "Protection from Evil and Good",
+      "description": "One ally: supernatural creatures have disadvantage on attacks. Concentration: ten minutes. Charm, fear and possession protections are deferred.",
+      "kind": "protection_from_evil_and_good"
     }
   ],
   "creation": [
@@ -2373,6 +2428,86 @@
         }
       ],
       "class": "wizard"
+    },
+    {
+      "recommended": {
+        "strength": 15,
+        "dexterity": 8,
+        "constitution": 14,
+        "intelligence": 8,
+        "wisdom": 10,
+        "charisma": 15
+      },
+      "groups": [
+        [
+          {
+            "id": "longsword",
+            "name": "Longsword",
+            "items": [
+              {
+                "item": "longsword",
+                "quantity": 1,
+                "slot": "main_hand"
+              }
+            ]
+          },
+          {
+            "id": "warhammer",
+            "name": "Warhammer",
+            "items": [
+              {
+                "item": "warhammer",
+                "quantity": 1,
+                "slot": "main_hand"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "id": "chain_mail",
+            "name": "Chain mail",
+            "items": [
+              {
+                "item": "chain_mail",
+                "quantity": 1,
+                "slot": "body"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "id": "shield",
+            "name": "Shield",
+            "items": [
+              {
+                "item": "shield",
+                "quantity": 1,
+                "slot": "off_hand"
+              }
+            ]
+          }
+        ]
+      ],
+      "supplies": [
+        {
+          "item": "holy_symbol",
+          "quantity": 1,
+          "slot": "bag"
+        },
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "slot": "bag"
+        },
+        {
+          "item": "mana_potion",
+          "quantity": 1,
+          "slot": "bag"
+        }
+      ],
+      "class": "paladin"
     }
   ]
 }

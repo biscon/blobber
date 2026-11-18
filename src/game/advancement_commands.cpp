@@ -4,6 +4,16 @@
 namespace blobber {
 const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept {
     using C = rules::ProgressionClass;
+    if (level == 4) {
+        if (cls == C::Wizard)
+            return "Ability Score Improvement. Learn one cantrip and two spells. Maximum mana rises to 17; "
+                   "second-level spells remain your highest spell level.";
+        if (cls == C::Cleric)
+            return "Ability Score Improvement. Learn one cantrip. Maximum mana rises to 17; Preserve Life "
+                   "pool rises to 20.";
+        return "Ability Score Improvement: raise one score by 2 or two scores by 1, to a maximum of 20. "
+               "Existing class features remain available.";
+    }
     switch (cls) {
     case C::Fighter:
         return level == 2 ? "Action Surge: one extra normal action. One charge, restored on a Short or Long "
@@ -21,6 +31,9 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
                      "initiative. You may activate it earlier."
                    : "Thief / Fast Hands: use your Cunning Action allowance for a potion instead of Defend. "
                      "Use a quick potion before your last normal action. Sneak Attack increases to 2d6.";
+    case C::Paladin:
+        return level == 2 ? "Defense grants +1 AC while armored. Charisma spellcasting and Divine Smite unlock; share four mana. Lay on Hands pool rises to ten."
+                          : "Oath of Devotion: Sanctuary and Protection from Evil and Good are always prepared. Sacred Weapon uses Channel Divinity, restored on rest. Mana rises to six; Lay on Hands to fifteen.";
     case C::Wizard:
         return level == 2 ? "Evocation / Sculpt Spells: Shatter protects your other three companions. You "
                             "remain vulnerable to your own blast. Learn two spells."
@@ -30,22 +43,76 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
         return "This class cannot level up.";
     }
 }
+rules::CharacterIdentityView AdvancementHud::candidate() const noexcept {
+    auto next = identity;
+    ++next.level;
+    if (next.level == 4)
+        next.levelFourAsi = request.choices.abilityImprovement;
+    return next;
+}
+bool AdvancementHud::choosing() const noexcept {
+    return step == AdvancementStep::Cantrips || step == AdvancementStep::Learned ||
+           step == AdvancementStep::Prepared;
+}
+rules::SpellChoice AdvancementHud::choiceKind() const noexcept {
+    return step == AdvancementStep::Cantrips  ? rules::SpellChoice::Cantrips
+           : step == AdvancementStep::Learned ? rules::SpellChoice::Learned
+                                              : rules::SpellChoice::Prepared;
+}
 bool AdvancementHud::applicable(AdvancementStep s) const noexcept {
-    if (s != AdvancementStep::Learned && s != AdvancementStep::Prepared)
+    if (s == AdvancementStep::Abilities)
+        return identity.level == 3;
+    if (s != AdvancementStep::Cantrips && s != AdvancementStep::Learned && s != AdvancementStep::Prepared)
         return true;
-    return rules::advancementChoices(*catalog, identity, portrait, baseline, request.choices,
-                                     s == AdvancementStep::Learned)
-               .maximum != 0;
+    const auto kind = s == AdvancementStep::Cantrips  ? rules::SpellChoice::Cantrips
+                      : s == AdvancementStep::Learned ? rules::SpellChoice::Learned
+                                                      : rules::SpellChoice::Prepared;
+    return rules::advancementChoices(*catalog, identity, portrait, baseline, request.choices, kind).maximum !=
+           0;
 }
 void AdvancementHud::sync() noexcept {
     selection = {};
     searchEdit = {};
     controls.focus = 0;
-    const bool learned = step == AdvancementStep::Learned;
     selection.context =
-        rules::advancementChoices(*catalog, identity, portrait, baseline, request.choices, learned);
-    selection.selected = learned ? request.choices.learned : request.choices.prepared;
+        rules::advancementChoices(*catalog, identity, portrait, baseline, request.choices, choiceKind());
+    selection.selected = step == AdvancementStep::Cantrips  ? request.choices.cantrips
+                         : step == AdvancementStep::Learned ? request.choices.learned
+                                                            : request.choices.prepared;
     selection.filter(*catalog);
+}
+void AdvancementHud::storeSelection() noexcept {
+    if (step == AdvancementStep::Cantrips)
+        request.choices.cantrips = selection.selected;
+    else if (step == AdvancementStep::Learned) {
+        request.choices.learned = selection.selected;
+        const auto context =
+            rules::advancementChoices(*catalog, identity, portrait, baseline, request.choices, false);
+        request.choices.prepared &= context.available;
+    } else if (step == AdvancementStep::Prepared)
+        request.choices.prepared = selection.selected;
+}
+bool AdvancementHud::canIncrease(unsigned index) const noexcept {
+    if (index >= rules::abilityCount || identity.level != 3 ||
+        request.choices.abilityImprovement.points() >= 2)
+        return false;
+    auto next = candidate();
+    ++next.levelFourAsi.increases[index];
+    return bool(rules::effectiveAbilities(*catalog, next, false));
+}
+void AdvancementHud::ability(unsigned index, int delta) noexcept {
+    if (index >= rules::abilityCount || step != AdvancementStep::Abilities)
+        return;
+    auto& value = request.choices.abilityImprovement.increases[index];
+    const auto before = rules::preparationLimit(*catalog, candidate());
+    if (delta == 1 && canIncrease(index))
+        ++value;
+    else if (delta == -1 && value)
+        --value;
+    else
+        return;
+    if (rules::preparationLimit(*catalog, candidate()) < before)
+        request.choices.prepared = 0;
 }
 void layoutAdvancement(FlowControls& w, const AdvancementHud& h) noexcept {
     w.clear();
@@ -59,11 +126,20 @@ void layoutAdvancement(FlowControls& w, const AdvancementHud& h) noexcept {
                  0};
     w.add({14, 330, 90, 20}, FlowAction::Cancel);
     w.add({414, 330, 90, 20}, FlowAction::Back, 0, h.step != AdvancementStep::Overview);
-    const bool choosing = h.step == AdvancementStep::Learned || h.step == AdvancementStep::Prepared;
+    const bool choosing = h.choosing();
     w.add({510, 330, 116, 20}, h.step == AdvancementStep::Review ? FlowAction::Done : FlowAction::Next, 0,
-          h.step == AdvancementStep::Review ? bool(h.preview) : !choosing || h.selection.valid());
+          h.step == AdvancementStep::Review      ? bool(h.preview)
+          : h.step == AdvancementStep::Abilities ? bool(rules::effectiveAbilities(*h.catalog, h.candidate()))
+                                                 : !choosing || h.selection.valid());
     if (choosing)
         layoutSelection(w, h.selection);
+    if (h.step == AdvancementStep::Abilities)
+        for (unsigned i = 0; i < rules::abilityCount; ++i) {
+            const int y = 108 + int(i) * 27;
+            w.add({502, y, 28, 20}, FlowAction::Minus, int(i),
+                  h.request.choices.abilityImprovement.increases[i] != 0);
+            w.add({571, y, 28, 20}, FlowAction::Plus, int(i), h.canIncrease(i));
+        }
 }
 void CommandController::openAdvancement(rules::CharacterId id) noexcept {
     const auto request = session_.advancementRequest(id);
@@ -135,8 +211,7 @@ void CommandController::routeAdvancement(const UiInput& input) noexcept {
     auto a = h.controls.input(routed);
     if (routed.has(UiKey::Cancel))
         a.action = FlowAction::Cancel;
-    if ((h.step == AdvancementStep::Learned || h.step == AdvancementStep::Prepared) &&
-        scrollSelection(h.selection, *h.catalog, input, a)) {
+    if (h.choosing() && scrollSelection(h.selection, *h.catalog, input, a)) {
         h.searchEdit.focused = false;
         return;
     }
@@ -176,6 +251,12 @@ void CommandController::routeAdvancement(const UiInput& input) noexcept {
         }
         break;
     }
+    case FlowAction::Minus:
+        h.ability(unsigned(a.value), -1);
+        break;
+    case FlowAction::Plus:
+        h.ability(unsigned(a.value), 1);
+        break;
     case FlowAction::Inspect:
         h.selection.inspected = {std::uint16_t(a.value)};
         h.selection.detailOffset = 0;
@@ -187,22 +268,13 @@ void CommandController::routeAdvancement(const UiInput& input) noexcept {
         h.searchEdit.focus(true, h.selection.search);
         break;
     case FlowAction::Recommend:
-        h.selection.selected = rules::recommendedChoices(
-            *h.catalog, h.selection.context,
-            h.step == AdvancementStep::Learned ? rules::SpellChoice::Learned : rules::SpellChoice::Prepared);
+        h.selection.selected = rules::recommendedChoices(*h.catalog, h.selection.context, h.choiceKind());
         h.selection.inspectSelected();
         break;
     default:
         break;
     }
-    if (h.step == AdvancementStep::Learned) {
-        h.request.choices.learned = h.selection.selected;
-        // Returning to learned choices may invalidate a newly prepared selection.
-        auto context = rules::advancementChoices(*h.catalog, h.identity, h.portrait, h.baseline,
-                                                 h.request.choices, false);
-        h.request.choices.prepared &= context.available;
-    } else if (h.step == AdvancementStep::Prepared)
-        h.request.choices.prepared = h.selection.selected;
+    h.storeSelection();
     h.preview = session_.previewAdvancement(h.request);
 }
 } // namespace blobber

@@ -39,7 +39,7 @@ inline rules::Catalog spellCatalog(int hp = 1000, int ac = 1, int saveAbility = 
         const auto& cls = f.classes[n];
         for (std::size_t i = 0; i < cls.spellCount; ++i) {
             const auto id = cls.spells[i];
-            const auto bit = std::uint32_t(1) << id.index;
+            const auto bit = rules::spellBit(id);
             const auto& r = *rules::spellRules(spells[id.index].kind);
             if (!r.level)
                 b.spells.cantrips |= bit;

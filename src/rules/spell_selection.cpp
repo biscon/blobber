@@ -51,7 +51,7 @@ bool SpellSelection::toggle(SpellId id) noexcept {
 void SpellSelection::inspectSelected() noexcept {
     inspected = {};
     detailOffset = 0;
-    for (std::uint16_t i = 0; i < 32; ++i)
+    for (std::uint16_t i = 0; i < spellCapacity; ++i)
         if (selected & spellBit({i})) {
             inspected = {i};
             break;
@@ -60,10 +60,10 @@ void SpellSelection::inspectSelected() noexcept {
 CharacterIdentityView draftIdentity(const CharacterDraft& d) noexcept {
     const auto n = std::find(d.name.begin(), d.name.end(), '\0') - d.name.begin();
     return {"draft",     {d.name.data(), std::size_t(n)}, d.race, d.characterClass, d.abilities, 1, d.defense,
-            d.lifeDomain};
+            d.lifeDomain, {}};
 }
-std::uint32_t racialCantrips(const Catalog& c) noexcept {
-    std::uint32_t bits = 0;
+SpellMask racialCantrips(const Catalog& c) noexcept {
+    SpellMask bits = 0;
     for (std::uint16_t i = 0; i < c.spellCount(); ++i) {
         const auto* r = spellRules(c.spell({i})->kind);
         if (!r->level && r->casting == Casting::Intelligence)
@@ -71,7 +71,7 @@ std::uint32_t racialCantrips(const Catalog& c) noexcept {
     }
     return bits;
 }
-std::uint32_t preparationOptions(const Catalog& c, const CharacterIdentityView& b,
+SpellMask preparationOptions(const Catalog& c, const CharacterIdentityView& b,
                                  const SpellGrants& g) noexcept {
     const auto* cls = c.characterClass(b.characterClass);
     if (!cls || cls->casting == Casting::None)
@@ -80,7 +80,7 @@ std::uint32_t preparationOptions(const Catalog& c, const CharacterIdentityView& 
     return (cls->casting == Casting::Intelligence ? eligible & g.learned : eligible) & ~g.domain;
 }
 bool validPreparation(const Catalog& c, const CharacterIdentityView& b, const SpellGrants& g,
-                      std::uint32_t selected) noexcept {
+                      SpellMask selected) noexcept {
     const auto limit = preparationLimit(c, b);
     return limit > 0 && selected && !(selected & ~preparationOptions(c, b, g)) &&
            spellCount(selected) <= unsigned(limit);
@@ -94,7 +94,7 @@ SpellSelectionContext choiceContext(const Catalog& c, const CharacterIdentityVie
     case SpellChoice::Cantrips:
         out.baseline = g.cantrips;
         out.available = classSpells(c, b.characterClass, 0) & ~g.racial;
-        out.minimum = out.maximum = 3;
+        out.minimum = out.maximum = b.level >= 4 ? 4 : 3;
         break;
     case SpellChoice::Racial:
         out.baseline = g.racial;
@@ -116,7 +116,7 @@ SpellSelectionContext choiceContext(const Catalog& c, const CharacterIdentityVie
     }
     return out;
 }
-std::uint32_t recommendedChoices(const Catalog& c, const SpellSelectionContext& ctx,
+SpellMask recommendedChoices(const Catalog& c, const SpellSelectionContext& ctx,
                                  SpellChoice kind) noexcept {
     SpellGrants g;
     recommendSpells(c, ctx.identity, g);
@@ -124,7 +124,7 @@ std::uint32_t recommendedChoices(const Catalog& c, const SpellSelectionContext& 
                      : kind == SpellChoice::Racial  ? g.racial
                      : kind == SpellChoice::Learned ? g.learned
                                                     : g.prepared;
-    std::uint32_t result = 0;
+    SpellMask result = 0;
     for (unsigned pass = 0; pass < 2; ++pass)
         for (std::uint16_t i = 0; i < c.spellCount() && spellCount(result) < ctx.maximum; ++i) {
             const auto bit = spellBit({i});

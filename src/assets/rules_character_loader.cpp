@@ -123,7 +123,9 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
     for (std::size_t i = 0; i < classes.size(); ++i) {
         const auto p = "classes[" + std::to_string(i) + "]";
         const auto& c = classes[i];
-        if (version >= 9)
+        if (version >= 17)
+            fields(c, p, {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense", "casting", "features", "spells", "progression", "spell_list", "spell_progression"});
+        else if (version >= 9)
             fields(c, p,
                    {"id", "name", "hit_die", "saves", "weapons", "armor", "allows_defense", "casting",
                     "features", "spells", "progression"});
@@ -137,7 +139,11 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         if (version >= 9)
             cls.progression = static_cast<ProgressionClass>(
                 choice(c.at("progression"), p + ".progression",
-                       std::array<const char*, 5>{"none", "fighter", "cleric", "rogue", "wizard"}));
+                       std::array<const char*, 6>{"none", "fighter", "cleric", "rogue", "wizard", "paladin"}));
+        if (version >= 17) {
+            cls.spellList = static_cast<SpellList>(choice(c.at("spell_list"), p + ".spell_list", std::array<const char*, 4>{"none", "cleric", "wizard", "paladin"}));
+            cls.spellProgression = static_cast<SpellProgression>(choice(c.at("spell_progression"), p + ".spell_progression", std::array<const char*, 2>{"full", "half"}));
+        }
         cls.id = identifier(c.at("id"), p + ".id");
         cls.name = string(c.at("name"), p + ".name");
         cls.hitDie = integer(c.at("hit_die"), p + ".hit_die");
@@ -146,7 +152,7 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         if (spellsEnabled) {
             cls.casting =
                 static_cast<Casting>(choice(c.at("casting"), p + ".casting",
-                                            std::array<const char*, 3>{"none", "wisdom", "intelligence"}));
+                                            std::array<const char*, 4>{"none", "wisdom", "intelligence", "charisma"}));
             array(c.at("features"), p + ".features", 4);
             for (const auto& f : c.at("features")) {
                 const auto bit = 1u << choice(f, p + ".features",
@@ -404,8 +410,8 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
             const auto& grants = c.at("spell_grants");
             fields(grants, p + ".spell_grants", {"cantrips", "learned", "prepared", "domain", "racial"});
             auto mask = [&](const char* key) {
-                array(grants.at(key), key, 32);
-                std::uint32_t bits = 0;
+                array(grants.at(key), key, rules::spellCapacity);
+                rules::SpellMask bits = 0;
                 for (const auto& id : grants.at(key)) {
                     const auto bit = spellBit({reference(id, key, out.spells)});
                     if (bits & bit)

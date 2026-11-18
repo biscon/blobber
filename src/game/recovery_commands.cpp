@@ -36,6 +36,10 @@ void CommandController::refreshCamp() noexcept {
                         party_.catalog().characterClass(c.build.characterClass)->hitDie,
                         c.stats.modifiers[2],
                         c.life != rules::Life::Dead};
+        if (party_.progressionClass({i}) == rules::ProgressionClass::Paladin) {
+            h.members[i].healingPool = c.layOnHands; h.members[i].healingMaximum = 5 * c.build.level;
+            h.members[i].hasChannel = c.build.level >= 3; h.members[i].channelAvailable = c.channelDivinity;
+        }
     }
 }
 void CommandController::campKind(RestKind kind) noexcept {

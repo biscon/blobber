@@ -6,6 +6,8 @@ struct CampMember {
     const char* name = "";
     int hp = 0, maxHp = 0, mana = 0, maxMana = 0, available = 0, sides = 0, modifier = 0;
     bool living = true;
+    int healingPool = 0, healingMaximum = 0;
+    bool channelAvailable = false, hasChannel = false;
 };
 struct CampHud {
     bool open = false, playing = false;
@@ -19,7 +21,7 @@ struct CampHud {
     const rules::Catalog* catalog = nullptr;
     std::array<rules::SpellSelectionContext,4> contexts{};
     std::array<bool,4> casters{};
-    std::array<std::uint32_t,4> editing{};
+    std::array<rules::SpellMask,4> editing{};
     unsigned preparationMember = 0;
     PreparationRequest staged, editingRequest;
     rules::SpellSelection selection;

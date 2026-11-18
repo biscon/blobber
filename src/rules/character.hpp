@@ -88,7 +88,7 @@ struct PortraitId {
     std::uint8_t index = UINT8_MAX;
 };
 struct SpellGrants {
-    std::uint32_t cantrips = 0, learned = 0, prepared = 0, domain = 0, racial = 0;
+    SpellMask cantrips = 0, learned = 0, prepared = 0, domain = 0, racial = 0;
 };
 enum class CreatureSize : std::uint8_t { Medium, Small };
 struct RaceDefinition {
@@ -100,7 +100,7 @@ struct RaceDefinition {
     bool wizardCantrip = false;
     CreatureSize size = CreatureSize::Medium;
 };
-enum class ProgressionClass : std::uint8_t { None, Fighter, Cleric, Rogue, Wizard };
+enum class ProgressionClass : std::uint8_t { None, Fighter, Cleric, Rogue, Wizard, Paladin };
 struct ClassDefinition {
     std::string id, name;
     int hitDie = 6;
@@ -110,9 +110,11 @@ struct ClassDefinition {
     bool allowsDefense = false;
     Casting casting = Casting::None;
     ClassFeatures features = 0;
-    std::array<SpellId, 32> spells{};
+    std::array<SpellId, spellCapacity> spells{};
     std::size_t spellCount = 0;
     ProgressionClass progression = ProgressionClass::None;
+    SpellList spellList = SpellList::None; // Legacy authored/owned fixtures infer from casting.
+    SpellProgression spellProgression = SpellProgression::Full;
 };
 struct EquipmentBonuses {
     int armorClass = 0, allSaves = 0, dexteritySave = 0, initiative = 0;
@@ -212,6 +214,15 @@ struct CreationClass {
     std::size_t supplyCount = 0;
 };
 
+struct AbilityScoreImprovement {
+    std::array<std::uint8_t, abilityCount> increases{};
+    unsigned points() const noexcept {
+        unsigned total = 0;
+        for (auto n : increases)
+            total += n;
+        return total;
+    }
+};
 struct CharacterIdentityView {
     std::string_view id, name;
     RaceId race;
@@ -219,6 +230,7 @@ struct CharacterIdentityView {
     Abilities baseAbilities{};
     int level = 1;
     bool defense = false, lifeDomain = false;
+    AbilityScoreImprovement levelFourAsi;
 };
 struct CharacterIdentity {
     std::string id, name;
@@ -230,8 +242,9 @@ struct CharacterIdentity {
     bool lifeDomain = false;
     PortraitId portrait;
     SpellGrants spells;
+    AbilityScoreImprovement levelFourAsi;
     CharacterIdentityView view() const noexcept {
-        return {id, name, race, characterClass, baseAbilities, level, defense, lifeDomain};
+        return {id, name, race, characterClass, baseAbilities, level, defense, lifeDomain, levelFourAsi};
     }
 };
 struct CharacterBuild : CharacterIdentity {
@@ -284,6 +297,9 @@ struct CharacterResult {
     explicit operator bool() const noexcept { return error == CharacterError::None; }
 };
 class Catalog;
+// Partial allocations are only for UI drafts; authoritative derivation requires two points at level four.
+Result<Abilities> effectiveAbilities(const Catalog&, const CharacterIdentityView&,
+                                     bool complete = true) noexcept;
 CharacterResult deriveCharacter(const Catalog& catalog, const CharacterBuild& build) noexcept;
 CharacterResult deriveCharacter(const Catalog&, const CharacterIdentity&, const CharacterLoadout&) noexcept;
 bool validFormation(const std::array<CharacterId, partySize>& formation) noexcept;

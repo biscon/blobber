@@ -27,14 +27,14 @@ constexpr PortraitDefinition portraits[]{
     {"elf.rogue", "high_elf", "portraits/elf-rogue.png"},
     {"elf.adventurer", "high_elf", "portraits/elf-adventurer.png"}};
 static_assert(std::size(portraits) == portraitCount);
-std::uint32_t kindBit(const Catalog& c, SpellKind k) noexcept {
+SpellMask kindBit(const Catalog& c, SpellKind k) noexcept {
     for (std::uint16_t i = 0; i < c.spellCount(); ++i)
         if (c.spell({i})->kind == k)
             return spellBit({i});
     return 0;
 }
-std::uint32_t wizardCantrips(const Catalog& c) noexcept {
-    std::uint32_t mask = 0;
+SpellMask wizardCantrips(const Catalog& c) noexcept {
+    SpellMask mask = 0;
     for (std::uint16_t i = 0; i < c.spellCount(); ++i) {
         const auto& r = *spellRules(c.spell({i})->kind);
         if (!r.level && r.casting == Casting::Intelligence)
@@ -42,9 +42,9 @@ std::uint32_t wizardCantrips(const Catalog& c) noexcept {
     }
     return mask;
 }
-std::uint32_t choose(const Catalog& c, std::uint32_t available, unsigned count,
+SpellMask choose(const Catalog& c, SpellMask available, unsigned count,
                      std::initializer_list<SpellKind> priority) noexcept {
-    std::uint32_t out = 0;
+    SpellMask out = 0;
     for (auto k : priority)
         if (spellCount(out) < count)
             out |= kindBit(c, k) & available;
@@ -57,7 +57,7 @@ CharacterIdentityView identity(const CharacterDraft& d) noexcept {
     return {"draft",     {d.name.data(), std::size_t(end - d.name.begin())},
             d.race,      d.characterClass,
             d.abilities, 1,
-            d.defense,   d.lifeDomain};
+            d.defense,   d.lifeDomain, {}};
 }
 bool sameGear(const CharacterLoadout& a, const CharacterBuild& b) noexcept {
     if (a.itemCount != b.itemCount)
@@ -121,7 +121,7 @@ int pointBuyCost(const Abilities& a) noexcept {
     }
     return sum;
 }
-unsigned spellCount(std::uint32_t bits) noexcept {
+unsigned spellCount(SpellMask bits) noexcept {
     unsigned n = 0;
     while (bits) {
         bits &= bits - 1;
@@ -129,12 +129,12 @@ unsigned spellCount(std::uint32_t bits) noexcept {
     }
     return n;
 }
-std::uint32_t spellBit(SpellId id) noexcept {
-    return id.index < 32 ? std::uint32_t(1) << id.index : 0;
+SpellMask spellBit(SpellId id) noexcept {
+    return spellIndexBit(id.index);
 }
-std::uint32_t classSpells(const Catalog& c, ClassId id, int level) noexcept {
+SpellMask classSpells(const Catalog& c, ClassId id, int level) noexcept {
     const auto* cls = c.characterClass(id);
-    std::uint32_t out = 0;
+    SpellMask out = 0;
     if (cls)
         for (std::size_t i = 0; i < cls->spellCount; ++i) {
             const auto* s = c.spell(cls->spells[i]);
@@ -143,13 +143,18 @@ std::uint32_t classSpells(const Catalog& c, ClassId id, int level) noexcept {
         }
     return out;
 }
-std::uint32_t eligibleLeveledSpells(const Catalog& c, const CharacterIdentityView& b) noexcept {
-    std::uint32_t mask = 0;
-    for (int level = 1; level <= maximumSpellLevel(b.level); ++level)
+SpellMask eligibleLeveledSpells(const Catalog& c, const CharacterIdentityView& b) noexcept {
+    SpellMask mask = 0;
+    const auto* cls = c.characterClass(b.characterClass);
+    if (!cls) return 0;
+    for (int level = 1; level <= maximumSpellLevel(cls->spellProgression, b.level); ++level)
         mask |= classSpells(c, b.characterClass, level);
     return mask;
 }
-std::uint32_t domainSpells(const Catalog& c, const CharacterIdentityView& b) noexcept {
+SpellMask domainSpells(const Catalog& c, const CharacterIdentityView& b) noexcept {
+    const auto* cls = c.characterClass(b.characterClass);
+    if (cls && cls->progression == ProgressionClass::Paladin)
+        return b.level >= 3 ? kindBit(c, SpellKind::Sanctuary) | kindBit(c, SpellKind::ProtectionFromEvilAndGood) : 0;
     if (!b.lifeDomain)
         return 0;
     auto bits = kindBit(c, SpellKind::Bless) | kindBit(c, SpellKind::CureWounds);
@@ -162,11 +167,14 @@ int preparationLimit(const Catalog& c, const CharacterIdentityView& b) noexcept 
     const auto* race = c.race(b.race);
     if (!cls || !race || cls->casting == Casting::None || b.level < 1 || b.level > 20)
         return 0;
-    const auto i = cls->casting == Casting::Wisdom ? 4 : 3;
-    if (!abilityModifier(b.baseAbilities[i]))
+    const auto i = castingAbilityIndex(cls->casting);
+    const auto scores = effectiveAbilities(c, b, false);
+    if (!scores)
         return 0;
-    const auto mod = abilityModifier(b.baseAbilities[i] + race->abilityIncreases[i]);
-    return mod ? std::max(1, b.level + mod.value) : 0;
+    const auto mod = abilityModifier(scores.value[i]);
+    if (!maximumSpellLevel(cls->spellProgression, b.level))
+        return 0;
+    return mod ? std::max(1, (cls->spellProgression == SpellProgression::Half ? b.level / 2 : b.level) + mod.value) : 0;
 }
 bool recommendSpells(const Catalog& c, const CharacterIdentityView& b, SpellGrants& s) noexcept {
     s = {};
@@ -192,6 +200,11 @@ bool recommendSpells(const Catalog& c, const CharacterIdentityView& b, SpellGran
             c, s.learned, unsigned(preparationLimit(c, b)),
             {SpellKind::MageArmor, SpellKind::MagicMissile, SpellKind::BurningHands, SpellKind::Thunderwave});
     }
+    if (cls->progression == ProgressionClass::Paladin && b.level >= 2) {
+        s.domain = domainSpells(c, b);
+        s.prepared = choose(c, leveled, unsigned(preparationLimit(c, b)),
+                            {SpellKind::Bless, SpellKind::CureWounds, SpellKind::ShieldOfFaith});
+    }
     if (race->wizardCantrip)
         s.racial = choose(c, wizardCantrips(c) & ~s.cantrips, 1,
                           {SpellKind::FireBolt, SpellKind::RayOfFrost, SpellKind::ShockingGrasp,
@@ -204,9 +217,11 @@ BuildError validateGrants(const Catalog& c, const CharacterIdentityView& b, cons
     const auto* race = c.race(b.race);
     if (!cls || !race)
         return BuildError::Content;
-    const bool caster = cls->casting != Casting::None, wizard = cls->casting == Casting::Intelligence;
+    const bool caster = maximumSpellLevel(cls->spellProgression, b.level) && cls->casting != Casting::None;
+    const bool wizard = cls->progression == ProgressionClass::Wizard || (cls->progression == ProgressionClass::None && cls->casting == Casting::Intelligence);
+    const bool classCantrips = cls->spellProgression == SpellProgression::Full && cls->casting != Casting::None;
     if ((s.cantrips & ~classSpells(c, b.characterClass, 0)) || (!caster && s.cantrips) ||
-        (counts && caster && spellCount(s.cantrips) != 3))
+        (counts && classCantrips && spellCount(s.cantrips) != unsigned(b.level >= 4 ? 4 : 3)))
         return BuildError::Cantrips;
     if ((s.learned & ~eligibleLeveledSpells(c, b)) || (!wizard && s.learned) ||
         (counts && wizard && spellCount(s.learned) != unsigned(4 + 2 * b.level)))
@@ -233,15 +248,14 @@ SpellAccess spellAccess(const Catalog& cat, const CharacterIdentity& b, const Ch
         return {};
     const auto bit = spellBit(id);
     const auto& r = *spellRules(spell->kind);
-    if (r.level > maximumSpellLevel(b.level))
+    if (r.level > maximumSpellLevel(cls->spellProgression, b.level))
         return {};
     SpellAccess out;
     if ((b.spells.racial & bit) && race->wizardCantrip && !r.level && r.casting == Casting::Intelligence) {
         out.source = SpellSource::Racial;
         out.casting = Casting::Intelligence;
-    } else if ((b.spells.domain & bit) && b.lifeDomain &&
-               hasFeature(cls->features, ClassFeature::LifeDomain) && (domainSpells(cat, b.view()) & bit)) {
-        out.source = SpellSource::Domain;
+    } else if ((b.spells.domain & bit) && (domainSpells(cat, b.view()) & bit)) {
+        out.source = cls->progression == ProgressionClass::Paladin ? SpellSource::Oath : SpellSource::Domain;
         out.casting = cls->casting;
     } else if ((classSpells(cat, b.characterClass, r.level) & bit) &&
                ((!r.level && (b.spells.cantrips & bit)) ||
@@ -252,7 +266,7 @@ SpellAccess spellAccess(const Catalog& cat, const CharacterIdentity& b, const Ch
     }
     if (!out)
         return {};
-    out.modifier = stats.modifiers[out.casting == Casting::Wisdom ? 4 : 3];
+    out.modifier = stats.modifiers[castingAbilityIndex(out.casting)];
     out.attack = stats.proficiency + out.modifier;
     out.difficulty = 8 + out.attack;
     out.attack += stats.spellAttackBonus;

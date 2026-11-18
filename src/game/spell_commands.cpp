@@ -3,6 +3,7 @@
 #include "ui/layout.hpp"
 #include <algorithm>
 #include <cstdio>
+#include <cmath>
 #include <cstring>
 namespace blobber {
 void CommandController::refreshMagic() noexcept {
@@ -23,6 +24,7 @@ void CommandController::refreshMagic() noexcept {
     m.armed = m.state == CastingState::Targeting;
     m.kind = rules::SpellKind::Count;
     m.assigned = m.maximum = 0;
+    m.healingPool = m.healingCapacity = m.healingMaximum = 0;
     m.single = m.ground = m.self = false;
     m.selectedAllies = {};
     m.allyReasons.fill(CommandReason::InvalidAlly);
@@ -38,7 +40,7 @@ void CommandController::refreshMagic() noexcept {
     m.attackBonus += c->stats.spellAttackBonus;
     const auto* cls = party_.catalog().characterClass(c->build.characterClass);
     m.spellcaster = cls->casting != rules::Casting::None || c->build.spells.racial;
-    static_assert(std::tuple_size<decltype(cls->spells)>::value + 6 <= MagicHud::capacity,
+    static_assert(std::tuple_size<decltype(cls->spells)>::value + 10 <= MagicHud::capacity,
                   "Picker must hold all supported spells and features");
     const auto entry = [&](rules::SpellId spell, rules::Feature feature, const char* name, const char* desc,
                            int cost) {
@@ -52,6 +54,8 @@ void CommandController::refreshMagic() noexcept {
                             : feature == rules::Feature::ActionSurge    ? int(c->actionSurge)
                             : feature == rules::Feature::PreserveLife   ? int(c->channelDivinity)
                             : feature == rules::Feature::ArcaneRecovery ? int(c->arcaneRecovery)
+                            : feature == rules::Feature::LayOnHands ? c->layOnHands
+                            : feature == rules::Feature::SacredWeapon ? int(c->channelDivinity)
                                                                         : -1;
         const auto* definition = party_.catalog().spell(spell);
         assert(m.count < m.entries.size());
@@ -86,12 +90,21 @@ void CommandController::refreshMagic() noexcept {
         row.attack = access.attack;
         row.difficulty = access.difficulty;
     }
+    if (cls->progression == rules::ProgressionClass::Paladin) {
+        entry({}, rules::Feature::LayOnHands, "Lay on Hands", "Choose a living ally and healing points. One action; pool refreshes on Long Rest. Disease and poison curing are deferred.", 0);
+        if (c->build.level >= 2)
+            entry({}, rules::Feature::DivineSmite, "Divine Smite", "Melee attack: spend 2 mana only on a hit for +2d8 radiant (+3d8 against undead/fiends). Critical doubles dice.", 2);
+        if (c->build.level >= 3)
+            entry({}, rules::Feature::SacredWeapon, "Sacred Weapon", "Empower your main-hand weapon for 60 seconds: +CHA (minimum 1) to attacks. One action and Channel Divinity; refreshes on rest. Ends on weapon change or incapacitation.", 0);
+        if (session_.effects().sacredWeapon(caster).serial)
+            entry({}, rules::Feature::DismissSacredWeapon, "Dismiss Sacred Weapon", "End Sacred Weapon without spending an action.", 0);
+    }
     if (party_.hasFeature(caster, rules::ClassFeature::SecondWind))
         entry({}, rules::Feature::SecondWind, "Second Wind",
               "Heal yourself for 1d10 + level. One action; refreshes on a Short or Long Rest.", 0);
     if (party_.hasFeature(caster, rules::ClassFeature::ArcaneRecovery))
         entry({}, rules::Feature::ArcaneRecovery, "Arcane Recovery",
-              "Recover 2 mana at levels 1-2, 4 at level 3. Refreshes on Long Rest. Requires "
+              "Recover 2 mana at levels 1-2, 4 at levels 3-4. Refreshes on Long Rest. Requires "
               "exploration without active threats.",
               0);
     if (c->build.level >= 2) {
@@ -142,10 +155,11 @@ void CommandController::refreshMagic() noexcept {
         if (m.count < m.entries.size())
             m.entries[m.count++] = e;
     };
+    if (c->build.defense ||
+        (cls->progression == rules::ProgressionClass::Paladin && c->build.level >= 2))
+        passive(PassiveFeature::Defense, "Defense",
+                "+1 Armor Class while wearing body armor. Already included in your armor class.");
     if (cls->casting == rules::Casting::None) {
-        if (c->build.defense)
-            passive(PassiveFeature::Defense, "Defense",
-                    "+1 Armor Class while wearing body armor. Already included in your armor class.");
         if (party_.hasFeature(caster, rules::ClassFeature::SneakAttack)) {
             passive(
                 PassiveFeature::SneakAttack, "Sneak Attack",
@@ -190,6 +204,24 @@ void CommandController::refreshMagic() noexcept {
         m.area = r->area;
         m.missiles = s->kind == rules::SpellKind::MagicMissile || s->kind == rules::SpellKind::ScorchingRay;
     }
+    if (m.pending.feature == rules::Feature::DivineSmite) {
+        m.hostile = true; m.single = true; m.maximum = 1;
+    }
+    if (m.pending.feature == rules::Feature::LayOnHands) {
+        m.maximum = 1;
+        m.healingPool = c->layOnHands;
+        m.healingCapacity = 5 * c->build.level;
+        if (m.pending.targetCount == 1) {
+            const auto* ally = party_.character(m.pending.allies[0]);
+            if (ally && ally->life != rules::Life::Dead)
+                m.healingMaximum = std::max(0, std::min(c->layOnHands, ally->stats.maxHitPoints - ally->hitPoints));
+            if (m.healingMaximum) {
+                m.pending.healingAmount = std::clamp(m.pending.healingAmount, 1, m.healingMaximum);
+                if (m.healingDragging)
+                    m.healingDragAmount = std::clamp(m.healingDragAmount, 1.f, float(m.healingMaximum));
+            }
+        }
+    }
     if (m.pending.feature == rules::Feature::SpiritualWeapon) {
         m.kind = rules::SpellKind::SpiritualWeapon;
         m.hostile = true;
@@ -227,23 +259,81 @@ void CommandController::refreshMagic() noexcept {
                                                                              : "Darts assigned %u/3")
                                  : "Enemies selected %u/%u",
                       m.missiles ? m.assigned : unsigned(m.pending.targetCount), m.maximum);
-    } else if (m.pending.action == PartyAction::Spell && !m.self) {
+    } else if ((m.pending.action == PartyAction::Spell && !m.self) || m.pending.feature == rules::Feature::LayOnHands) {
         for (std::size_t i = 0; i < rules::partySize; ++i) {
             auto one = m.pending;
             one.targetCount = 1;
             one.allies[0] = party_.snapshot().formation[i];
-            m.allyReasons[i] = session_.combat().spellRecipient(one, session_.movement().player, 0);
+            if (m.pending.feature == rules::Feature::LayOnHands) {
+                one.healingAmount = 1;
+                m.allyReasons[i] = session_.combat().validate(one, session_.movement().player);
+            } else
+                m.allyReasons[i] = session_.combat().spellRecipient(one, session_.movement().player, 0);
             for (std::size_t j = 0; j < m.pending.targetCount; ++j)
                 m.selectedAllies[i] |= one.allies[0].index == m.pending.allies[j].index;
         }
-        std::snprintf(m.targets.data(), m.targets.size(), "Allies selected %zu/%u", m.pending.targetCount,
-                      m.maximum);
+        if (m.pending.feature == rules::Feature::LayOnHands)
+            std::snprintf(m.targets.data(), m.targets.size(), m.healingMaximum ? "Heal %d HP / Spend %d / Keep %d" : "Choose an injured ally", m.pending.healingAmount, m.pending.healingAmount, c->layOnHands - m.pending.healingAmount);
+        else
+            std::snprintf(m.targets.data(), m.targets.size(), "Allies selected %zu/%u", m.pending.targetCount, m.maximum);
     } else if (m.pending.feature == rules::Feature::PreserveLife) {
         const auto pool = party_.preserveLifePreview(caster);
         std::snprintf(m.targets.data(), m.targets.size(), "Healing: %d / %d / %d / %d HP (character order)",
                       pool[0], pool[1], pool[2], pool[3]);
     } else
         std::snprintf(m.targets.data(), m.targets.size(), "Self / confirm to use");
+}
+void CommandController::healingAmount(int delta, bool maximum) noexcept {
+    auto& m = state_.magic;
+    if (!m.armed || state_.suspended || m.pending.feature != rules::Feature::LayOnHands || m.pending.targetCount != 1) return;
+    const auto* source = party_.character(m.pending.character);
+    const auto* target = party_.character(m.pending.allies[0]);
+    if (!source || !target) return;
+    const int cap = std::min(source->layOnHands, target->stats.maxHitPoints - target->hitPoints);
+    if (cap < 1) return;
+    m.pending.healingAmount = maximum ? cap : std::clamp(m.pending.healingAmount + delta, 1, cap);
+    m.feedback = {};
+    refreshMagic(); updateAvailability();
+}
+bool CommandController::routeHealingSlider(const UiInput& input, bool allowInput) noexcept {
+    auto& m = state_.magic;
+    if (!input.focused || !allowInput || state_.suspended || state_.modal() || !m.armed ||
+        m.pending.feature != rules::Feature::LayOnHands || input.has(UiKey::Cancel) || input.has(UiKey::Back)) {
+        m.healingDragging = false;
+        return false;
+    }
+    const auto& current = session_.combat().snapshot();
+    if (m.pending.world != current.world || m.pending.turn != current.turn) {
+        m.healingDragging = false;
+        return false;
+    }
+    if (m.pending.targetCount == 1 && m.pending.ally &&
+        m.pending.ally->index == m.pending.allies[0].index &&
+        (input.has(UiKey::Up) || input.has(UiKey::Down))) {
+        m.healingDragging = false;
+        healingAmount((input.has(UiKey::Up) ? 1 : -1) * (input.shift ? 5 : 1));
+        return true;
+    }
+    const bool press = input.has(UiKey::Click) && input.pointer && hudLayout::healingSlider.contains(*input.pointer);
+    if (!press && !m.healingDragging) return false;
+    state_.buttons.cancel();
+    if (press) {
+        m.healingDragging = input.pointerTracked;
+        const auto handle = hudLayout::healingHandle(m.pending.healingAmount, m.healingPool);
+        m.healingDragOffset = m.healingMaximum > 0 && handle.contains(*input.pointer)
+                                  ? input.pointer->x - hudLayout::healingHandleCenter(float(m.pending.healingAmount), m.healingPool)
+                                  : 0;
+    }
+    if (input.pointer && m.healingMaximum > 0 && (press || input.pointerHeld || input.pointerReleased)) {
+        const auto track = hudLayout::healingTrack;
+        const float fraction = std::clamp((input.pointer->x - m.healingDragOffset - track.x) / float(track.width), 0.f, 1.f);
+        m.healingDragAmount = std::clamp(fraction * m.healingPool, 1.f, float(m.healingMaximum));
+        const int amount = int(std::lround(m.healingDragAmount));
+        healingAmount(amount - m.pending.healingAmount);
+    }
+    if (!input.pointer || input.pointerReleased || (input.pointerTracked && !input.pointerHeld))
+        m.healingDragging = false;
+    return true;
 }
 void CommandController::setCastingState(CastingState next) noexcept {
     closeTargetPicker();
@@ -255,6 +345,7 @@ void CommandController::setCastingState(CastingState next) noexcept {
                               : hudLayout::logColumns;
         state_.logOffset = state_.log.rewrapOffset(state_.logOffset, before, after);
     }
+    m.healingDragging = false;
     m.state = next;
     m.open = next == CastingState::SpellPicker;
     m.armed = next == CastingState::Targeting;
@@ -400,6 +491,7 @@ void CommandController::chooseSpellbook(std::size_t index) noexcept {
     m.pending.action = entry.feature == rules::Feature::None ? PartyAction::Spell : PartyAction::Feature;
     m.pending.spell = entry.spell;
     m.pending.feature = entry.feature;
+    m.pending.healingAmount = 1;
     magicFeedback("");
     setCastingState(CastingState::Targeting);
     state_.hover = {};
@@ -418,6 +510,10 @@ CommandReason CommandController::magicEligibility(ActorId id) const noexcept {
     if (!visible(id))
         return CommandReason::NotVisible;
     auto c = m.pending;
+    if (c.feature == rules::Feature::DivineSmite) {
+        c.targetCount = 1; c.enemies[0] = id; c.target = id;
+        return session_.combat().validate(c, session_.movement().player);
+    }
     if (c.feature == rules::Feature::SpiritualWeapon) {
         c.targetCount = 1;
         c.enemies[0] = id;
@@ -496,13 +592,13 @@ void CommandController::magicAlly(std::size_t formation) noexcept {
     auto& m = state_.magic;
     auto& c = m.pending;
     if (!m.armed || m.hostile || m.self || state_.suspended || formation >= rules::partySize ||
-        c.action != PartyAction::Spell)
+        (c.action != PartyAction::Spell && c.feature != rules::Feature::LayOnHands))
         return;
     const auto id = party_.snapshot().formation[formation];
     c.ally = id;
     magicFeedback("");
     for (std::size_t i = 0; i < c.targetCount; ++i)
-        if (c.allies[i].index == id.index && !m.single) {
+        if (c.allies[i].index == id.index && !m.single && c.feature != rules::Feature::LayOnHands) {
             removeMagicRecipient(i);
             return;
         }
@@ -510,7 +606,14 @@ void CommandController::magicAlly(std::size_t formation) noexcept {
         magicFeedback(commandMessage(m.allyReasons[formation]));
         return;
     }
-    if (m.single) {
+    if (c.feature == rules::Feature::LayOnHands) {
+        const bool changed = c.targetCount != 1 || c.allies[0].index != id.index;
+        c.allies[0] = id; c.targetCount = 1;
+        const auto* ally = party_.character(id);
+        const int cap = std::min(party_.character(c.character)->layOnHands, ally->stats.maxHitPoints - ally->hitPoints);
+        c.healingAmount = changed ? cap : std::clamp(c.healingAmount, 1, cap);
+        if (changed) m.healingDragging = false;
+    } else if (m.single) {
         c.allies[0] = id;
         c.targetCount = 1;
     } else if (c.targetCount < m.maximum)
@@ -649,7 +752,11 @@ void CommandController::reconcileMagic() noexcept {
     if (m.hostile && m.pending.target && !visible(*m.pending.target))
         m.pending.target.reset();
     for (std::size_t i = 0; i < m.pending.targetCount;) {
-        const auto reason = session_.combat().spellRecipient(m.pending, session_.movement().player, i);
+        auto one = m.pending;
+        one.targetCount = 1; one.enemies[0] = m.pending.enemies[i]; one.allies[0] = m.pending.allies[i];
+        const auto reason = m.pending.action == PartyAction::Feature
+                                ? session_.combat().validate(one, session_.movement().player)
+                                : session_.combat().spellRecipient(m.pending, session_.movement().player, i);
         if (reason != CommandReason::Ready || (m.hostile && !visible(m.pending.enemies[i]))) {
             removeMagicRecipient(i);
             magicFeedback("Target no longer eligible; selection updated.");

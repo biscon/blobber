@@ -7,6 +7,7 @@
 #include "support/arena_preparation_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
+#include "support/paladin_fixtures.hpp"
 #include "support/temp_directory.hpp"
 #include "ui/interaction.hpp"
 #include <fstream>
@@ -48,6 +49,21 @@ rules::Catalog catalog(std::string secondId = "second") {
     second.id = std::move(secondId);
     return {{*c.attack({0})}, {*c.monster({0}), second}, races, classes, items, *c.preset(), spells,
             creation};
+}
+void paladinPreparation() {
+    const auto c = blobber::test::paladinCatalog();
+    auto scenario = defaultArena(c); scenario.adjust({0}, 1);
+    arenaLevel(c, scenario, 4);
+    const auto decoded = decodeArena(c, encodeArena(c, scenario));
+    auto party = prepareArenaParty(c, decoded);
+    const auto& paladin = *party->character({0});
+    check(paladin.build.level == 4 && paladin.layOnHands == 20 && paladin.maxMana == 6 && paladin.channelDivinity,
+          "Arena reconstructs full paladin resources through level four");
+    check(rules::spellCount(paladin.build.spells.domain) == 2 && !paladin.build.spells.cantrips,
+          "Arena reconstructs oath spells without class cantrips");
+    auto rematch = prepareArenaParty(c, decoded);
+    check(rematch->character({0})->stats.abilities == paladin.stats.abilities,
+          "Paladin rematch replays immutable advancement choices");
 }
 void placement(const rules::Catalog& c, unsigned count) {
     auto s = defaultArena(c);
@@ -230,7 +246,7 @@ void preparation() {
     v1.erase("preparation");
     check(decodeArena(c, v1.dump()).preparation.targetLevel == 1, "schema 1 defaults to level one");
     const auto fresh = prepareArenaParty(c, s);
-    for (unsigned level : {2u, 3u}) {
+    for (unsigned level : {2u, 3u, 4u}) {
         arenaLevel(c, s, level);
         check(!arenaError(c, s), "valid incremental arena preparation");
         const auto text = encodeArena(c, s);
@@ -263,7 +279,25 @@ void preparation() {
               "rematch reconstructs immutable preparation");
     }
     auto bad = nlohmann::json::parse(encodeArena(c, s));
-    for (const auto level : {0, 4}) {
+    auto legacy = bad;
+    legacy["schema_version"] = 2;
+    legacy["preparation"]["target_level"] = 3;
+    legacy["preparation"]["advancements"].erase(2);
+    for (auto& members : legacy["preparation"]["advancements"])
+        for (auto& choice : members) {
+            choice.erase("ability_improvement");
+            choice.erase("cantrips");
+        }
+    check(decodeArena(c, legacy.dump()).preparation.targetLevel == 3,
+          "legacy version-two preparation loads without ASIs");
+    for (const auto& gains :
+         {nlohmann::json::array({0, 0, 0, 0, 0, 0}), nlohmann::json::array({0, 0, 255, 0, 0, 0}),
+          nlohmann::json::array({0, 0, 1, 0, 0, 0})}) {
+        auto malformed = bad;
+        malformed["preparation"]["advancements"][2][0]["ability_improvement"] = gains;
+        rejects([&] { decodeArena(c, malformed.dump()); }, "malformed level-four ASI rejects");
+    }
+    for (const auto level : {0, 5}) {
         auto j = bad;
         j["preparation"]["target_level"] = level;
         rejects([&] { decodeArena(c, j.dump()); }, "invalid target rejected");
@@ -285,7 +319,7 @@ void preparation() {
     rejects([&] { decodeArena(c, j.dump()); }, "schema 2 requires preparation");
     ArenaSetup setup;
     setup.scenario = s;
-    check(!setup.replaceParty(s.party) && setup.scenario.preparation.targetLevel == 3,
+    check(!setup.replaceParty(s.party) && setup.scenario.preparation.targetLevel == 4,
           "unchanged party preserves preparation");
     auto reordered = s.party;
     std::swap(reordered[0], reordered[1]);
@@ -311,17 +345,21 @@ void preparation() {
     allocations = 0;
     watching = true;
     flow.begin(baseline);
-    flow.selectLevel(c, 3);
-    for (unsigned iteration = 0; flow.step != ArenaPreparationStep::Review && iteration < 100; ++iteration) {
+    flow.selectLevel(c, 4);
+    for (unsigned iteration = 0; flow.step != ArenaPreparationStep::Review && iteration < 180; ++iteration) {
         flow.layout();
         auto& h = flow.advancement;
-        const auto action = h.step == AdvancementStep::Learned && !h.selection.valid() ? FlowAction::Recommend
-                            : h.step == AdvancementStep::Review                        ? FlowAction::Done
-                                                                                       : FlowAction::Next;
+        const auto action =
+            h.step == AdvancementStep::Abilities && h.request.choices.abilityImprovement.points() < 2
+                ? FlowAction::Plus
+            : h.choosing() && !h.selection.valid() ? FlowAction::Recommend
+            : h.step == AdvancementStep::Review    ? FlowAction::Done
+                                                   : FlowAction::Next;
         bool routed = false;
         for (unsigned i = 0; i < h.controls.count; ++i) {
             const auto control = h.controls.entries[i];
-            if (control.action != action || !control.enabled)
+            if (control.action != action || !control.enabled ||
+                (action == FlowAction::Plus && control.value != 2))
                 continue;
             UiInput input;
             input.pressed[std::size_t(UiKey::Click)] = true;
@@ -333,10 +371,10 @@ void preparation() {
         check(routed, "shared controls provide next preparation action");
     }
     check(flow.step == ArenaPreparationStep::Review && flow.commit(c, baseline),
-          "shared wizard commits reviewed level 3");
+          "shared wizard commits reviewed level 4");
     watching = false;
     check(allocations == 0, "arena preparation selection and commit allocate no C++ frame storage");
-    check(baseline.preparation.targetLevel == 3 && !arenaError(c, baseline),
+    check(baseline.preparation.targetLevel == 4 && !arenaError(c, baseline),
           "wizard stores valid incremental choices");
     check(encodeArena(c, decodeArena(c, original)) == original, "starting snapshots remain unchanged");
 }
@@ -394,6 +432,7 @@ int main(int argc, char**) {
         persistence(c);
         picker(c);
         preparation();
+        paladinPreparation();
         std::cout << "Arena tests passed\n";
     } catch (const std::exception& e) {
         watching = false;

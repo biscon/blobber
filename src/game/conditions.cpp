@@ -42,7 +42,7 @@ const char* effectName(EffectKind kind) noexcept {
     constexpr const char* names[]{
         "Bless",     "Bane",       "Shield of Faith", "Mage Armor", "Hold Person", "Guidance", "Resistance",
         "Sanctuary", "Sleep",      "Blind",           "Slow",       "Knockdown",   "Aid",      "Mirror Image",
-        "Web",       "Restrained", "Spiritual Weapon"};
+        "Web",       "Restrained", "Spiritual Weapon", "Protection from Evil and Good", "Sacred Weapon"};
     return unsigned(kind) < std::size(names) ? names[unsigned(kind)] : "Effect";
 }
 std::size_t EffectController::conditionIndex(EffectTarget t) const noexcept {
@@ -80,6 +80,10 @@ rules::RollMode EffectController::attackMode(EffectTarget attacker, EffectTarget
                  (close && has(target, EffectKind::Knockdown));
     disadvantage |= has(attacker, EffectKind::Restrained) || has(attacker, EffectKind::Blind) ||
                     has(attacker, EffectKind::Knockdown) || (!close && has(target, EffectKind::Knockdown));
+    if (attacker.npc && has(target, EffectKind::ProtectionFromEvilAndGood)) {
+        const auto* a = actors_.actor(attacker.enemy);
+        disadvantage |= a && rules::protectionCreature(actors_.catalog().monster(a->monster)->creatureType);
+    }
     return rules::rollMode(advantage, disadvantage);
 }
 int EffectController::oneShot(EffectTarget target, EffectKind kind) noexcept {

@@ -44,7 +44,7 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
     if (attacks_.size() > maxAttacks || monsters_.size() > maxMonsters)
         throw std::runtime_error("catalog: exceeds 64 attacks or 32 monsters");
     if (spells_.size() > maxSpells)
-        throw std::runtime_error("spells: exceeds 32 definitions");
+        throw std::runtime_error("spells: exceeds 64 definitions");
     validateIds(spells_, "spells");
     for (std::size_t i = 0; i < spells_.size(); ++i) {
         const auto& spell = spells_[i];
@@ -71,16 +71,19 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                 throw std::runtime_error("races." + r.id + ".ability_increases: expected 0..2");
     }
     for (const auto& c : classes_) {
-        if (unsigned(c.progression) > unsigned(ProgressionClass::Wizard))
+        if (c.spellList > SpellList::Paladin || c.spellProgression > SpellProgression::Half ||
+            (c.progression == ProgressionClass::Paladin && (c.casting != Casting::Charisma || c.spellProgression != SpellProgression::Half || c.spellList != SpellList::Paladin)))
+            throw std::runtime_error("Invalid casting profile");
+        if (unsigned(c.progression) > unsigned(ProgressionClass::Paladin))
             throw std::runtime_error("Invalid class progression");
-        if (static_cast<unsigned>(c.casting) > static_cast<unsigned>(Casting::Intelligence) ||
+        if (static_cast<unsigned>(c.casting) > static_cast<unsigned>(Casting::Charisma) ||
             (c.features & ~15u) || c.spellCount > c.spells.size() ||
             (hasFeature(c.features, ClassFeature::LifeDomain) && c.casting != Casting::Wisdom) ||
             (hasFeature(c.features, ClassFeature::ArcaneRecovery) && c.casting != Casting::Intelligence))
             throw std::runtime_error("classes: invalid casting/features");
         for (std::size_t i = 0; i < c.spellCount; ++i) {
             const auto* s = spell(c.spells[i]);
-            if (!s || !spellClass(s->kind, c.casting))
+            if (!s || !spellClass(s->kind, c.spellList != SpellList::None ? c.spellList : c.casting == Casting::Wisdom ? SpellList::Cleric : c.casting == Casting::Intelligence ? SpellList::Wizard : SpellList::None))
                 throw std::runtime_error("classes: invalid spell reference or class eligibility");
             for (std::size_t j = 0; j < i; ++j)
                 if (c.spells[j].index == c.spells[i].index)
@@ -201,6 +204,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
     for (const auto& m : monsters_) {
         if (m.speedFeet < 0)
             throw std::runtime_error("monsters." + m.id + ".speed_ft: must be nonnegative");
+        if (m.creatureType > CreatureType::Undead || (m.creatureType != CreatureType::Unknown && (m.creatureType == CreatureType::Humanoid) != m.humanoid))
+            throw std::runtime_error("Invalid creature type/humanoid identity");
         if (m.spellcasting > EnemyCasting::AcolyteSupport)
             throw std::runtime_error("Unsupported enemy casting profile");
         if (!validDamageProfile(m.damageProfile))

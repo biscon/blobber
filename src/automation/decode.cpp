@@ -92,10 +92,10 @@ rules::SpellId spell(const Json& j, const rules::Catalog& catalog) {
             return {i};
     throw std::invalid_argument("Unknown spell ID");
 }
-std::uint32_t spells(const Json& j, const rules::Catalog& c) {
-    if (!j.is_array() || j.size() > 32)
-        throw std::invalid_argument("Expected at most 32 spell IDs");
-    std::uint32_t mask = 0;
+rules::SpellMask spells(const Json& j, const rules::Catalog& c) {
+    if (!j.is_array() || j.size() > rules::spellCapacity)
+        throw std::invalid_argument("Expected at most 64 spell IDs");
+    rules::SpellMask mask = 0;
     for (const auto& entry : j) {
         const auto bit = rules::spellBit(spell(entry, c));
         if (mask & bit)
@@ -223,9 +223,18 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
         return r;
     }
     if (op == "advancement") {
-        fields(j, {"kind", "character", "learned", "prepared"});
+        fields(j, {"kind", "character", "learned", "prepared", "cantrips", "ability_improvement"});
         r.operation = Operation::Advancement;
         r.advancement = g.advancementRequest({std::uint16_t(bounded(j.at("character"), 3))});
+        if (j.contains("ability_improvement")) {
+            const auto& gains = j.at("ability_improvement");
+            if (!gains.is_array() || gains.size() != rules::abilityCount)
+                throw std::invalid_argument("Expected six ability increases");
+            for (unsigned i = 0; i < rules::abilityCount; ++i)
+                r.advancement.choices.abilityImprovement.increases[i] = std::uint8_t(bounded(gains[i], 2));
+        }
+        if (j.contains("cantrips"))
+            r.advancement.choices.cantrips = spells(j.at("cantrips"), cat);
         if (j.contains("learned"))
             r.advancement.choices.learned = spells(j.at("learned"), cat);
         if (j.contains("prepared"))
@@ -235,21 +244,23 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     if (op != "combat")
         throw std::invalid_argument("Unknown action kind");
     fields(j, {"kind", "character", "action", "target", "ally", "spell", "feature", "item", "enemies",
-               "allies", "darts", "cell", "restore_paralysis", "aim_subcell"});
+               "allies", "darts", "cell", "restore_paralysis", "aim_subcell", "healing_amount"});
     auto& c = r.combat;
     c.world = g.actors().snapshot().world;
     c.turn = g.combat().snapshot().turn;
     c.character = {std::uint16_t(bounded(j.at("character"), 3))};
     const std::array<const char*, 9> actions{"melee", "back_melee", "defend",  "ranged", "spell",
-                                             "item",  "aid",        "feature", nullptr};
+                                             "item",  "aid",        "feature", "smite"};
     bool found = false;
-    for (unsigned i = 0; i < 8; ++i)
+    for (unsigned i = 0; i < 9; ++i)
         if (j.at("action") == actions[i]) {
             c.action = PartyAction(i);
             found = true;
         }
     if (!found)
         throw std::invalid_argument("Unknown combat action");
+    if (j.contains("healing_amount"))
+        c.healingAmount = int(bounded(j.at("healing_amount"), 20));
     if (j.contains("target"))
         c.target = g.actors().id(bounded(j.at("target"), NpcWorld::maxInstances - 1));
     if (j.contains("ally"))
@@ -257,12 +268,12 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     if (j.contains("spell"))
         c.spell = spell(j.at("spell"), cat);
     if (j.contains("feature")) {
-        const std::array<const char*, 11> names{
+        const std::array<const char*, 15> names{
             "none",         "second_wind",   "arcane_recovery",         "dismiss_concentration",
             "action_surge", "preserve_life", "cunning_action",          "spiritual_weapon",
-            "escape_web",   "end_turn",      "dismiss_spiritual_weapon"};
+            "escape_web",   "end_turn",      "dismiss_spiritual_weapon", "lay_on_hands", "sacred_weapon", "dismiss_sacred_weapon", "divine_smite"};
         bool matched = false;
-        for (unsigned i = 1; i < 11; ++i)
+        for (unsigned i = 1; i < 15; ++i)
             if (j.at("feature") == names[i]) {
                 c.feature = rules::Feature(i);
                 matched = true;

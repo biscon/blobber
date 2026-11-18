@@ -8,7 +8,7 @@ rules::SpellKind effectSpell(EffectKind kind) noexcept {
     constexpr S spells[]{S::Bless,      S::Bane,           S::ShieldOfFaith, S::MageArmor,   S::HoldPerson,
                          S::Guidance,   S::Resistance,     S::Sanctuary,     S::Sleep,       S::ColorSpray,
                          S::RayOfFrost, S::Grease,         S::Aid,           S::MirrorImage, S::Web,
-                         S::Web,        S::SpiritualWeapon};
+                         S::Web,        S::SpiritualWeapon, S::ProtectionFromEvilAndGood, S::Count};
     return unsigned(kind) < std::size(spells) ? spells[unsigned(kind)] : S::Count;
 }
 bool harmfulEffect(EffectKind kind) noexcept {
@@ -88,6 +88,8 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
             : kind == EffectKind::Guidance    ? "Consumed by the next ability check."
             : kind == EffectKind::Resistance  ? "Consumed by the next saving throw."
             : kind == EffectKind::Sanctuary   ? "Ends when the recipient attacks or casts offensively."
+            : kind == EffectKind::SacredWeapon ? "Ends on incapacitation, weapon change, or dismissal."
+            : kind == EffectKind::ProtectionFromEvilAndGood ? "Concentration; supernatural attackers have disadvantage."
             : kind == EffectKind::HoldPerson  ? "A successful repeat save ends it early."
                                               : "";
         result.entries[result.count++] = status;

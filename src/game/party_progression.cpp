@@ -8,7 +8,7 @@ const char* advancementMessage(AdvancementError e) noexcept {
     case AdvancementError::Stale:
         return "Your character changed. Reopen Level Up.";
     case AdvancementError::Unavailable:
-        return "This companion cannot level up. Companions must be conscious and below level 3.";
+        return "This companion cannot level up. Companions must be conscious and below level 4.";
     case AdvancementError::Experience:
         return "Earn enough XP for the next level first.";
     case AdvancementError::Unsafe:
@@ -16,7 +16,7 @@ const char* advancementMessage(AdvancementError e) noexcept {
     case AdvancementError::Moving:
         return "Wait until movement finishes.";
     case AdvancementError::Choices:
-        return "Complete the newly earned spell choices.";
+        return "Complete the ability and spell choices.";
     case AdvancementError::Capacity:
         return "Couldn't level up. Save your progress and restart the game.";
     }
@@ -39,7 +39,7 @@ AdvancementRequest Party::advancementRequest(rules::CharacterId id) const noexce
 }
 AdvancementError Party::advancementEligibility(const AdvancementRequest& r) const noexcept {
     const auto* c = character(r.character);
-    if (!c || c->life != rules::Life::Conscious || c->build.level >= 3 ||
+    if (!c || c->life != rules::Life::Conscious || c->build.level >= 4 ||
         progressionClass(r.character) == rules::ProgressionClass::None)
         return AdvancementError::Unavailable;
     if (r.level != c->build.level || r.revision != progressionRevision_ ||
@@ -59,24 +59,31 @@ AdvancementResult Party::advance(const AdvancementRequest& r, bool preview) noex
     auto& c = state_.characters[r.character.index];
     result.preview = rules::previewAdvancement(*catalog_, c.build.view(), c.build.spells,
                                                inventory_.loadout(r.character), r.choices);
+    if (result.preview.stats.maxHitPoints)
+        result.preview.stats.maxHitPoints += c.aidBonus;
     if (!result.preview.valid) {
         result.error = AdvancementError::Choices;
         return result;
     }
-    result.preview.stats.maxHitPoints += c.aidBonus;
     if (preview)
         return result;
     const auto oldMax = c.stats.maxHitPoints;
     c.stats = result.preview.stats;
     c.hitPoints += c.stats.maxHitPoints - oldMax;
     ++c.build.level;
+    c.build.levelFourAsi = result.preview.abilityImprovement;
     c.build.spells = result.preview.spells;
     const auto mana =
-        rules::maximumMana(catalog_->characterClass(c.build.characterClass)->casting, c.build.level) +
+        rules::maximumMana(catalog_->characterClass(c.build.characterClass)->casting, catalog_->characterClass(c.build.characterClass)->spellProgression, c.build.level) +
         c.stats.maxManaBonus;
     c.mana += mana - c.maxMana;
     c.maxMana = mana;
     ++c.availableHitDice;
+    if (progressionClass(r.character) == rules::ProgressionClass::Paladin) {
+        c.layOnHands += 5;
+        if (c.build.level == 3)
+            c.channelDivinity = true;
+    }
     if (c.build.level == 2) {
         c.actionSurge = progressionClass(r.character) == rules::ProgressionClass::Fighter;
         c.channelDivinity =
@@ -118,7 +125,8 @@ bool Party::grantNextLevelExperience() noexcept {
 std::array<int, 4> Party::preserveLifePreview(rules::CharacterId id) const noexcept {
     std::array<int, 4> out{};
     const auto* caster = character(id);
-    if (!caster || !caster->channelDivinity)
+    if (!caster || !caster->channelDivinity || !caster->build.lifeDomain ||
+        progressionClass(id) != rules::ProgressionClass::Cleric)
         return out;
     for (int n = 0; n < 5 * caster->build.level; ++n) {
         int best = -1;

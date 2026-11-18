@@ -8,6 +8,14 @@
 #include "ui/welcome_layout.hpp"
 namespace blobber {
 UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bool acceptPress) noexcept {
+    // Gameplay calls this before picking, then routeHudInput calls it again with
+    // logical input. Continuous controls must see physical edges exactly once.
+    if ((physical.pointerTracked || physical.has(UiKey::Click) || physical.has(UiKey::Up) ||
+         physical.has(UiKey::Down)) && commands.routeHealingSlider(physical, acceptPress)) {
+        UiInput consumed;
+        consumed.focused = physical.focused;
+        return consumed;
+    }
     auto input = physical;
     if (input.pointerTracked && !acceptPress) {
         commands.cancelPointerButtons();

@@ -13,7 +13,7 @@
 namespace blobber {
 const char* actionName(PartyAction action) noexcept {
     constexpr const char* names[]{"Melee", "Back-row melee", "Defend", "Ranged",
-                                  "Spell", "Item",           "Aid",    "Ability"};
+                                  "Spell", "Item",           "Aid",    "Ability", "Divine Smite"};
     const auto i = static_cast<unsigned>(action);
     return i < static_cast<unsigned>(PartyAction::Count) ? names[i] : "Invalid action";
 }
@@ -205,6 +205,12 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                           : out.hit    ? "hit"
                                        : "miss",
                           out.roll, static_cast<long long>(out.damage), out.died ? ", dead" : "");
+        if (out.smiteDamage && out.hit) {
+            appendLog(line);
+            std::snprintf(line, sizeof(line), "Divine Smite: %lld weapon + %lld radiant damage (%lld + %lld before mitigation).",
+                          static_cast<long long>(out.damageComponents[0].damage), static_cast<long long>(out.damageComponents[1].damage),
+                          static_cast<long long>(out.damageComponents[0].raw), static_cast<long long>(out.damageComponents[1].raw));
+        }
         if (out.damageAdjustment == rules::DamageAdjustment::Vulnerable) {
             appendLog(line);
             std::snprintf(line, sizeof(line), "%s #%u: %s vulnerability doubles damage.", species,
@@ -752,7 +758,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card.abilities = member.stats.abilities;
         card.armorClass = member.stats.armorClass;
         card.level = member.build.level;
-        card.levelEarned = member.build.level < 3 &&
+        card.levelEarned = member.build.level < 4 &&
                            party_.progressionClass(id) != rules::ProgressionClass::None &&
                            member.experience >= rules::nextLevelExperience(member.build.level);
         card.levelEligible =

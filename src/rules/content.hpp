@@ -33,6 +33,11 @@ struct LootEntry {
     std::uint16_t quantity = 1, sides = 0; // sides=0: fixed quantity; otherwise quantity d sides.
     std::uint8_t first = 1, last = 100;
 };
+enum class CreatureType : std::uint8_t { Unknown, Aberration, Beast, Celestial, Construct, Dragon, Elemental, Fey, Fiend, Giant, Humanoid, Monstrosity, Ooze, Plant, Undead };
+inline constexpr const char* creatureTypeNames[]{"unknown", "aberration", "beast", "celestial", "construct", "dragon", "elemental", "fey", "fiend", "giant", "humanoid", "monstrosity", "ooze", "plant", "undead"};
+constexpr bool protectionCreature(CreatureType t) noexcept {
+    return t == CreatureType::Aberration || t == CreatureType::Celestial || t == CreatureType::Elemental || t == CreatureType::Fey || t == CreatureType::Fiend || t == CreatureType::Undead;
+}
 enum class EnemyCasting : std::uint8_t { None, AcolyteSupport };
 struct MonsterDefinition {
     std::string id;
@@ -47,6 +52,7 @@ struct MonsterDefinition {
     bool metalArmor = false, sleepImmune = false;
     std::uint32_t experience = 0;
     bool humanoid = false;
+    CreatureType creatureType = CreatureType::Unknown;
     DamageProfile damageProfile;
     EnemyCasting spellcasting = EnemyCasting::None;
     std::int32_t speedFeet = 30; // Legacy catalogs/owned fixtures; schema 14 authors this explicitly.
@@ -56,7 +62,7 @@ struct CreationClass;
 class Catalog {
   public:
     static constexpr std::size_t maxMonsters = 32, maxAttacks = 64, maxIdBytes = 128;
-    static constexpr std::size_t maxRaces = 16, maxClasses = 16, maxItems = 64, maxSpells = 32;
+    static constexpr std::size_t maxRaces = 16, maxClasses = 16, maxItems = 64, maxSpells = spellCapacity;
     Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefinition> monsters,
             std::vector<RaceDefinition> races = {}, std::vector<ClassDefinition> classes = {},
             std::vector<ItemDefinition> items = {}, std::optional<PresetParty> preset = std::nullopt,

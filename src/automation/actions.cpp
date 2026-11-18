@@ -37,8 +37,8 @@ Json describeActions(const GameSession& g, const Observation& o) {
     const char* featureIds[]{
         "none",         "second_wind",   "arcane_recovery",         "dismiss_concentration",
         "action_surge", "preserve_life", "cunning_action",          "spiritual_weapon",
-        "escape_web",   "end_turn",      "dismiss_spiritual_weapon"};
-    const char* names[]{"melee", "back_melee", "defend", "ranged", "spell", "item", "aid", "feature"};
+        "escape_web",   "end_turn",      "dismiss_spiritual_weapon", "lay_on_hands", "sacred_weapon", "dismiss_sacred_weapon", "divine_smite"};
+    const char* names[]{"melee", "back_melee", "defend", "ranged", "spell", "item", "aid", "feature", "smite"};
     const auto eligibility = [&](const PartyCommand& c) {
         auto reason = g.actionBusy() ? CommandReason::Moving : g.combat().validate(c, g.movement().player);
         if (reason == CommandReason::Ready && !o.diagnostic)
@@ -55,7 +55,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
         c.character = {i};
         c.world = g.actors().snapshot().world;
         c.turn = g.combat().snapshot().turn;
-        for (unsigned a = 0; a < 8; ++a) {
+        for (unsigned a = 0; a < unsigned(PartyAction::Count); ++a) {
             if (a == unsigned(PartyAction::Spell) || a == unsigned(PartyAction::Feature))
                 continue;
             c.action = PartyAction(a);
@@ -63,7 +63,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
             c.ally.reset();
             Json d = {{"action", names[a]}, {"eligibility", eligibility(c)}};
             if (a == unsigned(PartyAction::Melee) || a == unsigned(PartyAction::BackMelee) ||
-                a == unsigned(PartyAction::Ranged)) {
+                a == unsigned(PartyAction::Ranged) || a == unsigned(PartyAction::Smite)) {
                 d["targets"] = Json::array();
                 for (std::size_t n = 0; n < o.targets.candidateCount; ++n) {
                     c.target = o.targets.candidates[n];
@@ -98,7 +98,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
         }
         c.spell = {};
         c.action = PartyAction::Feature;
-        for (unsigned f = 1; f < 11; ++f) {
+        for (unsigned f = 1; f <= unsigned(rules::Feature::DivineSmite); ++f) {
             c.feature = rules::Feature(f);
             c.spell = {};
             if (c.feature == rules::Feature::SpiritualWeapon)
@@ -109,19 +109,36 @@ Json describeActions(const GameSession& g, const Observation& o) {
                                          {"name", rules::featureName(c.feature)},
                                          {"eligibility", eligibility(c)}});
         }
+        entry["lay_on_hands"] = {{"remaining", member.layOnHands}, {"maximum", g.party().progressionClass({i}) == rules::ProgressionClass::Paladin ? 5 * member.build.level : 0}, {"amount_field", "healing_amount"}, {"minimum", 1}, {"targets", Json::array()}};
+        for (std::uint16_t target = 0; target < 4; ++target) {
+            const auto* ally = g.party().character({target});
+            const int cap = ally && ally->life != rules::Life::Dead ? std::min(member.layOnHands, ally->stats.maxHitPoints - ally->hitPoints) : 0;
+            entry["lay_on_hands"]["targets"].push_back({{"character", target}, {"maximum", cap}});
+        }
         const auto request = g.advancementRequest({i});
         const auto learned = rules::advancementChoices(cat, member.build.view(), member.build.portrait,
                                                        member.build.spells, {}, true);
         const auto prepared = rules::advancementChoices(cat, member.build.view(), member.build.portrait,
                                                         member.build.spells, {}, false);
-        entry["advancement"] = {{"reason", advancementMessage(g.advancementEligibility(request))},
-                                {"learnable", spellList(cat, learned.available)},
-                                {"learn_min", learned.minimum},
-                                {"learn_max", learned.maximum},
-                                {"preparable", spellList(cat, prepared.available)},
-                                {"prepare_max", prepared.maximum},
-                                {"note", "Prepared choices are additions. Wizard choices may unlock further "
-                                         "preparation; preview the complete selection."}};
+        const auto cantrips =
+            rules::advancementChoices(cat, member.build.view(), member.build.portrait, member.build.spells,
+                                      {}, rules::SpellChoice::Cantrips);
+        entry["advancement"] = {
+            {"reason", advancementMessage(g.advancementEligibility(request))},
+            {"ability_points", member.build.level == 3 ? 2 : 0},
+            {"ability_score_cap", 20},
+            {"ability_order",
+             {"strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"}},
+            {"cantrip_options", spellList(cat, cantrips.available)},
+            {"cantrip_min", cantrips.minimum},
+            {"cantrip_max", cantrips.maximum},
+            {"learnable", spellList(cat, learned.available)},
+            {"learn_min", learned.minimum},
+            {"learn_max", learned.maximum},
+            {"preparable", spellList(cat, prepared.available)},
+            {"prepare_max", prepared.maximum},
+            {"note", "Prepared choices are additions. Ability improvements and learned spells "
+                     "may unlock further preparation; preview the complete selection."}};
         result["combat"].push_back(entry);
     }
     result["fixtures"] = Json::array();

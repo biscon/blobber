@@ -1,5 +1,6 @@
 #pragma once
 #include "rules/resolve.hpp"
+#include "rules/spell_mask.hpp"
 #include <string>
 namespace blobber::rules {
 struct SpellId {
@@ -38,9 +39,16 @@ enum class SpellKind : std::uint8_t {
     Shatter,
     MirrorImage,
     Web,
+    ProtectionFromEvilAndGood,
     Count
 };
-enum class Casting : std::uint8_t { None, Wisdom, Intelligence };
+enum class Casting : std::uint8_t { None, Wisdom, Intelligence, Charisma };
+enum class SpellList : std::uint8_t { None, Cleric, Wizard, Paladin };
+enum class SpellProgression : std::uint8_t { Full, Half };
+constexpr unsigned castingAbilityIndex(Casting c) noexcept {
+    return c == Casting::Wisdom ? 4 : c == Casting::Charisma ? 5 : 3;
+}
+const char* castingAbilityName(Casting) noexcept;
 enum class Feature : std::uint8_t {
     None,
     SecondWind,
@@ -52,7 +60,11 @@ enum class Feature : std::uint8_t {
     SpiritualWeapon,
     EscapeWeb,
     EndTurn,
-    DismissSpiritualWeapon
+    DismissSpiritualWeapon,
+    LayOnHands,
+    SacredWeapon,
+    DismissSacredWeapon,
+    DivineSmite
 };
 enum class ClassFeature : std::uint8_t {
     SecondWind = 1,
@@ -82,6 +94,9 @@ struct SpellRules {
 const char* featureName(Feature) noexcept;
 const SpellRules* spellRules(SpellKind) noexcept;
 int maximumMana(Casting, int level) noexcept;
+int maximumMana(Casting, SpellProgression, int level) noexcept;
+int maximumSpellLevel(SpellProgression, int level) noexcept;
+bool spellClass(SpellKind, SpellList) noexcept;
 int spellManaCost(int spellLevel) noexcept;
 bool spellClass(SpellKind, Casting) noexcept;
 int maximumSpellLevel(int characterLevel) noexcept;

@@ -1,7 +1,9 @@
 #include "game/commands.hpp"
+#include "ui/interaction.hpp"
 #include "support/check.hpp"
 #include "support/fixture_world.hpp"
 #include "support/progression_fixtures.hpp"
+#include "support/paladin_fixtures.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -101,8 +103,56 @@ int main() {
         EffectController effects(party, actors, rng);
         CombatEvents events;
         effects.partyCell(spellSpawn.cell);
+        const auto paladinCatalog = blobber::test::paladinCatalog();
+        GameSession paladin(map, paladinCatalog, empty, 9, spellSpawn, false);
+        CommandController paladinUi(paladin);
+        const NpcWorld paladinNear(map, spellSpawn.cell, {"goblin"}, {{{0}, {6, 7}, {0, 1}, Heading::South}});
+        GameSession smiting(map, paladinCatalog, paladinNear, 5, spellSpawn, false);
+        blobber::test::advancePaladin(smiting.party(), 2);
+        levelReady(smiting, 0);
         bool okay = true;
         tracking = true;
+        for (int level = 2; level <= 4; ++level)
+            blobber::test::advancePaladin(paladin.party(), level);
+        paladin.party().damage({1}, 10);
+        okay &= paladin.party().useLayOnHands({0}, {1}, 5);
+        paladinUi.refresh({}, false, false, true);
+        paladinUi.openSpellbook();
+        for (std::size_t i = 0; i < paladinUi.snapshot().magic.count; ++i)
+            if (paladinUi.snapshot().magic.entries[i].feature == Feature::LayOnHands) {
+                paladinUi.chooseSpellbook(i);
+                break;
+            }
+        paladinUi.magicAlly(1);
+        UiInput slider;
+        slider.pointerTracked = slider.pointerHeld = true;
+        slider.pointer = ArtPoint{float(hudLayout::healingTrack.x + 1), float(hudLayout::healingTrack.y + 1)};
+        slider.pressed[std::size_t(UiKey::Click)] = true;
+        auto sliderFrame = [&] {
+            paladinUi.refresh({}, false, false, true);
+            const auto logical = routeHudButtons(paladinUi, slider);
+            routeHudInput(paladinUi, logical);
+        };
+        sliderFrame();
+        slider.pressed = {};
+        for (unsigned frame = 0; frame < 16; ++frame) {
+            slider.pointer->x = float(hudLayout::healingTrack.x + frame * 10);
+            sliderFrame();
+        }
+        slider.pointerHeld = false; slider.pointerReleased = true;
+        sliderFrame();
+        okay &= paladinUi.snapshot().magic.pending.healingAmount == 5 &&
+                paladin.party().character({0})->layOnHands == 15;
+        paladinUi.cancel();
+        okay &= paladin.submit(featureCommand(paladin, 0, Feature::SacredWeapon)).reason == CommandReason::Resolved;
+        paladin.update(7, false);
+        auto ward = spellCommand(paladin, SpellKind::ProtectionFromEvilAndGood);
+        ward.character = {0}; ward.allies[0] = {1}; ward.targetCount = 1;
+        okay &= paladin.submit(ward).reason == CommandReason::Resolved;
+        auto smite = featureCommand(smiting, 0, Feature::DivineSmite);
+        smite.targetCount = 1; smite.enemies[0] = smiting.actors().id(0);
+        okay &= smiting.submit(smite).reason == CommandReason::Resolved;
+        smiting.update(.5, false);
         for (unsigned frame = 0; frame < 32; ++frame) {
             promptUi.refresh({}, false, false, true);
             okay &= promptUi.snapshot().fixturePrompt[0] != 0;
@@ -112,7 +162,7 @@ int main() {
             promptUi.floorHover({});
         }
         progression.enableDevelopment(true);
-        for (int level = 2; level <= 3; ++level) {
+        for (int level = 2; level <= 4; ++level) {
             okay &= progression.grantNextLevelExperience();
             for (std::uint16_t id = 0; id < 4; ++id) {
                 ui.openAdvancement({id});
@@ -121,6 +171,12 @@ int main() {
                 const auto& c = *progression.party().character({id});
                 const auto context =
                     advancementChoices(catalog, c.build.view(), c.build.portrait, c.build.spells, {}, true);
+                if (c.build.level == 3) {
+                    r.choices.abilityImprovement.increases[2] = 2;
+                    const auto can = advancementChoices(catalog, c.build.view(), c.build.portrait,
+                                                        c.build.spells, r.choices, SpellChoice::Cantrips);
+                    r.choices.cantrips = recommendedChoices(catalog, can, SpellChoice::Cantrips);
+                }
                 r.choices.learned = recommendedChoices(catalog, context, SpellChoice::Learned);
                 okay &= bool(progression.previewAdvancement(r));
                 okay &= bool(progression.advance(r));

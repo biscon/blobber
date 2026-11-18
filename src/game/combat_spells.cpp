@@ -10,7 +10,7 @@ bool effectSpell(SpellKind k) {
     return k == SpellKind::Bless || k == SpellKind::Bane || k == SpellKind::ShieldOfFaith ||
            k == SpellKind::MageArmor || k == SpellKind::Guidance || k == SpellKind::Resistance ||
            k == SpellKind::Sanctuary || k == SpellKind::Aid || k == SpellKind::HoldPerson ||
-           k == SpellKind::MirrorImage;
+           k == SpellKind::MirrorImage || k == SpellKind::ProtectionFromEvilAndGood;
 }
 bool delayed(SpellKind k) {
     return k == SpellKind::FireBolt || k == SpellKind::GuidingBolt || k == SpellKind::MagicMissile ||
@@ -119,7 +119,8 @@ EffectRequest CombatController::spellEffect(const PartyCommand& c, SpellKind kin
     request.world = c.world;
     request.caster = c.character;
     request.count = c.targetCount;
-    request.kind = kind == SpellKind::Aid               ? EffectKind::Aid
+    request.kind = kind == SpellKind::ProtectionFromEvilAndGood ? EffectKind::ProtectionFromEvilAndGood
+                   : kind == SpellKind::Aid               ? EffectKind::Aid
                    : kind == SpellKind::HoldPerson      ? EffectKind::HoldPerson
                    : kind == SpellKind::MirrorImage     ? EffectKind::MirrorImage
                    : kind == SpellKind::SpiritualWeapon ? EffectKind::SpiritualWeapon
@@ -155,6 +156,12 @@ bool CombatController::safeRecovery(Player pose) const noexcept {
     return true;
 }
 CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose) const noexcept {
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DivineSmite) {
+        auto melee = c; melee.action = PartyAction::Smite;
+        if (c.targetCount == 1) melee.target = c.enemies[0];
+        if (c.targetCount > 1) return CommandReason::InvalidTargets;
+        return validate(melee, pose);
+    }
     const auto* ch = party_.character(c.character);
     if (!ch)
         return CommandReason::InvalidCharacter;
@@ -162,6 +169,8 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         return CommandReason::StaleTurn;
     if (!effects_.canAct(c.character))
         return CommandReason::CannotAct;
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissSacredWeapon)
+        return effects_.sacredWeapon(c.character).serial ? CommandReason::Ready : CommandReason::Unavailable;
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissSpiritualWeapon)
         return effects_.spiritualWeapon(c.character) && settledRecovery(pose, noticeTime_)
                    ? CommandReason::Ready
@@ -209,8 +218,31 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
                 return CommandReason::InvalidTarget;
             return c.targetCount ? spellRecipient(c, pose, 0) : CommandReason::Ready;
         }
+        if (c.feature == rules::Feature::LayOnHands) {
+            if (party_.progressionClass(c.character) != rules::ProgressionClass::Paladin)
+                return CommandReason::FeatureRequired;
+            if (!ch->layOnHands)
+                return CommandReason::NoCharges;
+            if (c.targetCount != 1)
+                return CommandReason::MissingTarget;
+            const auto* ally = party_.character(c.allies[0]);
+            if (!ally || ally->life == rules::Life::Dead)
+                return CommandReason::DeadAlly;
+            if (ally->hitPoints >= ally->stats.maxHitPoints)
+                return CommandReason::FullHealth;
+            return c.healingAmount > 0 && c.healingAmount <= ch->layOnHands && c.healingAmount <= ally->stats.maxHitPoints - ally->hitPoints ? CommandReason::Ready : CommandReason::InvalidTargets;
+        }
         if (c.targetCount)
             return CommandReason::InvalidTargets;
+        if (c.feature == rules::Feature::SacredWeapon) {
+            if (party_.progressionClass(c.character) != rules::ProgressionClass::Paladin || ch->build.level < 3)
+                return CommandReason::FeatureRequired;
+            if (!ch->channelDivinity)
+                return CommandReason::NoCharges;
+            EffectRequest r; r.world = c.world; r.caster = c.character; r.kind = EffectKind::SacredWeapon; r.targets[0] = c.character; r.count = 1;
+            const auto error = effects_.validate(r);
+            return error == EffectError::None ? CommandReason::Ready : error == EffectError::Capacity ? CommandReason::EffectCapacity : CommandReason::NoWeapon;
+        }
         if (c.feature == rules::Feature::EscapeWeb)
             return effects_.has(c.character, EffectKind::Restrained) ? CommandReason::Ready
                                                                      : CommandReason::Unavailable;
@@ -222,6 +254,8 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
         if (c.feature == rules::Feature::CunningAction)
             return cunningAvailable(c.character) ? CommandReason::Ready : CommandReason::Cooldown;
         if (c.feature == rules::Feature::PreserveLife) {
+            if (party_.progressionClass(c.character) != rules::ProgressionClass::Cleric || !ch->build.lifeDomain)
+                return CommandReason::FeatureRequired;
             if (!ch->channelDivinity)
                 return CommandReason::NoCharges;
             const auto healing = party_.preserveLifePreview(c.character);
@@ -362,6 +396,13 @@ bool CombatController::sneakEligible(rules::CharacterId id, ActorId target, rule
 }
 CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, std::uint64_t now,
                                             CombatEvents& events) noexcept {
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DivineSmite) {
+        const auto reason = validateMagic(c, pose);
+        if (reason != CommandReason::Ready) { CombatOutcome rejected; rejected.reason = reason; return rejected; }
+        auto melee = c; melee.action = PartyAction::Smite;
+        if (c.targetCount == 1) melee.target = c.enemies[0];
+        return submit(melee, pose, now, events);
+    }
     CombatOutcome out;
     out.reason = validateMagic(c, pose);
     if (out.reason != CommandReason::Ready)
@@ -378,6 +419,10 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
     }
     if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissConcentration) {
         effects_.remove(effects_.concentration(c.character), now, events);
+        return out;
+    }
+    if (c.action == PartyAction::Feature && c.feature == rules::Feature::DismissSacredWeapon) {
+        effects_.remove(effects_.sacredWeapon(c.character), now, events);
         return out;
     }
     const auto* ch = party_.character(c.character);
@@ -409,7 +454,17 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         auto result = out;
         result.recipient = c.character;
         result.hit = true;
-        if (c.feature == rules::Feature::EscapeWeb) {
+        if (c.feature == rules::Feature::LayOnHands) {
+            const int hp = party_.character(c.allies[0])->hitPoints;
+            party_.useLayOnHands(c.character, c.allies[0], c.healingAmount);
+            result.event = CombatEvent::Healing;
+            result.recipient = c.allies[0];
+            result.damage = party_.character(c.allies[0])->hitPoints - hp;
+        } else if (c.feature == rules::Feature::SacredWeapon) {
+            EffectRequest r; r.world = c.world; r.caster = c.character; r.kind = EffectKind::SacredWeapon; r.targets[0] = c.character; r.count = 1;
+            effects_.apply(r, now, events);
+            result.event = CombatEvent::None;
+        } else if (c.feature == rules::Feature::EscapeWeb) {
             effects_.escapeWeb(c.character, now, events);
             result.event = CombatEvent::None;
         } else if (c.feature == rules::Feature::ActionSurge) {

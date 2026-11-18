@@ -104,6 +104,8 @@ void selection() {
     f.manifest["selectors"].push_back("ui-icons");
     for (std::size_t i = 4; i < interfaceArtNames.size(); ++i)
         f.asset(std::string("ui/") + interfaceArtNames[i] + ".png");
+    for (const auto* name : paladinArtNames)
+        f.asset(std::string("ui/") + name + ".png");
     for (const auto* id : equipmentIconIds)
         f.asset(std::string("ui/items/") + id + ".png");
     f.fixed("blueprints/underkeep.json");
@@ -123,6 +125,8 @@ void selection() {
     check(!names.count("assets/npcs/frames/not-shipped.png") &&
               !names.count("assets/ui/repeated.prompt.json") && !names.count("assets/ui/alden.png"),
           "Authoring artwork and prepared-only portraits excluded");
+    for (const auto* name : paladinArtNames)
+        check(names.count(std::string("assets/ui/") + name + ".png"), "Paladin icons are included in shipping inventory");
     check(names.size() == inventory.files.size(), "Identical entries deduplicate");
     check(!names.count("assets/prepared/fixture.bin") &&
               paths(d::resolve(f.s, true)).count("assets/prepared/fixture.bin"),

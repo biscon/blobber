@@ -83,6 +83,17 @@ class PolicyContracts(unittest.TestCase):
         del s["preparation"]
         with self.assertRaises(ValueError): resolve(c,".",embedded=True)
 
+    def test_level_four_preparation_structure(self):
+        c=config(); s=c["parties"][0]["scenario"]
+        s["schema_version"]=3
+        s["preparation"]=dict(target_level=4, advancements=[
+            [dict(learned=[], prepared=[], cantrips=[], ability_improvement=([0,0,2,0,0,0] if step==2 else [0]*6))
+             for _ in range(4)] for step in range(3)])
+        self.assertEqual(resolve(c,".",embedded=True)["parties"][0]["scenario"]["preparation"]["target_level"],4)
+        for increases in ([0]*6, [3,0,0,0,0,0], [1]*6, [True,0,1,0,0,0]):
+            s["preparation"]["advancements"][2][0]["ability_improvement"]=increases
+            with self.assertRaises(ValueError): resolve(c,".",embedded=True)
+
     def test_heal_unconscious_before_attack(self):
         o=observation(); o["active_character"]=1; o["party"][2].update(hp=0,life=1)
         choices=list(policy().candidates(o,descriptors([("cure_wounds",2,False),("spare_the_dying",0,False)])))

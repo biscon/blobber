@@ -117,6 +117,8 @@ CombatOutcome CombatController::queueAttack(CombatOutcome out, Player pose, std:
     out.impactMs = windup;
     out.hit = out.critical = out.died = false;
     out.damage = out.roll = 0;
+    out.smiteDamage = 0;
+    out.damageComponents = {};
     out.saveTotal = out.saveDifficulty = 0;
     out.saveSucceeded = false;
     out.packTactics = false;
@@ -157,6 +159,8 @@ void CombatController::cancelAttack(std::size_t slot, std::uint64_t when, Combat
     out.targetGone = targetGone;
     out.hit = out.critical = out.died = false;
     out.damage = out.roll = 0;
+    out.smiteDamage = 0;
+    out.damageComponents = {};
     out.saveTotal = out.saveDifficulty = 0;
     out.saveSucceeded = false;
     out.packTactics = false;
@@ -220,6 +224,8 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
             out.occurredMs = v.releaseMs;
             out.hit = out.critical = false;
             out.damage = out.roll = 0;
+    out.smiteDamage = 0;
+    out.damageComponents = {};
             out.saveTotal = out.saveDifficulty = 0;
             out.saveSucceeded = false;
             out.packTactics = false;
@@ -295,6 +301,8 @@ void CombatController::resolveImpacts(Player pose, std::uint64_t now, CombatEven
                 out.occurredMs = earliest;
                 out.hit = out.critical = out.died = false;
                 out.damage = out.roll = 0;
+    out.smiteDamage = 0;
+    out.damageComponents = {};
                 out.saveTotal = out.saveDifficulty = 0;
                 out.saveSucceeded = false;
                 out.packTactics = false;
@@ -382,6 +390,7 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
     if (out.targetGone) {
         out.hit = out.critical = out.died = false;
         out.damage = 0;
+        out.smiteDamage = 0;
     } else if (out.mirror.effect.serial) {
         effects_.resolveMirror(out.mirror, false, when, events);
         out.damage = 0;
@@ -398,8 +407,12 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
             if (party_.character(out.recipient)->life != rules::Life::Conscious)
                 state_.defending[out.recipient.index] = false;
         } else {
-            const auto result =
-                damageNpc(actors_, effects_, out.enemy, out.damage, out.damageType, out.critical, when);
+            rules::DamagePacket packet;
+            packet.count = out.smiteDamage ? 2 : 1;
+            packet.components[0] = {out.damage, out.damageType};
+            packet.components[1] = {out.smiteDamage, rules::DamageType::Radiant};
+            const auto result = damageNpc(actors_, effects_, out.enemy, packet, out.critical, when);
+            out.damageComponents = result.components;
             out.rawDamage = result.resolved.raw;
             out.damage = result.resolved.damage;
             out.damageAdjustment = result.resolved.adjustment;

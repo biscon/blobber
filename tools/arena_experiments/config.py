@@ -116,22 +116,34 @@ def resolve(value, base, *, embedded=False):
                 raise ValueError("Party scenario must be a filename")
             p["scenario"] = read_json(Path(base)/p["scenario"])
         s = p["scenario"]
-        version = integer(s.get("schema_version"), 1, 2, "scenario version")
+        version = integer(s.get("schema_version"), 1, 3, "scenario version")
         fields(s, ("schema_version", "layout_version", "name", "seed", "party", "monsters"),
-               ("preparation",) if version == 2 else ())
-        if version == 2:
+               ("preparation",) if version >= 2 else ())
+        if version >= 2:
             prep = s.get("preparation")
             fields(prep, ("target_level", "advancements"))
-            level = integer(prep["target_level"], 1, 3, "target level")
+            level = integer(prep["target_level"], 1, 4 if version == 3 else 3, "target level")
             steps = prep["advancements"]
             if not isinstance(steps, list) or len(steps) != level-1:
                 raise ValueError("Expected one advancement transition per level")
-            for members in steps:
+            for step, members in enumerate(steps):
                 if not isinstance(members, list) or len(members) != 4:
                     raise ValueError("Expected four advancement choices")
                 for choices in members:
-                    fields(choices, ("learned", "prepared"))
-                    for names in choices.values():
+                    fields(choices, ("learned", "prepared", "cantrips", "ability_improvement")
+                           if version == 3 else ("learned", "prepared"))
+                    if version == 3:
+                        gains = choices["ability_improvement"]
+                        if not isinstance(gains, list) or len(gains) != 6:
+                            raise ValueError("Expected six ability increases")
+                        for gain in gains:
+                            integer(gain, 0, 2, "ability increase")
+                        if sum(gains) != (2 if step == 2 else 0):
+                            raise ValueError("Invalid ability improvement for advancement level")
+                        if step < 2 and choices["cantrips"]:
+                            raise ValueError("Premature advancement cantrip")
+                    for key in (("learned", "prepared", "cantrips") if version == 3 else ("learned", "prepared")):
+                        names = choices[key]
                         if (not isinstance(names, list) or len(names) > 32
                             or any(not isinstance(n, str) or not n for n in names)
                             or len(set(names)) != len(names)):

@@ -20,9 +20,9 @@ void abilities() {
     check(abilityModifier(scores, Ability::Dexterity).value == 2, "Typed ability selects score");
     check(abilityModifier(scores, static_cast<Ability>(255)).error == Error::InvalidAbility,
           "Invalid ability enum");
-    for (int level = 1; level <= 3; ++level)
+    for (int level = 1; level <= 4; ++level)
         check(proficiencyBonus(level).value == 2, "Supported proficiency");
-    check(!proficiencyBonus(0) && !proficiencyBonus(4), "Unsupported levels fail explicitly");
+    check(!proficiencyBonus(0) && !proficiencyBonus(5), "Unsupported levels fail explicitly");
 }
 void randomness() {
     // Observable replay contract, independent of std::uniform_int_distribution.

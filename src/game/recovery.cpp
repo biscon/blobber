@@ -166,12 +166,14 @@ RestError Party::recoveryBenefits(const RestRequest& r) const noexcept {
         benefit |= c.build.level >= 2 &&
                    ((progressionClass({i}) == rules::ProgressionClass::Fighter && !c.actionSurge) ||
                     (progressionClass({i}) == rules::ProgressionClass::Cleric && c.build.lifeDomain &&
-                     !c.channelDivinity));
+                     !c.channelDivinity) ||
+                    (progressionClass({i}) == rules::ProgressionClass::Paladin && c.build.level >= 3 && !c.channelDivinity));
         benefit |= r.dice[i] || (hasFeature({i}, rules::ClassFeature::SecondWind) && !c.secondWind);
         if (r.kind == RestKind::Long)
             benefit |= c.hitPoints < c.stats.maxHitPoints || c.mana < c.maxMana ||
                        c.availableHitDice < c.build.level ||
-                       (hasFeature({i}, rules::ClassFeature::ArcaneRecovery) && !c.arcaneRecovery);
+                       (hasFeature({i}, rules::ClassFeature::ArcaneRecovery) && !c.arcaneRecovery) ||
+                       (progressionClass({i}) == rules::ProgressionClass::Paladin && c.layOnHands < 5 * c.build.level);
     }
     return benefit ? RestError::None : RestError::NoBenefit;
 }
@@ -214,6 +216,8 @@ RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRn
         } else {
             heal({i}, c.stats.maxHitPoints);
             c.mana = c.maxMana;
+            if (progressionClass({i}) == rules::ProgressionClass::Paladin)
+                c.layOnHands = 5 * c.build.level;
             c.availableHitDice = std::min(c.build.level, c.availableHitDice + std::max(1, c.build.level / 2));
             if (hasFeature({i}, rules::ClassFeature::ArcaneRecovery))
                 c.arcaneRecovery = true;
@@ -223,7 +227,8 @@ RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRn
         if (c.build.level >= 2) {
             if (progressionClass({i}) == rules::ProgressionClass::Fighter)
                 c.actionSurge = true;
-            if (progressionClass({i}) == rules::ProgressionClass::Cleric && c.build.lifeDomain)
+            if ((progressionClass({i}) == rules::ProgressionClass::Cleric && c.build.lifeDomain) ||
+                (progressionClass({i}) == rules::ProgressionClass::Paladin && c.build.level >= 3))
                 c.channelDivinity = true;
         }
         out.healed[i] = c.hitPoints - beforeHp;

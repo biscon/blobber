@@ -8,12 +8,12 @@ namespace {
 bool concentrates(EffectKind kind) {
     return kind == EffectKind::Bless || kind == EffectKind::Bane || kind == EffectKind::ShieldOfFaith ||
            kind == EffectKind::Web || kind == EffectKind::HoldPerson || kind == EffectKind::Guidance ||
-           kind == EffectKind::Resistance;
+           kind == EffectKind::Resistance || kind == EffectKind::ProtectionFromEvilAndGood;
 }
 std::uint64_t duration(EffectKind kind) {
     return kind == EffectKind::Web                                      ? 3600000
            : (kind == EffectKind::MageArmor || kind == EffectKind::Aid) ? 28800000
-           : kind == EffectKind::ShieldOfFaith                          ? 600000
+           : (kind == EffectKind::ShieldOfFaith || kind == EffectKind::ProtectionFromEvilAndGood) ? 600000
                                                                         : 60000;
 }
 bool targetLess(EffectTarget a, EffectTarget b) {
@@ -103,6 +103,20 @@ int EffectController::armorClass(EffectTarget t) const noexcept {
             ac += 3; // Current unarmored base is 10 + Dex; preserve the shield.
     }
     return ac + (has(t, EffectKind::ShieldOfFaith) ? 2 : 0);
+}
+EffectId EffectController::sacredWeapon(rules::CharacterId id) const noexcept {
+    for (const auto& e : instances_)
+        if (e.active && e.kind == EffectKind::SacredWeapon && !e.caster.npc && e.caster.character.index == id.index)
+            return e.id;
+    return {};
+}
+int EffectController::sacredWeaponBonus(rules::CharacterId id) const noexcept {
+    const auto* e = find(sacredWeapon(id));
+    if (!e || !conscious(id))
+        return 0;
+    const auto handle = party_.inventory().at({id, static_cast<std::uint16_t>(EquipmentSlot::MainHand)});
+    return handle && handle.slot == e->weaponSlot && handle.generation == e->weaponGeneration
+               ? std::max(1, party_.character(id)->stats.modifiers[5]) : 0;
 }
 int EffectController::rollModifier(EffectTarget t) noexcept {
     int bonus = 0;
@@ -202,6 +216,16 @@ EffectError EffectController::validate(const EffectRequest& request) const noexc
         return EffectError::InvalidKind;
     if (request.difficulty < 1 || request.difficulty > 1000)
         return EffectError::InvalidDifficulty;
+    if (request.kind == EffectKind::SacredWeapon) {
+        const auto* ch = party_.character(request.caster.character);
+        const auto* weapon = party_.equipped(request.caster.character, EquipmentSlot::MainHand);
+        if (!ch || party_.progressionClass(request.caster.character) != rules::ProgressionClass::Paladin || ch->build.level < 3 ||
+            !weapon || weapon->kind != rules::ItemKind::Weapon || weapon->ranged || request.count != 1 ||
+            request.targets[0].npc || request.targets[0].character.index != request.caster.character.index)
+            return EffectError::InvalidTargets;
+    }
+    if (request.kind == EffectKind::ProtectionFromEvilAndGood && (request.count != 1 || request.targets[0].npc))
+        return EffectError::InvalidTargets;
     const auto maxTargets = request.kind == EffectKind::Bless || request.kind == EffectKind::Bane ||
                                     request.kind == EffectKind::Aid
                                 ? 3u
@@ -250,7 +274,8 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
             if (e.active && e.id.serial == old.serial)
                 end(e, EffectEnd::Replaced, now, events);
     if (request.kind == EffectKind::Sanctuary || request.kind == EffectKind::MirrorImage ||
-        request.kind == EffectKind::SpiritualWeapon)
+        request.kind == EffectKind::SpiritualWeapon || request.kind == EffectKind::SacredWeapon ||
+        request.kind == EffectKind::ProtectionFromEvilAndGood)
         for (auto& e : instances_)
             if (e.active && e.kind == request.kind && e.targets[0] == request.targets[0])
                 end(e, EffectEnd::Replaced, now, events);
@@ -261,6 +286,11 @@ EffectResult EffectController::apply(const EffectRequest& request, std::uint64_t
     candidate.difficulty = request.difficulty;
     candidate.expiresMs = gameplayMs_ + duration(request.kind);
     candidate.retryMs = gameplayMs_ + retryIntervalMs;
+    if (request.kind == EffectKind::SacredWeapon) {
+        const auto h = party_.inventory().at({request.caster.character, static_cast<std::uint16_t>(EquipmentSlot::MainHand)});
+        candidate.weaponSlot = h.slot;
+        candidate.weaponGeneration = h.generation;
+    }
     auto targets = request.targets;
     // At most three recipients; a bounded insertion pass preserves canonical RNG
     // order without instantiating a large-range sort for this tiny array.
@@ -312,6 +342,10 @@ void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexce
             break;
         auto& e = *next;
         previous = e.id.serial;
+        if (e.kind == EffectKind::SacredWeapon && !sacredWeaponBonus(e.caster.character)) {
+            end(e, conscious(e.caster) ? EffectEnd::InvalidTarget : EffectEnd::Incapacitated, now, events);
+            continue;
+        }
         if (concentrates(e.kind) && !conscious(e.caster)) {
             end(e, EffectEnd::Incapacitated, now, events);
             continue;

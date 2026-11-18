@@ -10,16 +10,16 @@
 namespace blobber {
 namespace {
 using namespace rules_json;
-Json spellNames(const rules::Catalog& c, std::uint32_t mask) {
+Json spellNames(const rules::Catalog& c, rules::SpellMask mask) {
     Json out = Json::array();
     for (std::uint16_t i = 0; i < c.spellCount(); ++i)
         if (mask & rules::spellBit({i}))
             out.push_back(c.spell({i})->id);
     return out;
 }
-std::uint32_t spellMask(const rules::Catalog& c, const Json& j) {
-    array(j, "advancement spells", 32);
-    std::uint32_t mask = 0;
+rules::SpellMask spellMask(const rules::Catalog& c, const Json& j) {
+    array(j, "advancement spells", rules::spellCapacity);
+    rules::SpellMask mask = 0;
     for (const auto& name : j) {
         const auto bit = rules::spellBit(c.findSpell(identifier(name, "spell")));
         if (!bit || (mask & bit))
@@ -59,12 +59,14 @@ std::string encodeArena(const rules::Catalog& c, const ArenaScenario& s) {
     for (unsigned step = 0; step + 1 < s.preparation.targetLevel; ++step) {
         Json members = Json::array();
         for (const auto choices : s.preparation.advancements[step])
-            members.push_back(
-                {{"learned", spellNames(c, choices.learned)}, {"prepared", spellNames(c, choices.prepared)}});
+            members.push_back({{"learned", spellNames(c, choices.learned)},
+                               {"prepared", spellNames(c, choices.prepared)},
+                               {"cantrips", spellNames(c, choices.cantrips)},
+                               {"ability_improvement", choices.abilityImprovement.increases}});
         advancements.push_back(std::move(members));
     }
     auto text =
-        Json{{"schema_version", 2},
+        Json{{"schema_version", 3},
              {"layout_version", 1},
              {"name", s.name.data()},
              {"seed", s.seed},
@@ -97,7 +99,7 @@ ArenaScenario decodeArena(const rules::Catalog& c, const std::string& text) {
     else
         fields(root, "scenario",
                {"schema_version", "layout_version", "name", "seed", "party", "monsters", "preparation"});
-    if ((version != 1 && version != 2) || integer(root.at("layout_version"), "layout") != 1)
+    if ((version != 1 && version != 2 && version != 3) || integer(root.at("layout_version"), "layout") != 1)
         fail("version", "unsupported scenario version");
     ArenaScenario s;
     const auto name = string(root.at("name"), "name");
@@ -118,15 +120,15 @@ ArenaScenario decodeArena(const rules::Catalog& c, const std::string& text) {
         const auto id = j.at("id").get<std::string>();
         std::copy(id.begin(), id.end(), s.party[i].id.begin());
     }
-    if (version == 2) {
+    if (version >= 2) {
         const auto& prep = root.at("preparation");
         fields(prep, "preparation", {"target_level", "advancements"});
         const auto level = integer(prep.at("target_level"), "target_level");
-        if (level < 1 || level > 3)
-            fail("target_level", "expected 1..3");
+        if (level < 1 || level > (version == 3 ? 4 : 3))
+            fail("target_level", "unsupported target level");
         s.preparation.targetLevel = unsigned(level);
         const auto& steps = prep.at("advancements");
-        array(steps, "advancements", 2);
+        array(steps, "advancements", version == 3 ? 3 : 2);
         if (steps.size() != unsigned(level - 1))
             fail("advancements", "expected one transition per level");
         for (unsigned step = 0; step < steps.size(); ++step) {
@@ -135,9 +137,26 @@ ArenaScenario decodeArena(const rules::Catalog& c, const std::string& text) {
                 fail("advancements", "expected four character choices");
             for (unsigned i = 0; i < 4; ++i) {
                 const auto& choice = steps[step][i];
-                fields(choice, "advancement", {"learned", "prepared"});
+                if (version == 3)
+                    fields(choice, "advancement", {"learned", "prepared", "cantrips", "ability_improvement"});
+                else
+                    fields(choice, "advancement", {"learned", "prepared"});
                 s.preparation.advancements[step][i] = {spellMask(c, choice.at("learned")),
-                                                       spellMask(c, choice.at("prepared"))};
+                                                       spellMask(c, choice.at("prepared")), {}};
+                if (version == 3) {
+                    auto& out = s.preparation.advancements[step][i];
+                    out.cantrips = spellMask(c, choice.at("cantrips"));
+                    const auto& scores = choice.at("ability_improvement");
+                    array(scores, "ability improvement", rules::abilityCount);
+                    if (scores.size() != rules::abilityCount)
+                        fail("ability improvement", "expected six increases");
+                    for (unsigned n = 0; n < rules::abilityCount; ++n) {
+                        const auto gain = integer(scores[n], "ability increase");
+                        if (gain < 0 || gain > 2)
+                            fail("ability increase", "expected 0..2");
+                        out.abilityImprovement.increases[n] = std::uint8_t(gain);
+                    }
+                }
             }
         }
     }

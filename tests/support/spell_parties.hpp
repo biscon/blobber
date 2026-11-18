@@ -15,7 +15,7 @@ inline rules::PresetParty leveledSpellParty(const rules::Catalog& catalog, rules
     const auto bit = spellBit(catalog.findSpell(r->id));
     if (!bit)
         throw std::invalid_argument("Missing diagnostic spell");
-    auto include = [&](std::uint32_t& mask, unsigned maximum) {
+    auto include = [&](rules::SpellMask& mask, unsigned maximum) {
         mask |= bit;
         for (int i = 31; i >= 0 && spellCount(mask) > maximum; --i) {
             const auto remove = spellBit({std::uint16_t(i)});

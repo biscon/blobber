@@ -59,7 +59,7 @@ void CommandController::refreshTargetPicker() noexcept {
         encounterActive(session_.combat().snapshot().phase) &&
         (m.armed ? m.hostile && !m.area && (!m.ground || m.single) && !m.self
                  : !m.casting() && (c.action == PartyAction::Melee || c.action == PartyAction::BackMelee ||
-                                    c.action == PartyAction::Ranged));
+                                    c.action == PartyAction::Ranged || c.action == PartyAction::Smite));
     if (!p.available || !sameTargetContext(c, targetContext_)) {
         p.open = false;
         p.feedback = {};

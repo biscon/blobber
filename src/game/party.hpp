@@ -16,6 +16,7 @@ struct PartyCharacter : rules::HealthState {
     int aidBonus = 0;
     std::uint8_t experienceFraction = 0;
     bool actionSurge = false, channelDivinity = false;
+    int layOnHands = 0;
     std::uint64_t temporaryUntilMs = 0;
 };
 struct PartySnapshot {
@@ -58,6 +59,7 @@ class Party {
     bool spendMana(rules::CharacterId, int amount) noexcept;
     std::array<int, 4> preserveLifePreview(rules::CharacterId) const noexcept;
     void aidBonus(rules::CharacterId, int) noexcept;
+    bool useLayOnHands(rules::CharacterId, rules::CharacterId target, int amount) noexcept;
     bool useFeature(rules::CharacterId, rules::Feature) noexcept;
     bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;
     int castingModifier(rules::CharacterId) const noexcept;

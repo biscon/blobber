@@ -9,15 +9,23 @@ inline void levelParty(GameSession& s, int level = 3, rules::SpellKind chosen = 
         for (std::uint16_t i = 0; i < 4; ++i) {
             auto request = party.advancementRequest({i});
             const auto& c = *party.character({i});
+            if (next == 4) {
+                request.choices.abilityImprovement.increases[2] = 2;
+                const auto can =
+                    rules::advancementChoices(party.catalog(), c.build.view(), c.build.portrait,
+                                              c.build.spells, request.choices, rules::SpellChoice::Cantrips);
+                request.choices.cantrips =
+                    rules::recommendedChoices(party.catalog(), can, rules::SpellChoice::Cantrips);
+            }
             auto context = rules::advancementChoices(party.catalog(), c.build.view(), c.build.portrait,
                                                      c.build.spells, {}, true);
             const auto* rule = rules::spellRules(chosen);
             const auto bit = rule ? rules::spellBit(party.catalog().findSpell(rule->id)) : 0;
             if (next == 3 && (context.available & bit))
                 request.choices.learned = bit;
-            for (unsigned j = 0; j < 32 && rules::spellCount(request.choices.learned) < context.minimum; ++j)
-                if (context.available & (1u << j))
-                    request.choices.learned |= 1u << j;
+            for (unsigned j = 0; j < rules::spellCapacity && rules::spellCount(request.choices.learned) < context.minimum; ++j)
+                if (context.available & rules::spellIndexBit(j))
+                    request.choices.learned |= rules::spellIndexBit(j);
             context = rules::advancementChoices(party.catalog(), c.build.view(), c.build.portrait,
                                                 c.build.spells, request.choices, false);
             if (next == 3 && (context.available & bit))

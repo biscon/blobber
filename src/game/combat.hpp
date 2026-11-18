@@ -68,6 +68,8 @@ struct CombatOutcome {
     std::int64_t rawDamage = 0;
     rules::DamageType damageType = rules::DamageType::Bludgeoning;
     rules::DamageAdjustment damageAdjustment = rules::DamageAdjustment::Normal;
+    std::int64_t smiteDamage = 0; // Accepted radiant component, resolved separately at impact.
+    std::array<rules::DamageResolution, 2> damageComponents{};
     FortitudeResult fortitude; // Resolved impact only; never an accepted/saved roll.
     int roll = 0;
     // Accepted NPC weapon-roll context, published only with the resolved attack.

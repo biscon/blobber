@@ -232,6 +232,8 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
                       h.targetPicker.canConfirm);
             if (h.magic.kind == rules::SpellKind::LesserRestoration)
                 t.add(hudLayout::restorationChoice);
+            if (h.magic.pending.feature == rules::Feature::LayOnHands && h.magic.armed)
+                t.add(hudLayout::healingSlider, h.magic.healingMaximum > 0, true);
             for (unsigned i = 0; i < h.magic.pending.targetCount && !h.magic.hostile; ++i)
                 t.add(hudLayout::recipientChip(int(i)));
             for (int i = 0; i < 4; ++i)

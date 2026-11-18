@@ -81,25 +81,27 @@ rules::PresetParty arenaParty(const rules::Catalog& c, const ArenaScenario& s) {
 }
 const char* arenaPreparationError(const rules::Catalog& c, const StartingParty& starting,
                                   const ArenaPreparation& p) noexcept {
-    if (p.targetLevel < 1 || p.targetLevel > 3)
-        return "Arena level must be between 1 and 3.";
+    if (p.targetLevel < 1 || p.targetLevel > 4)
+        return "Arena level must be between 1 and 4.";
     for (unsigned i = 0; i < 4; ++i) {
         const auto preview = rules::previewBuild(c, starting[i].draft);
         if (!preview)
             return "Choose four valid level-one characters.";
         auto identity = rules::draftIdentity(starting[i].draft);
         auto spells = starting[i].draft.spells;
-        for (unsigned step = 0; step < 2; ++step) {
+        for (unsigned step = 0; step < 3; ++step) {
             const auto choices = p.advancements[step][i];
             if (step + 1 >= p.targetLevel) {
-                if (choices.learned || choices.prepared)
+                if (choices.learned || choices.prepared || choices.cantrips ||
+                    choices.abilityImprovement.points())
                     return "Unexpected arena advancement choices above the target level.";
                 continue;
             }
             const auto next = rules::previewAdvancement(c, identity, spells, preview.loadout, choices);
             if (!next.valid)
-                return "Complete each arena character's advancement spell choices.";
+                return "Complete each arena character's advancement choices.";
             ++identity.level;
+            identity.levelFourAsi = next.abilityImprovement;
             spells = next.spells;
         }
     }

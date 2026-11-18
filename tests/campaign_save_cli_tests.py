@@ -45,14 +45,30 @@ def main(runner):
             assert client.request('preview_save')['data']['eligible']
             result=client.request('save',slot_revision=status['slot_revision'])
             assert result['ok'] and result['data']['durable'],result
-            # New Game square -> north-facing dungeon landing, using ordinary wire input.
-            for direction in ('right', 'right', 'forward'):
+            # Follow the observed entrance rather than the old tiny-hub coordinates.
+            hub=client.request('observe')['data']
+            stair=next(f for f in hub['fixtures'] if f['kind']==3)
+            landing=[stair['position'][0],stair['position'][1]+1]  # Authored hub stairs face north.
+            def move(direction):
                 moved=client.request('act',action=dict(kind='move',direction=direction))
                 assert moved['data']['accepted'],moved
                 client.request('advance',ticks=100,until_decision=False)
-            hub=client.request('observe')['data']
-            stair=hub['fixtures'][0]['fixture']
-            result=client.request('act',action=dict(kind='interact',fixture=stair))
+                return client.request('observe')['data']
+            def face(heading):
+                nonlocal hub
+                for _ in range(4):
+                    if hub['heading']==heading:return
+                    hub=move('turn_right')
+                raise AssertionError('Failed to face dungeon landing')
+            for axis in (1,0):
+                for _ in range(24):
+                    if hub['position'][axis]==landing[axis]:break
+                    positive=hub['position'][axis]<landing[axis]
+                    face((2 if positive else 0) if axis==1 else (1 if positive else 3))
+                    hub=move('forward')
+                assert hub['position'][axis]==landing[axis]
+            face(0)
+            result=client.request('act',action=dict(kind='interact',fixture=stair['fixture']))
             assert result['data']['accepted'],result
             assert client.request('act',action=dict(kind='recall'))['data']['accepted']
             status=client.request('save_status')['data']

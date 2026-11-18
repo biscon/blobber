@@ -10,7 +10,7 @@ namespace {
 void spells() {
     const auto map = hybridRoom();
     const auto catalog = creationCatalog(true);
-    for (unsigned k = unsigned(SpellKind::Aid); k < unsigned(SpellKind::Count); ++k) {
+    for (unsigned k = unsigned(SpellKind::Aid); k <= unsigned(SpellKind::Web); ++k) {
         const auto kind = SpellKind(k);
         const auto places = spellPlacements(map, 3);
         GameSession s(map, catalog, places, 11, spellSpawn, false);

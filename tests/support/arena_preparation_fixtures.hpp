@@ -11,12 +11,22 @@ inline void arenaLevel(const rules::Catalog& c, ArenaScenario& s, unsigned level
             const auto context =
                 rules::advancementChoices(c, identity, s.party[i].draft.portrait, spells, {}, true);
             auto& choices = s.preparation.advancements[step][i];
+            if (step == 2) {
+                choices.abilityImprovement.increases[2] = 2;
+                const auto can = rules::advancementChoices(c, identity, s.party[i].draft.portrait, spells,
+                                                           choices, rules::SpellChoice::Cantrips);
+                choices.cantrips = rules::recommendedChoices(c, can, rules::SpellChoice::Cantrips);
+            }
             choices.learned = rules::recommendedChoices(c, context, rules::SpellChoice::Learned);
+            const auto prep = rules::advancementChoices(c, identity, s.party[i].draft.portrait, spells, choices, false);
+            if (prep.minimum)
+                choices.prepared = rules::recommendedChoices(c, prep, rules::SpellChoice::Prepared);
             const auto next = rules::previewAdvancement(c, identity, spells, gear, choices);
             if (!next.valid)
                 throw std::runtime_error("Fixture arena advancement invalid");
             spells = next.spells;
             ++identity.level;
+            identity.levelFourAsi = next.abilityImprovement;
         }
     }
 }

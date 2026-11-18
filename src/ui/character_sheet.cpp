@@ -92,7 +92,7 @@ void HudPainter::characterSheet(const HudSnapshot& h) const {
         std::snprintf(value, sizeof(value), "Mana %d / %d", c.mana, c.maxMana);
         text(value, 16, 310, teal);
         std::snprintf(value, sizeof(value), "Class %s %+d / Save DC %d",
-                      s.casting == rules::Casting::Wisdom ? "WIS" : "INT", s.spellAttack, s.spellDifficulty);
+                      rules::castingAbilityName(s.casting), s.spellAttack, s.spellDifficulty);
         clipped(value, 16, 323, 153, muted, UiTextStyle::Small);
     }
     if (s.racialCasting) {

@@ -178,6 +178,8 @@ Inventory resolve(const Settings& settings, bool includePrepared) {
     if (selected.count("ui-icons")) {
         for (std::size_t i = 4; i < interfaceArtNames.size(); ++i)
             asset(std::string("ui/") + interfaceArtNames[i] + ".png", "UI region");
+        for (const auto* name : paladinArtNames)
+            asset(std::string("ui/") + name + ".png", "paladin icon");
         for (const auto* id : equipmentIconIds)
             asset(std::string("ui/items/") + id + ".png", "equipment icon");
     }

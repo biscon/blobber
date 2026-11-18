@@ -53,7 +53,7 @@ bool CreatorModel::applicable(const Catalog& c, CreatorStep s) const noexcept {
     if (s == CreatorStep::Racial)
         return r && r->wizardCantrip;
     if (s == CreatorStep::Cantrips || s == CreatorStep::Prepared)
-        return cls && cls->casting != Casting::None;
+        return cls && cls->casting != Casting::None && cls->spellProgression == SpellProgression::Full;
     if (s == CreatorStep::Learned)
         return cls && cls->casting == Casting::Intelligence;
     return s < CreatorStep::Count;
@@ -311,8 +311,12 @@ void layoutCreator(FlowControls& w, const CreatorModel& m, const Catalog& c) noe
         }
         break;
     case CreatorStep::Class:
-        for (int i = 0; i < 4; ++i)
-            w.add({174 + i * 114, 92, 106, 90}, FlowAction::Class, i);
+        for (unsigned i = 0; i < c.classCount(); ++i) {
+            const unsigned columns = std::min<std::size_t>(5, c.classCount());
+            const unsigned rows = (c.classCount() + columns - 1) / columns;
+            const int width = 448 / int(columns), height = 94 / int(rows);
+            w.add({174 + int(i % columns) * width, 92 + int(i / columns) * height, width - 4, height - 4}, FlowAction::Class, int(i));
+        }
         break;
     case CreatorStep::Abilities:
         for (unsigned i = 0; i < 6; ++i) {

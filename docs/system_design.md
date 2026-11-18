@@ -1364,3 +1364,48 @@ PC07.1 preparation and calibration are Accepted and closed;
 PC07.2 population, route checks and review corrections are Accepted and closed
 (2026-11-01), completing parent PC07. PC08 is next for separate detailed planning;
 P-C remains incomplete. See the [current handoff](procedural_campaign_plan.md#pc072-accepted-closeout-and-next-agent-handoff-2026-11-01-current).
+
+
+## Level-four advancement
+
+The [level-four specification](progression_design.md#level-four-and-ability-improvements--approved-implementation-specification)
+is **implemented, mechanically verified, accepted and closed** (2026-11-16),
+following the user’s explicit “looks good, approved.” It extends the existing
+Party-owned atomic advancement flow to level four/2700 XP, stores earned ability
+increases separately from creation scores, and shares effective-score derivation
+with spell preparation and UI. Complete caster gains and arena preparation are
+included; strict campaign save versioning is retained. Skills/tools, feats and
+new classes remain deferred. See the specification for ownership, bounded storage,
+compatibility and required verification; prior progression acceptance is unchanged.
+
+## Paladin through level four
+
+The [paladin design](paladin_design.md) is **implemented and mechanically verified;
+awaiting user review** (2026-11-16). Creation, campaign, arena, library and headless
+flows support a Charisma half-caster with Lay on Hands, level-two Defense/Smite,
+Devotion oath spells/Sacred Weapon and the shared level-four ASI. Casting ability,
+spell list and progression are separate; 64-bit spell masks support Protection at
+index 32. Explicit creature types and bounded two-component damage preserve typed
+mitigation and Undead Fortitude. Party owns healing/charges; existing effects own
+Protection and inventory-generation-bound Sacred Weapon. Catalog schema 17 and
+strict campaign schema/simulation 24/26 apply; library 1 and arena 3 retain their
+shapes. The design records deferred SRD features, APIs, allocation checks,
+persistence/travel coverage, artwork and [review captures](screenshots/paladin/README.md).
+Existing level-four acceptance remains unchanged; paladin acceptance is pending.
+
+The [paladin implementation review](paladin_design.md#implementation-review--2026-11-16)
+corrects a remaining 32-bit reward-scan shift, saved Protection recipient validation,
+and the missing automatic Defense picker entry. Focused regressions, campaign
+save/travel and hidden UI verification pass; acceptance remains pending.
+
+The [healing power slider](paladin_design.md#healing-power-slider--2026-11-16)
+replaces Lay on Hands amount buttons with a pool-scaled integer slider in the
+lower casting dock, defaults to a full useful heal, shades overheal capacity,
+and retains explicit confirmation.
+The [drag/resource clarity follow-up](paladin_design.md#slider-drag-and-healing-pool-clarity-follow-up--2026-11-16)
+routes continuous input before gameplay's button prepass, widens the shared
+handle, and labels current/maximum healing points in the dock and character sheet.
+Healing points remain separate from portrait mana.
+The [continuous slider follow-up](paladin_design.md#continuous-slider-feedback--2026-11-16)
+keeps fractional visual feedback during dragging while the submitted amount stays
+integer, snaps the handle on release, and paints the opaque handle over the track.

@@ -1,5 +1,6 @@
 #pragma once
 #include "render/layout.hpp"
+#include <algorithm>
 #include <cmath>
 #include <optional>
 namespace blobber {
@@ -15,6 +16,14 @@ struct UiRect {
 namespace hudLayout {
 constexpr UiRect mapCanvas{8, 42, 370, 254}, mapSidebar{394, 46, 102, 242};
 constexpr UiRect diagnosticMap{394, 280, 102, 12};
+inline constexpr UiRect healingSlider{50, 339, 232, 16};
+inline constexpr UiRect healingTrack{56, 344, 220, 6};
+inline float healingHandleCenter(float amount, int pool) noexcept {
+    return healingTrack.x + (pool > 0 ? healingTrack.width * std::clamp(amount, 0.f, float(pool)) / pool : 0.f);
+}
+inline UiRect healingHandle(int amount, int pool) noexcept {
+    return {int(std::lround(healingHandleCenter(float(amount), pool))) - 6, healingTrack.y - 4, 12, 14};
+}
 constexpr UiRect restorationChoice{180, 280, 210, 20};
 constexpr UiRect endTurn{410, 278, 86, 19};
 constexpr UiRect developmentXp{200, 300, 240, 20};

@@ -2,6 +2,7 @@
 #include "game/commands.hpp"
 #include "support/arena_preparation_fixtures.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/paladin_fixtures.hpp"
 #include "support/generation_blueprints.hpp"
 #include <iostream>
 #include <sstream>
@@ -23,6 +24,39 @@ class CoveredCandidates final : public Visibility {
     }
     bool lootVisible(LootId) const noexcept override { return false; }
 };
+void paladinWire() {
+    using namespace rules;
+    const auto cat = blobber::test::paladinCatalog(); const auto defs = definitions();
+    auto arena = defaultArena(cat); arena.adjust({0}, 1); arenaLevel(cat, arena, 4);
+    Session session(blobber::test::campaignBlueprints(), cat, defs, arena, Mode::Diagnostic);
+    session.game().party().damage({1}, 6);
+    Json request{{"kind", "combat"}, {"action", "feature"}, {"character", 0}, {"feature", "lay_on_hands"}, {"allies", {1}}, {"healing_amount", 3}};
+    const auto decoded = decodeAction(request, session.game());
+    check(decoded.combat.healingAmount == 3 && session.action(decoded, true).accepted, "Healing wire validates amount without spending");
+    check(session.game().party().character({0})->layOnHands == 20, "Wire preview does not mutate healing pool");
+    check(session.action(decoded, false).accepted && session.game().party().character({0})->layOnHands == 17, "Wire healing commits exact pool amount");
+    check(!session.action(decoded, false).accepted, "Wire healing duplicate rejected");
+    auto malformed = request; malformed["healing_amount"] = true;
+    rejects([&] { decodeAction(malformed, session.game()); }, "Healing wire rejects boolean amount");
+    malformed["healing_amount"] = 21;
+    rejects([&] { decodeAction(malformed, session.game()); }, "Healing wire rejects oversized amount");
+    const auto smite = decodeAction({{"kind", "combat"}, {"action", "smite"}, {"character", 0}, {"target", 0}}, session.game());
+    check(smite.combat.action == PartyAction::Smite, "Direct Smite action is wire-visible");
+    Observation observation; session.observe(observation);
+    const auto state = encodeObservation(observation);
+    check(state["party"][0]["lay_on_hands"] == 17, "Observation exposes healing pool");
+    const auto descriptors = describeActions(session.game(), observation);
+    check(descriptors["combat"][0]["lay_on_hands"]["maximum"] == 20, "Descriptors expose healing limits");
+    bool oath = false, ability = false;
+    for (const auto& spell : descriptors["combat"][0]["spells"]) oath |= spell["id"] == "protection_from_evil_and_good";
+    for (const auto& feature : descriptors["combat"][0]["features"]) ability |= feature["id"] == "divine_smite";
+    check(oath && ability, "Descriptors include high-bit oath spell and Smite");
+    CombatOutcome impact; impact.event = CombatEvent::Attack; impact.hit = true; impact.smiteDamage = 9;
+    impact.damageComponents[0] = {4, 4, DamageAdjustment::Normal};
+    impact.damageComponents[1] = {9, 9, DamageAdjustment::Normal};
+    const auto event = encodeEvent(impact, cat, true);
+    check(event["damage_components"].size() == 2 && event["damage_components"][1]["type"] == "radiant", "Wire feedback keeps damage types separate");
+}
 void preciseAimProtocol() {
     const auto cat = catalog();
     const auto defs = definitions();
@@ -392,7 +426,18 @@ void earnedProgression() {
     const auto cat = catalog(false, 1200, 1);
     const auto defs = definitions();
     Client c(cat, defs);
-    c.start(cat, 8);
+    c.start(cat, 2);
+    // One distant survivor keeps the arena active without making this progression
+    // contract depend on a pursuing pack's search/return timing.
+    auto& fixture = c.protocol.replaySession()->game();
+    for (int x = 9; x >= 1; --x)
+        check(bool(fixture.actors().move(fixture.actors().id(1), {x, 7}, {0, 0},
+                                         fixture.movement().player.cell)),
+              "progression fixture isolates surviving guard");
+    for (int y = 6; y >= 1; --y)
+        check(bool(fixture.actors().move(fixture.actors().id(1), {1, y}, {0, 0},
+                                         fixture.movement().player.cell)),
+              "progression fixture keeps survivor outside alert range");
     for (unsigned i = 0; i < 8; ++i) {
         check(c.act({{"kind", "move"}, {"direction", "forward"}}).at("data").at("accepted"),
               "ranged approach");
@@ -408,18 +453,66 @@ void earnedProgression() {
         killed = c.protocol.session()->game().party().character({0})->experience >= 300;
     }
     check(killed, "normal ranged kill earns level-two XP");
-    for (unsigned i = 0; i < 10; ++i) {
-        const auto moved = c.act({{"kind", "move"}, {"direction", "back"}});
-        if (!moved.at("data").at("accepted"))
-            throw std::runtime_error("retreat fixture: " + moved.dump());
-        c.advance();
+    for (unsigned attempt = 0; attempt < 3; ++attempt) {
+        c.advance(700, false); // Settle the shot/corpse tail, which may publish a local victory.
+        if (!c.protocol.session()->result()) break;
+        check(c.act({{"kind", "continue"}}).at("data").at("accepted"),
+              "resume active arena after local victory");
     }
-    c.advance(1000, false); // Let pursuing enemies finish searching and the shot cooldown settle.
     auto result = c.act({{"kind", "advancement"}, {"character", 0}});
     if (!result.at("data").at("accepted"))
         throw std::runtime_error("advancement fixture: " + result.dump());
     check(c.protocol.session()->game().party().character({0})->build.level == 2,
           "earned fighter advancement commits through runner");
+}
+void levelFourWire() {
+    const auto cat = catalog();
+    const auto defs = definitions();
+    auto arena = scenario(cat);
+    arenaLevel(cat, arena, 3);
+    Session runner(blobber::test::campaignBlueprints(), cat, defs, arena, Mode::Diagnostic);
+    auto& game = runner.game();
+    game.party().grantNextLevelExperience();
+    Observation observed;
+    runner.observe(observed, true);
+    const auto descriptor = describeActions(game, observed).at("combat").at(3).at("advancement");
+    check(descriptor.at("ability_points") == 2 && descriptor.at("cantrip_min") == 1,
+          "wire descriptors expose mandatory level-four choices");
+    const auto& c = *game.party().character({3});
+    rules::AdvancementChoices choices;
+    choices.abilityImprovement.increases[3] = 2;
+    auto context =
+        rules::advancementChoices(cat, c.build.view(), c.build.portrait, c.build.spells, choices, true);
+    choices.learned = rules::recommendedChoices(cat, context, rules::SpellChoice::Learned);
+    context = rules::advancementChoices(cat, c.build.view(), c.build.portrait, c.build.spells, choices,
+                                        rules::SpellChoice::Cantrips);
+    choices.cantrips = rules::recommendedChoices(cat, context, rules::SpellChoice::Cantrips);
+    Json input = {{"kind", "advancement"},
+                  {"character", 3},
+                  {"learned", spellList(cat, choices.learned)},
+                  {"prepared", Json::array()},
+                  {"cantrips", spellList(cat, choices.cantrips)},
+                  {"ability_improvement", {0, 0, 0, 2, 0, 0}}};
+    for (const auto& bad : {Json::array({0, 0}), Json::array({0, 0, 0, 3, 0, 0}),
+                            Json::array({0, 0, 0, -1, 0, 0}), Json::array({0, 0, 0, true, 0, 0})}) {
+        auto invalid = input;
+        invalid["ability_improvement"] = bad;
+        rejects([&] { decodeAction(invalid, game); }, "wire rejects malformed ability arrays");
+    }
+    auto incomplete = input;
+    incomplete.erase("ability_improvement");
+    check(!runner.action(decodeAction(incomplete, game), false).accepted && c.build.level == 3,
+          "omitted ASI cannot bypass authoritative advancement");
+    const auto decoded = decodeAction(input, game);
+    check(runner.action(decoded, true).accepted && c.build.level == 3,
+          "wire preview accepts complete choices without advancing");
+    check(runner.action(decoded, false).accepted && c.build.level == 4,
+          "wire commits full level-four caster advancement");
+    runner.observe(observed, true);
+    const auto result = encodeObservation(observed).at("party").at(3);
+    check(result.at("level_four_asi") == input.at("ability_improvement") && result.at("max_mana") == 17,
+          "wire observation retains earned improvements and mana cap");
+    check(!runner.action(decoded, false).accepted, "wire cannot replay the fourth-level commit");
 }
 void timingParity() {
     const auto cat = catalog();
@@ -611,6 +704,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        paladinWire();
         preciseAimProtocol();
         coveredObservations();
         preparedArena();
@@ -623,6 +717,7 @@ int main(int argc, char** argv) {
         outcomes();
         spellAndPartialVictory();
         earnedProgression();
+        levelFourWire();
         timingParity();
         recordings(argv[0]);
         std::cout << "Automation protocol, lifecycle, management, outcomes and replay passed\n";

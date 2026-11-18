@@ -37,7 +37,7 @@ const char* phaseName(CombatPhase p) noexcept {
                         "defeat",      "approach", "facing", "round_end"};
     return names[unsigned(p)];
 }
-Json spellList(const rules::Catalog& cat, std::uint32_t bits) {
+Json spellList(const rules::Catalog& cat, rules::SpellMask bits) {
     Json a = Json::array();
     for (std::uint16_t i = 0; i < cat.spellCount(); ++i)
         if (bits & rules::spellBit({i}))
@@ -140,6 +140,7 @@ Json encodeObservation(const Observation& o) {
                   {"armor_class", g.effects().armorClass(rules::CharacterId{i})},
                   {"abilities", p.stats.abilities},
                   {"base_abilities", p.build.baseAbilities},
+                  {"level_four_asi", p.build.levelFourAsi.increases},
                   {"saves", p.stats.saves},
                   {"proficiency", p.stats.proficiency},
                   {"initiative", p.stats.initiative},
@@ -157,6 +158,7 @@ Json encodeObservation(const Observation& o) {
                   {"arcane_recovery", p.arcaneRecovery},
                   {"action_surge", p.actionSurge},
                   {"channel_divinity", p.channelDivinity},
+                  {"lay_on_hands", p.layOnHands},
                   {"cantrips", spellList(cat, p.build.spells.cantrips)},
                   {"learned", spellList(cat, p.build.spells.learned)},
                   {"prepared", spellList(cat, p.build.spells.prepared)},
@@ -430,6 +432,13 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
             j["attack_roll_mode"] = e.attackRollMode == rules::RollMode::Advantage      ? "advantage"
                                     : e.attackRollMode == rules::RollMode::Disadvantage ? "disadvantage"
                                                                                         : "normal";
+        }
+        if (e.smiteDamage) {
+            j["damage_components"] = Json::array();
+            for (unsigned i = 0; i < 2; ++i) {
+                const auto& part = e.damageComponents[i];
+                j["damage_components"].push_back({{"type", rules::damageTypeName(i ? rules::DamageType::Radiant : e.damageType)}, {"raw", part.raw}, {"damage", part.damage}, {"adjustment", rules::damageAdjustmentName(part.adjustment)}});
+            }
         }
         j["damage_type"] = rules::damageTypeName(e.damageType);
         j["raw_damage"] = e.rawDamage;

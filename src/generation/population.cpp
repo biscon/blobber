@@ -13,7 +13,7 @@ RewardProfile rewardProfile(const rules::Catalog& catalog, const rules::PresetPa
         out.manaCaster |= cls->casting != rules::Casting::None;
         out.spellAttack |= cls->casting != rules::Casting::None;
         for (unsigned i = 0; i < catalog.spellCount(); ++i)
-            if ((c.spells.racial & (1u << i)) &&
+            if ((c.spells.racial & rules::spellIndexBit(i)) &&
                 rules::spellRules(catalog.spell({std::uint8_t(i)})->kind)->attack)
                 out.spellAttack = true;
         out.unarmored |= c.equipment.body.index == UINT16_MAX && c.equipment.offHand.index == UINT16_MAX;

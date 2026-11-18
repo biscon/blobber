@@ -242,3 +242,183 @@ when another eligible card is clicked; clicking the selected card clears it.
 Recommended picks applies its choices and previews a selected spell immediately.
 Multi-pick budgets and immutable grants remain unchanged. Verify replacement,
 clear/reselect, recommendation idempotence and the rendered single-border state.
+
+
+## Level four and ability improvements — approved implementation specification
+
+Status: **implemented, mechanically verified, accepted and closed** (2026-11-16). The user authorized
+implementation after approving complete level-four gains in campaign and arena,
+and explicitly selected strict campaign save versioning. This section does not
+change acceptance of the previous levels-two/three slice.
+
+The user explicitly accepted the completed level-four work on 2026-11-16:
+“looks good, approved.” This closes the level-four advancement and ASI scope;
+skills/tools, feats and new classes remain deferred.
+
+### Rules and ownership
+
+Extend the four current classes through level four. XP thresholds become
+300/900/2700, with a 2700 cap and existing exact fractional awards. Keep one level
+per atomic commit, earned reminders/audio, safety and stale-request validation.
+Level-four proficiency remains +2. No level five, skills/tools, feats, new classes,
+encounter/reward rebalancing or respec is included.
+
+Creation scores remain immutable. CharacterIdentity and its borrowed view gain a
+typed fixed-size level-four ASI record containing six byte-sized increases. Below
+four every increase must be zero; at four exactly two points must be distributed,
+with each entry 0..2 and final scores (including race) at most 20. This supports
++2 to one ability or +1 to two. Do not introduce unused skill/feat infrastructure.
+A shared checked ability calculation must feed derivation, preparation and UI.
+AdvancementChoices gains the allocation and a new-cantrip mask; AdvancementPreview
+returns the resulting ASI record and grants. Partial UI drafts are permissible;
+authoritative preview/commit requires the complete legal allocation.
+
+Recompute attacks/damage, armor limits, saves, initiative, carrying capacity,
+spell attacks/DCs and preparation from effective scores. Constitution applies
+retroactively to all four levels under existing fixed-average/minimum HP rules.
+Current HP/mana increase by maximum differences, preserving deficits and Aid/item
+bonuses. Gain one available Hit Die; spent charges stay spent. Identity, inventory,
+formation and original library blueprints remain unchanged.
+
+Cleric and Wizard gain one class cantrip (four total), keeping racial cantrips
+separate and rejecting duplicates. Wizard learns exactly two additional spells
+(twelve total). Maximum spell level remains two and base mana becomes 17. Use
+existing content and artwork. Arcane Recovery stays four mana, Sneak Attack 2d6;
+Second Wind scales to level four and Preserve Life to 20. No cantrip damage scaling.
+Preserve preparations/domain grants, allowing optional new preparations equal to
+the increase in preparation limit, including the ASI casting-modifier increase.
+Bound choices by remaining legal spells. Existing level-two/three and Long Rest
+replacement policies remain unchanged.
+
+### UI and arena integration
+
+Shared flow: Overview → Class features → Ability scores → Cantrips → Learned
+spells → Preparation → Review, skipping inapplicable steps. Level-two/three flows
+remain unchanged. Six minus/plus score rows show original/proposed scores and
+modifiers, with two initially unassigned points. Both points are mandatory.
+Abilities precede spells. Reducing preparation capacity by revising abilities
+clears new preparation selections and requires reviewing that step again; baseline
+preparations remain. Empty preparation remains an explicit optional choice.
+Review displays selected improvements, effective scores/modifiers, shared-rule HP
+and mana previews, and cantrip/spell choices. Remove independent UI HP arithmetic.
+The character sheet shows a compact level-four improvement summary.
+
+Retain fixed-capacity drafts/controls and allocation-free ordinary processing.
+Confirmation validates all existing revisions/safety, then atomically commits
+level, ASI, spells, stats and resources. Cancel/stale/invalid requests mutate none.
+Arena supports three transitions and four level buttons, mandatory martial ASIs,
+shared preview/replay, and rematches from stored preparation.
+
+### Persistence
+
+Bump campaign schema/simulation 22/24 to 23/25. No migration; reject incompatible
+saves without overwriting them. Serialize and validate the ASI before deriving
+restored stats. Level-one library format stays unchanged. Arena writers emit
+scenario version three with ASI/cantrip choices; retain reading versions one/two
+under their original level-one-to-three constraints, with zero new fields. Update
+arena experiment validators without extending combat policies. Audit level bounds,
+checkpoint validation, errors, XP displays and development XP grants consistently.
+
+### Required verification and handoff
+
+Focused fixtures must cover all race/class combinations; +2/split allocations;
+score-20 boundaries; incomplete/forged/premature improvements; unchanged creation
+scores; level cap; derived modifier thresholds, armor caps, racial magic and
+retroactive Constitution with damaged/Aid/equipped characters. Verify fourth
+cantrips, twelve learned spells, racial duplicates, immutable baselines, optional
+preparation gains of one/two and choices invalidated by revised abilities.
+Exercise 2699/2700 thresholds, capped rewards, audio/reminders, stale/double/cancel
+requests, safety, deficits/charges, development no-ops, save round trips/malformed
+ASI/old-version rejection, travel/rest, arena rematches and legacy scenarios.
+Extend first/repeated progression allocation checks through previews and commits.
+
+Run affected rules/progression/creation/inventory/spell/arena/persistence/allocation
+checks using configured CMake/Ninja, two build workers maximum and one test process.
+Inspect hidden application-owned native/reduced/letterboxed captures of allocation,
+two-slot preparation, review and character sheet. No desktop input automation;
+interactive acceptance belongs to the user. Own disposable output through the
+agent-artifact workflow; keep at most six selected review images and clean the run.
+Record actual commands/results and limitations here. Verification commands and final outcomes are recorded below.
+
+
+### Implemented interfaces and verification — 2026-11-16
+
+`AbilityScoreImprovement` contains six byte-sized increases in STR/DEX/CON/INT/WIS/CHA
+order. `CharacterIdentity`/`CharacterIdentityView::levelFourAsi` retain the earned
+record; `effectiveAbilities` provides checked effective scores and an explicitly
+partial mode for UI drafts. Authoritative derivation requires the complete record.
+`AdvancementChoices` carries `abilityImprovement` and new `cantrips` alongside the
+existing learned/prepared masks. The new spell-choice overload of
+`advancementChoices` retains the old bool overload for existing callers.
+`AdvancementPreview` returns the resulting record and derived stats. Stats may be
+available while required spell selections are incomplete; only `valid` authorizes
+a commit. Party adds active Aid to the preview and commits the complete result.
+
+`AdvancementHud` shares candidate identity, ability controls and spell-selection
+storage between campaign and arena. Arena retains three four-member transitions.
+Scenario version 3 stores `ability_improvement` as six integer increases and
+`cantrips` as stable spell IDs; versions 1/2 retain their original bounds. Campaign
+schema/simulation are 23/25; previous 22/24 saves reject without migration or writes.
+The level-one library format is unchanged.
+
+The headless `advancement` action accepts optional `ability_improvement` and
+`cantrips` fields with the same shapes as arena choices. Existing level-two/three
+requests remain legal without them; level four requires complete choices through
+the same authoritative validation. Descriptors expose ability order/cap/points and
+new cantrip options, and explain that preparation depends on the complete choices.
+Observations expose `level_four_asi` separately from `base_abilities` and effective
+`abilities`. Wire regressions cover malformed arrays, omitted mandatory ASIs,
+non-mutating preview, commit, observation and replay rejection.
+
+All selected Debug suites pass across focused runs: **rules, party, creator,
+inventory, spells, level_spells, progression, progression_allocations, arena,
+arena_experiment_tools, campaign_save_smoke, campaign_save_cli, automation**
+(13 distinct suites). Progression/arena allocation guards report zero engine-owned
+C++ allocations, including the full level-four UI route. The dedicated campaign
+progression run also passes level-four serialized round trips, missing-ASI and
+previous-version rejection, floor travel, recall and revisit. Final application,
+headless and affected test targets build with the configured CLion CMake/Ninja;
+the final initializer and wire builds emit no warnings. `git diff --check` passes.
+
+The CLI save/replay fixture now follows the observed dungeon entrance instead of
+the obsolete small-hub route. The older earned-XP automation fixture uses one
+nearby target and one distant survivor, explicitly continuing after local victory;
+it preserves the live-arena advancement invariant without depending on an
+unrelated pursuing pack's search duration. The production AI was not changed.
+
+Reproduction, from the repository root (use a fresh owned agent-run directory for
+capture output):
+
+```sh
+# Build targets: blobber, blobber_headless, blobber_automation_tests, and each
+# blobber_<suite>_tests target named above (the Python tooling suite has no target).
+# Use the configured tool, at low priority, with at most two workers:
+nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/cmake --build cmake-build-debug --target blobber blobber_headless blobber_progression_tests blobber_progression_allocations_tests blobber_arena_tests blobber_campaign_save_tests blobber_automation_tests blobber_world_integration_gpu_tests -j 2
+
+# Selected CTest suites (one test process):
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 ionice -c 3 /home/bison/clion/bin/cmake/linux/x64/bin/ctest --test-dir cmake-build-debug --output-on-failure -j 1 -R '^(rules|party|creator|inventory|spells|level_spells|progression|progression_allocations|arena|arena_experiment_tools|campaign_save_smoke|campaign_save_cli|automation)$'
+
+# Narrow campaign persistence/travel integration, avoiding the full slow suite:
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 ionice -c 3 cmake-build-debug/blobber_campaign_save_tests --progression
+
+# Hidden production UI export; replace RUN_DIRECTORY with the owned run path:
+OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 LP_NUM_THREADS=2 nice -n 15 ionice -c 3 cmake-build-debug/blobber_world_integration_gpu_tests assets RUN_DIRECTORY/visual-review --level-four-review cmake-build-debug/assets/prepared
+```
+
+The hidden OpenGL capture passes and its six outputs were visually inspected:
+allocation at 1920×1080, 1280×720 and letterboxed 1024×768, plus two-slot preparation,
+final review and the committed character sheet. The wizard shows INT 16→18,
+17 mana, four class cantrips and twelve learned spells. See the
+[selected evidence](screenshots/level-four/README.md). No OS input was injected and
+no desktop windows were controlled. The user accepted the completed work on
+2026-11-16 (“looks good, approved.”). Recorded verification limitations remain.
+
+Limitations: Release/sanitizer configurations, benchmarks and the full slow save
+suite were not run; verification selected affected Debug behavior instead. The
+sandbox could not open the display, so the authorized hidden capture ran with
+normal display access. The staged Debug asset tree could not initialize UI artwork
+because it lacks `ui/items/padded.png`; successful capture used source artwork and
+separately supplied prepared atlases. This is not a staged-package verification.
+No unresolved level-four mechanical failures remain. The owned disposable run
+was previewed and cleaned (38 files, 3,962,884 bytes removed). Only the six selected
+review images remain; build caches and unrelated runs were preserved.

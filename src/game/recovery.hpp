@@ -21,7 +21,7 @@ enum class RestError : std::uint8_t {
 const char* restMessage(RestError) noexcept;
 struct PreparationRequest {
     bool enabled = false;
-    std::array<std::uint32_t, 4> prepared{};
+    std::array<rules::SpellMask, 4> prepared{};
     std::uint64_t inventoryRevision = 0, revision = 0;
 };
 struct RestRequest {

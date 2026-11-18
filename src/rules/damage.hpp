@@ -12,6 +12,14 @@ inline constexpr DamageMask allDamageTypes = (1u << damageTypeCount) - 1u;
 constexpr DamageMask damageBit(DamageType type) noexcept {
     return unsigned(type) < damageTypeCount ? DamageMask(1u << unsigned(type)) : DamageMask{0};
 }
+struct DamageComponent {
+    std::int64_t amount = 0;
+    DamageType type = DamageType::Bludgeoning;
+};
+struct DamagePacket {
+    std::array<DamageComponent, 2> components{};
+    unsigned count = 0;
+};
 struct DamageProfile {
     DamageMask immunities = 0, vulnerabilities = 0;
 };

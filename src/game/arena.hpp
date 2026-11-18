@@ -12,7 +12,7 @@ struct ArenaMonster {
 };
 struct ArenaPreparation {
     unsigned targetLevel = 1;
-    std::array<std::array<rules::AdvancementChoices, 4>, 2> advancements{};
+    std::array<std::array<rules::AdvancementChoices, 4>, 3> advancements{};
 };
 struct ArenaScenario {
     std::array<char, 65> name{};

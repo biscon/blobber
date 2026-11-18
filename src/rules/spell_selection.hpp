@@ -6,18 +6,18 @@ enum class SpellChoice { Cantrips, Racial, Learned, Prepared };
 struct SpellSelectionContext {
     CharacterIdentityView identity;
     PortraitId portrait;
-    std::uint32_t baseline = 0, available = 0, locked = 0;
+    SpellMask baseline = 0, available = 0, locked = 0;
     unsigned minimum = 0, maximum = 0;
-    std::uint32_t granted = 0;
+    SpellMask granted = 0;
     const char* lockedLabel = "Granted";
     bool editableFirst = false;
     bool showLocked = true;
 };
 struct SpellSelection {
     SpellSelectionContext context;
-    std::uint32_t selected = 0;
+    SpellMask selected = 0;
     SpellId inspected;
-    std::array<SpellId, 32> visible{};
+    std::array<SpellId, spellCapacity> visible{};
     std::size_t count = 0, offset = 0;
     unsigned detailOffset = 0;
     // Measured by presentation; input uses the last displayed scroll range.
@@ -31,11 +31,11 @@ struct SpellSelection {
     bool valid() const noexcept;
 };
 CharacterIdentityView draftIdentity(const CharacterDraft&) noexcept;
-std::uint32_t racialCantrips(const Catalog&) noexcept;
-std::uint32_t preparationOptions(const Catalog&, const CharacterIdentityView&, const SpellGrants&) noexcept;
+SpellMask racialCantrips(const Catalog&) noexcept;
+SpellMask preparationOptions(const Catalog&, const CharacterIdentityView&, const SpellGrants&) noexcept;
 bool validPreparation(const Catalog&, const CharacterIdentityView&, const SpellGrants&,
-                      std::uint32_t) noexcept;
+                      SpellMask) noexcept;
 SpellSelectionContext choiceContext(const Catalog&, const CharacterIdentityView&, PortraitId,
                                     const SpellGrants&, SpellChoice) noexcept;
-std::uint32_t recommendedChoices(const Catalog&, const SpellSelectionContext&, SpellChoice) noexcept;
+SpellMask recommendedChoices(const Catalog&, const SpellSelectionContext&, SpellChoice) noexcept;
 } // namespace blobber::rules

@@ -200,10 +200,10 @@ struct Archive {
         } else if constexpr (std::is_same_v<T, rules::SpellGrants>) {
             Json obj = reading ? j : Json::object();
             unsigned count = 0;
-            const auto mask = [&](const char* key, std::uint32_t& value) {
+            const auto mask = [&](const char* key, rules::SpellMask& value) {
                 ++count;
                 if (reading) {
-                    if (!obj.contains(key) || !obj[key].is_array() || obj[key].size() > 32)
+                    if (!obj.contains(key) || !obj[key].is_array() || obj[key].size() > rules::spellCapacity)
                         invalid("Invalid spell choices");
                     value = 0;
                     for (const auto& name : obj[key]) {
@@ -216,8 +216,8 @@ struct Archive {
                     }
                 } else {
                     obj[key] = Json::array();
-                    for (unsigned i = 0; i < 32; ++i)
-                        if (value & (1u << i)) {
+                    for (unsigned i = 0; i < rules::spellCapacity; ++i)
+                        if (value & rules::spellIndexBit(i)) {
                             const auto* spell = catalog.spell({std::uint16_t(i)});
                             if (!spell)
                                 invalid("Unknown spell choice");
@@ -293,7 +293,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!content.blueprints || !j.is_object() || j.size() != 12 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 22 || j.at("simulation") != 24 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 24 || j.at("simulation") != 26 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) ||
@@ -382,9 +382,9 @@ std::string encode(const rules::Catalog& catalog, const NpcDefinitions& definiti
         summary["party"].push_back(member.build.name);
     if (!content.blueprints)
         invalid("Missing blueprint catalog");
-    Json j = {{"schema", 22},
+    Json j = {{"schema", 24},
               {"blueprints", std::to_string(blueprints::fingerprint(*content.blueprints))},
-              {"simulation", 24},
+              {"simulation", 26},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

@@ -22,9 +22,14 @@ inline CommandReason targetVisibility(const PartyCommand& command, const rules::
         return false;
     };
     if ((command.action == PartyAction::Melee || command.action == PartyAction::BackMelee ||
-         command.action == PartyAction::Ranged) &&
+         command.action == PartyAction::Ranged || command.action == PartyAction::Smite) &&
         command.target && !visible(*command.target))
         return CommandReason::NotVisible;
+    if (command.action == PartyAction::Feature && command.feature == rules::Feature::DivineSmite) {
+        if (command.target && !visible(*command.target)) return CommandReason::NotVisible;
+        for (std::size_t i = 0; i < command.targetCount; ++i)
+            if (!visible(command.enemies[i])) return CommandReason::NotVisible;
+    }
     if (command.action == PartyAction::Spell ||
         (command.action == PartyAction::Feature && command.feature == rules::Feature::SpiritualWeapon)) {
         const auto* spell = catalog.spell(command.spell);

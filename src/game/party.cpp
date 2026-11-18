@@ -48,9 +48,13 @@ Party::Party(const rules::Catalog& catalog, const rules::PresetParty& startingPa
         c.hitPoints = c.stats.maxHitPoints;
         c.availableHitDice = c.build.level;
         const auto* cls = catalog.characterClass(c.build.characterClass);
-        c.mana = c.maxMana = rules::maximumMana(cls->casting, c.build.level) + c.stats.maxManaBonus;
+        c.mana = c.maxMana = rules::maximumMana(cls->casting, cls->spellProgression, c.build.level) + c.stats.maxManaBonus;
         c.secondWind = rules::hasFeature(cls->features, rules::ClassFeature::SecondWind);
         c.arcaneRecovery = rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery);
+        if (cls->progression == rules::ProgressionClass::Paladin) {
+            c.layOnHands = 5 * c.build.level;
+            c.channelDivinity = c.build.level >= 3;
+        }
     }
     // Only authored creation-enabled content grants launch supplies. Fixture/legacy parties
     // retain their authored inventories; this path never mutates a saved blueprint.
@@ -76,7 +80,7 @@ void Party::commitStats(rules::CharacterId id, const rules::CharacterStats& stat
     auto& c = state_.characters[id.index];
     c.stats = stats;
     const auto* cls = catalog_->characterClass(c.build.characterClass);
-    c.maxMana = rules::maximumMana(cls->casting, c.build.level) + stats.maxManaBonus;
+    c.maxMana = rules::maximumMana(cls->casting, cls->spellProgression, c.build.level) + stats.maxManaBonus;
     c.hitPoints = std::min(c.hitPoints, stats.maxHitPoints);
     c.mana = std::min(c.mana, c.maxMana);
 }
@@ -208,7 +212,7 @@ int Party::castingModifier(rules::CharacterId id) const noexcept {
         return 0;
     const auto casting = catalog_->characterClass(c->build.characterClass)->casting;
     return casting == rules::Casting::None ? 0
-                                           : c->stats.modifiers[casting == rules::Casting::Wisdom ? 4 : 3];
+                                           : c->stats.modifiers[rules::castingAbilityIndex(casting)];
 }
 bool Party::grantTemporary(rules::CharacterId id, int amount, std::uint64_t until) noexcept {
     if (!character(id) || amount < 0 || character(id)->life == rules::Life::Dead)
@@ -232,6 +236,19 @@ bool Party::spendMana(rules::CharacterId id, int amount) noexcept {
     state_.characters[id.index].mana -= amount;
     return true;
 }
+bool Party::useLayOnHands(rules::CharacterId id, rules::CharacterId target, int amount) noexcept {
+    const auto* source = character(id);
+    const auto* recipient = character(target);
+    if (!source || !recipient || progressionClass(id) != rules::ProgressionClass::Paladin ||
+        source->life != rules::Life::Conscious || recipient->life == rules::Life::Dead ||
+        amount <= 0 || amount > source->layOnHands || amount > recipient->stats.maxHitPoints - recipient->hitPoints)
+        return false;
+    const auto result = heal(target, amount);
+    if (!result || !result.changed)
+        return false;
+    state_.characters[id.index].layOnHands -= amount;
+    return true;
+}
 bool Party::useFeature(rules::CharacterId id, rules::Feature feature) noexcept {
     if (!character(id))
         return false;
@@ -240,7 +257,8 @@ bool Party::useFeature(rules::CharacterId id, rules::Feature feature) noexcept {
         c.actionSurge = false;
         return true;
     }
-    if (feature == rules::Feature::PreserveLife && c.channelDivinity) {
+    if (((feature == rules::Feature::PreserveLife && c.build.lifeDomain) ||
+         (feature == rules::Feature::SacredWeapon && progressionClass(id) == rules::ProgressionClass::Paladin && c.build.level >= 3)) && c.channelDivinity) {
         c.channelDivinity = false;
         return true;
     }

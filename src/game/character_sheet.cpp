@@ -70,7 +70,7 @@ void CommandController::refreshCharacterSheet() noexcept {
         row.detail = detail;
         std::snprintf(row.value.data(), row.value.size(), "%s", value);
     };
-    if (c->build.defense)
+    if (c->build.defense || (cls.progression == rules::ProgressionClass::Paladin && c->build.level >= 2))
         feature("Defense", "While wearing armor; included in AC.", "+1 AC");
     if (party_.hasFeature(i.character, rules::ClassFeature::SecondWind))
         feature("Second Wind", "Heal 1d10 + level; refreshes on rest.",
@@ -100,6 +100,25 @@ void CommandController::refreshCharacterSheet() noexcept {
                     "Optional");
         if (cls.progression == rules::ProgressionClass::Wizard)
             feature("Evocation / Sculpt", "Shatter protects companions, not caster.", "Automatic");
+    }
+    if (cls.progression == rules::ProgressionClass::Paladin) {
+        char pool[32]; std::snprintf(pool, sizeof(pool), "%d / %d healing points", c->layOnHands, 5 * c->build.level);
+        feature("Lay on Hands", "One point heals 1 HP; long rest refills the pool.", pool);
+        if (c->build.level >= 2) feature("Divine Smite", "Two mana on a melee hit; critical doubles dice.", "+2d8 radiant");
+        if (c->build.level >= 3) feature("Devotion / Sacred Weapon", "+CHA to weapon attacks for 60 seconds.", c->channelDivinity ? "1 / 1 use" : "0 / 1 use");
+    }
+    if (c->build.level == 4) {
+        char summary[64]{};
+        constexpr const char* scores[]{"STR", "DEX", "CON", "INT", "WIS", "CHA"};
+        for (unsigned n = 0; n < rules::abilityCount; ++n)
+            if (c->build.levelFourAsi.increases[n]) {
+                char gain[16];
+                std::snprintf(gain, sizeof(gain), "%s +%u", scores[n],
+                              unsigned(c->build.levelFourAsi.increases[n]));
+                const auto used = std::strlen(summary);
+                std::snprintf(summary + used, sizeof(summary) - used, "%s%s", used ? ", " : "", gain);
+            }
+        feature("Level 4 ASI", "Permanent increases; included in ability scores.", summary);
     }
     {
         for (unsigned n = 0; n < unsigned(EffectKind::Count); ++n)

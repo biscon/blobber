@@ -31,7 +31,7 @@ Result<int> abilityModifier(const Abilities& scores, Ability ability) noexcept {
     return abilityModifier(scores[index]);
 }
 Result<int> proficiencyBonus(int level) noexcept {
-    if (level < 1 || level > 3)
+    if (level < 1 || level > 4)
         return {{}, Error::UnsupportedLevel};
     return {2};
 }

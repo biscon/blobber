@@ -61,8 +61,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         const int version = integer(root.at("schema_version"), "schema_version");
         if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6 &&
             version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 &&
-            version != 13 && version != 14 && version != 15 && version != 16)
-            fail("schema_version", "only versions 1 through 16 are supported");
+            version != 13 && version != 14 && version != 15 && version != 16 && version != 17)
+            fail("schema_version", "only versions 1 through 17 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
         else if (version >= 8)
@@ -116,7 +116,9 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         for (std::size_t i = 0; i < monsterJson.size(); ++i) {
             const auto p = "monsters[" + std::to_string(i) + "]";
             const auto& m = monsterJson[i];
-            if (version >= 14)
+            if (version >= 17)
+                fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks", "traits", "loot", "metal_armor", "sleep_immune", "experience", "humanoid", "damage_immunities", "damage_vulnerabilities", "spellcasting", "speed_ft", "creature_type"});
+            else if (version >= 14)
                 fields(m, p,
                        {"id", "abilities", "armor_class", "hit_points", "attacks", "traits", "loot",
                         "metal_armor", "sleep_immune", "experience", "humanoid", "damage_immunities",
@@ -146,6 +148,13 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
             else
                 fields(m, p, {"id", "abilities", "armor_class", "hit_points", "attacks"});
             MonsterDefinition definition;
+            if (version >= 17) {
+                const auto name = string(m.at("creature_type"), p + ".creature_type");
+                bool found = false;
+                for (unsigned t = 0; t < std::size(creatureTypeNames); ++t)
+                    if (name == creatureTypeNames[t]) { definition.creatureType = CreatureType(t); found = true; }
+                if (!found) fail(p + ".creature_type", "unknown creature type");
+            }
             if (version >= 13) {
                 const auto profile = string(m.at("spellcasting"), p + ".spellcasting");
                 if (profile == "acolyte_support")

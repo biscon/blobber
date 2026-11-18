@@ -53,7 +53,7 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
         const auto* cls = catalog.characterClass(c.build.characterClass);
         const auto* race = catalog.race(c.build.race);
         if (!rules::validContentId(c.build.id) || !rules::validDisplayText(c.build.name, 64) || !cls ||
-            !race || c.build.level < 1 || c.build.level > 3 ||
+            !race || c.build.level < 1 || c.build.level > 4 ||
             rules::validateGrants(catalog, c.build.view(), c.build.spells,
                                   bool(catalog.creation(c.build.characterClass))) != rules::BuildError::None)
             throw std::invalid_argument("Invalid saved character build");
@@ -70,7 +70,7 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
             throw std::invalid_argument("Invalid saved character equipment or Aid");
         c.stats = stats.value;
         c.stats.maxHitPoints += c.aidBonus;
-        c.maxMana = rules::maximumMana(cls->casting, c.build.level) + c.stats.maxManaBonus;
+        c.maxMana = rules::maximumMana(cls->casting, cls->spellProgression, c.build.level) + c.stats.maxManaBonus;
         if (!rules::validHealth(c, c.stats.maxHitPoints) || c.mana < 0 || c.mana > c.maxMana ||
             c.temporaryUntilMs > UINT64_MAX / 2 || c.availableHitDice < 0 ||
             c.availableHitDice > c.build.level || c.experience > rules::experienceCap ||
@@ -79,7 +79,8 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
             (c.secondWind && !rules::hasFeature(cls->features, rules::ClassFeature::SecondWind)) ||
             (c.arcaneRecovery && !rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery)) ||
             (c.actionSurge && (c.build.level < 2 || cls->progression != rules::ProgressionClass::Fighter)) ||
-            (c.channelDivinity && (c.build.level < 2 || !c.build.lifeDomain)))
+            (c.channelDivinity && !((c.build.level >= 2 && c.build.lifeDomain) || (c.build.level >= 3 && cls->progression == rules::ProgressionClass::Paladin))) ||
+            c.layOnHands < 0 || c.layOnHands > (cls->progression == rules::ProgressionClass::Paladin ? 5 * c.build.level : 0))
             throw std::invalid_argument("Invalid saved character resources");
     }
 }

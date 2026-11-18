@@ -3,6 +3,7 @@
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
+#include "support/paladin_checks.hpp"
 #include <cstring>
 #include <iostream>
 using namespace blobber;
@@ -13,6 +14,12 @@ AdvancementRequest chosen(GameSession& s, CharacterId id) {
     const auto& c = *s.party().character(id);
     const auto context =
         advancementChoices(s.party().catalog(), c.build.view(), c.build.portrait, c.build.spells, {}, true);
+    if (c.build.level == 3) {
+        r.choices.abilityImprovement.increases[2] = 2;
+        const auto can = advancementChoices(s.party().catalog(), c.build.view(), c.build.portrait,
+                                            c.build.spells, r.choices, SpellChoice::Cantrips);
+        r.choices.cantrips = recommendedChoices(s.party().catalog(), can, SpellChoice::Cantrips);
+    }
     r.choices.learned = recommendedChoices(s.party().catalog(), context, SpellChoice::Learned);
     return r;
 }
@@ -91,7 +98,7 @@ void identities() {
         const auto invRevision = p.inventory().revision();
         check(!s.grantNextLevelExperience(), "development grant disabled by default");
         s.enableDevelopment(true);
-        for (int level = 2; level <= 3; ++level) {
+        for (int level = 2; level <= 4; ++level) {
             check(s.grantNextLevelExperience(), "development grant earns threshold");
             check(s.audioEvents().count == 1 &&
                       std::strcmp(s.audioEvents().entries[0].cue, "advancement") == 0,
@@ -122,7 +129,7 @@ void identities() {
                       "all race/class identities survive advancement");
                 check(c.hitPoints == c.stats.maxHitPoints - 2 && c.availableHitDice == level,
                       "HP deficit preserved and new hit die earned");
-                check(c.build.spells.cantrips == originals[i].cantrips &&
+                check((c.build.spells.cantrips & originals[i].cantrips) == originals[i].cantrips &&
                           c.build.spells.racial == originals[i].racial &&
                           c.build.spells.prepared == originals[i].prepared,
                       "existing choices and sources remain");
@@ -139,7 +146,7 @@ void identities() {
         }
         check(!s.grantNextLevelExperience(), "supported level cap");
         check(s.audioEvents().count == 0, "Level-cap grants stay silent");
-        check(!s.advance(chosen(s, {0})), "cannot level beyond three");
+        check(!s.advance(chosen(s, {0})), "cannot level beyond four");
         check(cat.preset()->characters[0].level == 1 && start.characters[0].level == 1,
               "launch and catalog never mutate");
     }
@@ -158,7 +165,7 @@ void rewards() {
               p.character({1})->experienceFraction == 6,
           "dead excluded, unconscious included, exact thirds");
     p.awardExperience(UINT32_MAX);
-    check(p.character({2})->experience == 900 && p.character({2})->experienceFraction == 0,
+    check(p.character({2})->experience == 2700 && p.character({2})->experienceFraction == 0,
           "large XP safely saturates");
     const auto map = hybridRoom();
     const auto npcs = spellPlacements(map, 1);
@@ -269,6 +276,189 @@ void advancementUi() {
     check(s.previewAdvancement(stale).error == AdvancementError::Stale,
           "stale draft is rejected without changes");
 }
+void levelFourChoices() {
+    const auto cat = creationCatalog(true);
+    const auto map = hybridRoom();
+    const auto empty = spellPlacements(map, 0);
+    GameSession game(map, cat, empty, 5, spellSpawn, false);
+    auto& party = game.party();
+    for (unsigned level = 2; level <= 3; ++level) {
+        party.grantNextLevelExperience();
+        for (std::uint16_t i = 0; i < 4; ++i)
+            check(bool(game.advance(chosen(game, {i}))), "prepare level-three party");
+    }
+    for (std::uint16_t i : {std::uint16_t(0), std::uint16_t(1), std::uint16_t(2)}) {
+        const auto& before = *party.character({i});
+        auto r = chosen(game, {i});
+        r.choices.abilityImprovement = {};
+        const unsigned ability = i == 0 ? 0 : i == 1 ? 4 : 1;
+        r.choices.abilityImprovement.increases[ability] = 2;
+        const auto stats = previewAdvancement(cat, before.build.view(), before.build.spells,
+                                              party.inventory().loadout({i}), r.choices);
+        check(stats.valid && stats.stats.saves[ability] == before.stats.saves[ability] + 1,
+              "ASI updates affected saving throw");
+        if (i == 0)
+            check(stats.stats.carryingCapacity == before.stats.carryingCapacity + 3000,
+                  "strength ASI updates carrying capacity");
+        if (i == 1) {
+            const auto prep = advancementChoices(cat, before.build.view(), before.build.portrait,
+                                                 before.build.spells, r.choices, false);
+            check(prep.maximum == 2, "cleric wisdom ASI grants two preparation slots");
+        }
+        if (i == 2)
+            check(stats.stats.initiative == before.stats.initiative + 1 &&
+                      stats.stats.armorClass == before.stats.armorClass + 1,
+                  "dexterity ASI updates initiative and light armor AC");
+    }
+    const auto original = *party.character({3});
+    auto request = chosen(game, {3});
+    request.choices.abilityImprovement = {};
+    check(!previewAdvancement(cat, original.build.view(), original.build.spells,
+                              party.inventory().loadout({3}), request.choices)
+               .valid,
+          "missing mandatory ASI rejects");
+    request.choices.abilityImprovement.increases[3] = 2;
+    auto next = original.build.view();
+    ++next.level;
+    next.levelFourAsi = request.choices.abilityImprovement;
+    const auto expectedSlots = preparationLimit(cat, next) - preparationLimit(cat, original.build.view());
+    check(expectedSlots == 2, "wizard INT increase earns two preparation slots");
+    auto prep = advancementChoices(cat, original.build.view(), original.build.portrait, original.build.spells,
+                                   request.choices, false);
+    check(prep.maximum == 2 && prep.minimum == 0, "two new preparations remain optional");
+    request.choices.prepared = recommendedChoices(cat, prep, SpellChoice::Prepared);
+    auto preview = previewAdvancement(cat, original.build.view(), original.build.spells,
+                                      party.inventory().loadout({3}), request.choices);
+    check(preview.valid && spellCount(preview.spells.cantrips) == 4 &&
+              spellCount(preview.spells.learned) == 12 &&
+              preview.stats.modifiers[3] == original.stats.modifiers[3] + 1,
+          "complete wizard level-four choices use improved casting score");
+    auto bad = request.choices;
+    bad.abilityImprovement.increases[0] = 1;
+    check(!previewAdvancement(cat, original.build.view(), original.build.spells,
+                              party.inventory().loadout({3}), bad)
+               .valid,
+          "over-budget allocation rejects");
+    bad = request.choices;
+    bad.cantrips = original.build.spells.racial;
+    check(!previewAdvancement(cat, original.build.view(), original.build.spells,
+                              party.inventory().loadout({3}), bad)
+               .valid,
+          "racial cantrip cannot be learned again as class cantrip");
+    auto boundary = original.build.view();
+    boundary.level = 4;
+    boundary.baseAbilities[0] = 19 - cat.race(boundary.race)->abilityIncreases[0];
+    boundary.levelFourAsi.increases[0] = 1;
+    boundary.levelFourAsi.increases[1] = 1;
+    check(effectiveAbilities(cat, boundary).value[0] == 20, "split allocation can reach score twenty");
+    boundary.levelFourAsi.increases[0] = 2;
+    boundary.levelFourAsi.increases[1] = 0;
+    check(!effectiveAbilities(cat, boundary), "allocation above twenty rejects");
+    boundary.level = 3;
+    check(!effectiveAbilities(cat, boundary), "premature saved allocation rejects");
+    party.awardExperience(4 * (2699 - original.experience));
+    check(party.character({3})->experience == 2699 &&
+              game.advancementEligibility(game.advancementRequest({3})) == AdvancementError::Experience,
+          "2699 XP is below level-four threshold");
+    party.awardExperience(4);
+    check(party.character({3})->experience == 2700, "exact level-four XP threshold");
+    request = chosen(game, {3});
+    request.choices.abilityImprovement = {};
+    request.choices.abilityImprovement.increases[3] = 2;
+    prep = advancementChoices(cat, original.build.view(), original.build.portrait, original.build.spells,
+                              request.choices, false);
+    request.choices.prepared = recommendedChoices(cat, prep, SpellChoice::Prepared);
+    CommandController ui(game);
+    ui.openAdvancement({3});
+    auto click = [&](FlowAction action, int value = -1) {
+        FlowControls controls;
+        layoutAdvancement(controls, ui.snapshot().advancement);
+        check(!controls.overflow, "level-four controls fit capacity");
+        for (unsigned n = 0; n < controls.count; ++n) {
+            const auto& c = controls.entries[n];
+            if (c.action != action || (value >= 0 && c.value != value))
+                continue;
+            check(c.enabled, "level-four requested control enabled");
+            UiInput in;
+            in.pressed[std::size_t(UiKey::Click)] = true;
+            in.pointer = ArtPoint{float(c.rect.x + 2), float(c.rect.y + 2)};
+            ui.routeAdvancement(in);
+            return;
+        }
+        check(false, "level-four requested control exists");
+    };
+    click(FlowAction::Next);
+    click(FlowAction::Next);
+    check(ui.snapshot().advancement.step == AdvancementStep::Abilities, "abilities precede caster choices");
+    click(FlowAction::Plus, 3);
+    click(FlowAction::Plus, 3);
+    click(FlowAction::Next);
+    check(ui.snapshot().advancement.step == AdvancementStep::Cantrips, "additional cantrip gets own step");
+    click(FlowAction::Recommend);
+    click(FlowAction::Next);
+    click(FlowAction::Recommend);
+    click(FlowAction::Next);
+    check(ui.snapshot().advancement.selection.context.maximum == 2, "routed preparation sees improved INT");
+    click(FlowAction::Recommend);
+    check(spellCount(ui.snapshot().advancement.selection.selected) == 2,
+          "two preparations selected through UI");
+    click(FlowAction::Back);
+    click(FlowAction::Back);
+    click(FlowAction::Back);
+    click(FlowAction::Minus, 3);
+    check(!ui.snapshot().advancement.request.choices.prepared,
+          "reduced casting capacity clears new preparations");
+    click(FlowAction::Plus, 2); // Split INT/CON instead of +2 INT.
+    click(FlowAction::Cancel);
+    check(party.character({3})->build.level == 3 && !party.character({3})->build.levelFourAsi.points(),
+          "cancelled ASI never mutates live identity");
+    party.damage({3}, 2);
+    party.spendMana({3}, 2);
+    check(party.useFeature({3}, Feature::ArcaneRecovery), "spend recovery charge before advancing");
+    party.spendMana({3}, 2);
+    const auto manaDeficit = party.character({3})->maxMana - party.character({3})->mana;
+    EffectRequest aid;
+    aid.world = game.actors().snapshot().world;
+    aid.caster = CharacterId{1};
+    aid.kind = EffectKind::Aid;
+    aid.count = 1;
+    aid.targets[0] = CharacterId{3};
+    check(bool(game.applyEffect(aid)), "active Aid fixture");
+    const auto oldHp = party.character({3})->hitPoints;
+    const auto oldMax = party.character({3})->stats.maxHitPoints;
+    request = chosen(game, {3}); // CON +2, including retroactive HP.
+    const auto complete = game.previewAdvancement(request);
+    check(bool(complete) &&
+              complete.preview.stats.maxHitPoints == oldMax + 4 + original.stats.modifiers[2] + 4,
+          "CON improvement adds retroactive HP while retaining Aid");
+    check(bool(game.advance(request)), "complete fourth-level transaction commits");
+    const auto& result = *party.character({3});
+    check(result.hitPoints == oldHp + result.stats.maxHitPoints - oldMax && result.maxMana == 17 &&
+              result.maxMana - result.mana == manaDeficit && !result.arcaneRecovery,
+          "advance preserves HP/mana deficits, Aid and spent charges");
+    check(result.build.baseAbilities == original.build.baseAbilities &&
+              result.build.levelFourAsi.increases[2] == 2,
+          "earned ASI is separate from creation scores");
+    const auto saved = party.checkpoint();
+    Party restored(cat, saved);
+    check(restored.character({3})->stats.abilities == result.stats.abilities,
+          "party restore derives earned ASI");
+    auto corrupt = saved;
+    corrupt.state.characters[3].build.levelFourAsi.increases[2] = 255;
+    bool rejected = false;
+    try {
+        Party invalid(cat, corrupt);
+    } catch (const std::invalid_argument&) {
+        rejected = true;
+    }
+    check(rejected, "malformed saved ASI rejected before publication");
+    AdvancementHud draft;
+    draft.catalog = &cat;
+    draft.identity = original.build.view();
+    draft.request.choices = request.choices;
+    draft.step = AdvancementStep::Abilities;
+    check(!draft.canIncrease(0), "fully allocated ASI disables additional points");
+}
 void earnedLevelReminders() {
     const auto catalog = creationCatalog(true);
     const auto map = hybridRoom();
@@ -303,6 +493,8 @@ void earnedLevelReminders() {
     check(bool(game.advance(chosen(game, {0}))), "Advance once after movement settles");
     game.party().grantNextLevelExperience();
     check(bool(game.advance(chosen(game, {0}))), "Advance to supported level cap");
+    game.party().grantNextLevelExperience();
+    check(bool(game.advance(chosen(game, {0}))), "Advance to level four cap");
     ui.refresh({}, false, false, true);
     check(!ui.snapshot().cards[0].levelEarned && !ui.snapshot().cards[0].levelEligible,
           "Level cap clears the reminder even with maximum XP");
@@ -397,7 +589,9 @@ void earnedLevelAudio() {
 } // namespace
 int main() {
     try {
+        blobber::test::paladinChecks();
         identities();
+        levelFourChoices();
         equippedAdvancement();
         rewards();
         advancementUi();
