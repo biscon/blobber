@@ -1,6 +1,7 @@
 #pragma once
 #include "game/actors.hpp"
 #include "game/party.hpp"
+#include "game/roll_decision.hpp"
 #include "game/spell_visuals.hpp"
 #include "rules/spells.hpp"
 #include <optional>
@@ -205,6 +206,12 @@ class EffectController {
     EffectId concentration(rules::CharacterId id) const noexcept { return concentrationSource(id); }
     EffectId concentrationSource(EffectSource) const noexcept;
     EffectError validate(const EffectRequest&) const noexcept;
+    int inspiration(RollPurpose, rules::CharacterId, ActorId, std::int64_t total, std::int64_t dc) noexcept;
+    rules::AttackResult partyHit(rules::CharacterId, ActorId, rules::D20Roll, int bonus,
+                                 bool automatic = false) noexcept;
+    int cuttingWords(RollDecision, rules::CharacterId& bard) noexcept;
+    void mock(ActorId id) noexcept { mockeryUntil_[id.slot] = gameplayMs_ + 6000; }
+    void endMockery(ActorId id) noexcept { mockeryUntil_[id.slot] = 0; }
     bool guiding(ActorId) const noexcept;
     void guide(ActorId, std::uint64_t now, CombatEvents&) noexcept;
     void consumeGuiding(ActorId, std::uint64_t now, CombatEvents&) noexcept;
@@ -286,13 +293,14 @@ class EffectController {
     std::array<bool, NpcWorld::maxInstances> incapacitatedActors() const noexcept;
     int armorClass(EffectTarget) const noexcept;
     int rollModifier(EffectTarget) noexcept;
-    rules::SaveResult save(EffectTarget, rules::Ability, std::int64_t difficulty) noexcept;
+    rules::SaveResult save(EffectTarget, rules::Ability, std::int64_t difficulty,
+                           RollPurpose purpose = RollPurpose::Save) noexcept;
     std::uint64_t gameplayMs() const noexcept { return gameplayMs_; }
 
     // Preparation-only owned values; no borrowed pointers or navigation workspace.
     struct Saved {
         std::array<EffectInstance, capacity> instances{};
-        std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil{};
+        std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil{}, mockeryUntil{};
         std::uint64_t nextSerial = 1, gameplayMs = 0;
         std::array<std::array<ConditionState, 4>, NpcWorld::maxInstances + rules::partySize> conditions{};
         std::array<std::uint64_t, 4> casterTurns{};
@@ -308,7 +316,8 @@ class EffectController {
     ActorWorld& actors_;
     rules::DiceRng& rng_;
     std::array<EffectInstance, capacity> instances_{};
-    std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil_{};
+    std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil_{}, mockeryUntil_{};
+    RollResolver* rolls_ = nullptr;
     std::uint64_t nextSerial_ = 1, gameplayMs_ = 0;
     static constexpr std::size_t creatureCount = NpcWorld::maxInstances + rules::partySize;
     std::array<std::array<ConditionState, 4>, creatureCount> conditions_{};

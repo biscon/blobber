@@ -314,6 +314,7 @@ template <class A> void visit(A& a, Restraint& v, const Restraint& base) {
 template <class A> void visit(A& a, EffectController::Saved& v, const EffectController::Saved& base) {
     a("instances", v.instances, base.instances);
     a("guidingUntil", v.guidingUntil, base.guidingUntil);
+    a("mockeryUntil", v.mockeryUntil, base.mockeryUntil);
     a("nextSerial", v.nextSerial, base.nextSerial);
     a("gameplayMs", v.gameplayMs, base.gameplayMs);
     a("conditions", v.conditions, base.conditions);
@@ -354,6 +355,7 @@ template <class A> void visit(A& a, CombatController::Saved& v, const CombatCont
     a("state", v.state, base.state);
     a("sneakReady", v.sneakReady, base.sneakReady);
     a("cunningReady", v.cunningReady, base.cunningReady);
+    a("reactionReady", v.reactionReady, base.reactionReady);
     a("extraUntil", v.extraUntil, base.extraUntil);
     a("partyReady", v.partyReady, base.partyReady);
     a("saveDue", v.saveDue, base.saveDue);
@@ -428,6 +430,9 @@ template <class A> void visit(A& a, PartyCharacter& v, const PartyCharacter& bas
     a("actionSurge", v.actionSurge, base.actionSurge);
     a("channelDivinity", v.channelDivinity, base.channelDivinity);
     a("layOnHands", v.layOnHands, base.layOnHands);
+    a("inspirationSpent", v.inspirationSpent, base.inspirationSpent);
+    a("inspirationSource", v.inspirationSource.index, base.inspirationSource.index);
+    a("inspirationUntil", v.inspirationUntil, base.inspirationUntil);
     a("temporaryUntilMs", v.temporaryUntilMs, base.temporaryUntilMs);
 }
 template <class A> void visit(A& a, PartySnapshot& v, const PartySnapshot& base) {

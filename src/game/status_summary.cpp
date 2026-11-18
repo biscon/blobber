@@ -97,6 +97,16 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
                                               : "";
         result.entries[result.count++] = status;
     }
+    if (target.npc && mockeryUntil_[target.enemy.slot] &&
+        (turns_ || mockeryUntil_[target.enemy.slot] > gameplayMs_))
+        result.entries[result.count++] = {EffectKind::Count,
+                                          rules::SpellKind::ViciousMockery,
+                                          "Vicious Mockery",
+                                          "Disadvantage on the next attack.",
+                                          turns_ ? combatRoundMs
+                                                 : remaining(mockeryUntil_[target.enemy.slot]),
+                                          turns_ ? StatusClock::Turns : StatusClock::Seconds,
+                                          true};
     if (target.npc && guiding(target.enemy))
         result.entries[result.count++] = {EffectKind::Count,
                                           rules::SpellKind::GuidingBolt,

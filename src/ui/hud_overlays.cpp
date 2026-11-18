@@ -3,6 +3,7 @@
 #include "ui/hud.hpp"
 #include "ui/hud_painter.hpp"
 #include "ui/inventory_layout.hpp"
+#include "ui/roll_layout.hpp"
 #include "ui/save_screen.hpp"
 #include "ui/spell_layout.hpp"
 #include "ui/status_occlusion.hpp"
@@ -15,7 +16,7 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
     const auto& hover = h.hover;
     if (!hover.tooltipVisible || hover.kind == HoverKind::None ||
         (h.modal() &&
-         !(h.magic.open && (hover.kind == HoverKind::Status || hover.kind == HoverKind::Concentration))) ||
+         !(h.magic.open && statusHoverKind(hover.kind))) ||
         h.suspended)
         return;
     if (hover.kind == HoverKind::Enemy && hover.enemy &&
@@ -55,7 +56,7 @@ void HudPainter::tooltip(const HudSnapshot& h) const {
             continue;
         clipped(hover.lines[i].data(), r.x + 6, lineY, width - 12,
                 i == 0 ? gold
-                : i == 3 && hover.kind != HoverKind::Status && hover.kind != HoverKind::Concentration
+                : i == 3 && !statusHoverKind(hover.kind)
                     ? (hover.reason == CommandReason::Ready ? bright : muted)
                     : hudInk::text,
                 i == 0 ? UiTextStyle::Heading : UiTextStyle::Label);
@@ -150,6 +151,42 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
     if (!h)
         return;
     const HudPainter p(fonts, art, metrics);
+    if (h->roll.serial) {
+        const auto& d = h->roll;
+        const bool cutting = d.purpose == RollPurpose::CuttingWords;
+        p.fill({0, 0, 640, 360}, {0, 0, 0, 150});
+        p.overlayBox(rollLayout::panel);
+        p.picture(cutting ? UiArt::cuttingWordsIcon : UiArt::inspirationIcon, {143, 122, 33, 33});
+        p.centered(cutting ? "Use Cutting Words?" : "Spend Bardic Inspiration?", {181, 121, 312, 24}, gold,
+                   UiTextStyle::WelcomeTitle);
+        p.centered(h->rollDescription.data(), {143, 150, 354, 13}, hudInk::text, UiTextStyle::Heading);
+        char line[96];
+        std::snprintf(line, sizeof(line), "Roll %d or higher on the d6 to %s.", d.needed(),
+                      cutting                            ? "make the attack miss"
+                      : d.purpose == RollPurpose::Attack ? "hit"
+                                                         : "succeed");
+        p.centered(line, {143, 165, 354, 13}, gold, UiTextStyle::Label);
+        if (cutting)
+            for (unsigned i = 0; i < h->cards.size(); ++i) {
+                const auto& card = h->cards[i];
+                if (!(d.eligible & (1u << card.id.index)))
+                    continue;
+                if (!(d.eligible & (d.eligible - 1))) {
+                    std::snprintf(line, sizeof(line), "%s spends one use and a reaction.", card.name);
+                    p.centered(line, {143, 181, 354, 13}, muted);
+                    break;
+                }
+                const auto r = rollLayout::bard(i);
+                p.box(r, card.id.index == h->respondingBard.index ? gold : edge);
+                p.centered(card.name, r);
+            }
+        p.box(rollLayout::spend, gold);
+        p.centered("Roll d6", rollLayout::spend, gold);
+        p.box(rollLayout::keep, edge);
+        p.centered("Keep die", rollLayout::keep);
+        p.buttonFeedback(h->buttons.feedback);
+        return;
+    }
     if (h->welcomeOpen) {
         p.fill({0, 16, 640, 344}, {0, 0, 0, 150});
         welcome(p);

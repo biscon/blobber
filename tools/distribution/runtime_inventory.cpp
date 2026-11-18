@@ -182,6 +182,8 @@ Inventory resolve(const Settings& settings, bool includePrepared) {
             asset(std::string("ui/") + name + ".png", "paladin icon");
         for (const auto* name : rangerArtNames)
             asset(std::string("ui/") + name + ".png", "ranger icon");
+        for (const auto* name : bardArtNames)
+            asset(std::string("ui/") + name + ".png", "bard icon");
         for (const auto* id : equipmentIconIds)
             asset(std::string("ui/items/") + id + ".png", "equipment icon");
     }

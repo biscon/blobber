@@ -17,6 +17,8 @@ const char* subclassName(ProgressionClass cls, int level, bool life) noexcept {
         return "Oath of Devotion";
     if (cls == ProgressionClass::Ranger && level >= 3)
         return "Hunter";
+    if (cls == ProgressionClass::Bard && level >= 3)
+        return "College of Lore";
     return "None yet";
 }
 SpellSelectionContext advancementChoices(const Catalog& cat, const CharacterIdentityView& source,
@@ -51,9 +53,10 @@ SpellSelectionContext advancementChoices(const Catalog& cat, const CharacterIden
         out.locked = baseline.learned;
         out.lockedLabel = "Known";
         const auto* cls = cat.characterClass(source.characterClass);
-        if (cls && cls->progression == ProgressionClass::Wizard) {
+        if (cls &&
+            (cls->progression == ProgressionClass::Wizard || cls->progression == ProgressionClass::Bard)) {
             out.available = eligibleLeveledSpells(cat, next) & ~out.locked;
-            out.minimum = out.maximum = 2;
+            out.minimum = out.maximum = cls->progression == ProgressionClass::Bard ? 1 : 2;
         } else if (cls && cls->progression == ProgressionClass::Ranger && next.level == 2) {
             out.granted = rangerMarkGrant(cat, next);
             out.locked |= out.granted;

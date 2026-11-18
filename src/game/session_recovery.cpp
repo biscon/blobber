@@ -156,6 +156,10 @@ RestPreview GameSession::previewRest(const RestRequest& r) const noexcept {
     RestPreview p;
     p.elapsedMs = r.kind == RestKind::Short ? gameDuration::shortRest : gameDuration::longRest;
     p.sanctuary = atSanctuary();
+    if (r.kind == RestKind::Short)
+        for (std::uint16_t i = 0; i < rules::partySize; ++i)
+            p.song |= party_.progressionClass({i}) == rules::ProgressionClass::Bard &&
+                      party_.character({i})->build.level >= 2 && effects_.canAct(rules::CharacterId{i});
     const auto supplies = party_.campSupplies();
     p.kits = supplies.kits;
     p.supply = supplies.supply;
@@ -189,15 +193,28 @@ RestResult GameSession::rest(const RestRequest& r) noexcept {
     const auto p = previewRest(r);
     if (!p)
         return {p.error};
-    const auto out = party_.recover(r, p.supply, rng_);
+    const auto out = party_.recover(r, p.supply, rng_, p.song);
     if (!out)
         return out;
     audio_.emit({"recovery", {}, 0, 0, false, false, true});
     ++restToken_;
     movement_.clearPending();
-    combat_.restTime(p.elapsedMs, timeMs_, events_);
+    if (canInterrupt()) {
+        restElapsed_ = p.elapsedMs;
+        rolls_->run(
+            [](void* owner) noexcept {
+                auto& g = *static_cast<GameSession*>(owner);
+                g.finishRest(g.restElapsed_);
+            },
+            this);
+    } else {
+        finishRest(p.elapsedMs);
+    }
+    return out;
+}
+void GameSession::finishRest(std::uint64_t elapsed) noexcept {
+    combat_.restTime(elapsed, timeMs_, events_);
     loot_.reconcile(actors_);
     reconcileRewards();
-    return out;
 }
 } // namespace blobber

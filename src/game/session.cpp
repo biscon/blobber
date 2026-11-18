@@ -48,6 +48,12 @@ GameSession::GameSession(const Map& map, Party& party, const NpcWorld& placement
     support_.bind(effects_);
     events_.supportJournal = &support_;
     doors_.world = floor_.world();
+    for (auto id : party_.snapshot().formation)
+        if (party_.progressionClass(id) == rules::ProgressionClass::Bard) {
+            rolls_ = std::make_unique<RollResolver>();
+            effects_.rolls_ = rolls_.get();
+            break;
+        }
     prepareObjective();
     ai_.bindEffects(&effects_);
     movement_.bindEffects(&effects_);
@@ -62,7 +68,50 @@ void GameSession::detectContact(bool settlingEndpoint) noexcept {
         combat_.contact(movement_.state().player, timeMs_))
         clearPending();
 }
+const RollDecision& GameSession::pendingRollDecision() const noexcept {
+    static const RollDecision none{};
+    return rolls_ ? rolls_->pending() : none;
+}
+const RollDecision& GameSession::lastRollDecision() const noexcept {
+    static const RollDecision none{};
+    return rolls_ ? rolls_->last() : none;
+}
+bool GameSession::canInterrupt() const noexcept {
+    if (!rolls_)
+        return false;
+    for (const auto id : party_.snapshot().formation) {
+        const auto& c = *party_.character(id);
+        if (c.inspirationUntil || (c.build.level >= 3 && party_.inspirationUses(id)))
+            return true;
+    }
+    return false;
+}
+bool GameSession::resolveRollDecision(std::uint64_t world, std::uint64_t serial, RollAnswer answer) noexcept {
+    const auto& d = pendingRollDecision();
+    if (!d.accepts(world, serial, answer))
+        return false;
+    events_.clear();
+    if (mutation_ != UINT64_MAX)
+        ++mutation_;
+    return rolls_->answer(world, serial, answer);
+}
 const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
+    if (pendingRollDecision().serial) {
+        events_.clear();
+        return events_;
+    }
+    if (paused || !canInterrupt())
+        return updateSimulation(seconds, paused);
+    updateSeconds_ = seconds;
+    rolls_->run(
+        [](void* owner) noexcept {
+            auto& g = *static_cast<GameSession*>(owner);
+            g.updateSimulation(g.updateSeconds_, false);
+        },
+        this);
+    return events_;
+}
+const CombatEvents& GameSession::updateSimulation(double seconds, bool paused) noexcept {
     paused = paused || bool(conversation_);
     if (campaign_ && campaign_->status() != CampaignStatus::Active) {
         events_.clear();
@@ -164,6 +213,20 @@ const CombatEvents& GameSession::update(double seconds, bool paused) noexcept {
     return events_;
 }
 void GameSession::move(Action action, bool fresh) noexcept {
+    if (pendingRollDecision().serial)
+        return;
+    if (!canInterrupt())
+        return moveSimulation(action, fresh);
+    submittedMove_ = action;
+    freshMove_ = fresh;
+    rolls_->run(
+        [](void* owner) noexcept {
+            auto& g = *static_cast<GameSession*>(owner);
+            g.moveSimulation(g.submittedMove_, g.freshMove_);
+        },
+        this);
+}
+void GameSession::moveSimulation(Action action, bool fresh) noexcept {
     if (conversation_)
         return;
     if (!runActive())
@@ -235,6 +298,24 @@ InventoryResult GameSession::inventoryChange(const InventoryRequest& request) no
     return result;
 }
 CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
+    if (pendingRollDecision().serial) {
+        CombatOutcome blocked;
+        blocked.reason = CommandReason::Unavailable;
+        return blocked;
+    }
+    if (!canInterrupt())
+        return submitSimulation(command);
+    submittedCommand_ = command;
+    submittedResult_ = {};
+    rolls_->run(
+        [](void* owner) noexcept {
+            auto& g = *static_cast<GameSession*>(owner);
+            g.submittedResult_ = g.submitSimulation(g.submittedCommand_);
+        },
+        this);
+    return submittedResult_;
+}
+CombatOutcome GameSession::submitSimulation(const PartyCommand& command) noexcept {
     if (conversation_ || !runActive()) {
         CombatOutcome out;
         out.reason = CommandReason::Unavailable;
@@ -257,7 +338,22 @@ CombatOutcome GameSession::submit(const PartyCommand& command) noexcept {
     return out;
 }
 EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {
-    if (!runActive())
+    if (pendingRollDecision().serial)
+        return {EffectError::InvalidWorld};
+    if (!canInterrupt())
+        return applyEffectSimulation(request);
+    submittedEffect_ = request;
+    effectResult_ = {};
+    rolls_->run(
+        [](void* owner) noexcept {
+            auto& g = *static_cast<GameSession*>(owner);
+            g.effectResult_ = g.applyEffectSimulation(g.submittedEffect_);
+        },
+        this);
+    return effectResult_;
+}
+EffectResult GameSession::applyEffectSimulation(const EffectRequest& request) noexcept {
+    if (pendingRollDecision().serial || !runActive())
         return {EffectError::InvalidWorld};
     if (mutation_ != UINT64_MAX)
         ++mutation_;
@@ -271,7 +367,7 @@ EffectResult GameSession::applyEffect(const EffectRequest& request) noexcept {
     return result;
 }
 EffectResult GameSession::removeEffect(EffectId id) noexcept {
-    if (!runActive())
+    if (pendingRollDecision().serial || !runActive())
         return {EffectError::InvalidWorld};
     if (mutation_ != UINT64_MAX)
         ++mutation_;

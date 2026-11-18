@@ -113,19 +113,32 @@ bool Session::terminal() const noexcept {
             arenaCleared(game().actors().snapshot()));
 }
 bool Session::decision() const noexcept {
-    return result() || (!game().opening() && game().combat().snapshot().awaitingAction) ||
+    return game().pendingRollDecision().serial || result() ||
+           (!game().opening() && game().combat().snapshot().awaitingAction) ||
            (realTime(game().combat().snapshot().phase) && !game().actionBusy());
 }
 const CombatEvents& Session::tick() noexcept {
+    if (game().pendingRollDecision().serial)
+        return game().update(0, true);
     ++ticks_;
     return campaign_ ? campaign_->update(double(tickMs) / 1000, false)
                      : game().update(double(tickMs) / 1000, false);
 }
 ActionResult Session::action(const ActionRequest& r, bool preview) {
-    if (terminal())
+    const auto& roll = game().pendingRollDecision();
+    if (roll.serial && r.operation != Operation::ResolveRoll)
+        return {false, "Resolve the pending roll first"};
+    if (!roll.serial && terminal())
         return {false, "Terminal"};
     const auto okay = [](bool b, const char* reason) -> ActionResult { return {b, b ? "Ready" : reason}; };
     switch (r.operation) {
+    case Operation::ResolveRoll: {
+        const auto& a = r.rollAnswer;
+        if (!roll.accepts(r.rollWorld, r.rollSerial, a))
+            return {false, "Stale or ineligible roll decision"};
+        return {preview || game().resolveRollDecision(r.rollWorld, r.rollSerial, a), "Resolved"};
+    }
+
     case Operation::Combat: {
         if (game().actionBusy())
             return {false, game().opening() ? "Wait until the door opens." : "Moving"};

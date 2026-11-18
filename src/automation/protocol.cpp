@@ -320,7 +320,7 @@ Json Protocol::perform(const Json& r, Output& output) {
         const auto oldStatus = campaign ? campaign->status() : CampaignStatus::Active;
         unsigned done = 0;
         while (done < ticks && session_->ticks() < maxRunTicks && !session_->result() &&
-               !(decision && session_->decision())) {
+               !session_->game().pendingRollDecision().serial && !(decision && session_->decision())) {
             const auto& events = session_->tick();
             ++done;
             emitEvents(r.at("id"), events, output);
@@ -333,11 +333,13 @@ Json Protocol::perform(const Json& r, Output& output) {
                                                    {"status", unsigned(campaign->status())}}})}};
             output.emit(event, event);
         }
-        const char* stop = session_->terminal()               ? "terminal"
-                           : session_->result()               ? "encounter_result"
-                           : session_->ticks() >= maxRunTicks ? "tick_limit"
-                           : decision && session_->decision() ? "decision"
-                                                              : "ticks";
+        const char* stop =
+            session_->terminal()               ? "terminal"
+            : session_->result()               ? "encounter_result"
+            : session_->ticks() >= maxRunTicks ? "tick_limit"
+            : (session_->game().pendingRollDecision().serial || (decision && session_->decision()))
+                ? "decision"
+                : "ticks";
         return {{"ticks", done}, {"stop", stop}, {"observation", observation(false)}};
     }
     throw std::invalid_argument("Unknown operation");

@@ -109,6 +109,18 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     const auto op = j.at("kind").get<std::string>();
     const auto& cat = g.party().catalog();
     ActionRequest r;
+    if (op == "resolve_roll") {
+        fields(j, {"kind", "serial", "spend", "bard"});
+        r.operation = Operation::ResolveRoll;
+        r.rollWorld = g.combat().snapshot().world;
+        r.rollSerial = serial(j.at("serial"));
+        r.rollAnswer.spend = j.at("spend").get<bool>();
+        if (j.contains("bard")) {
+            const auto index = bounded(j.at("bard"), rules::partySize - 1);
+            r.rollAnswer.bard.index = std::uint16_t(index);
+        }
+        return r;
+    }
     if (op == "move") {
         fields(j, {"kind", "direction"});
         r.operation = Operation::Move;
@@ -268,12 +280,24 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     if (j.contains("spell"))
         c.spell = spell(j.at("spell"), cat);
     if (j.contains("feature")) {
-        const std::array<const char*, 15> names{
-            "none",         "second_wind",   "arcane_recovery",         "dismiss_concentration",
-            "action_surge", "preserve_life", "cunning_action",          "spiritual_weapon",
-            "escape_web",   "end_turn",      "dismiss_spiritual_weapon", "lay_on_hands", "sacred_weapon", "dismiss_sacred_weapon", "divine_smite"};
+        const std::array<const char*, 16> names{"none",
+                                                "second_wind",
+                                                "arcane_recovery",
+                                                "dismiss_concentration",
+                                                "action_surge",
+                                                "preserve_life",
+                                                "cunning_action",
+                                                "spiritual_weapon",
+                                                "escape_web",
+                                                "end_turn",
+                                                "dismiss_spiritual_weapon",
+                                                "lay_on_hands",
+                                                "sacred_weapon",
+                                                "dismiss_sacred_weapon",
+                                                "divine_smite",
+                                                "bardic_inspiration"};
         bool matched = false;
-        for (unsigned i = 1; i < 15; ++i)
+        for (unsigned i = 1; i < names.size(); ++i)
             if (j.at("feature") == names[i]) {
                 c.feature = rules::Feature(i);
                 matched = true;

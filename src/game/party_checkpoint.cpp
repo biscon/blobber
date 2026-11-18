@@ -79,8 +79,19 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
             (c.secondWind && !rules::hasFeature(cls->features, rules::ClassFeature::SecondWind)) ||
             (c.arcaneRecovery && !rules::hasFeature(cls->features, rules::ClassFeature::ArcaneRecovery)) ||
             (c.actionSurge && (c.build.level < 2 || cls->progression != rules::ProgressionClass::Fighter)) ||
-            (c.channelDivinity && !((c.build.level >= 2 && c.build.lifeDomain) || (c.build.level >= 3 && cls->progression == rules::ProgressionClass::Paladin))) ||
-            c.layOnHands < 0 || c.layOnHands > (cls->progression == rules::ProgressionClass::Paladin ? 5 * c.build.level : 0))
+            (c.channelDivinity &&
+             !((c.build.level >= 2 && c.build.lifeDomain) ||
+               (c.build.level >= 3 && cls->progression == rules::ProgressionClass::Paladin))) ||
+            c.inspirationSpent < 0 ||
+            c.inspirationSpent >
+                (cls->progression == rules::ProgressionClass::Bard ? std::max(1, c.stats.modifiers[5]) : 0) ||
+            c.inspirationUntil > UINT64_MAX / 2 ||
+            (c.inspirationUntil
+                 ? (c.inspirationSource.index >= rules::partySize || c.inspirationSource.index == i ||
+                    progressionClass(c.inspirationSource) != rules::ProgressionClass::Bard)
+                 : c.inspirationSource.index != UINT16_MAX) ||
+            c.layOnHands < 0 ||
+            c.layOnHands > (cls->progression == rules::ProgressionClass::Paladin ? 5 * c.build.level : 0))
             throw std::invalid_argument("Invalid saved character resources");
     }
 }

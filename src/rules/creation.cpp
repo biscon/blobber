@@ -175,7 +175,7 @@ int preparationLimit(const Catalog& c, const CharacterIdentityView& b) noexcept 
     const auto* cls = c.characterClass(b.characterClass);
     const auto* race = c.race(b.race);
     if (!cls || !race || cls->casting == Casting::None || cls->progression == ProgressionClass::Ranger ||
-        b.level < 1 || b.level > 20)
+        cls->progression == ProgressionClass::Bard || b.level < 1 || b.level > 20)
         return 0;
     const auto i = castingAbilityIndex(cls->casting);
     const auto scores = effectiveAbilities(c, b, false);
@@ -199,6 +199,11 @@ bool recommendSpells(const Catalog& c, const CharacterIdentityView& b, SpellGran
             s.learned = mark | choose(c, leveled & ~mark, 1, {SpellKind::CureWounds});
         } else if (b.level >= 3)
             s.learned = eligibleLeveledSpells(c, b);
+    } else if (cls->progression == ProgressionClass::Bard) {
+        s.cantrips = choose(c, can, b.level >= 4 ? 3 : 2, {SpellKind::ViciousMockery, SpellKind::Guidance});
+        s.learned = choose(c, eligibleLeveledSpells(c, b), 3 + b.level,
+                           {SpellKind::Sleep, SpellKind::Thunderwave, SpellKind::CureWounds, SpellKind::Bane,
+                            SpellKind::ColorSpray, SpellKind::Shatter, SpellKind::HoldPerson});
     } else if (cls->casting == Casting::Wisdom) {
         s.cantrips =
             choose(c, can, 3, {SpellKind::SacredFlame, SpellKind::SpareTheDying, SpellKind::Guidance});
@@ -235,12 +240,15 @@ BuildError validateGrants(const Catalog& c, const CharacterIdentityView& b, cons
         return BuildError::Content;
     const bool caster = maximumSpellLevel(cls->spellProgression, b.level) && cls->casting != Casting::None;
     const bool ranger = cls->progression == ProgressionClass::Ranger;
+    const bool bard = cls->progression == ProgressionClass::Bard;
     const bool wizard = cls->progression == ProgressionClass::Wizard || (cls->progression == ProgressionClass::None && cls->casting == Casting::Intelligence);
     const bool classCantrips = cls->spellProgression == SpellProgression::Full && cls->casting != Casting::None;
     if ((s.cantrips & ~classSpells(c, b.characterClass, 0)) || (!caster && s.cantrips) ||
-        (counts && classCantrips && spellCount(s.cantrips) != unsigned(b.level >= 4 ? 4 : 3)))
+        (bard && !(s.cantrips & kindBit(c, SpellKind::ViciousMockery))) ||
+        (counts && classCantrips && spellCount(s.cantrips) != unsigned((bard ? 2 : 3) + (b.level >= 4))))
         return BuildError::Cantrips;
-    if ((s.learned & ~eligibleLeveledSpells(c, b)) || (!wizard && !ranger && s.learned) ||
+    if ((s.learned & ~eligibleLeveledSpells(c, b)) || (!wizard && !ranger && !bard && s.learned) ||
+        (counts && bard && spellCount(s.learned) != unsigned(3 + b.level)) ||
         (counts && wizard && spellCount(s.learned) != unsigned(4 + 2 * b.level)))
         return BuildError::Learned;
     if (ranger) {
@@ -254,8 +262,8 @@ BuildError validateGrants(const Catalog& c, const CharacterIdentityView& b, cons
         (counts && b.lifeDomain && spellCount(domain) != unsigned(b.level >= 3 ? 4 : 2)))
         return BuildError::Domain;
     const auto available = wizard ? s.learned : eligibleLeveledSpells(c, b);
-    if ((s.prepared & ~available) || (s.prepared & s.domain) || ((!caster || ranger) && s.prepared) ||
-        (counts && caster && !ranger &&
+    if ((s.prepared & ~available) || (s.prepared & s.domain) || ((!caster || ranger || bard) && s.prepared) ||
+        (counts && caster && !ranger && !bard &&
          (!s.prepared || spellCount(s.prepared) > unsigned(preparationLimit(c, b)))))
         return BuildError::Prepared;
     if ((s.racial & ~wizardCantrips(c)) || (s.racial & s.cantrips) || (!race->wizardCantrip && s.racial) ||
@@ -281,8 +289,8 @@ SpellAccess spellAccess(const Catalog& cat, const CharacterIdentity& b, const Ch
     } else if ((b.spells.domain & bit) && (domainSpells(cat, b.view()) & bit)) {
         out.source = cls->progression == ProgressionClass::Paladin ? SpellSource::Oath : SpellSource::Domain;
         out.casting = cls->casting;
-    } else if (cls->progression == ProgressionClass::Ranger && r.level &&
-               (classSpells(cat, b.characterClass, r.level) & b.spells.learned & bit)) {
+    } else if ((cls->progression == ProgressionClass::Ranger || cls->progression == ProgressionClass::Bard) &&
+               r.level && (classSpells(cat, b.characterClass, r.level) & b.spells.learned & bit)) {
         out.source = SpellSource::Known;
         out.casting = cls->casting;
     } else if ((classSpells(cat, b.characterClass, r.level) & bit) &&

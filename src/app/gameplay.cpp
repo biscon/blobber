@@ -232,12 +232,14 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             const bool paused =
                 campWasOpen || !sample.ui.focused || debug || view.commands.snapshot().modal();
             const bool presentedCampaignTerminal = view.commands.snapshot().campaignTerminal;
+            const auto presentedRoll = view.commands.snapshot().roll.serial;
             const auto presentedCombat = view.commands.snapshot().combat;
             const auto previous = view.session.movement().player;
             view.commands.record(campaign ? campaign->update(dt, paused) : view.session.update(dt, paused));
-            if (!paused && continueLocalVictory(view.session, launch && launch->arena))
+            if (!paused && !view.session.pendingRollDecision().serial &&
+                continueLocalVictory(view.session, launch && launch->arena))
                 view.commands.cancel();
-            if (!paused) {
+            if (!paused && !view.session.pendingRollDecision().serial) {
                 if (sample.toggleAnimation)
                     view.session.setAnimated(!view.session.movement().animated);
                 if (sample.action) {
@@ -250,7 +252,8 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             bool changed = view.refresh(debug, sample.ui.focused);
             const auto& currentCombat = view.session.combat().snapshot();
             const auto phase = currentCombat.phase;
-            const bool samePresentedTurn = confirmationMatches(presentedCombat, currentCombat);
+            const bool samePresentedTurn = presentedRoll == view.session.pendingRollDecision().serial &&
+                                           confirmationMatches(presentedCombat, currentCombat);
             const bool arenaResult =
                 launch && launch->arena &&
                 (phase == CombatPhase::Defeat ||
@@ -270,10 +273,12 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
             if (arenaResult && samePresentedTurn && !paused && sample.ui.has(UiKey::Click) &&
                 sample.ui.pointer && hudLayout::arenaEdit.contains(*sample.ui.pointer))
                 return PlayOutcome::ArenaSetup;
-            if (terminalCampaign && !view.commands.snapshot().save.terminalWarning && samePresentedTurn &&
-                confirmResult)
+            if (view.session.pendingRollDecision().serial) {
+                routeHudInput(view.commands, sample.ui, {}, samePresentedTurn);
+            } else if (terminalCampaign && !view.commands.snapshot().save.terminalWarning &&
+                       samePresentedTurn && confirmResult) {
                 return PlayOutcome::MainMenu;
-            if (result && samePresentedTurn && confirmResult) {
+            } else if (result && samePresentedTurn && confirmResult) {
                 if (phase == CombatPhase::Defeat || arenaResult) {
                     restart = true;
                     break;
@@ -310,7 +315,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                 view.commands.cancelPointerButtons();
                 inputArmed = false;
             }
-            if (campaign) {
+            if (campaign && !view.session.pendingRollDecision().serial) {
                 std::optional<SavingScreen> saving;
                 const auto intent = view.commands.saveMenu().intent;
                 const bool terminalSave = saveFlow.terminalPending(*campaign, view.commands);

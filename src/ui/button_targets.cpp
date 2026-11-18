@@ -3,6 +3,7 @@
 #include "ui/dialogue_layout.hpp"
 #include "ui/inventory_layout.hpp"
 #include "ui/loot_layout.hpp"
+#include "ui/roll_layout.hpp"
 #include "ui/save_layout.hpp"
 #include "ui/trade_layout.hpp"
 #include "ui/travel_layout.hpp"
@@ -23,6 +24,16 @@ ButtonTargets hudButtonTargets(const HudSnapshot& h) noexcept {
         for (int i = 0; i < 4; ++i)
             t.add(hudLayout::card(i));
     };
+    if (h.roll.serial) {
+        panel(18);
+        t.context[7] = h.roll.serial;
+        t.add(rollLayout::spend);
+        t.add(rollLayout::keep);
+        for (unsigned i = 0; i < h.cards.size(); ++i)
+            if ((h.roll.eligible & (h.roll.eligible - 1)) && (h.roll.eligible & (1u << h.cards[i].id.index)))
+                t.add(rollLayout::bard(i));
+        return t;
+    }
     if (h.welcomeOpen) {
         panel(17);
         t.add(welcomeLayout::begin);

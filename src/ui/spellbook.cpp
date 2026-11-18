@@ -7,6 +7,10 @@ namespace {
 unsigned entryIcon(const SpellBookEntry& e) noexcept {
     if (e.passive == PassiveFeature::Archery)
         return UiArt::archeryIcon;
+    if (e.passive == PassiveFeature::SongOfRest)
+        return UiArt::songIcon;
+    if (e.passive == PassiveFeature::CuttingWords)
+        return UiArt::cuttingWordsIcon;
     if (e.passive == PassiveFeature::ColossusSlayer)
         return UiArt::colossusSlayerIcon;
     return e.category == PickerEntryKind::AutomaticFeature ? UiArt::classFeaturesIcon
@@ -16,6 +20,8 @@ void usesLabel(char* output, std::size_t size, int charges) {
     std::snprintf(output, size, "%d %s remaining", charges, charges == 1 ? "use" : "uses");
 }
 const char* featureAction(rules::Feature feature, CombatPhase phase) {
+    if (feature == rules::Feature::BardicInspiration)
+        return "Bonus action";
     if (feature == rules::Feature::ActionSurge || feature == rules::Feature::CunningAction ||
         feature == rules::Feature::SpiritualWeapon)
         return "Free activation";

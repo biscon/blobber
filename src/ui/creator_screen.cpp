@@ -220,6 +220,9 @@ unsigned drawBuildReview(const HudPainter& p, const Catalog& c, const CharacterD
         std::snprintf(line, sizeof(line), "%s / attack %+d / DC %d / prepare 1..%d",
                       castingAbilityName(cls->casting), preview.stats.proficiency + mod,
                       8 + preview.stats.proficiency + mod, preview.preparation);
+        if (cls->progression == ProgressionClass::Bard)
+            std::snprintf(line, sizeof(line), "CHA / attack %+d / DC %d / cast known spells",
+                          preview.stats.proficiency + mod, 8 + preview.stats.proficiency + mod);
         detail("Class casting", line);
     }
     if (d.spells.racial) {
@@ -230,7 +233,9 @@ unsigned drawBuildReview(const HudPainter& p, const Catalog& c, const CharacterD
     }
     const rules::SpellMask masks[]{d.spells.cantrips, d.spells.racial, d.spells.learned, d.spells.prepared,
                                 d.spells.domain};
-    const char* categories[]{"Cantrip", "Racial (INT)", "Spellbook", "Prepared", "Domain grant"};
+    const char* categories[]{"Cantrip", "Racial (INT)",
+                             cls && cls->progression == ProgressionClass::Bard ? "Known spell" : "Spellbook",
+                             "Prepared", "Domain grant"};
     for (unsigned category = 0; category < 5; ++category) {
         const auto mask = masks[category];
         const char* label = categories[category];
@@ -305,26 +310,31 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
             const bool paladin = cls->progression == ProgressionClass::Paladin;
             const bool ranger = cls->progression == ProgressionClass::Ranger;
             wrap(p,
-                 ranger ? "Bow specialist. At level two, Archery sharpens ranged attacks and Wisdom fuels "
-                          "Hunter's Mark and healing magic. Become a Hunter at level three."
-                 : paladin ? "Armored holy warrior. Lay on Hands heals allies. At level two, Charisma spells and Divine Smite share mana. Oath of Devotion unlocks at level three."
-                 : fighter  ? "Armored front line. Defense adds 1 AC while armored. Second Wind spends an "
-                            "action to heal; rests refresh its charge."
-                 : cleric ? "Healing and protection. Life Domain grants Bless and Cure Wounds. Disciple of "
-                            "Life strengthens healing. Prepare spells from the cleric list."
-                 : rogue  ? "Precision and agility. Sneak Attack adds damage on a qualifying hit once per "
-                            "turn. The rogue can strike from the back row."
-                          : "Damage and control. Choose a spellbook and prepare spells from it. Arcane "
-                            "Recovery restores mana during safe exploration.",
+                 cls->progression == ProgressionClass::Bard
+                     ? "Inspire companions and cast Charisma spells. Song of Rest improves healing at camp. "
+                       "College of Lore grants Cutting Words at level three."
+                 : ranger  ? "Bow specialist. At level two, Archery sharpens ranged attacks and Wisdom fuels "
+                             "Hunter's Mark and healing magic. Become a Hunter at level three."
+                 : paladin ? "Armored holy warrior. Lay on Hands heals allies. At level two, Charisma spells "
+                             "and Divine Smite share mana. Oath of Devotion unlocks at level three."
+                 : fighter ? "Armored front line. Defense adds 1 AC while armored. Second Wind spends an "
+                             "action to heal; rests refresh its charge."
+                 : cleric  ? "Healing and protection. Life Domain grants Bless and Cure Wounds. Disciple of "
+                             "Life strengthens healing. Prepare spells from the cleric list."
+                 : rogue   ? "Precision and agility. Sneak Attack adds damage on a qualifying hit once per "
+                             "turn. The rogue can strike from the back row."
+                           : "Damage and control. Choose a spellbook and prepare spells from it. Arcane "
+                             "Recovery restores mana during safe exploration.",
                  {174, 218, 448, 44});
             std::snprintf(line, sizeof(line), "Hit Die d%d / Primary ability: %s / Armor training: %s",
                           cls->hitDie,
-                          ranger ? "Dexterity / Wisdom"
-                          : paladin ? "Strength / Charisma"
-                          : cleric    ? "Wisdom"
-                          : fighter ? "Strength"
-                          : rogue   ? "Dexterity"
-                                    : "Intelligence",
+                          cls->progression == ProgressionClass::Bard ? "Charisma"
+                          : ranger                                   ? "Dexterity / Wisdom"
+                          : paladin                                  ? "Strength / Charisma"
+                          : cleric                                   ? "Wisdom"
+                          : fighter                                  ? "Strength"
+                          : rogue                                    ? "Dexterity"
+                                                                     : "Intelligence",
                           cls->armor ? "Class proficiencies" : "None");
             p.text(line, 174, 273, muted);
         } else
@@ -479,7 +489,10 @@ static void drawCreatorContent(void* context, const UiFonts& fonts, const UiArt&
             const auto cls = c.characterClass({std::uint16_t(b.value)})->progression;
             if (b.rect.height > 45) {
                 const UiRect icon{b.rect.x + (b.rect.width - 56) / 2, b.rect.y + 4, 56, 56};
-                if (cls == ProgressionClass::Ranger) p.picture(UiArt::archeryIcon, icon);
+                if (cls == ProgressionClass::Bard)
+                    p.picture(UiArt::inspirationIcon, icon);
+                else if (cls == ProgressionClass::Ranger)
+                    p.picture(UiArt::archeryIcon, icon);
                 else if (cls == ProgressionClass::Paladin) p.picture(UiArt::spellIcon(SpellKind::Count, Feature::SacredWeapon), icon);
                 else if (b.value < 4) art.creator(32 + unsigned(b.value), icon);
             }
@@ -602,9 +615,13 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
             std::snprintf(line, sizeof(line), "%u class cantrips unchanged; racial magic stays separate.",
                           spellCount(h.baseline.cantrips));
         } else if (learning) {
-            p.text(ranger ? "Learn one healing spell" : "Learn 2 spells for your spellbook",
+            p.text(cls->progression == ProgressionClass::Bard ? "Learn one Bard spell"
+                   : ranger                                   ? "Learn one healing spell"
+                                                              : "Learn 2 spells for your spellbook",
                    174, 66, gold, UiTextStyle::Heading);
-            if (ranger)
+            if (cls->progression == ProgressionClass::Bard)
+                std::snprintf(line, sizeof(line), "Cast your known spells directly with Charisma.");
+            else if (ranger)
                 std::snprintf(line, sizeof(line), "Hunter's Mark is granted automatically.");
             else
                 std::snprintf(line, sizeof(line), "%u known spells stay in your spellbook.",
@@ -628,8 +645,9 @@ void drawAdvancement(const HudPainter& p, const AdvancementHud& h, bool arena) {
         wrap(p, line, {174, 289, 266, 18}, text, UiTextStyle::Small, 0, 9);
         wrap(p,
              cantrip    ? "Your new cantrip is permanent. Existing cantrips cannot be replaced."
-             : learning ? (ranger ? "You can cast known spells as soon as you learn them."
-                                  : "Only new choices are listed; preparation comes next.")
+             : learning ? ((ranger || cls->progression == ProgressionClass::Bard)
+                               ? "You can cast known spells as soon as you learn them."
+                               : "Only new choices are listed; preparation comes next.")
                         : "Only new choices are listed. Swap preparations during Long Rest.",
              {174, 307, 266, 18}, muted, UiTextStyle::Small, 0, 9);
     } else {

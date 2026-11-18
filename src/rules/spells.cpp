@@ -161,7 +161,8 @@ constexpr SpellRules spells[]{
      0},
     {"thunderwave",
      "Thunderwave",
-     "Fixed party-front 4x2 subcell rectangle: 2d8 thunder, Constitution save for half. Failed-save survivors are pushed one "
+     "Fixed party-front 4x2 subcell rectangle: 2d8 thunder, Constitution save for half. Failed-save "
+     "survivors are pushed one "
      "cell forward if space permits.",
      Casting::Intelligence,
      1,
@@ -261,7 +262,8 @@ constexpr SpellRules spells[]{
      false},
     {"color_spray",
      "Color Spray",
-     "Fixed party-front fan (2 then 4 subcells): 6d10 HP budget blinds weakest seeing creatures until your next turn (6 seconds "
+     "Fixed party-front fan (2 then 4 subcells): 6d10 HP budget blinds weakest seeing creatures until your "
+     "next turn (6 seconds "
      "outside turns).",
      Casting::Intelligence,
      1,
@@ -384,7 +386,8 @@ constexpr SpellRules spells[]{
      3},
     {"shatter",
      "Shatter",
-     "Aim a 10-foot-radius circle within 60 feet: 3d8 thunder, Constitution save for half. Affects allies and caster; "
+     "Aim a 10-foot-radius circle within 60 feet: 3d8 thunder, Constitution save for half. Affects allies "
+     "and caster; "
      "Evocation protects other companions.",
      Casting::Intelligence,
      2,
@@ -414,7 +417,8 @@ constexpr SpellRules spells[]{
      true},
     {"web",
      "Web",
-     "Aim a 20-foot square within 60 feet: difficult terrain and Dexterity saves against restraint. Escape with a Strength "
+     "Aim a 20-foot square within 60 feet: difficult terrain and Dexterity saves against restraint. Escape "
+     "with a Strength "
      "action. Affects allies, burns in fire; concentration, one hour.",
      Casting::Intelligence,
      2,
@@ -427,14 +431,58 @@ constexpr SpellRules spells[]{
      0,
      true,
      false},
-    {"protection_from_evil_and_good", "Protection from Evil and Good",
-     "One ally: listed supernatural creatures have disadvantage on attacks. Concentration: ten minutes. Charm, fear and possession are not supported.",
-     Casting::Charisma, 1, {1, 4, 0}, DamageType::Radiant, Ability::Wisdom, false, false, false, 1},
-    {"hunters_mark", "Hunter's Mark",
+    {"protection_from_evil_and_good",
+     "Protection from Evil and Good",
+     "One ally: listed supernatural creatures have disadvantage on attacks. Concentration: ten minutes. "
+     "Charm, fear and possession are not supported.",
+     Casting::Charisma,
+     1,
+     {1, 4, 0},
+     DamageType::Radiant,
+     Ability::Wisdom,
+     false,
+     false,
+     false,
+     1},
+    {"hunters_mark",
+     "Hunter's Mark",
      "Mark one enemy. Your weapon hits deal an extra 1d6 to it. Concentration: one hour or until it dies.",
-     Casting::Wisdom, 1, {1, 6, 0}, DamageType::Piercing, Ability::Wisdom, false, true, false, 1},
-    {"goodberry", "Goodberry", "Share up to 10 HP among injured conscious companions, lowest HP percentage first.",
-     Casting::Wisdom, 1, {1, 1, 0}, DamageType::Piercing, Ability::Wisdom, false, false, false, 0, false, true}};
+     Casting::Wisdom,
+     1,
+     {1, 6, 0},
+     DamageType::Piercing,
+     Ability::Wisdom,
+     false,
+     true,
+     false,
+     1},
+    {"goodberry",
+     "Goodberry",
+     "Share up to 10 HP among injured conscious companions, lowest HP percentage first.",
+     Casting::Wisdom,
+     1,
+     {1, 1, 0},
+     DamageType::Piercing,
+     Ability::Wisdom,
+     false,
+     false,
+     false,
+     0,
+     false,
+     true},
+    {"vicious_mockery",
+     "Vicious Mockery",
+     "A cutting taunt deals 1d4 psychic damage on a failed Wisdom save and gives disadvantage on the next "
+     "attack.",
+     Casting::Charisma,
+     0,
+     {1, 4, 0},
+     DamageType::Psychic,
+     Ability::Wisdom,
+     false,
+     true,
+     false,
+     1}};
 static_assert(sizeof(spells) / sizeof(*spells) == static_cast<unsigned>(SpellKind::Count));
 } // namespace
 const SpellRules* spellRules(SpellKind kind) noexcept {
@@ -442,11 +490,22 @@ const SpellRules* spellRules(SpellKind kind) noexcept {
     return n < static_cast<unsigned>(SpellKind::Count) ? &spells[n] : nullptr;
 }
 const char* featureName(Feature f) noexcept {
-    constexpr const char* names[]{
-        "Ability",      "Second Wind",   "Arcane Recovery",         "End concentration",
-        "Action Surge", "Preserve Life", "Cunning Action",          "Spiritual Weapon",
-        "Escape Web",   "End Turn",      "Dismiss Spiritual Weapon",
-        "Lay on Hands", "Sacred Weapon", "Dismiss Sacred Weapon", "Divine Smite"};
+    constexpr const char* names[]{"Ability",
+                                  "Second Wind",
+                                  "Arcane Recovery",
+                                  "End concentration",
+                                  "Action Surge",
+                                  "Preserve Life",
+                                  "Cunning Action",
+                                  "Spiritual Weapon",
+                                  "Escape Web",
+                                  "End Turn",
+                                  "Dismiss Spiritual Weapon",
+                                  "Lay on Hands",
+                                  "Sacred Weapon",
+                                  "Dismiss Sacred Weapon",
+                                  "Divine Smite",
+                                  "Bardic Inspiration"};
     return unsigned(f) < std::size(names) ? names[unsigned(f)] : "Ability";
 }
 int spellManaCost(int level) noexcept {
@@ -462,6 +521,12 @@ const char* castingAbilityName(Casting c) noexcept {
     return c == Casting::Wisdom ? "WIS" : c == Casting::Charisma ? "CHA" : c == Casting::Intelligence ? "INT" : "None";
 }
 bool spellClass(SpellKind kind, SpellList list) noexcept {
+    if (list == SpellList::Bard)
+        return kind == SpellKind::ViciousMockery || kind == SpellKind::Guidance ||
+               kind == SpellKind::Resistance || kind == SpellKind::SpareTheDying || kind == SpellKind::Bane ||
+               kind == SpellKind::ColorSpray || kind == SpellKind::CureWounds || kind == SpellKind::Sleep ||
+               kind == SpellKind::Thunderwave || kind == SpellKind::HoldPerson ||
+               kind == SpellKind::LesserRestoration || kind == SpellKind::Shatter;
     if (list == SpellList::Paladin)
         return kind == SpellKind::Bless || kind == SpellKind::CureWounds || kind == SpellKind::ShieldOfFaith;
     if (list == SpellList::Ranger)
@@ -480,7 +545,8 @@ int maximumSpellLevel(int level) noexcept {
 }
 int maximumMana(Casting casting, int level) noexcept {
     constexpr int caps[]{4, 6, 14, 17};
-    return (casting == Casting::Wisdom || casting == Casting::Intelligence) && level >= 1 && level <= 4
+    return (casting == Casting::Wisdom || casting == Casting::Intelligence || casting == Casting::Charisma) &&
+                   level >= 1 && level <= 4
                ? caps[level - 1]
                : 0;
 }

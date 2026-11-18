@@ -6,7 +6,7 @@
 #include <string_view>
 
 namespace blobber::rules {
-inline constexpr unsigned damageTypeCount = unsigned(DamageType::Poison) + 1;
+inline constexpr unsigned damageTypeCount = unsigned(DamageType::Psychic) + 1;
 using DamageMask = std::uint16_t;
 inline constexpr DamageMask allDamageTypes = (1u << damageTypeCount) - 1u;
 constexpr DamageMask damageBit(DamageType type) noexcept {
@@ -41,8 +41,9 @@ inline DamageResolution resolveDamage(std::int64_t amount, DamageType type,
     return {raw, raw, DamageAdjustment::Normal};
 }
 inline const char* damageTypeName(DamageType type) noexcept {
-    constexpr const char* names[]{"bludgeoning", "piercing", "slashing", "acid", "fire",      "force",
-                                  "radiant",     "necrotic", "thunder",  "cold", "lightning", "poison"};
+    constexpr const char* names[]{"bludgeoning", "piercing", "slashing", "acid",    "fire",
+                                  "force",       "radiant",  "necrotic", "thunder", "cold",
+                                  "lightning",   "poison",   "psychic"};
     return unsigned(type) < damageTypeCount ? names[unsigned(type)] : "unknown";
 }
 inline std::optional<DamageType> findDamageType(std::string_view name) noexcept {

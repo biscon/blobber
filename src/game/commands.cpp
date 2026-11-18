@@ -297,6 +297,10 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     }
     case CombatEvent::Healing:
     case CombatEvent::Recovery: {
+        if (out.feature == rules::Feature::BardicInspiration) {
+            std::snprintf(line, sizeof(line), "%s gives %s an Inspiration die (d6).", name, target);
+            break;
+        }
         if (out.feature == rules::Feature::ActionSurge) {
             std::snprintf(line, sizeof(line), "%s gains one extra action.", name);
             break;
@@ -538,8 +542,62 @@ bool CommandController::visible(ActorId id) const noexcept {
             return true;
     return false;
 }
+void CommandController::chooseRespondingBard(rules::CharacterId id) noexcept {
+    if (id.index < rules::partySize && (state_.roll.eligible & (1u << id.index)))
+        state_.respondingBard = id;
+}
+void CommandController::answerRoll(bool spend) noexcept {
+    const auto d = state_.roll;
+    if (!session_.resolveRollDecision(d.world, d.serial, {spend, state_.respondingBard}))
+        return;
+    if (spend && session_.lastRollDecision().serial == d.serial) {
+        const int die = session_.lastInspirationDie();
+        const bool cutting = d.purpose == RollPurpose::CuttingWords;
+        const auto total = d.total + (cutting ? -die : die);
+        char line[160];
+        const bool attack = cutting || d.purpose == RollPurpose::Attack;
+        std::snprintf(line, sizeof(line), "%s: %lld %c %d = %lld. %s",
+                      cutting ? "Cutting Words" : "Inspiration", (long long)d.total, cutting ? '-' : '+', die,
+                      (long long)total,
+                      attack ? (total >= d.difficulty ? "Hit" : "Miss")
+                             : (total >= d.difficulty ? "Save succeeds" : "Save fails"));
+        state_.log.append(line);
+    }
+    record(session_.events());
+    state_.roll = {}; // Next refresh binds any subsequent decision to fresh input.
+    cancelPointerButtons();
+}
 void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool mapOpen,
                                 bool focused) noexcept {
+    const auto& d = session_.pendingRollDecision();
+    if (d.serial != state_.roll.serial) {
+        state_.roll = d;
+        state_.respondingBard = {};
+        if (d.serial) {
+            for (auto id : party_.snapshot().formation)
+                if (d.eligible & (1u << id.index)) {
+                    state_.respondingBard = id;
+                    break;
+                }
+            const auto* member = party_.character(d.character);
+            const auto* actor = actors_.actor(d.enemy);
+            const char* enemy = actor ? monsterName(actors_.catalog().monster(actor->monster)->id) : "Enemy";
+            const char* name = member->build.name.c_str();
+            if (d.purpose == RollPurpose::CuttingWords)
+                std::snprintf(state_.rollDescription.data(), state_.rollDescription.size(),
+                              "%s attacks %s: %lld against AC %lld.", enemy, name, (long long)d.total,
+                              (long long)d.difficulty);
+            else
+                std::snprintf(state_.rollDescription.data(), state_.rollDescription.size(),
+                              "%s's %s: %lld against %s %lld.", name,
+                              d.purpose == RollPurpose::Attack          ? "attack"
+                              : d.purpose == RollPurpose::DeathSave     ? "death save"
+                              : d.purpose == RollPurpose::Concentration ? "concentration save"
+                                                                        : "save",
+                              (long long)d.total, d.purpose == RollPurpose::Attack ? "AC" : "DC",
+                              (long long)d.difficulty);
+        }
+    }
     state_.worldTransform = shake_.sample(session_.timeMs(), actors_.snapshot().world);
     moving |= session_.opening();
     if (session_.objective().known) {
@@ -756,6 +814,10 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         card = {};
         card.id = id;
         card.name = member.build.name.c_str();
+        if (member.inspirationUntil > session_.combat().snapshot().gameplayMs) {
+            card.inspirationSource = party_.character(member.inspirationSource)->build.name.c_str();
+            card.inspirationRemaining = member.inspirationUntil - session_.combat().snapshot().gameplayMs;
+        }
         card.raceName = party_.catalog().race(member.build.race)->name.c_str();
         card.abilities = member.stats.abilities;
         card.armorClass = member.stats.armorClass;

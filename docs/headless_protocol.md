@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 17/21 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 26/28 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -51,7 +51,7 @@ the save format. The legacy `door_opening` field covers both opening and closing
 
 Party purse observations include `party_gold` as a lossless uint64 decimal string
 in both diagnostic and player modes. Gold is shared and does not appear in
-character inventory entries. Campaign saves now require schema 17/simulation 21. The authored smithy is location
+character inventory entries. Campaign saves require schema 26/simulation 28. The authored smithy is location
 5 at depth zero, with identity `sanctuary-smithy-v1`. Arcane Emporium is location 6 at depth zero, with identity
 `sanctuary-emporium-v1`. City doorway requests resolve the inn, smithy or emporium
 by the current cell/facing; the existing `doorway` action is unchanged.
@@ -669,3 +669,28 @@ Other cell-targeted abilities retain `cell`. Ground observations include
 `subcell_origin` and decimal-string `subcell_mask` (eight bits per row). Diagnostic
 observations also include per-square burn deadlines. `wake` events expose rescuer
 `enemy` and recipient `awakened`; rescue consumes the enemy action.
+
+
+## Bard roll decisions
+
+A pending Inspiration or Cutting Words decision stops advancement, including
+requests with `until_decision:false`. The observation includes `pending_roll`
+with a decimal-string `serial`, `purpose` (attack, save, concentration,
+death_save or cutting_words), the affected `character`, original modified
+`total`, target `difficulty` and minimum rescuing d6 face `needed`.
+Enemy attacks identify the `enemy` and the character indices in `eligible_bards`.
+The actions response lists `resolve_roll` while a decision is pending.
+
+Pass the following action object to `preview` or `act`, using the current
+session, revision and observed serial.
+
+```json
+{"kind":"resolve_roll","serial":"1","spend":true}
+```
+
+Use `spend:false` to keep the die. To spend Cutting Words, include `bard` with
+an eligible character index. Preview preserves the held roll, resources and RNG.
+A successful spend updates `last_inspiration` with its serial and die face.
+Inspect the next observation after resolving because another target or ray of
+the same action can immediately require a decision. Party observations expose
+remaining uses, held-die source and expiration on the active floor's gameplay clock.

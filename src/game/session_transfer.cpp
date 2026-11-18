@@ -5,6 +5,8 @@
 #include <stdexcept>
 namespace blobber {
 const char* GameSession::saveSafety() const noexcept {
+    if (pendingRollDecision().serial)
+        return "Resolve the pending roll first.";
     if (conversation_)
         return "Finish the conversation before saving.";
     if (!runActive())
@@ -21,6 +23,8 @@ const char* GameSession::saveSafety() const noexcept {
     return nullptr;
 }
 const char* GameSession::travelSafety() const noexcept {
+    if (pendingRollDecision().serial)
+        return "Resolve the pending roll first.";
     if (conversation_)
         return "Finish the conversation before travelling.";
     if (mutation_ == UINT64_MAX)
@@ -71,6 +75,7 @@ void GameSession::exportFloor(FloorState& s) const noexcept {
     s.ai.priority = ai_.priority_;
     s.effects.instances = effects_.instances_;
     s.effects.guidingUntil = effects_.guidingUntil_;
+    s.effects.mockeryUntil = effects_.mockeryUntil_;
     s.effects.nextSerial = effects_.nextSerial_;
     s.effects.gameplayMs = effects_.gameplayMs_;
     s.effects.conditions = effects_.conditions_;
@@ -83,6 +88,7 @@ void GameSession::exportFloor(FloorState& s) const noexcept {
     s.combat.state = combat_.state_;
     s.combat.sneakReady = combat_.sneakReady_;
     s.combat.cunningReady = combat_.cunningReady_;
+    s.combat.reactionReady = combat_.reactionReady_;
     s.combat.extraUntil = combat_.extraUntil_;
     s.combat.partyReady = combat_.partyReady_;
     s.combat.saveDue = combat_.saveDue_;
@@ -306,6 +312,7 @@ void GameSession::importFloor(const FloorState& s) {
     ai_.priority_ = s.ai.priority;
     effects_.instances_ = s.effects.instances;
     effects_.guidingUntil_ = s.effects.guidingUntil;
+    effects_.mockeryUntil_ = s.effects.mockeryUntil;
     effects_.nextSerial_ = s.effects.nextSerial;
     effects_.gameplayMs_ = s.effects.gameplayMs;
     effects_.conditions_ = s.effects.conditions;
@@ -318,6 +325,7 @@ void GameSession::importFloor(const FloorState& s) {
     combat_.state_ = s.combat.state;
     combat_.sneakReady_ = s.combat.sneakReady;
     combat_.cunningReady_ = s.combat.cunningReady;
+    combat_.reactionReady_ = s.combat.reactionReady;
     combat_.extraUntil_ = s.combat.extraUntil;
     combat_.partyReady_ = s.combat.partyReady;
     combat_.saveDue_ = s.combat.saveDue;

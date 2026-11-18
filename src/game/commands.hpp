@@ -36,6 +36,8 @@ struct HudCard {
     std::optional<StatusEntry> concentration;
     bool hasMana = false, defending = false, active = false, recentlyHit = false, hasDeathSaves = false;
     bool incomingShot = false;
+    const char* inspirationSource = nullptr;
+    std::uint64_t inspirationRemaining = 0;
     std::uint8_t successes = 0, failures = 0;
     DisplayStatus status = DisplayStatus::Ready;
     const char* raceName = "";
@@ -49,7 +51,10 @@ struct HudCard {
          castHovered = false;
     const char* castPreview = "";
 };
-enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration, Travel };
+enum class HoverKind { None, Enemy, Action, Portrait, Rest, Status, Concentration, Travel, Inspiration };
+constexpr bool statusHoverKind(HoverKind k) noexcept {
+    return k == HoverKind::Status || k == HoverKind::Concentration || k == HoverKind::Inspiration;
+}
 struct HudHover {
     bool tooltipVisible = true;
     HoverKind kind = HoverKind::None;
@@ -82,7 +87,16 @@ struct CombatFeedback {
     std::uint64_t startedMs = 0;
 };
 enum class PickerEntryKind : std::uint8_t { Spell, ActivatedFeature, AutomaticFeature };
-enum class PassiveFeature : std::uint8_t { None, Defense, SneakAttack, RearRowMelee, Archery, ColossusSlayer };
+enum class PassiveFeature : std::uint8_t {
+    None,
+    Defense,
+    SneakAttack,
+    RearRowMelee,
+    Archery,
+    ColossusSlayer,
+    SongOfRest,
+    CuttingWords
+};
 struct SpellBookEntry {
     rules::SpellId spell;
     rules::Feature feature = rules::Feature::None;
@@ -163,6 +177,9 @@ struct EnemyTargetPicker {
 };
 struct HudSnapshot {
     bool welcomeOpen = false;
+    RollDecision roll;
+    rules::CharacterId respondingBard;
+    std::array<char, 112> rollDescription{};
     GameTime gameTime;
     DialogueHud dialogue;
     TradeHud trade;
@@ -209,9 +226,9 @@ struct HudSnapshot {
     bool menuOpen = false, quitRequested = false, menuRequested = false, leaveConfirmation = false,
          canReturnToMenu = false;
     bool modal(bool includeDialogue = true) const noexcept {
-        return welcomeOpen || (includeDialogue && (dialogue.open || trade.open)) || travel.open ||
-               advancement.open || loot.open || camp.open || inventory.open || logExpanded || menuOpen ||
-               magic.open;
+        return roll.serial || welcomeOpen || (includeDialogue && (dialogue.open || trade.open)) ||
+               travel.open || advancement.open || loot.open || camp.open || inventory.open || logExpanded ||
+               menuOpen || magic.open;
     }
     const char* interactionPrompt() const noexcept {
         if (suspended || modal() || campaignTerminal || combat.phase != CombatPhase::Exploration ||
@@ -230,6 +247,8 @@ class CommandController {
     explicit CommandController(GameSession& session, const std::vector<NpcTimings>& timings = {});
     ~CommandController();
     void openWelcome() noexcept;
+    void chooseRespondingBard(rules::CharacterId) noexcept;
+    void answerRoll(bool spend) noexcept;
     void bindDialogue(const DialogueCatalog*, DialogueHistory*) noexcept;
     void bindTrade(const ShopCatalog*, MerchantLedger*) noexcept;
     bool openTrade() noexcept;

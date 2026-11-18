@@ -52,10 +52,12 @@ bool CreatorModel::applicable(const Catalog& c, CreatorStep s) const noexcept {
     const auto* r = c.race(draft.race);
     if (s == CreatorStep::Racial)
         return r && r->wizardCantrip;
+    if (s == CreatorStep::Prepared && cls && cls->progression == ProgressionClass::Bard)
+        return false;
     if (s == CreatorStep::Cantrips || s == CreatorStep::Prepared)
         return cls && cls->casting != Casting::None && cls->spellProgression == SpellProgression::Full;
     if (s == CreatorStep::Learned)
-        return cls && cls->casting == Casting::Intelligence;
+        return cls && (cls->casting == Casting::Intelligence || cls->progression == ProgressionClass::Bard);
     return s < CreatorStep::Count;
 }
 void CreatorModel::syncSelection(const Catalog& c) noexcept {
@@ -125,8 +127,12 @@ void CreatorModel::prune(const Catalog& c) noexcept {
     const auto* cls = c.characterClass(draft.characterClass);
     const auto* r = c.race(draft.race);
     draft.spells.cantrips &= classSpells(c, draft.characterClass, 0);
+    if (cls && cls->progression == ProgressionClass::Bard)
+        draft.spells.cantrips |= spellBit(c.findSpell("vicious_mockery"));
     draft.spells.learned &=
-        cls && cls->casting == Casting::Intelligence ? classSpells(c, draft.characterClass, 1) : 0;
+        cls && (cls->casting == Casting::Intelligence || cls->progression == ProgressionClass::Bard)
+            ? classSpells(c, draft.characterClass, 1)
+            : 0;
     draft.spells.racial &= r && r->wizardCantrip ? racialCantrips(c) & ~draft.spells.cantrips : 0;
     SpellGrants recommended;
     recommendSpells(c, draftIdentity(draft), recommended);
@@ -193,7 +199,7 @@ void CreatorModel::recommend(const Catalog& c) noexcept {
     } else {
         auto bits = recommendedChoices(c, selection.context, choice());
         if (step == CreatorStep::Cantrips)
-            draft.spells.cantrips = bits;
+            draft.spells.cantrips = bits | selection.context.granted;
         if (step == CreatorStep::Racial)
             draft.spells.racial = bits;
         if (step == CreatorStep::Learned)
@@ -211,7 +217,7 @@ void CreatorModel::toggleSpell(const Catalog& c, SpellId id) noexcept {
     if (!selection.toggle(id))
         return;
     if (step == CreatorStep::Cantrips)
-        draft.spells.cantrips = selection.selected;
+        draft.spells.cantrips = selection.selected | selection.context.granted;
     if (step == CreatorStep::Racial)
         draft.spells.racial = selection.selected;
     if (step == CreatorStep::Learned)
@@ -312,7 +318,7 @@ void layoutCreator(FlowControls& w, const CreatorModel& m, const Catalog& c) noe
         break;
     case CreatorStep::Class:
         for (unsigned i = 0; i < c.classCount(); ++i) {
-            const unsigned columns = std::min<std::size_t>(6, c.classCount());
+            const unsigned columns = std::min<std::size_t>(7, c.classCount());
             const unsigned rows = (c.classCount() + columns - 1) / columns;
             const int width = 448 / int(columns), height = 94 / int(rows);
             w.add({174 + int(i % columns) * width, 92 + int(i / columns) * height, width - 4, height - 4}, FlowAction::Class, int(i));

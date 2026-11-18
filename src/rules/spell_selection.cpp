@@ -74,7 +74,8 @@ SpellMask racialCantrips(const Catalog& c) noexcept {
 SpellMask preparationOptions(const Catalog& c, const CharacterIdentityView& b,
                                  const SpellGrants& g) noexcept {
     const auto* cls = c.characterClass(b.characterClass);
-    if (!cls || cls->casting == Casting::None || cls->progression == ProgressionClass::Ranger)
+    if (!cls || cls->casting == Casting::None || cls->progression == ProgressionClass::Ranger ||
+        cls->progression == ProgressionClass::Bard)
         return 0;
     const auto eligible = eligibleLeveledSpells(c, b);
     return (cls->casting == Casting::Intelligence ? eligible & g.learned : eligible) & ~g.domain;
@@ -88,6 +89,8 @@ bool validPreparation(const Catalog& c, const CharacterIdentityView& b, const Sp
 SpellSelectionContext choiceContext(const Catalog& c, const CharacterIdentityView& b, PortraitId portrait,
                                     const SpellGrants& g, SpellChoice kind) noexcept {
     SpellSelectionContext out;
+    const auto* cls = c.characterClass(b.characterClass);
+    const bool bard = cls && cls->progression == ProgressionClass::Bard;
     out.identity = b;
     out.portrait = portrait;
     switch (kind) {
@@ -95,6 +98,11 @@ SpellSelectionContext choiceContext(const Catalog& c, const CharacterIdentityVie
         out.baseline = g.cantrips;
         out.available = classSpells(c, b.characterClass, 0) & ~g.racial;
         out.minimum = out.maximum = b.level >= 4 ? 4 : 3;
+        if (bard) {
+            out.granted = out.locked = spellBit(c.findSpell("vicious_mockery"));
+            out.baseline &= ~out.granted;
+            out.minimum = out.maximum = b.level >= 4 ? 2 : 1;
+        }
         break;
     case SpellChoice::Racial:
         out.baseline = g.racial;
@@ -104,7 +112,7 @@ SpellSelectionContext choiceContext(const Catalog& c, const CharacterIdentityVie
     case SpellChoice::Learned:
         out.baseline = g.learned;
         out.available = classSpells(c, b.characterClass, 1);
-        out.minimum = out.maximum = 6;
+        out.minimum = out.maximum = bard ? 4 : 6;
         break;
     case SpellChoice::Prepared:
         out.baseline = g.prepared;

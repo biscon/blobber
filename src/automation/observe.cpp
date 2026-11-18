@@ -68,6 +68,22 @@ Json encodeObservation(const Observation& o) {
               {"loot", Json::array()},
               {"targets", Json::array()},
               {"active_character", nullptr}};
+    const auto& pending = g.pendingRollDecision();
+    if (pending.serial) {
+        constexpr const char* purposes[]{"attack", "save", "concentration", "death_save", "cutting_words"};
+        j["pending_roll"] = {
+            {"serial", u(pending.serial)},          {"purpose", purposes[unsigned(pending.purpose)]},
+            {"character", pending.character.index}, {"total", pending.total},
+            {"difficulty", pending.difficulty},     {"needed", pending.needed()},
+            {"eligible_bards", Json::array()}};
+        if (pending.enemy.world)
+            j["pending_roll"]["enemy"] = pending.enemy.slot;
+        for (unsigned i = 0; i < rules::partySize; ++i)
+            if (pending.eligible & (1u << i))
+                j["pending_roll"]["eligible_bards"].push_back(i);
+    }
+    if (g.lastRollDecision().serial)
+        j["last_inspiration"] = {{"serial", u(g.lastRollDecision().serial)}, {"die", g.lastInspirationDie()}};
     const auto& objective = g.objective();
     if (objective.count && (o.diagnostic || objective.known)) {
         j["objective"] = {{"known", objective.known},
@@ -121,50 +137,61 @@ Json encodeObservation(const Observation& o) {
         j["formation"].push_back(id.index);
     for (std::uint16_t i = 0; i < 4; ++i) {
         const auto& p = *g.party().character({i});
-        Json c = {{"character", i},
-                  {"name", p.build.name},
-                  {"id", p.build.id},
-                  {"race", cat.race(p.build.race)->id},
-                  {"class", cat.characterClass(p.build.characterClass)->id},
-                  {"level", p.build.level},
-                  {"hp", p.hitPoints},
-                  {"max_hp", p.stats.maxHitPoints},
-                  {"temporary_hp", p.temporaryHitPoints},
-                  {"life", unsigned(p.life)},
-                  {"death_successes", p.successes},
-                  {"death_failures", p.failures},
-                  {"mana", p.mana},
-                  {"max_mana", p.maxMana},
-                  {"hit_dice", p.availableHitDice},
-                  {"xp", p.experience},
-                  {"armor_class", g.effects().armorClass(rules::CharacterId{i})},
-                  {"abilities", p.stats.abilities},
-                  {"base_abilities", p.build.baseAbilities},
-                  {"level_four_asi", p.build.levelFourAsi.increases},
-                  {"saves", p.stats.saves},
-                  {"proficiency", p.stats.proficiency},
-                  {"initiative", p.stats.initiative},
-                  {"spell_attack_bonus", p.stats.spellAttackBonus},
-                  {"max_mana_bonus", p.stats.maxManaBonus},
-                  {"death_save_bonus", p.stats.deathSaveBonus},
-                  {"bolts", g.party().inventory().count({i}, rules::Ammunition::Bolt, g.party().catalog())},
-                  {"carried_weight", p.stats.carriedWeight},
-                  {"carrying_capacity", p.stats.carryingCapacity},
-                  {"statuses", status(g.effects().statuses(rules::CharacterId{i}))},
-                  {"cooldown_ms", u(combat.cooldownMs[i])},
-                  {"spent", combat.spent[i]},
-                  {"defending", combat.defending[i]},
-                  {"second_wind", p.secondWind},
-                  {"arcane_recovery", p.arcaneRecovery},
-                  {"action_surge", p.actionSurge},
-                  {"channel_divinity", p.channelDivinity},
-                  {"lay_on_hands", p.layOnHands},
-                  {"cantrips", spellList(cat, p.build.spells.cantrips)},
-                  {"learned", spellList(cat, p.build.spells.learned)},
-                  {"prepared", spellList(cat, p.build.spells.prepared)},
-                  {"domain", spellList(cat, p.build.spells.domain)},
-                  {"racial", spellList(cat, p.build.spells.racial)},
-                  {"inventory", Json::array()}};
+        Json c = {
+            {"character", i},
+            {"name", p.build.name},
+            {"id", p.build.id},
+            {"race", cat.race(p.build.race)->id},
+            {"class", cat.characterClass(p.build.characterClass)->id},
+            {"level", p.build.level},
+            {"hp", p.hitPoints},
+            {"max_hp", p.stats.maxHitPoints},
+            {"temporary_hp", p.temporaryHitPoints},
+            {"life", unsigned(p.life)},
+            {"death_successes", p.successes},
+            {"death_failures", p.failures},
+            {"mana", p.mana},
+            {"max_mana", p.maxMana},
+            {"hit_dice", p.availableHitDice},
+            {"xp", p.experience},
+            {"armor_class", g.effects().armorClass(rules::CharacterId{i})},
+            {"abilities", p.stats.abilities},
+            {"base_abilities", p.build.baseAbilities},
+            {"level_four_asi", p.build.levelFourAsi.increases},
+            {"saves", p.stats.saves},
+            {"proficiency", p.stats.proficiency},
+            {"initiative", p.stats.initiative},
+            {"spell_attack_bonus", p.stats.spellAttackBonus},
+            {"max_mana_bonus", p.stats.maxManaBonus},
+            {"death_save_bonus", p.stats.deathSaveBonus},
+            {"bolts", g.party().inventory().count({i}, rules::Ammunition::Bolt, g.party().catalog())},
+            {"carried_weight", p.stats.carriedWeight},
+            {"carrying_capacity", p.stats.carryingCapacity},
+            {"statuses", status(g.effects().statuses(rules::CharacterId{i}))},
+            {"cooldown_ms", u(combat.cooldownMs[i])},
+            {"spent", combat.spent[i]},
+            {"defending", combat.defending[i]},
+            {"second_wind", p.secondWind},
+            {"arcane_recovery", p.arcaneRecovery},
+            {"action_surge", p.actionSurge},
+            {"channel_divinity", p.channelDivinity},
+            {"lay_on_hands", p.layOnHands},
+            {"inspiration_uses", g.party().inspirationUses({std::uint16_t(i)})},
+            {"inspiration_source", p.inspirationUntil ? Json(p.inspirationSource.index) : Json(nullptr)},
+            {"inspiration_until_ms", u(p.inspirationUntil)},
+            {"cantrips", spellList(cat, p.build.spells.cantrips)},
+            {"learned", spellList(cat, p.build.spells.learned)},
+            {"prepared", spellList(cat, p.build.spells.prepared)},
+            {"domain", spellList(cat, p.build.spells.domain)},
+            {"racial", spellList(cat, p.build.spells.racial)},
+            {"inventory", Json::array()}};
+        if (g.party().progressionClass({i}) == rules::ProgressionClass::Bard) {
+            auto& passives = c["passive_features"] = Json::array();
+            if (p.build.level >= 2)
+                passives.push_back("song_of_rest");
+            if (p.build.level >= 3)
+                passives.push_back("cutting_words");
+        }
         if (g.party().progressionClass({i}) == rules::ProgressionClass::Ranger) {
             auto& passive = c["passive_features"] = Json::array();
             if (p.build.level >= 2)

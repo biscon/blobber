@@ -40,13 +40,13 @@ struct RestPreview {
     ItemHandle supply{};
     rules::CharacterId supplier{};
     unsigned kits = 0;
-    bool sanctuary = false;
+    bool sanctuary = false, song = false;
     std::uint64_t elapsedMs = 0;
     explicit operator bool() const noexcept { return error == RestError::None; }
 };
 struct RestResult {
     RestError error = RestError::None;
-    std::array<int, 4> healed{}, mana{}, diceSpent{};
+    std::array<int, 4> healed{}, mana{}, diceSpent{}, songHealing{};
     bool usedSupply = false, preparationChanged = false;
     explicit operator bool() const noexcept { return error == RestError::None; }
 };

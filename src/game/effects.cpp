@@ -133,8 +133,43 @@ int EffectController::rollModifier(EffectTarget t) noexcept {
         bonus -= static_cast<int>(rng_.roll({1, 4, 0}).value.total);
     return bonus;
 }
-rules::SaveResult EffectController::save(EffectTarget target, rules::Ability ability,
-                                         std::int64_t dc) noexcept {
+int EffectController::inspiration(RollPurpose purpose, rules::CharacterId who, ActorId enemy,
+                                  std::int64_t total, std::int64_t dc) noexcept {
+    const auto* member = party_.character(who);
+    if (!rolls_ || !member || member->inspirationUntil <= gameplayMs_ || total >= dc || dc > total + 6)
+        return 0;
+    RollDecision roll{actors_.snapshot().world, 0, purpose, who, enemy, total, dc};
+    if (!rolls_->ask(roll).spend)
+        return 0;
+    party_.clearInspiration(who);
+    const int die = int(rng_.roll({1, 6, 0}).value.total);
+    rolls_->record(roll, die);
+    return die;
+}
+int EffectController::cuttingWords(RollDecision roll, rules::CharacterId& bard) noexcept {
+    if (!rolls_ || !roll.eligible || roll.needed() < 1 || roll.needed() > 6)
+        return 0;
+    const auto choice = rolls_->ask(roll);
+    if (!choice.spend || !party_.spendInspiration(choice.bard))
+        return 0;
+    bard = choice.bard;
+    const int die = int(rng_.roll({1, 6, 0}).value.total);
+    rolls_->record(roll, die);
+    return die;
+}
+rules::AttackResult EffectController::partyHit(rules::CharacterId who, ActorId enemy, rules::D20Roll roll,
+                                               int bonus, bool automatic) noexcept {
+    const int ac = armorClass(enemy);
+    auto hit = rules::resolveAttack(roll, bonus, ac).value;
+    if (!automatic && hit.outcome == rules::AttackOutcome::Miss && roll.selected != 1) {
+        hit.total += inspiration(RollPurpose::Attack, who, enemy, hit.total, ac);
+        if (hit.total >= ac)
+            hit.outcome = rules::AttackOutcome::Hit;
+    }
+    return hit;
+}
+rules::SaveResult EffectController::save(EffectTarget target, rules::Ability ability, std::int64_t dc,
+                                         RollPurpose purpose) noexcept {
     rules::SaveResult result;
     const auto index = static_cast<std::size_t>(ability);
     if (!living(target) || index >= rules::abilityCount)
@@ -151,6 +186,8 @@ rules::SaveResult EffectController::save(EffectTarget target, rules::Ability abi
                                : rules::RollMode::Normal)
                       .value;
     result.total = std::int64_t(result.roll.selected) + bonus + saveModifier(target);
+    if (!target.npc)
+        result.total += inspiration(purpose, target.character, {}, result.total, dc);
     result.succeeded = result.total >= dc;
     return result;
 }
@@ -385,6 +422,10 @@ void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool r
     assert(goal >= gameplayMs_);
     bindEvents(events, session);
     party_.expireTemporary(goal);
+    if (!turns_)
+        for (auto& until : mockeryUntil_)
+            if (until <= goal)
+                until = 0;
     for (;;) {
         EffectInstance* next = nullptr;
         std::uint64_t deadline = std::numeric_limits<std::uint64_t>::max();
@@ -439,6 +480,11 @@ void EffectController::advance(std::uint64_t goal, std::uint64_t session, bool r
             e.retryMs += retryIntervalMs;
     }
     gameplayMs_ = goal;
+    for (auto id : party_.snapshot().formation) {
+        const auto until = party_.character(id)->inspirationUntil;
+        if (until && until <= goal)
+            party_.clearInspiration(id);
+    }
 }
 void EffectController::damaged(EffectTarget id, std::int64_t damage, std::uint64_t now,
                                CombatEvents& events) noexcept {
@@ -451,7 +497,7 @@ void EffectController::damaged(EffectTarget id, std::int64_t damage, std::uint64
     for (auto& e : instances_)
         if (e.active && held.serial && e.id.serial == held.serial) {
             const auto dc = std::max(std::int64_t{10}, damage / 2);
-            const auto saved = save(id, rules::Ability::Constitution, dc);
+            const auto saved = save(id, rules::Ability::Constitution, dc, RollPurpose::Concentration);
             emit(e, EffectNotice::ConcentrationSave, EffectEnd::None, id, saved, dc, now, events);
             if (!saved.succeeded && e.active)
                 end(e, EffectEnd::FailedSave, now, events);

@@ -5,6 +5,9 @@ namespace blobber {
 const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept {
     using C = rules::ProgressionClass;
     if (level == 4) {
+        if (cls == C::Bard)
+            return "Improve ability scores, choose one new cantrip and learn one spell. Maximum mana rises "
+                   "to 17.";
         if (cls == C::Wizard)
             return "Ability Score Improvement. Learn one cantrip and two spells. Maximum mana rises to 17; "
                    "second-level spells remain your highest spell level.";
@@ -34,6 +37,12 @@ const char* advancementFeatures(rules::ProgressionClass cls, int level) noexcept
     case C::Paladin:
         return level == 2 ? "Defense grants +1 AC while armored. Charisma spellcasting and Divine Smite unlock; share four mana. Lay on Hands pool rises to ten."
                           : "Oath of Devotion: Sanctuary and Protection from Evil and Good are always prepared. Sacred Weapon uses Channel Divinity, restored on rest. Mana rises to six; Lay on Hands to fifteen.";
+    case C::Bard:
+        return level == 2
+                   ? "Song of Rest adds 1d6 healing for each companion spending Hit Dice on a short rest. "
+                     "Learn one spell."
+                   : "College of Lore grants Cutting Words. Spend one Inspiration use and a reaction to "
+                     "reduce an enemy attack by 1d6. Learn one spell, including second-level choices.";
     case C::Ranger:
         return level == 2
                    ? "Archery adds +2 to ranged weapon attack rolls. Learn Hunter's Mark and one healing "

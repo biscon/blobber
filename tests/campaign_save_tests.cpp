@@ -3,11 +3,12 @@
 #include "core/preparation.hpp"
 #include "persistence/campaign_store.hpp"
 #include "persistence/character_library.hpp"
+#include "support/bard_fixtures.hpp"
 #include "support/campaign_fixtures.hpp"
-#include "support/paladin_fixtures.hpp"
-#include "support/ranger_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
 #include "support/generation_blueprints.hpp"
+#include "support/paladin_fixtures.hpp"
+#include "support/ranger_fixtures.hpp"
 #include "ui/interaction.hpp"
 #include "ui/save_layout.hpp"
 #include <chrono>
@@ -597,6 +598,27 @@ void paladinPersistence() {
     rejects([&] { CampaignRun invalid(blobber::test::campaignBlueprints(), c, std::move(*corrupt), d.timings); },
             "Campaign rejects malformed healing pool");
 }
+void bardPersistence() {
+    const auto c = blobber::test::bardCatalog(catalog());
+    const auto d = definitions();
+    const auto& blueprints = blobber::test::campaignBlueprints();
+    auto run = std::make_unique<CampaignRun>(blueprints, c, *c.preset(), d.types, d.timings, 5);
+    blobber::test::levelBard(run->party(), 4);
+    check(run->game().submit(blobber::test::inspire(run->game(), 1)).reason == CommandReason::Resolved,
+          "Campaign inspiration");
+    run->game().update(7, false);
+    const int uses = run->party().inspirationUses({0});
+    run = copy(c, d, *run);
+    check(run->party().inspirationUses({0}) == uses &&
+              run->party().character({1})->inspirationSource.index == 0,
+          "Campaign codec preserves spent use and held die");
+    travel(*run, FixtureKind::Downstairs);
+    check(run->party().character({1})->inspirationUntil > run->game().combat().snapshot().gameplayMs,
+          "Inspiration stays with the party across floor clocks");
+    auto malformed = run->party().checkpoint();
+    malformed.state.characters[1].inspirationSource = {1};
+    rejects([&] { Party invalid(c, malformed); }, "Reject an impossible Inspiration source");
+}
 void rangerPersistence() {
     using namespace rules;
     const auto c = blobber::test::rangerCatalog(catalog());
@@ -648,7 +670,7 @@ void rangerPersistence() {
     const CampaignContent content{"fixture", 0, &blueprints};
     auto current = run->checkpoint();
     auto legacy = blobber::automation::Json::parse(encodeCampaign(c, d, content, *current));
-    check(legacy["schema"] == 25 && legacy["simulation"] == 27, "Ranger campaigns carry the new versions");
+    check(legacy["schema"] == 26 && legacy["simulation"] == 28, "Ranger campaigns carry the new versions");
     legacy["schema"] = 24;
     legacy["simulation"] = 26;
     rejects([&] { decodeCampaign(c, d, content, legacy.dump()); }, "Pre-Ranger campaigns require their original build");
@@ -1687,6 +1709,10 @@ int main(int argc, char** argv) {
         if (argc == 2 && std::string(argv[1]) == "--paladin") {
             paladinPersistence();
             std::cout << "paladin campaign persistence passed\n";
+            return 0;
+        }
+        if (argc == 2 && std::string(argv[1]) == "--bard") {
+            bardPersistence();
             return 0;
         }
         if (argc == 2 && std::string(argv[1]) == "--ranger") {

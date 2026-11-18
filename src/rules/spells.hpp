@@ -42,10 +42,11 @@ enum class SpellKind : std::uint8_t {
     ProtectionFromEvilAndGood,
     HuntersMark,
     Goodberry,
+    ViciousMockery,
     Count
 };
 enum class Casting : std::uint8_t { None, Wisdom, Intelligence, Charisma };
-enum class SpellList : std::uint8_t { None, Cleric, Wizard, Paladin, Ranger };
+enum class SpellList : std::uint8_t { None, Cleric, Wizard, Paladin, Ranger, Bard };
 enum class SpellProgression : std::uint8_t { Full, Half };
 constexpr unsigned castingAbilityIndex(Casting c) noexcept {
     return c == Casting::Wisdom ? 4 : c == Casting::Charisma ? 5 : 3;
@@ -66,7 +67,8 @@ enum class Feature : std::uint8_t {
     LayOnHands,
     SacredWeapon,
     DismissSacredWeapon,
-    DivineSmite
+    DivineSmite,
+    BardicInspiration
 };
 enum class ClassFeature : std::uint8_t {
     SecondWind = 1,

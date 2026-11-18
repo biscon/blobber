@@ -1,5 +1,6 @@
 #include "game/commands.hpp"
 #include "game/session.hpp"
+#include "support/bard_checks.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "support/early_equipment_fixtures.hpp"
@@ -593,6 +594,11 @@ int main() {
         blobber::test::paladinChecks();
         blobber::test::rangerProgression();
         blobber::test::rangerGoodberry();
+        blobber::test::bardProgressionAndRecovery();
+        blobber::test::bardAttackDecisions();
+        blobber::test::bardSavesAndMockery();
+        blobber::test::bardDeathAndRayDecisions();
+        blobber::test::competingLoreBards();
         blobber::test::rangerMarkAndDamage();
         identities();
         levelFourChoices();

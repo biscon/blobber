@@ -45,7 +45,10 @@ void HudPainter::camp(const HudSnapshot& h) const {
         if (c.playing) {
             std::snprintf(line, sizeof(line), "+%d HP  |  +%d mana", c.result.healed[i], c.result.mana[i]);
             centered(line, {x, 241, 104, 11}, gold);
-            std::snprintf(line, sizeof(line), "Hit Dice remaining: %d", m.available);
+            if (c.result.songHealing[i])
+                std::snprintf(line, sizeof(line), "Includes %d HP from song", c.result.songHealing[i]);
+            else
+                std::snprintf(line, sizeof(line), "Hit Dice remaining: %d", m.available);
         } else if (shortRest) {
             const auto color = m.living && m.hp < m.maxHp && m.available ? gold : muted;
             box(campLayout::minus(i), color);
@@ -54,7 +57,10 @@ void HudPainter::camp(const HudSnapshot& h) const {
             centered("+", campLayout::plus(i), color);
             std::snprintf(line, sizeof(line), "%u / %d", unsigned(c.request.dice[i]), m.available);
             centered(line, {x + 24, 239, 48, 16});
-            std::snprintf(line, sizeof(line), "d%d %+d  |  HP %d/%d", m.sides, m.modifier, m.hp, m.maxHp);
+            if (c.preview.song && c.request.dice[i])
+                std::snprintf(line, sizeof(line), "Song of Rest +1d6");
+            else
+                std::snprintf(line, sizeof(line), "d%d %+d  |  HP %d/%d", m.sides, m.modifier, m.hp, m.maxHp);
         } else {
             std::snprintf(line, sizeof(line), m.living ? "HP %d/%d  Mana %d/%d" : "Dead - no recovery", m.hp,
                           m.maxHp, m.mana, m.maxMana);

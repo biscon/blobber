@@ -2,9 +2,10 @@
 #include "game/commands.hpp"
 #include "support/arena_preparation_fixtures.hpp"
 #include "support/automation_fixtures.hpp"
+#include "support/bard_fixtures.hpp"
+#include "support/generation_blueprints.hpp"
 #include "support/paladin_fixtures.hpp"
 #include "support/ranger_fixtures.hpp"
-#include "support/generation_blueprints.hpp"
 #include <iostream>
 #include <sstream>
 #include <sys/wait.h>
@@ -57,6 +58,63 @@ void paladinWire() {
     impact.damageComponents[1] = {9, 9, DamageAdjustment::Normal};
     const auto event = encodeEvent(impact, cat, true);
     check(event["damage_components"].size() == 2 && event["damage_components"][1]["type"] == "radiant", "Wire feedback keeps damage types separate");
+}
+void bardWire() {
+    const auto cat = blobber::test::bardCatalog();
+    const auto defs = definitions();
+    auto arena = defaultArena(cat);
+    arena.adjust({0}, 1);
+    arenaLevel(cat, arena, 3);
+    arena.preparation.advancements[1][0].learned = rules::spellBit(cat.findSpell("shatter"));
+    const auto resolve = [&](const Json& expected) -> Json {
+        Session s(blobber::test::campaignBlueprints(), cat, defs, arena, Mode::Diagnostic);
+        auto& g = s.game();
+        const auto grant = decodeAction({{"kind", "combat"},
+                                         {"character", 0},
+                                         {"action", "feature"},
+                                         {"feature", "bardic_inspiration"},
+                                         {"allies", {1}}},
+                                        g);
+        check(s.action(grant, false).accepted, "Headless Bard grants Inspiration");
+        const auto cell = g.movement().player.cell;
+        const auto cast = decodeAction({{"kind", "combat"},
+                                        {"character", 0},
+                                        {"action", "spell"},
+                                        {"spell", "shatter"},
+                                        {"cell", Json::array({cell.x, cell.y})}},
+                                       g);
+        check(s.action(cast, false).accepted, "Headless Bard casts known Shatter");
+        if (!g.pendingRollDecision().serial)
+            return nullptr;
+        Observation o;
+        s.observe(o);
+        const auto roll = encodeObservation(o).at("pending_roll");
+        if (!expected.is_null())
+            check(roll == expected.at("pending"), "Same seed reproduces pending save");
+        check(roll.at("purpose") == "save" && roll.at("serial").is_string() && roll.at("character") == 1 &&
+                  describeActions(g, o).contains("resolve_roll"),
+              "Headless player can discover the pending save");
+        const auto answer =
+            decodeAction({{"kind", "resolve_roll"}, {"serial", roll.at("serial")}, {"spend", true}}, g);
+        const auto before = s.ticks();
+        const auto now = g.timeMs();
+        s.tick();
+        check(s.ticks() == before && g.timeMs() == now && s.action(answer, true).accepted &&
+                  g.party().character({1})->inspirationUntil,
+              "Preview and tick preserve held roll");
+        check(s.action(answer, false).accepted && !s.action(answer, false).accepted,
+              "Wire answer commits once");
+        s.observe(o);
+        return {{"pending", roll}, {"spent", encodeObservation(o).at("last_inspiration")}};
+    };
+    for (arena.seed = 1; arena.seed <= 48; ++arena.seed) {
+        const auto result = resolve(nullptr);
+        if (!result.is_null()) {
+            check(resolve(result) == result, "Same seed and answer reproduce the full Bard decision");
+            return;
+        }
+    }
+    check(false, "Headless Bard fixture reaches an eligible save");
 }
 void rangerWire() {
     const auto cat = blobber::test::rangerCatalog();
@@ -735,6 +793,7 @@ int main(int argc, char** argv) {
         }
         paladinWire();
         rangerWire();
+        bardWire();
         preciseAimProtocol();
         coveredObservations();
         preparedArena();

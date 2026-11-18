@@ -118,7 +118,7 @@ class CampaignRun {
         unsigned from = 0, to = 0;
         std::uint64_t mutation = 0, actorRevision = 0;
         std::array<std::uint64_t, 100> partyStamp{};
-        std::array<std::uint64_t, 4> temporaryUntil{};
+        std::array<std::uint64_t, 4> temporaryUntil{}, inspirationUntil{};
     };
     CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&,
                 const rules::PresetParty&, const std::vector<std::string>& types,

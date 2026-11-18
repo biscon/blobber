@@ -107,10 +107,28 @@ void CommandController::refreshCharacterSheet() noexcept {
         if (c->build.level >= 2) feature("Divine Smite", "Two mana on a melee hit; critical doubles dice.", "+2d8 radiant");
         if (c->build.level >= 3) feature("Devotion / Sacred Weapon", "+CHA to weapon attacks for 60 seconds.", c->channelDivinity ? "1 / 1 use" : "0 / 1 use");
     }
+    if (cls.progression == rules::ProgressionClass::Bard) {
+        char uses[32];
+        std::snprintf(uses, sizeof(uses), "%d / %d uses", party_.inspirationUses(i.character),
+                      std::max(1, c->stats.modifiers[5]));
+        feature("Bardic Inspiration", "Give a companion a d6. Long rest restores uses.", uses);
+        if (c->build.level >= 2)
+            feature("Song of Rest", "Adds healing when companions spend Hit Dice.", "+1d6 per rest");
+        if (c->build.level >= 3)
+            feature("Cutting Words", "Spend one Bard use and a reaction on an incoming attack.",
+                    "-1d6 to hit");
+    }
     if (cls.progression == rules::ProgressionClass::Ranger && c->build.level >= 2) {
         feature("Archery", "Included in ranged weapon attack rolls.", "+2 ranged attack");
         if (c->build.level >= 3)
             feature("Colossus Slayer", "Weapon hits against wounded enemies.", "+1d8 once per turn");
+    }
+    if (cls.progression == rules::ProgressionClass::Bard) {
+        char count[32];
+        std::snprintf(count, sizeof(count), "%u known spells", rules::spellCount(c->build.spells.learned));
+        feature("Known Spells", "Choose a known spell in the spell picker. Cast with Charisma.", count);
+    }
+    if (cls.progression == rules::ProgressionClass::Ranger && c->build.level >= 2) {
         auto& known = out.features[out.featureCount++];
         known.name = "Known Spells";
         known.detail = "Cast directly with Wisdom.";

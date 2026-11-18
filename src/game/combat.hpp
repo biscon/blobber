@@ -215,8 +215,8 @@ class CombatController {
     // Preparation-only owned values; no borrowed pointers or navigation workspace.
     struct Saved {
         CombatSnapshot state;
-        std::array<std::uint64_t, 4> sneakReady{}, cunningReady{}, extraUntil{}, partyReady{}, saveDue{},
-            defendDue{}, processedCasterRound{};
+        std::array<std::uint64_t, 4> sneakReady{}, cunningReady{}, reactionReady{}, extraUntil{},
+            partyReady{}, saveDue{}, defendDue{}, processedCasterRound{};
         std::array<bool, 4> extraAction{};
         std::array<bool, NpcWorld::maxInstances> known{}, episodeActors{};
         std::array<std::uint64_t, NpcWorld::maxInstances> knownUntil{}, enemyReady{}, enemyBusy{};
@@ -257,7 +257,7 @@ class CombatController {
     };
     std::array<SpellPayload, rules::partySize> spellPayloads_{};
     std::array<std::uint64_t, rules::partySize> sneakReady_{};
-    std::array<std::uint64_t, 4> cunningReady_{}, extraUntil_{};
+    std::array<std::uint64_t, 4> cunningReady_{}, reactionReady_{}, extraUntil_{};
     std::array<bool, 4> extraAction_{};
     bool normalAction(rules::CharacterId) const noexcept;
     bool cunningAvailable(rules::CharacterId) const noexcept;

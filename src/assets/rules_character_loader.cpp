@@ -87,6 +87,8 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                 fail("spells[].kind", "unknown concrete spell");
             if (version < 18 && (spell.kind == SpellKind::HuntersMark || spell.kind == SpellKind::Goodberry))
                 fail("spells[].kind", "Ranger spells require schema version 18");
+            if (version < 19 && spell.kind == SpellKind::ViciousMockery)
+                fail("spells[].kind", "Vicious Mockery requires schema version 19");
             out.spells.push_back(std::move(spell));
         }
     }
@@ -141,11 +143,16 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
         if (version >= 9)
             cls.progression = static_cast<ProgressionClass>(
                 choice(c.at("progression"), p + ".progression",
-                       std::array<const char*, 7>{"none", "fighter", "cleric", "rogue", "wizard", "paladin", "ranger"}));
+                       std::array<const char*, 8>{"none", "fighter", "cleric", "rogue", "wizard", "paladin",
+                                                  "ranger", "bard"}));
         if (version >= 17) {
-            cls.spellList = static_cast<SpellList>(choice(c.at("spell_list"), p + ".spell_list", std::array<const char*, 5>{"none", "cleric", "wizard", "paladin", "ranger"}));
+            cls.spellList = static_cast<SpellList>(
+                choice(c.at("spell_list"), p + ".spell_list",
+                       std::array<const char*, 6>{"none", "cleric", "wizard", "paladin", "ranger", "bard"}));
             cls.spellProgression = static_cast<SpellProgression>(choice(c.at("spell_progression"), p + ".spell_progression", std::array<const char*, 2>{"full", "half"}));
         }
+        if (version < 19 && (cls.progression == ProgressionClass::Bard || cls.spellList == SpellList::Bard))
+            fail(p, "bard requires schema version 19");
         if (version < 18 && (cls.progression == ProgressionClass::Ranger || cls.spellList == SpellList::Ranger))
             fail(p, "ranger requires schema version 18");
         cls.id = identifier(c.at("id"), p + ".id");

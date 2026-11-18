@@ -72,13 +72,19 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
     }
     for (const auto& c : classes_) {
         const bool ranger = c.progression == ProgressionClass::Ranger;
-        if (c.spellList > SpellList::Ranger || c.spellProgression > SpellProgression::Half ||
-            (c.progression == ProgressionClass::Paladin && (c.casting != Casting::Charisma || c.spellProgression != SpellProgression::Half || c.spellList != SpellList::Paladin)) ||
+        if (c.spellList > SpellList::Bard ||
+            ((c.progression == ProgressionClass::Bard) != (c.spellList == SpellList::Bard)) ||
+            (c.spellList == SpellList::Bard &&
+             (c.casting != Casting::Charisma || c.spellProgression != SpellProgression::Full)) ||
+            c.spellProgression > SpellProgression::Half ||
+            (c.progression == ProgressionClass::Paladin &&
+             (c.casting != Casting::Charisma || c.spellProgression != SpellProgression::Half ||
+              c.spellList != SpellList::Paladin)) ||
             (ranger != (c.spellList == SpellList::Ranger)) ||
             (ranger && (c.casting != Casting::Wisdom || c.spellProgression != SpellProgression::Half ||
                         c.spellCount != 3 || c.features || c.allowsDefense)))
             throw std::runtime_error("Invalid casting profile");
-        if (unsigned(c.progression) > unsigned(ProgressionClass::Ranger))
+        if (unsigned(c.progression) > unsigned(ProgressionClass::Bard))
             throw std::runtime_error("Invalid class progression");
         if (static_cast<unsigned>(c.casting) > static_cast<unsigned>(Casting::Charisma) ||
             (c.features & ~15u) || c.spellCount > c.spells.size() ||

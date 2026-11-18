@@ -252,6 +252,21 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
                 return CommandReason::InvalidTarget;
             return c.targetCount ? spellRecipient(c, pose, 0) : CommandReason::Ready;
         }
+        if (c.feature == rules::Feature::BardicInspiration) {
+            if (party_.progressionClass(c.character) != rules::ProgressionClass::Bard)
+                return CommandReason::FeatureRequired;
+            if (!party_.inspirationUses(c.character))
+                return CommandReason::NoCharges;
+            if (cunningReady_[c.character.index] > state_.gameplayMs)
+                return CommandReason::Cooldown;
+            if (c.targetCount != 1)
+                return CommandReason::MissingTarget;
+            const auto* ally = party_.character(c.allies[0]);
+            return ally && c.allies[0].index != c.character.index && effects_.conscious(c.allies[0]) &&
+                           !ally->inspirationUntil
+                       ? CommandReason::Ready
+                       : CommandReason::InvalidAlly;
+        }
         if (c.feature == rules::Feature::LayOnHands) {
             if (party_.progressionClass(c.character) != rules::ProgressionClass::Paladin)
                 return CommandReason::FeatureRequired;
@@ -527,7 +542,11 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
         auto result = out;
         result.recipient = c.character;
         result.hit = true;
-        if (c.feature == rules::Feature::LayOnHands) {
+        if (c.feature == rules::Feature::BardicInspiration) {
+            party_.giveInspiration(c.character, c.allies[0], state_.gameplayMs + 3600000);
+            result.recipient = c.allies[0];
+            result.event = CombatEvent::Recovery;
+        } else if (c.feature == rules::Feature::LayOnHands) {
             const int hp = party_.character(c.allies[0])->hitPoints;
             party_.useLayOnHands(c.character, c.allies[0], c.healingAmount);
             result.event = CombatEvent::Healing;
@@ -756,13 +775,10 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     const auto roll = rng_.d20(result.attackRollMode).value;
                     effects_.consumeGuiding(id, now, events);
                     result.roll = roll.selected;
-                    const auto hit =
-                        rules::resolveAttack(roll,
-                                             ch->stats.proficiency + ch->stats.spellAttackBonus +
-                                                 party_.spellAccess(c.character, c.spell).modifier +
-                                                 effects_.rollModifier(c.character),
-                                             effects_.armorClass(id))
-                            .value;
+                    const int bonus = ch->stats.proficiency + ch->stats.spellAttackBonus +
+                                      party_.spellAccess(c.character, c.spell).modifier +
+                                      effects_.rollModifier(c.character);
+                    const auto hit = effects_.partyHit(c.character, id, roll, bonus);
                     result.hit = hit.outcome != rules::AttackOutcome::Miss;
                     result.critical = hit.outcome == rules::AttackOutcome::Critical ||
                                       (result.hit && held && combatAdjacent(map_, pose.cell, a->npc.cell));
@@ -773,7 +789,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                         if (sameActor(id, c.enemies[j]))
                             result.darts = c.darts[j];
                     result.damage = sharedDamage * result.darts;
-                } else if (kind != SpellKind::Thunderwave &&
+                } else if (kind != SpellKind::Thunderwave && kind != SpellKind::ViciousMockery &&
                            (actors_.catalog().monster(a->monster)->damageProfile.immunities &
                             rules::damageBit(r.damage))) {
                     // Damage-only immunity needs no target save. Keep the shared cast roll/cost.
@@ -791,6 +807,8 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
                     events.append(notice);
                     result.hit = !save.succeeded || r.area;
                     result.damage = save.succeeded ? (r.area ? sharedDamage / 2 : 0) : sharedDamage;
+                    if (kind == SpellKind::ViciousMockery && !save.succeeded)
+                        effects_.mock(id);
                     visualSaved = save.succeeded;
                     push[i] = kind == SpellKind::Thunderwave && !save.succeeded;
                 }

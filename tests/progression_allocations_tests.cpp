@@ -1,10 +1,11 @@
 #include "game/commands.hpp"
-#include "ui/interaction.hpp"
+#include "support/bard_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/fixture_world.hpp"
-#include "support/progression_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
+#include "support/progression_fixtures.hpp"
 #include "support/ranger_fixtures.hpp"
+#include "ui/interaction.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <memory>
@@ -118,7 +119,23 @@ int main() {
         blobber::test::advanceRanger(hunting.party(), 3);
         levelReady(hunting, 0);
         bool okay = true;
+        const auto bardCatalog = blobber::test::bardCatalog();
+        std::uint32_t bardSeed = 1;
+        for (; bardSeed <= 64; ++bardSeed) {
+            auto probe = std::make_unique<GameSession>(map, bardCatalog, places, bardSeed, spellSpawn, false);
+            probe->submit(blobber::test::inspire(*probe, 2));
+            probe->submit(blobber::test::inspiredShot(*probe));
+            if (probe->pendingRollDecision().serial)
+                break;
+        }
+        check(bardSeed <= 64, "Allocation fixture reaches an Inspiration prompt");
+        auto bard = std::make_unique<GameSession>(map, bardCatalog, places, bardSeed, spellSpawn, false);
         tracking = true;
+        okay &= bard->submit(blobber::test::inspire(*bard, 2)).reason == CommandReason::Resolved;
+        okay &= bard->submit(blobber::test::inspiredShot(*bard)).reason == CommandReason::Resolved;
+        const auto roll = bard->pendingRollDecision();
+        okay &= roll.serial && bard->resolveRollDecision(roll.world, roll.serial, {true, {}});
+        bard->update(.5, false);
         blobber::test::advanceRanger(ranger.party(), 4);
         ranger.party().damage({1}, 5);
         rangerUi.refresh({}, false, false, true);

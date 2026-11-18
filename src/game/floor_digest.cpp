@@ -234,6 +234,7 @@ struct Canonical {
     void add(const EffectController::Saved& v) {
         add(v.instances);
         add(v.guidingUntil);
+        add(v.mockeryUntil);
         add(v.nextSerial);
         add(v.gameplayMs);
         add(v.conditions);
@@ -276,6 +277,7 @@ struct Canonical {
         add(v.state);
         add(v.sneakReady);
         add(v.cunningReady);
+        add(v.reactionReady);
         add(v.extraUntil);
         add(v.partyReady);
         add(v.saveDue);

@@ -81,6 +81,9 @@ rules::RollMode EffectController::attackMode(EffectTarget attacker, EffectTarget
                  (close && has(target, EffectKind::Knockdown));
     disadvantage |= has(attacker, EffectKind::Restrained) || has(attacker, EffectKind::Blind) ||
                     has(attacker, EffectKind::Knockdown) || (!close && has(target, EffectKind::Knockdown));
+    if (attacker.npc && actors_.actor(attacker.enemy))
+        disadvantage |= mockeryUntil_[attacker.enemy.slot] &&
+                        (turns_ || mockeryUntil_[attacker.enemy.slot] > gameplayMs_);
     if (attacker.npc && has(target, EffectKind::ProtectionFromEvilAndGood)) {
         const auto* a = actors_.actor(attacker.enemy);
         disadvantage |= a && rules::protectionCreature(actors_.catalog().monster(a->monster)->creatureType);
@@ -205,6 +208,12 @@ void EffectController::clockMode(bool turns) noexcept {
         }
     if (!turns && groundDueMs_ < gameplayMs_)
         groundDueMs_ = gameplayMs_ + 6000;
+    for (auto& until : mockeryUntil_) {
+        if (turns && until <= gameplayMs_)
+            until = 0;
+        if (!turns && until)
+            until = gameplayMs_ + 6000;
+    }
     turns_ = turns;
 }
 void EffectController::casterTurn(rules::CharacterId caster, std::uint64_t now,

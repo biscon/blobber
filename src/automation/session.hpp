@@ -39,7 +39,8 @@ enum class Operation {
     Advancement,
     Continue,
     Interact,
-    Travel
+    Travel,
+    ResolveRoll
 };
 struct ActionRequest {
     Operation operation = Operation::Combat;
@@ -53,6 +54,8 @@ struct ActionRequest {
     AdvancementRequest advancement;
     FixtureRequest fixture;
     TravelRequest travel;
+    std::uint64_t rollWorld = 0, rollSerial = 0;
+    RollAnswer rollAnswer;
 };
 struct ActionResult {
     bool accepted = false;

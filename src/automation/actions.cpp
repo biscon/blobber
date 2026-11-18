@@ -28,16 +28,34 @@ Json describeActions(const GameSession& g, const Observation& o) {
         {"movement", {"forward", "back", "left", "right", "turn_left", "turn_right"}},
         {"note",
          "Descriptors are not complete combinations. Preview a fully specified action before submission."}};
+    if (const auto& d = g.pendingRollDecision(); d.serial) {
+        return {{"resolve_roll",
+                 {{"serial", std::to_string(d.serial)},
+                  {"choices", {"spend", "keep"}},
+                  {"bard_required_to_spend", bool(d.eligible)}}}};
+    }
     if (g.campaign()) {
         result["management"].push_back("doorway");
         result["management"].push_back("recall");
         result["management"].push_back("waypoint");
         result["travel"] = describeTravel(*g.campaign());
     }
-    const char* featureIds[]{
-        "none",         "second_wind",   "arcane_recovery",         "dismiss_concentration",
-        "action_surge", "preserve_life", "cunning_action",          "spiritual_weapon",
-        "escape_web",   "end_turn",      "dismiss_spiritual_weapon", "lay_on_hands", "sacred_weapon", "dismiss_sacred_weapon", "divine_smite"};
+    const char* featureIds[]{"none",
+                             "second_wind",
+                             "arcane_recovery",
+                             "dismiss_concentration",
+                             "action_surge",
+                             "preserve_life",
+                             "cunning_action",
+                             "spiritual_weapon",
+                             "escape_web",
+                             "end_turn",
+                             "dismiss_spiritual_weapon",
+                             "lay_on_hands",
+                             "sacred_weapon",
+                             "dismiss_sacred_weapon",
+                             "divine_smite",
+                             "bardic_inspiration"};
     const char* names[]{"melee", "back_melee", "defend", "ranged", "spell", "item", "aid", "feature", "smite"};
     const auto eligibility = [&](const PartyCommand& c) {
         auto reason = g.actionBusy() ? CommandReason::Moving : g.combat().validate(c, g.movement().player);
@@ -100,7 +118,7 @@ Json describeActions(const GameSession& g, const Observation& o) {
         }
         c.spell = {};
         c.action = PartyAction::Feature;
-        for (unsigned f = 1; f <= unsigned(rules::Feature::DivineSmite); ++f) {
+        for (unsigned f = 1; f <= unsigned(rules::Feature::BardicInspiration); ++f) {
             c.feature = rules::Feature(f);
             c.spell = {};
             if (c.feature == rules::Feature::SpiritualWeapon)

@@ -82,6 +82,10 @@ class GameSession {
                 Player = {}, bool = true, const std::vector<NpcTimings>& = {}, const RecoveryLevel& = {},
                 const FloorFixtures& = {}, const FloorObjectiveDefinition& = {}) = delete;
     GameSession(const GameSession&) = delete;
+    const RollDecision& pendingRollDecision() const noexcept;
+    const RollDecision& lastRollDecision() const noexcept;
+    int lastInspirationDie() const noexcept { return rolls_ ? rolls_->die() : 0; }
+    bool resolveRollDecision(std::uint64_t world, std::uint64_t serial, RollAnswer) noexcept;
     GameSession& operator=(const GameSession&) = delete;
     const FloorObjectiveSnapshot& objective() const noexcept { return objective_; }
     unsigned guardianDoor() const noexcept {
@@ -118,7 +122,9 @@ class GameSession {
     const DoorSnapshot& doors() const noexcept { return doors_; }
     std::optional<Action> doorPending() const noexcept { return doorPending_; }
     bool opening() const noexcept { return doors_.active(); }
-    bool actionBusy() const noexcept { return opening() || movement().transition.active(); }
+    bool actionBusy() const noexcept {
+        return opening() || movement().transition.active() || pendingRollDecision().serial;
+    }
     void clearPending() noexcept {
         movement_.clearPending();
         doorPending_.reset();
@@ -197,5 +203,21 @@ class GameSession {
     std::uint64_t discoveredFixtures_ = 0;
     void detectContact(bool settlingEndpoint = false) noexcept;
     void driveFacing() noexcept;
+    const CombatEvents& updateSimulation(double seconds, bool paused) noexcept;
+    CombatOutcome submitSimulation(const PartyCommand&) noexcept;
+    void moveSimulation(Action, bool) noexcept;
+    EffectResult applyEffectSimulation(const EffectRequest&) noexcept;
+    bool canInterrupt() const noexcept;
+    void finishRest(std::uint64_t elapsed) noexcept;
+    std::uint64_t restElapsed_ = 0;
+    double updateSeconds_ = 0;
+    PartyCommand submittedCommand_;
+    CombatOutcome submittedResult_;
+    EffectRequest submittedEffect_;
+    EffectResult effectResult_;
+    Action submittedMove_ = Action::Forward;
+    bool freshMove_ = false;
+    // Destroy first so a suspended operation can finish while its owners still exist.
+    std::unique_ptr<RollResolver> rolls_;
 };
 } // namespace blobber

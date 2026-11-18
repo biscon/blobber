@@ -183,15 +183,15 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
         const auto roll = rng_.d20(out.attackRollMode).value;
         effects_.consumeGuiding(out.enemy, now, events);
         out.roll = roll.selected;
-        const auto hit = rules::resolveAttack(roll, w.attackBonus + (!ranged ? effects_.sacredWeaponBonus(c.character) : 0) + effects_.rollModifier(c.character),
-                                              effects_.armorClass(out.enemy))
-                             .value;
+        const bool champion = roll.selected == 19 &&
+                              party_.progressionClass(c.character) == rules::ProgressionClass::Fighter &&
+                              party_.character(c.character)->build.level >= 3;
+        const int bonus = w.attackBonus + (!ranged ? effects_.sacredWeaponBonus(c.character) : 0) +
+                          effects_.rollModifier(c.character);
+        const auto hit = effects_.partyHit(c.character, out.enemy, roll, bonus, champion);
         out.hit = hit.outcome != rules::AttackOutcome::Miss;
-        out.critical =
-            hit.outcome == rules::AttackOutcome::Critical ||
-            (out.roll == 19 && party_.progressionClass(c.character) == rules::ProgressionClass::Fighter &&
-             party_.character(c.character)->build.level >= 3) ||
-            (out.hit && held && combatAdjacent(map_, a->npc.cell, pose.cell));
+        out.critical = hit.outcome == rules::AttackOutcome::Critical || champion ||
+                       (out.hit && held && combatAdjacent(map_, a->npc.cell, pose.cell));
         out.hit |= out.critical;
         if (out.hit) {
             out.damage = rng_.damage(w.damage, out.critical).value.total;
@@ -291,6 +291,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
         state_.defending[out.recipient.index] || (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell)));
     const auto roll = rng_.d20(out.attackRollMode).value;
     out.roll = roll.selected;
+    effects_.endMockery(id);
     const int attackBonus = attack->bonus + effects_.rollModifier(id);
     out.mirror = effects_.mirror(id, out.recipient, roll.selected, attackBonus);
     const auto hit = rules::resolveAttack(roll, attackBonus, effects_.armorClass(out.recipient)).value;
@@ -298,6 +299,26 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     out.critical =
         hit.outcome == rules::AttackOutcome::Critical ||
         (out.hit && effects_.helpless(out.recipient) && combatAdjacent(map_, a->npc.cell, origin_.cell));
+    if (out.hit && !out.mirror.effect.serial && roll.selected != 20 &&
+        hit.total - effects_.armorClass(out.recipient) < 6 && inBowRange(origin_.cell, a->npc.cell) &&
+        inPartyView(map_, origin_.cell, origin_.heading, a->npc.cell, a->npc.subcell) &&
+        lineOfSight(map_, origin_.cell, a->npc.cell)) {
+        RollDecision question{state_.world, 0,         RollPurpose::CuttingWords,         out.recipient,
+                              id,           hit.total, effects_.armorClass(out.recipient)};
+        for (std::uint16_t i = 0; i < rules::partySize; ++i)
+            if (party_.inspirationUses({i}) && party_.character({i})->build.level >= 3 &&
+                effects_.sees(rules::CharacterId{i}) &&
+                (state_.phase == CombatPhase::Turns ? !reactionReady_[i]
+                                                    : reactionReady_[i] <= state_.gameplayMs))
+                question.eligible |= 1u << i;
+        rules::CharacterId bard;
+        const int die = effects_.cuttingWords(question, bard);
+        if (die) {
+            reactionReady_[bard.index] = state_.gameplayMs + combatRoundMs;
+            out.hit = hit.total - die >= question.difficulty;
+            out.critical &= out.hit;
+        }
+    }
     actors_.face(id, headingToward(a->npc.cell, origin_.cell));
     actors_.attack(id, now, ranged);
     if (out.mirror.effect.serial) {
@@ -496,7 +517,12 @@ CombatOutcome CombatController::deathSave(rules::CharacterId id, std::uint64_t) 
         return out;
     out.event = CombatEvent::DeathSave;
     out.roll = rng_.d20().value.selected;
-    out.died = party_.deathSave(id, out.roll, effects_.saveModifier(id)).died;
+    int modifier = effects_.saveModifier(id);
+    if (out.roll != 1 && out.roll != 20)
+        modifier +=
+            effects_.inspiration(RollPurpose::DeathSave, id, {},
+                                 out.roll + modifier + party_.character(id)->stats.deathSaveBonus, 10);
+    out.died = party_.deathSave(id, out.roll, modifier).died;
     saveDue_[id.index] = actionReadyMs();
     return out;
 }

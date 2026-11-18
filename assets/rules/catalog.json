@@ -1,5 +1,5 @@
 {
-  "schema_version": 18,
+  "schema_version": 19,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -947,6 +947,45 @@
       "progression": "ranger",
       "spell_list": "ranger",
       "spell_progression": "half"
+    },
+    {
+      "id": "bard",
+      "name": "Bard",
+      "hit_die": 8,
+      "saves": [
+        "dexterity",
+        "charisma"
+      ],
+      "weapons": [
+        "simple",
+        "longsword",
+        "rapier",
+        "shortsword",
+        "hand_crossbow"
+      ],
+      "armor": [
+        "light"
+      ],
+      "allows_defense": false,
+      "casting": "charisma",
+      "features": [],
+      "spells": [
+        "vicious_mockery",
+        "guidance",
+        "resistance",
+        "spare_the_dying",
+        "bane",
+        "color_spray",
+        "cure_wounds",
+        "sleep",
+        "thunderwave",
+        "hold_person",
+        "lesser_restoration",
+        "shatter"
+      ],
+      "progression": "bard",
+      "spell_list": "bard",
+      "spell_progression": "full"
     }
   ],
   "items": [
@@ -2129,6 +2168,12 @@
       "name": "Goodberry",
       "description": "Share up to 10 HP among injured conscious companions, lowest HP percentage first. No berries are stored.",
       "kind": "goodberry"
+    },
+    {
+      "id": "vicious_mockery",
+      "kind": "vicious_mockery",
+      "name": "Vicious Mockery",
+      "description": "A cutting taunt deals 1d4 psychic damage on a failed Wisdom save and gives disadvantage on the next attack."
     }
   ],
   "creation": [
@@ -2640,6 +2685,81 @@
         }
       ],
       "class": "ranger"
+    },
+    {
+      "recommended": {
+        "strength": 8,
+        "dexterity": 14,
+        "constitution": 14,
+        "intelligence": 10,
+        "wisdom": 10,
+        "charisma": 15
+      },
+      "groups": [
+        [
+          {
+            "id": "rapier",
+            "name": "Rapier",
+            "items": [
+              {
+                "item": "rapier",
+                "quantity": 1,
+                "slot": "main_hand"
+              }
+            ]
+          },
+          {
+            "id": "shortsword",
+            "name": "Shortsword",
+            "items": [
+              {
+                "item": "shortsword",
+                "quantity": 1,
+                "slot": "main_hand"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "id": "leather",
+            "name": "Leather armor",
+            "items": [
+              {
+                "item": "leather",
+                "quantity": 1,
+                "slot": "body"
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "id": "shortbow_kit",
+            "name": "Shortbow and 20 arrows",
+            "items": [
+              {
+                "item": "shortbow",
+                "quantity": 1,
+                "slot": "ranged"
+              },
+              {
+                "item": "arrow",
+                "quantity": 20,
+                "slot": "bag"
+              }
+            ]
+          }
+        ]
+      ],
+      "supplies": [
+        {
+          "item": "healing_potion",
+          "quantity": 1,
+          "slot": "bag"
+        }
+      ],
+      "class": "bard"
     }
   ]
 }

@@ -16,7 +16,9 @@ struct PartyCharacter : rules::HealthState {
     int aidBonus = 0;
     std::uint8_t experienceFraction = 0;
     bool actionSurge = false, channelDivinity = false;
-    int layOnHands = 0;
+    int layOnHands = 0, inspirationSpent = 0;
+    rules::CharacterId inspirationSource{};
+    std::uint64_t inspirationUntil = 0;
     std::uint64_t temporaryUntilMs = 0;
 };
 struct PartySnapshot {
@@ -63,6 +65,10 @@ class Party {
     bool useFeature(rules::CharacterId, rules::Feature) noexcept;
     bool hasFeature(rules::CharacterId, rules::ClassFeature) const noexcept;
     int castingModifier(rules::CharacterId) const noexcept;
+    int inspirationUses(rules::CharacterId) const noexcept;
+    bool spendInspiration(rules::CharacterId) noexcept;
+    void giveInspiration(rules::CharacterId, rules::CharacterId, std::uint64_t until) noexcept;
+    void clearInspiration(rules::CharacterId) noexcept;
     rules::SpellAccess spellAccess(rules::CharacterId, rules::SpellId) const noexcept;
     void lockFormation(bool locked) noexcept { formationLocked_ = locked; }
     std::uint64_t gold() const noexcept { return gold_; }
@@ -76,7 +82,7 @@ class Party {
     std::uint64_t preparationRevision() const noexcept { return preparationRevision_; }
     CampSupplies campSupplies() const noexcept;
     RestError recoveryBenefits(const RestRequest&) const noexcept;
-    RestResult recover(const RestRequest&, ItemHandle supply, rules::DiceRng&) noexcept;
+    RestResult recover(const RestRequest&, ItemHandle supply, rules::DiceRng&, bool song = false) noexcept;
     InventoryResult releaseItem(ItemHandle, std::uint64_t revision, bool preview = false) noexcept;
     bool consumeItem(ItemHandle, unsigned quantity = 1) noexcept;
     bool restoreMana(rules::CharacterId, int amount) noexcept;

@@ -1,5 +1,14 @@
 # SRD 5.1 source and adaptation ledger
 
+## College of Lore Bard through level four
+
+The Bard uses the SRD 5.1 class, College of Lore, Song of Rest and Vicious Mockery
+as its rules baseline. Blobber grants an hour-long d6, prompts after a potentially
+recoverable failure, uses mana and a curated spell list, and limits Cutting Words
+to attack rolls. Party-wide hearing and shared grid targeting follow the existing
+formation. Ability checks, skills and instruments are outside this slice.
+[Bard mechanics](bard_design.md) and [shipping attribution](../assets/rules/ATTRIBUTION.md).
+
 ## Early equipment expansion — 2026-11-09
 
 See [equipment/reward design](early_equipment_design.md). The nine missing body

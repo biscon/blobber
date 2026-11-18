@@ -100,7 +100,7 @@ struct RaceDefinition {
     bool wizardCantrip = false;
     CreatureSize size = CreatureSize::Medium;
 };
-enum class ProgressionClass : std::uint8_t { None, Fighter, Cleric, Rogue, Wizard, Paladin, Ranger };
+enum class ProgressionClass : std::uint8_t { None, Fighter, Cleric, Rogue, Wizard, Paladin, Ranger, Bard };
 struct ClassDefinition {
     std::string id, name;
     int hitDie = 6;

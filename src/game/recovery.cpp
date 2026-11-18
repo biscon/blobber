@@ -170,14 +170,15 @@ RestError Party::recoveryBenefits(const RestRequest& r) const noexcept {
                     (progressionClass({i}) == rules::ProgressionClass::Paladin && c.build.level >= 3 && !c.channelDivinity));
         benefit |= r.dice[i] || (hasFeature({i}, rules::ClassFeature::SecondWind) && !c.secondWind);
         if (r.kind == RestKind::Long)
-            benefit |= c.hitPoints < c.stats.maxHitPoints || c.mana < c.maxMana ||
+            benefit |= c.inspirationSpent || c.hitPoints < c.stats.maxHitPoints || c.mana < c.maxMana ||
                        c.availableHitDice < c.build.level ||
                        (hasFeature({i}, rules::ClassFeature::ArcaneRecovery) && !c.arcaneRecovery) ||
-                       (progressionClass({i}) == rules::ProgressionClass::Paladin && c.layOnHands < 5 * c.build.level);
+                       (progressionClass({i}) == rules::ProgressionClass::Paladin &&
+                        c.layOnHands < 5 * c.build.level);
     }
     return benefit ? RestError::None : RestError::NoBenefit;
 }
-RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRng& rng) noexcept {
+RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRng& rng, bool song) noexcept {
     RestResult out;
     out.error = recoveryBenefits(r);
     if (out.error != RestError::None)
@@ -213,9 +214,15 @@ RestResult Party::recover(const RestRequest& r, ItemHandle supply, rules::DiceRn
                 --c.availableHitDice;
                 ++out.diceSpent[i];
             }
+            if (song && r.dice[i]) {
+                const int before = c.hitPoints;
+                heal({i}, rng.roll({1, 6, 0}).value.total);
+                out.songHealing[i] = c.hitPoints - before;
+            }
         } else {
             heal({i}, c.stats.maxHitPoints);
             c.mana = c.maxMana;
+            c.inspirationSpent = 0;
             if (progressionClass({i}) == rules::ProgressionClass::Paladin)
                 c.layOnHands = 5 * c.build.level;
             c.availableHitDice = std::min(c.build.level, c.availableHitDice + std::max(1, c.build.level / 2));

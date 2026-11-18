@@ -317,6 +317,10 @@ void CombatController::begin(std::uint64_t now) noexcept {
                                      c.stats.abilities[1]};
         }
     }
+    if (!state_.round)
+        for (auto& due : reactionReady_)
+            if (due <= state_.gameplayMs)
+                due = 0;
     const bool resume = state_.round && state_.gameplayMs < roundEndMs_;
     if (!resume) {
         if (state_.round)
@@ -346,6 +350,7 @@ void CombatController::selectTurn() noexcept {
         if (e.party) {
             if (processedCasterRound_[e.index] != state_.round) {
                 processedCasterRound_[e.index] = state_.round;
+                reactionReady_[e.index] = 0;
                 if (currentEvents_)
                     effects_.casterTurn({e.index}, noticeTime_, *currentEvents_);
             }
@@ -394,6 +399,8 @@ void CombatController::selectTurn() noexcept {
     ++state_.turn;
 }
 void CombatController::advance(std::uint64_t now) noexcept {
+    if (state_.activeEnemy)
+        effects_.endMockery(*state_.activeEnemy);
     if (state_.activeCharacter)
         extraAction_[state_.activeCharacter->index] = false;
     due_ = now + actionDelayMs;

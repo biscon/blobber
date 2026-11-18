@@ -14,11 +14,9 @@ CombatOutcome CombatController::spectralAttack(const PartyCommand& c, Player pos
     const auto roll = rng_.d20(out.attackRollMode).value;
     effects_.consumeGuiding(out.enemy, now, events);
     out.roll = roll.selected;
-    const auto hit = rules::resolveAttack(roll,
-                                          ch->stats.proficiency + ch->stats.modifiers[4] +
-                                              ch->stats.spellAttackBonus + effects_.rollModifier(c.character),
-                                          effects_.armorClass(out.enemy))
-                         .value;
+    const auto hit = effects_.partyHit(c.character, out.enemy, roll,
+                                       ch->stats.proficiency + ch->stats.modifiers[4] +
+                                           ch->stats.spellAttackBonus + effects_.rollModifier(c.character));
     out.hit = hit.outcome != rules::AttackOutcome::Miss;
     out.critical = hit.outcome == rules::AttackOutcome::Critical || (out.hit && effects_.helpless(out.enemy));
     if (out.hit)

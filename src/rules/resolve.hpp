@@ -38,7 +38,8 @@ enum class DamageType : std::uint8_t {
     Thunder,
     Cold,
     Lightning,
-    Poison
+    Poison,
+    Psychic
 };
 struct DiceRoll {
     std::array<std::uint8_t, 64> faces{};

@@ -52,13 +52,14 @@ void CommandController::refreshMagic() noexcept {
         command.feature = feature;
         command.action = feature == rules::Feature::None ? PartyAction::Spell : PartyAction::Feature;
         const auto reason = session_.combat().validate(command, session_.movement().player);
-        const int charges = feature == rules::Feature::SecondWind       ? int(c->secondWind)
-                            : feature == rules::Feature::ActionSurge    ? int(c->actionSurge)
-                            : feature == rules::Feature::PreserveLife   ? int(c->channelDivinity)
-                            : feature == rules::Feature::ArcaneRecovery ? int(c->arcaneRecovery)
-                            : feature == rules::Feature::LayOnHands ? c->layOnHands
-                            : feature == rules::Feature::SacredWeapon ? int(c->channelDivinity)
-                                                                        : -1;
+        const int charges = feature == rules::Feature::SecondWind          ? int(c->secondWind)
+                            : feature == rules::Feature::ActionSurge       ? int(c->actionSurge)
+                            : feature == rules::Feature::PreserveLife      ? int(c->channelDivinity)
+                            : feature == rules::Feature::ArcaneRecovery    ? int(c->arcaneRecovery)
+                            : feature == rules::Feature::BardicInspiration ? party_.inspirationUses(caster)
+                            : feature == rules::Feature::LayOnHands        ? c->layOnHands
+                            : feature == rules::Feature::SacredWeapon      ? int(c->channelDivinity)
+                                                                           : -1;
         const auto* definition = party_.catalog().spell(spell);
         assert(m.count < m.entries.size());
         if (m.count == m.entries.size())
@@ -74,6 +75,9 @@ void CommandController::refreshMagic() noexcept {
                                 feature == rules::Feature::None ? PickerEntryKind::Spell
                                                                 : PickerEntryKind::ActivatedFeature};
     };
+    if (cls->progression == rules::ProgressionClass::Bard)
+        entry({}, rules::Feature::BardicInspiration, "Bardic Inspiration",
+              "Give another companion a d6 for an attack or save. Bonus action; lasts one hour.", 0);
     for (std::uint16_t i = 0; i < party_.catalog().spellCount(); ++i) {
         const auto access = party_.spellAccess(caster, {i});
         if (!access)
@@ -161,6 +165,12 @@ void CommandController::refreshMagic() noexcept {
         (cls->progression == rules::ProgressionClass::Paladin && c->build.level >= 2))
         passive(PassiveFeature::Defense, "Defense",
                 "+1 Armor Class while wearing body armor. Already included in your armor class.");
+    if (cls->progression == rules::ProgressionClass::Bard && c->build.level >= 2)
+        passive(PassiveFeature::SongOfRest, "Song of Rest",
+                "Each companion spending Hit Dice during a short rest heals an additional 1d6.");
+    if (cls->progression == rules::ProgressionClass::Bard && c->build.level >= 3)
+        passive(PassiveFeature::CuttingWords, "Cutting Words",
+                "When an enemy would hit, spend one use and your reaction to subtract 1d6 from its attack.");
     if (ranger && c->build.level >= 2)
         passive(PassiveFeature::Archery, "Archery", "+2 to ranged weapon attack rolls.");
     if (ranger && c->build.level >= 3)
@@ -210,6 +220,10 @@ void CommandController::refreshMagic() noexcept {
         m.hostile = r->hostile;
         m.area = r->area;
         m.missiles = s->kind == rules::SpellKind::MagicMissile || s->kind == rules::SpellKind::ScorchingRay;
+    }
+    if (m.pending.feature == rules::Feature::BardicInspiration) {
+        m.maximum = 1;
+        m.single = true;
     }
     if (m.pending.feature == rules::Feature::DivineSmite) {
         m.hostile = true; m.single = true; m.maximum = 1;
@@ -266,12 +280,15 @@ void CommandController::refreshMagic() noexcept {
                                                                              : "Darts assigned %u/3")
                                  : "Enemies selected %u/%u",
                       m.missiles ? m.assigned : unsigned(m.pending.targetCount), m.maximum);
-    } else if ((m.pending.action == PartyAction::Spell && !m.self) || m.pending.feature == rules::Feature::LayOnHands) {
+    } else if ((m.pending.action == PartyAction::Spell && !m.self) ||
+               m.pending.feature == rules::Feature::LayOnHands ||
+               m.pending.feature == rules::Feature::BardicInspiration) {
         for (std::size_t i = 0; i < rules::partySize; ++i) {
             auto one = m.pending;
             one.targetCount = 1;
             one.allies[0] = party_.snapshot().formation[i];
-            if (m.pending.feature == rules::Feature::LayOnHands) {
+            if (m.pending.feature == rules::Feature::LayOnHands ||
+                m.pending.feature == rules::Feature::BardicInspiration) {
                 one.healingAmount = 1;
                 m.allyReasons[i] = session_.combat().validate(one, session_.movement().player);
             } else
@@ -601,7 +618,8 @@ void CommandController::magicAlly(std::size_t formation) noexcept {
     auto& m = state_.magic;
     auto& c = m.pending;
     if (!m.armed || m.hostile || m.self || state_.suspended || formation >= rules::partySize ||
-        (c.action != PartyAction::Spell && c.feature != rules::Feature::LayOnHands))
+        (c.action != PartyAction::Spell && c.feature != rules::Feature::BardicInspiration &&
+         c.feature != rules::Feature::LayOnHands))
         return;
     const auto id = party_.snapshot().formation[formation];
     c.ally = id;

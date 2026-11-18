@@ -210,7 +210,7 @@ void CommandController::updateHover() noexcept {
         tooltipEnemy_.reset();
     h.lines = {};
     if ((state_.modal() &&
-         !(state_.magic.open && (h.kind == HoverKind::Status || h.kind == HoverKind::Concentration))) ||
+         !(state_.magic.open && statusHoverKind(h.kind))) ||
         state_.suspended) {
         tooltipEnemy_.reset();
         h.kind = HoverKind::None;
@@ -231,6 +231,19 @@ void CommandController::updateHover() noexcept {
     auto put = [&](int line, const char* text) {
         std::snprintf(h.lines[line].data(), h.lines[line].size(), "%s", text);
     };
+    if (h.kind == HoverKind::Inspiration) {
+        if (unsigned(h.index) >= state_.cards.size() || !state_.cards[h.index].inspirationSource) {
+            h.kind = HoverKind::None;
+            return;
+        }
+        const auto& card = state_.cards[h.index];
+        put(0, "Bardic Inspiration (d6)");
+        std::snprintf(h.lines[1].data(), h.lines[1].size(), "Granted by %s", card.inspirationSource);
+        std::snprintf(h.lines[2].data(), h.lines[2].size(), "%llu min remaining",
+                      (unsigned long long)((card.inspirationRemaining + 59999) / 60000));
+        put(3, "Spend after a failed attack or save.");
+        return;
+    }
     if (h.kind == HoverKind::Concentration) {
         if (unsigned(h.index) >= state_.cards.size() || !state_.cards[h.index].concentration) {
             h.kind = HoverKind::None;
@@ -412,11 +425,21 @@ void CommandController::updateHover() noexcept {
     } else if (h.kind == HoverKind::Portrait && h.index >= 0 && h.index < 4) {
         const auto& card = state_.cards[h.index];
         put(0, card.name);
+        if (card.inspirationSource && !state_.magic.armed) {
+            std::snprintf(h.lines[1].data(), h.lines[1].size(), "Inspiration d6 from %s",
+                          card.inspirationSource);
+            std::snprintf(h.lines[2].data(), h.lines[2].size(), "%llu seconds remaining",
+                          (unsigned long long)((card.inspirationRemaining + 999) / 1000));
+            return;
+        }
         if (state_.magic.armed) {
             const auto& m = state_.magic;
             h.reason = m.allyReasons[h.index];
-            if (m.pending.action == PartyAction::Feature)
-                put(1, "This feature needs no recipient selection.");
+            if (m.pending.feature == rules::Feature::BardicInspiration)
+                put(1, h.reason == CommandReason::Ready ? "Give this companion the Inspiration die."
+                                                        : commandMessage(h.reason));
+            else if (m.pending.action == PartyAction::Feature)
+                put(1, "Select an eligible recipient.");
             else if (m.hostile)
                 put(1, m.selectedAllies[h.index] ? "WARNING: ally in affected area."
                                                  : "This ally is outside the affected area.");

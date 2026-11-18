@@ -176,8 +176,11 @@ bool Party::swapFormation(FormationSlot a, FormationSlot b) noexcept {
     return true;
 }
 rules::HealthResult Party::commit(rules::CharacterId id, rules::HealthResult result) noexcept {
-    if (result && result.changed)
+    if (result && result.changed) {
         static_cast<rules::HealthState&>(state_.characters[id.index]) = result.state;
+        if (result.state.life == rules::Life::Dead)
+            clearInspiration(id);
+    }
     return result;
 }
 rules::HealthResult Party::damage(rules::CharacterId id, std::int64_t amount, bool critical) noexcept {
@@ -222,12 +225,37 @@ bool Party::grantTemporary(rules::CharacterId id, int amount, std::uint64_t unti
     c.temporaryUntilMs = until;
     return true;
 }
+int Party::inspirationUses(rules::CharacterId id) const noexcept {
+    if (!character(id) || progressionClass(id) != rules::ProgressionClass::Bard)
+        return 0;
+    return std::max(0, std::max(1, character(id)->stats.modifiers[5]) - character(id)->inspirationSpent);
+}
+bool Party::spendInspiration(rules::CharacterId id) noexcept {
+    if (!inspirationUses(id))
+        return false;
+    ++state_.characters[id.index].inspirationSpent;
+    return true;
+}
+void Party::clearInspiration(rules::CharacterId id) noexcept {
+    auto& c = state_.characters[id.index];
+    c.inspirationUntil = 0;
+    c.inspirationSource = {};
+}
+void Party::giveInspiration(rules::CharacterId bard, rules::CharacterId ally, std::uint64_t until) noexcept {
+    const auto* recipient = character(ally);
+    if (!until || !recipient || bard.index == ally.index || recipient->life != rules::Life::Conscious ||
+        recipient->inspirationUntil || !spendInspiration(bard))
+        return;
+    state_.characters[ally.index].inspirationSource = bard;
+    state_.characters[ally.index].inspirationUntil = until;
+}
 void Party::expireTemporary(std::uint64_t now) noexcept {
-    for (auto& c : state_.characters)
+    for (auto& c : state_.characters) {
         if (c.temporaryUntilMs <= now || c.life == rules::Life::Dead) {
             c.temporaryHitPoints = 0;
             c.temporaryUntilMs = 0;
         }
+    }
 }
 bool Party::spendMana(rules::CharacterId id, int amount) noexcept {
     const auto* c = character(id);

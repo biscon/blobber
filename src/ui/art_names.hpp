@@ -6,6 +6,8 @@ inline constexpr std::array<const char*, 4> paladinArtNames{{
     "spells/protection_from_evil_and_good"}};
 inline constexpr std::array<const char*, 4> rangerArtNames{{
     "spells/hunters_mark", "spells/goodberry", "spells/archery", "spells/colossus_slayer"}};
+inline constexpr std::array<const char*, 4> bardArtNames{
+    {"spells/bardic_inspiration", "spells/vicious_mockery", "spells/song_of_rest", "spells/cutting_words"}};
 // UI region order is part of the existing atlas mapping. First four use prepared portraits.
 inline constexpr std::array<const char*, 64> interfaceArtNames{{
     "alden",

@@ -24,6 +24,7 @@ const char* spellFamily(rules::SpellKind s) noexcept {
     case S::Thunderwave:
     case S::Shatter:
         return "thunder";
+    case S::ViciousMockery:
     case S::Sleep:
     case S::HoldPerson:
     case S::HuntersMark:

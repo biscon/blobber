@@ -1423,3 +1423,10 @@ Interactive review is pending. The
 Ranger uses existing weapon actions, directly cast Wisdom spells, and the shared
 level-four advancement flow. Effects owns Hunter’s Mark and combat resolves its
 bonus together with Colossus Slayer. Goodberry uses a bounded party healing plan.
+
+## College of Lore Bard
+
+The [Bard design](bard_design.md) covers level-four progression, Inspiration,
+interruptible rolls, Cutting Words, Song of Rest and Vicious Mockery. A Bard
+party can pause a single combat operation before its consequences and answer
+through the HUD or the headless protocol.

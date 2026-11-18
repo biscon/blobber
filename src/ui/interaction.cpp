@@ -4,14 +4,17 @@
 #include "ui/camp_layout.hpp"
 #include "ui/inventory_interaction.hpp"
 #include "ui/loot_layout.hpp"
+#include "ui/roll_layout.hpp"
 #include "ui/travel_layout.hpp"
 #include "ui/welcome_layout.hpp"
 namespace blobber {
 UiInput routeHudButtons(CommandController& commands, const UiInput& physical, bool acceptPress) noexcept {
     // Gameplay calls this before picking, then routeHudInput calls it again with
     // logical input. Continuous controls must see physical edges exactly once.
-    if ((physical.pointerTracked || physical.has(UiKey::Click) || physical.has(UiKey::Up) ||
-         physical.has(UiKey::Down)) && commands.routeHealingSlider(physical, acceptPress)) {
+    if (!commands.snapshot().roll.serial &&
+        (physical.pointerTracked || physical.has(UiKey::Click) || physical.has(UiKey::Up) ||
+         physical.has(UiKey::Down)) &&
+        commands.routeHealingSlider(physical, acceptPress)) {
         UiInput consumed;
         consumed.focused = physical.focused;
         return consumed;
@@ -44,6 +47,21 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
                    bool worldImageMoving, std::optional<ActorId> residentHit,
                    std::optional<SpellAim> preciseGround) noexcept {
     const auto input = routeHudButtons(commands, physical, allowConfirm);
+    if (commands.snapshot().roll.serial) {
+        if (!input.focused || !allowConfirm)
+            return;
+        const bool click = input.has(UiKey::Click) && input.pointer;
+        if (input.has(UiKey::Cancel) || (click && rollLayout::keep.contains(*input.pointer)))
+            commands.answerRoll(false);
+        else if (input.has(UiKey::Confirm) || (click && rollLayout::spend.contains(*input.pointer)))
+            commands.answerRoll(true);
+        else
+            for (unsigned i = 0; i < rules::partySize; ++i)
+                if (input.has(UiKey(unsigned(UiKey::One) + i)) ||
+                    (click && rollLayout::bard(i).contains(*input.pointer)))
+                    commands.chooseRespondingBard(commands.snapshot().cards[i].id);
+        return;
+    }
     if (commands.snapshot().trade.open) {
         commands.routeTrade(input);
         return;
@@ -278,6 +296,10 @@ void routeHudInput(CommandController& commands, const UiInput& physical, std::op
         if (!input.pointer || state.suspended)
             return false;
         for (unsigned c = 0; c < state.cards.size(); ++c) {
+            if (state.cards[c].inspirationSource && inside(rollLayout::heldDie(int(c)))) {
+                commands.hover(HoverKind::Inspiration, int(c), {}, input.pointer->x, input.pointer->y);
+                return true;
+            }
             if (state.cards[c].concentration && inside(hudLayout::concentration(int(c)))) {
                 commands.hover(HoverKind::Concentration, int(c), {}, input.pointer->x, input.pointer->y);
                 return true;

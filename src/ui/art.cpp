@@ -98,18 +98,19 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
         SetTextureFilter(resources_.texture(equipment_), TEXTURE_FILTER_BILINEAR);
     }
     {
-        OwnedImage atlas(GenImageColor(1024, 512, BLANK));
+        OwnedImage atlas(GenImageColor(1024, 768, BLANK));
         if (!atlas.value.data)
             throw std::runtime_error("Class ability atlas allocation failed");
-        for (unsigned i = 0; i < paladinArtNames.size() + rangerArtNames.size(); ++i) {
-            const auto* name = i < paladinArtNames.size() ? paladinArtNames[i]
-                                                        : rangerArtNames[i - paladinArtNames.size()];
-            OwnedImage icon(preparedImage(directory / (std::string(name) + ".png")));
-            if (!icon.value.data)
-                throw std::runtime_error(std::string("Missing class ability icon: ") + name);
-            ImageResize(&icon.value, 248, 248);
-            ImageDrawImage(&atlas.value, icon.value, int(i % 4 * 256 + 4), int(i / 4 * 256 + 4), WHITE);
-        }
+        unsigned i = 0;
+        for (const auto& row : {paladinArtNames, rangerArtNames, bardArtNames})
+            for (const auto* name : row) {
+                OwnedImage icon(preparedImage(directory / (std::string(name) + ".png")));
+                if (!icon.value.data)
+                    throw std::runtime_error(std::string("Missing class ability icon: ") + name);
+                ImageResize(&icon.value, 248, 248);
+                ImageDrawImage(&atlas.value, icon.value, int(i % 4 * 256 + 4), int(i / 4 * 256 + 4), WHITE);
+                ++i;
+            }
         classAbilities_ = resources_.createTexture(atlas.value);
         SetTextureFilter(resources_.texture(classAbilities_), TEXTURE_FILTER_BILINEAR);
     }
@@ -153,7 +154,7 @@ UiArt::UiArt(GpuResources& resources, const std::filesystem::path& directory,
     atlas_ = resources_.createTexture(atlas.value);
     SetTextureFilter(resources_.texture(atlas_), TEXTURE_FILTER_BILINEAR);
 }
-static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 35,
+static_assert(static_cast<unsigned>(rules::SpellKind::Count) == 36,
               "Extend the spell atlas mapping for new spells");
 unsigned UiArt::itemIcon(const rules::ItemDefinition& item) noexcept {
     for (unsigned i = 0; i < equipmentIconIds.size(); ++i)
@@ -181,6 +182,10 @@ unsigned UiArt::spellIcon(rules::SpellKind kind, rules::Feature feature) noexcep
     if (feature == rules::Feature::SacredWeapon || feature == rules::Feature::DismissSacredWeapon) return 194;
     if (kind == rules::SpellKind::ProtectionFromEvilAndGood) return 195;
     if (kind == rules::SpellKind::HuntersMark) return 196;
+    if (feature == rules::Feature::BardicInspiration)
+        return inspirationIcon;
+    if (kind == rules::SpellKind::ViciousMockery)
+        return mockeryIcon;
     if (kind == rules::SpellKind::Goodberry) return 197;
     if (feature == rules::Feature::SecondWind)
         return 25;
@@ -218,7 +223,7 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
     }
     constexpr float scale = float(gameWidth) / artWidth;
     Rectangle destination{r.x * scale, r.y * scale, r.width * scale, r.height * scale};
-    if (index >= 192 && index <= colossusSlayerIcon) {
+    if (index >= 192 && index <= cuttingWordsIcon) {
         const auto tile = index - 192;
         DrawTexturePro(resources_.texture(classAbilities_),
                        {float(tile % 4 * 256), float(tile / 4 * 256), 256, 256}, destination, {0, 0}, 0, tint);

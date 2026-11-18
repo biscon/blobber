@@ -5,6 +5,7 @@
 #include "game/session.hpp"
 #include "support/allocations.hpp"
 #include "support/arena_preparation_fixtures.hpp"
+#include "support/bard_fixtures.hpp"
 #include "support/check.hpp"
 #include "support/creation_fixtures.hpp"
 #include "support/paladin_fixtures.hpp"
@@ -453,6 +454,17 @@ int main(int argc, char**) {
         preparation();
         paladinPreparation();
         rangerPreparation();
+        {
+            const auto c = blobber::test::bardCatalog();
+            auto scenario = defaultArena(c);
+            scenario.adjust({0}, 1);
+            arenaLevel(c, scenario, 4);
+            const auto restored = prepareArenaParty(c, decodeArena(c, encodeArena(c, scenario)));
+            const auto& bard = *restored->character({0});
+            check(bard.maxMana == 17 && rules::spellCount(bard.build.spells.learned) == 7 &&
+                      rules::spellCount(bard.build.spells.cantrips) == 3 && !bard.build.spells.prepared,
+                  "Bard level-four arena preparation survives a rematch");
+        }
         std::cout << "Arena tests passed\n";
     } catch (const std::exception& e) {
         watching = false;

@@ -53,11 +53,13 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
     if (s.ai.tickDue > maxCheckpointClock || s.effects.groundDueMs > maxCheckpointClock)
         reject("deadline capacity");
     clocks(s.effects.guidingUntil);
+    clocks(s.effects.mockeryUntil);
     clocks(s.combat.partyReady);
     clocks(s.combat.saveDue);
     clocks(s.combat.defendDue);
     clocks(s.combat.sneakReady);
     clocks(s.combat.cunningReady);
+    clocks(s.combat.reactionReady);
     clocks(s.combat.extraUntil);
     clocks(s.combat.knownUntil);
     clocks(s.combat.enemyReady);

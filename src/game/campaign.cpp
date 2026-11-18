@@ -335,6 +335,7 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
                 c.untilMs = rebase(c.untilMs, from, to);
         local.conditions[i] = {};
         ticket.temporaryUntil[i] = rebase(party_.state_.characters[i].temporaryUntilMs, from, to);
+        ticket.inspirationUntil[i] = rebase(party_.state_.characters[i].inspirationUntil, from, to);
     }
     const auto transfer = [&](auto& dest, const auto& source) {
         for (unsigned i = 0; i < 4; ++i)
@@ -347,6 +348,7 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
     transfer(c.defendDue, old.defendDue);
     transfer(c.sneakReady, old.sneakReady);
     transfer(c.cunningReady, old.cunningReady);
+    transfer(c.reactionReady, old.reactionReady);
     transfer(c.extraUntil, old.extraUntil);
     c.extraAction = old.extraAction;
     c.processedCasterRound = old.processedCasterRound;
@@ -375,8 +377,12 @@ bool CampaignRun::commitTravel(PreparedTravel& ticket) noexcept {
         party_.inventory_ = *ticket.chargedInventory;
         party_.commitStats(ticket.supplier, ticket.supplierStats);
     }
-    for (unsigned i = 0; i < 4; ++i)
+    for (unsigned i = 0; i < 4; ++i) {
         party_.state_.characters[i].temporaryUntilMs = ticket.temporaryUntil[i];
+        party_.state_.characters[i].inspirationUntil = ticket.inspirationUntil[i];
+        if (!ticket.inspirationUntil[i])
+            party_.state_.characters[i].inspirationSource = {};
+    }
     locations_[location_].saved.swap(ticket.source);
     active_.swap(ticket.session);
     location_ = ticket.to;
@@ -402,7 +408,8 @@ std::array<std::uint64_t, 100> CampaignRun::partyStamp() const noexcept {
               std::uint64_t(c.availableHitDice), std::uint64_t(c.experience),
               std::uint64_t(c.experienceFraction), std::uint64_t(c.secondWind),
               std::uint64_t(c.arcaneRecovery), std::uint64_t(c.actionSurge), std::uint64_t(c.channelDivinity),
-              std::uint64_t(c.aidBonus), c.temporaryUntilMs,
+              std::uint64_t(c.aidBonus), c.temporaryUntilMs, std::uint64_t(c.inspirationSpent),
+              std::uint64_t(c.inspirationSource.index), c.inspirationUntil,
               std::uint64_t(party_.snapshot().formation[i].index)})
             out[n++] = value;
     }
