@@ -99,6 +99,8 @@ const char* commandMessage(CommandReason reason) noexcept {
         return "Close the map to target or confirm.";
     case CommandReason::Unfocused:
         return "Input paused while unfocused.";
+    case CommandReason::AboveReach:
+        return "Above melee reach.";
     case CommandReason::CannotAct:
         return "Character is not conscious.";
     }
@@ -122,13 +124,15 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
     std::copy(timings.begin(), timings.end(), dialogueTimings_.begin());
     for (std::size_t i = 0; i < actors_.snapshot().count; ++i) {
         const auto& a = actors_.snapshot().actors[i];
-        if (!a.hostile())
+        if (!a.targetable())
             continue;
         const auto& species = actors_.catalog().monster(a.monster)->id;
-        state_.enemyPortraits[i] = species == "skeleton"        ? EnemyPortrait::Skeleton
-                                   : species == "bugbear"       ? EnemyPortrait::Bugbear
+        state_.enemyPortraits[i] = species == "skeleton"          ? EnemyPortrait::Skeleton
+                                   : species == "bugbear"         ? EnemyPortrait::Bugbear
                                    : species == "blind.cave.newt" ? EnemyPortrait::Newt
-                                   : species == "venomous.spider" ? EnemyPortrait::Spider
+                                   : species == "broodmother"     ? EnemyPortrait::Broodmother
+                                   : (species == "venomous.spider" || species == "vault.young")
+                                       ? EnemyPortrait::Spider
                                    : species == "giant.rat"     ? EnemyPortrait::GiantRat
                                    : species == "zombie"        ? EnemyPortrait::Zombie
                                    : species == "goblin_shaman" ? EnemyPortrait::Shaman
@@ -151,8 +155,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     const char* target = recipient ? recipient->build.name.c_str() : "?";
     char species[rules::Catalog::maxIdBytes + 1] = "Monster";
     if (const auto* enemy = actors_.actor(out.enemy)) {
-        std::snprintf(species, sizeof(species), "%s",
-                      monsterName(actors_.catalog().monster(enemy->monster)->id));
+        std::snprintf(species, sizeof(species), "%s", monsterName(actors_, *enemy));
     }
     const char* pack = !out.enemyAttack || !out.packTactics ? ""
                        : out.attackRollMode == rules::RollMode::Advantage
@@ -196,12 +199,16 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             break;
         }
         if (out.enemyAttack) {
-            std::snprintf(line, sizeof(line), "%s #%u -> %s: %s (d20 %d%s), %lld damage%s.%s", species,
-                          unsigned(out.enemy.slot) + 1, target,
+            const auto* attacker = actors_.actor(out.enemy);
+            const char* attack =
+                attacker && attacker->npc.young() && out.kind == rules::AttackKind::Ranged ? " bristles" : "";
+            std::snprintf(line, sizeof(line), "%s #%u%s -> %s: %s (d20 %d%s), %lld damage%s.%s", species,
+                          unsigned(out.enemy.slot) + 1, attack, target,
                           out.critical ? "critical"
                           : out.hit    ? "hit"
                                        : "miss",
-                          out.roll, disadvantage, static_cast<long long>(out.damage), out.died ? ", dead" : "", pack);
+                          out.roll, disadvantage, static_cast<long long>(out.damage),
+                          out.died ? ", dead" : "", pack);
         } else
             std::snprintf(line, sizeof(line), "%s%s%s -> %s #%u: %s (d20 %d%s), %lld damage%s.", name,
                           rules::barbarianStrike(out.feature) ? " / " : "",
@@ -249,6 +256,15 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                               unsigned(out.enemy.slot) + 1,
                               f.status == FortitudeStatus::RadiantBypass ? "radiant damage" : "critical hit");
         }
+        break;
+    case CombatEvent::ClutchWarning:
+        std::snprintf(line, sizeof(line), "%s is stirring. Shoot it before the next hatch!", species);
+        break;
+    case CombatEvent::ClutchHatch:
+        std::snprintf(line, sizeof(line), "%s releases a hatchling!", species);
+        break;
+    case CombatEvent::VaultClear:
+        std::snprintf(line, sizeof(line), "Brood Vault cleared. Party gains 200 XP.");
         break;
     case CombatEvent::BiteWarning:
         std::snprintf(line, sizeof(line), "Newt braces to bite %s. Defend for disadvantage and half damage on a hit.", target);
@@ -621,7 +637,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
                 }
             const auto* member = party_.character(d.character);
             const auto* actor = actors_.actor(d.enemy);
-            const char* enemy = actor ? monsterName(actors_.catalog().monster(actor->monster)->id) : "Enemy";
+            const char* enemy = actor ? monsterName(actors_, *actor) : "Enemy";
             const char* name = member->build.name.c_str();
             if (d.purpose == RollPurpose::CuttingWords)
                 std::snprintf(state_.rollDescription.data(), state_.rollDescription.size(),
@@ -783,7 +799,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         std::array<bool, NpcWorld::maxInstances> included{};
         for (std::size_t i = 0; i < targets.count; ++i) {
             const auto* a = actors_.actor(targets.ids[i]);
-            if (a && a->hostile() && a->life == ActorLife::Alive)
+            if (a && a->targetable() && a->life == ActorLife::Alive)
                 included[targets.ids[i].slot] = true;
         }
         for (std::size_t i = 0; i < included.size(); ++i)
@@ -796,7 +812,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
         std::array<bool, NpcWorld::maxInstances> included{};
         const auto add = [&](ActorId id) {
             const auto* a = actors_.actor(id);
-            if (a && a->hostile() && a->life == ActorLife::Alive)
+            if (a && a->targetable() && a->life == ActorLife::Alive)
                 included[id.slot] = true;
         };
         for (std::size_t i = 0; i < normalized.count; ++i)

@@ -150,8 +150,8 @@ int main(int argc, char** argv) try {
         --argc;
     std::string mode = argv[1];
     const unsigned depth = number(argv[2]), seed = number(argv[3]);
-    require(!encounter || depth == 4 || depth == 5, "Encounters require depth 4 or 5");
-    auto result = generateCave(seed, depth, forced);
+    const bool vault = encounter && depth == 6;
+    auto result = generateCave(seed, depth, forced, vault);
     if (!result.floor)
         throw std::runtime_error(std::string("Cave generation failed: ") +
                                  errorName(result.diagnostics.failure.code));
@@ -194,7 +194,10 @@ int main(int argc, char** argv) try {
     const bool galleries = encounter && depth == 5;
     require(rules.preset() != nullptr, "Cave review requires a starting party");
     const auto& starting = *rules.preset();
-    if (galleries) {
+    std::optional<ArenaScenario> vaultParty;
+    if (vault) {
+        vaultParty = cave_review::prepareVault(f.sites, defs.types, rules, occupants);
+    } else if (galleries) {
         cave_review::placeGalleries(f.sites, defs.types, occupants);
     } else if (encounter) {
         const auto type = std::find(defs.types.begin(), defs.types.end(), "venomous.spider");
@@ -216,6 +219,19 @@ int main(int argc, char** argv) try {
             cave_review::checkGalleries(game, f, defs.timings, north, meleeOnly, output, renderer, presenter);
         }
     };
+    auto walkVault = [&](WorldRenderer* renderer = nullptr, Presenter* presenter = nullptr) {
+        for (auto route : {cave_review::VaultRoute::Suppress, cave_review::VaultRoute::Burst,
+                           cave_review::VaultRoute::OpeningVolley, cave_review::VaultRoute::DoorwayVolley,
+                           cave_review::VaultRoute::Replacement}) {
+            GameSession game(f.map, prepareArenaParty(rules, *vaultParty), actors, combatSeed, f.layout.spawn,
+                             true, defs.timings, recovery, f.layout.fixtures, {});
+            cave_review::checkVault(game, f, defs.timings, route, output, renderer, presenter);
+        }
+    };
+    if (check && vault) {
+        walkVault();
+        return 0;
+    }
     if (check && galleries) {
         walkGalleries(false);
         walkGalleries(true);
@@ -247,7 +263,16 @@ int main(int argc, char** argv) try {
         const auto baseline = resources.counts();
         {
             WorldRenderer renderer(resources, std::move(pub));
-            if (hidden && galleries) {
+            if (hidden && vault) {
+                walkVault(&renderer, &presenter);
+                for (const auto* frame : {"vault-nest.png", "stirring-sac.png", "mother-and-young.png"})
+                    require(std::filesystem::is_regular_file(output / frame),
+                            "Missing native vault review frame");
+                using GetError = unsigned (*)();
+                const auto glError = reinterpret_cast<GetError>(rlGetProcAddress("glGetError"));
+                require(glError && glError() == 0, "OpenGL error in vault encounter");
+                require(!renderer.memory().textureCount, "Vault review retained textures");
+            } else if (hidden && galleries) {
                 walkGalleries(false, &renderer, &presenter);
                 require(!renderer.memory().textureCount, "Galleries review retained scene textures");
             } else if (hidden && encounter) {
@@ -428,6 +453,8 @@ int main(int argc, char** argv) try {
                 launch.spawn = f.layout.spawn;
                 launch.seed = combatSeed;
                 launch.enableAi = encounter;
+                if (vaultParty)
+                    launch.arenaScenario = &*vaultParty;
                 launch.rooms = &f.layout;
                 launch.fixtures = &f.layout.fixtures;
                 runGameplay(f.map, rules, actors, defs.timings, presenter, options, renderer, recovery,

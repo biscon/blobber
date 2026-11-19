@@ -120,6 +120,8 @@ CombatOutcome CombatController::update(Player pose, bool moving, std::uint64_t n
             effects_.advance(state_.gameplayMs, now, false, events);
             reconcileEffects(now, events);
             refreshReadiness();
+            if (vaultMother_.world)
+                vaultBoundary(state_.round + 1, pose, events);
             // Capture sound alerts before the full-round perception update can
             // expire them. New members use initiative movement, not roaming too.
             enroll(pose, false);

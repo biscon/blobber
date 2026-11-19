@@ -20,7 +20,8 @@ void GameSession::reconcileRewards() noexcept {
     rewardRevision_ = world.revision;
     const auto earnedBefore = earnedLevelMask(party_);
     for (std::size_t i = 0; i < world.count; ++i) {
-        if (!world.actors[i].hostile() || !world.actors[i].hasDeath || creditedDeaths_[i])
+        if (!world.actors[i].hostile() || world.actors[i].npc.vault != VaultPart::None ||
+            !world.actors[i].hasDeath || creditedDeaths_[i])
             continue;
         creditedDeaths_[i] = true;
         party_.awardExperience(actors_.catalog().monster(world.actors[i].monster)->experience);

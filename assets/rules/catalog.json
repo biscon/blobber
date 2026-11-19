@@ -100,6 +100,40 @@
         "modifier": 3,
         "type": "piercing"
       }
+    },
+    {
+      "id": "broodmother.bite",
+      "kind": "melee",
+      "attack_bonus": 5,
+      "damage": {
+        "count": 2,
+        "sides": 6,
+        "modifier": 3,
+        "type": "piercing"
+      }
+    },
+    {
+      "id": "vault.young.bite",
+      "kind": "melee",
+      "attack_bonus": 5,
+      "damage": {
+        "count": 2,
+        "sides": 4,
+        "modifier": 2,
+        "type": "piercing"
+      },
+      "venom_dc": 12
+    },
+    {
+      "id": "vault.young.bristles",
+      "kind": "ranged",
+      "attack_bonus": 5,
+      "damage": {
+        "count": 1,
+        "sides": 6,
+        "modifier": 2,
+        "type": "piercing"
+      }
     }
   ],
   "monsters": [
@@ -737,6 +771,63 @@
       "metal_armor": false,
       "sleep_immune": false,
       "experience": 50,
+      "humanoid": false,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none",
+      "creature_type": "beast"
+    },
+    {
+      "id": "broodmother",
+      "abilities": {
+        "strength": 7,
+        "dexterity": 15,
+        "constitution": 11,
+        "intelligence": 2,
+        "wisdom": 10,
+        "charisma": 4
+      },
+      "armor_class": 13,
+      "hit_points": 124,
+      "speed_ft": 30,
+      "attacks": [
+        "broodmother.bite"
+      ],
+      "traits": [],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 0,
+      "humanoid": false,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none",
+      "creature_type": "beast"
+    },
+    {
+      "id": "vault.young",
+      "abilities": {
+        "strength": 7,
+        "dexterity": 15,
+        "constitution": 11,
+        "intelligence": 2,
+        "wisdom": 10,
+        "charisma": 4
+      },
+      "armor_class": 11,
+      "hit_points": 7,
+      "speed_ft": 40,
+      "attacks": [
+        "vault.young.bite",
+        "vault.young.bristles"
+      ],
+      "traits": [
+        "pack_tactics"
+      ],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 0,
       "humanoid": false,
       "damage_immunities": [],
       "damage_vulnerabilities": [],

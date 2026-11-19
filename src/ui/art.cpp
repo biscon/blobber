@@ -272,7 +272,9 @@ void UiArt::draw(unsigned index, UiRect r, Color tint) const {
         DrawTexturePro(texture, {tile % 3 * w, tile / 3 * h, w, h}, destination, {0, 0}, 0, tint);
         return;
     }
-    if (index == newtPortraitIcon)
+    if (index == broodmotherPortraitIcon)
+        index = 66;
+    else if (index == newtPortraitIcon)
         index = 65;
     else if (index == spiderPortraitIcon)
         index = 64;

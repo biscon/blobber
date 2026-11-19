@@ -1,6 +1,6 @@
 # Damp Caves expansion — design and delivery roadmap
 
-Created 2026-11-18. **DC01–DC04 are Accepted and closed. DC05–DC07 are Planned.**
+Created 2026-11-18. **DC01–DC05 are Accepted and closed. DC06–DC07 are Planned.**
 
 Extend the playable descent from three floors to six. Below the Underkeep, water
 has broken through an old cistern into limestone galleries occupied by venomous
@@ -13,17 +13,17 @@ then decide which threat deserves the party's next action.
 | Field | Current value |
 | --- | --- |
 | Starting point | Three persistent Underkeep floors. The third guardian ends the campaign. |
-| Last closed slice | [DC04 — Blind cave newt and mixed approaches](dc04_blind_cave_newt_design.md), accepted and closed by the player on 2026-11-19 after reviewing the heavier bite. |
+| Last closed slice | [DC05 — Broodmother and interruptible clutches](dc05_broodmother_design.md#player-acceptance), accepted and closed by the player on 2026-11-19. |
 | Current review | None. |
-| Next eligible slice | DC05 — Broodmother and interruptible clutches (Planned). |
+| Next eligible slice | [DC06 — Population, rewards and floor pacing](#dc06--population-rewards-and-floor-pacing) (Planned). |
 
 ## Floor brief and progression targets
 
 | Depth | What the player sees | Decision or payoff |
 | --- | --- | --- |
 | 4 · The Seep | A limestone dogleg below the cistern opens into a low, mossy cave. A dry survey camp holds antitoxin. Beyond it, one spider waits by a webbed arch. | Learn the bite in isolation. Recognize the same webbing at an optional shortcut or cache and decide whether to enter. |
-| 5 · The Drowned Galleries | Higher chambers, shallow pools, broad stone ribs. The surveyors' rope marks a walkable way around the water. A lone blind newt introduces its heavy bite before the mixed encounter. | Pick a side of the pillar during approach. One route brings the spider within reach sooner, the other brings the newt into contact first. Both must work with actual sightlines, alert range and contact locking. |
-| 6 · The Brood Vault | Web density rises toward the guardian. The rope disappears into one of two sealed egg clutches. Moving silk announces an impending hatch. | Spend an attack on a clutch or concentrate damage on the broodmother and deal with a finite number of young. |
+| 5 · The Drowned Galleries | Higher chambers, shallow pools, broad stone ribs. Survey rope lies along the north bank. The pillars and water divide the two approaches. A lone blind newt introduces its heavy bite before the mixed encounter. | Pick a side of the pillar during approach. One route brings the spider within reach sooner, the other brings the newt into contact first. Both must work with actual sightlines, alert range and contact locking. |
+| 6 · The Brood Vault | Web density rises toward the guardian. Old survey rope lies beneath the nests. Two ceiling sacs pulse before their young hatch. | Spend an attack on a clutch or concentrate damage on the broodmother and deal with recurring young from the surviving clutches. |
 
 Preserve the opening floors' gentle density, ordinary and guardian rosters, supplies
 and XP. Floor 3 gains a way down after its guardian. The cave floors each have a
@@ -53,7 +53,7 @@ clear finishes relative to it. Earning level four is an open tuning outcome.
 | DC02 | Limestone kit, distributed ceiling groups, webs, shallow pools, shoreline mist and animated lookout lighting | DC01 placement and clearance contracts | [Accepted and closed](dc02_limestone_kit_design.md) |
 | DC03 | Venomous spider, two-turn poison and accessible cures | DC02 cave palette and scale | [Accepted and closed](dc03_venomous_spider_design.md) |
 | DC04 | Blind cave newt and a mixed approach encounter | DC03 working spider | [Accepted and closed](dc04_blind_cave_newt_design.md) |
-| DC05 | Broodmother and two interruptible egg clutches | DC04 encounter handoff and DC02 vault | Planned |
+| DC05 | Broodmother and two interruptible egg clutches | DC04 encounter handoff and DC02 vault | [Accepted and closed](dc05_broodmother_design.md#player-acceptance) |
 | DC06 | Populated, playable standalone floors 4–6 with finite XP and rewards | DC01–DC05 content and mechanics | Planned |
 | DC07 | Six-floor New Campaign, persistent travel, Continue and final victory | DC06 play-ready floors | Planned |
 
@@ -154,10 +154,10 @@ directional art and feedback with both species visible.
 ### DC05 — Broodmother and interruptible clutches
 
 Build the guardian fight in the isolated vault. Give the broodmother a distinct
-silhouette and bite. Two visible clutches each produce at most one hatchling.
+silhouette and bite. Each visible clutch can replace its slain young while the mother lives, with one living child per clutch.
 Publish the warning before a player action opportunity. The normal target picker,
 attack validation and feedback must support breaking a clutch during that window,
-including for a melee-only party. Set attack access, area damage, hatch timing
+using ranged weapons or Fire Bolt. A melee-only party faces recurring young. Set attack access, area damage, hatch timing
 and the tie-break between a lethal hit and hatching in the slice design.
 
 Use bounded clutch state and reserve legal hatchling placements during preparation.

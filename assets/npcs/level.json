@@ -14,7 +14,10 @@
     "blacksmith/blacksmith.json",
     "shadowtart/shadowtart.json",
     "venomous-spider/venomous-spider.json",
-    "blind-cave-newt/blind-cave-newt.json"
+    "blind-cave-newt/blind-cave-newt.json",
+    "broodmother/broodmother.json",
+    "vault-young/vault-young.json",
+    "vault-clutch/vault-clutch.json"
   ],
   "instances": [
     {

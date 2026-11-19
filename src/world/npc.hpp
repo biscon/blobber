@@ -48,6 +48,7 @@ struct NpcAiConfig {
     std::array<Cell, 8> waypoints{};
     std::uint8_t waypointCount = 0;
 };
+enum class VaultPart : std::uint8_t { None, Mother, WestSac, EastSac, WestYoung, EastYoung };
 struct NpcInstance {
     NpcTypeId type;
     Cell cell;
@@ -60,8 +61,11 @@ struct NpcInstance {
     std::optional<rules::MonsterId> monster{};
     NpcRole role = NpcRole::Hostile;
     std::uint64_t residentId = 0; // Stable per-character identity; never an appearance/actor slot.
+    VaultPart vault = VaultPart::None;
+    bool sac() const noexcept { return vault == VaultPart::WestSac || vault == VaultPart::EastSac; }
+    bool young() const noexcept { return vault == VaultPart::WestYoung || vault == VaultPart::EastYoung; }
 };
-// Immutable level-lifetime indices: no removal, recycling or runtime spawning.
+// Immutable preparation placements. ActorWorld owns runtime occupancy and vault births.
 class NpcWorld {
   public:
     static constexpr std::size_t maxTypes = 32, maxInstances = 256;

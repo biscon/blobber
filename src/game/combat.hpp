@@ -54,7 +54,10 @@ enum class CombatEvent : std::uint8_t {
     Dash,
     Wake,
     BiteWarning,
-    BiteAbandoned
+    BiteAbandoned,
+    ClutchWarning,
+    ClutchHatch,
+    VaultClear
 };
 enum class SpentCause : std::uint8_t { NoAction, Cooldown, Surprise, EndTurn };
 struct CombatOutcome {
@@ -201,6 +204,9 @@ class CombatController {
     bool bonusReady(rules::CharacterId id) const noexcept {
         return id.index < cunningReady_.size() && cunningReady_[id.index] <= state_.gameplayMs;
     }
+    ActorId vaultMother() const noexcept { return vaultMother_; }
+    bool vaultCleared() const noexcept;
+    bool stirring(ActorId) const noexcept;
     bool member(ActorId) const noexcept;
     bool exposed(rules::CharacterId) const noexcept;
     bool exposed(ActorId) const noexcept;
@@ -253,6 +259,18 @@ class CombatController {
     NpcAiController& ai_;
     EffectController& effects_;
     CombatSnapshot state_;
+    struct Clutch {
+        ActorId sac;
+        std::uint16_t young = UINT16_MAX;
+        NpcInstance hatch;
+        std::uint64_t warningRound = 0;
+        bool opportunity = false;
+    };
+    ActorId vaultMother_;
+    std::array<Clutch, 2> clutches_{};
+    void prepareVault();
+    void vaultBoundary(std::uint64_t round, Player, CombatEvents&) noexcept;
+    void silenceVault() noexcept;
     struct PendingAttack {
         CombatOutcome result;
         std::uint64_t clipEndMs = 0, hurtUntilMs = 0;

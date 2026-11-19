@@ -8,7 +8,11 @@
 namespace blobber {
 struct ActorId {
     std::uint16_t slot = std::numeric_limits<std::uint16_t>::max();
+    std::uint32_t generation = 0;
     std::uint64_t world = 0;
+    constexpr ActorId() = default;
+    constexpr ActorId(std::uint16_t s, std::uint64_t w, std::uint32_t g = 0)
+        : slot(s), generation(g), world(w) {}
 };
 enum class ActorLife : std::uint8_t { Alive, Dead, Removed };
 inline constexpr std::uint64_t npcWalkDurationMs = 600;
@@ -33,7 +37,9 @@ struct ActorState {
     bool hasTravel = false;
     ActorPosition walkFrom;
     float walkFromElevation = 0;
-    bool hostile() const noexcept { return npc.role == NpcRole::Hostile; }
+    std::uint32_t generation = 0;
+    bool targetable() const noexcept { return npc.role == NpcRole::Hostile; }
+    bool hostile() const noexcept { return targetable() && !npc.sac(); }
 };
 ActorState initialActorState(const rules::Catalog&, const NpcInstance&, rules::MonsterId appearanceBinding);
 ActorPosition actorPosition(const ActorState& actor, std::uint64_t timeMs) noexcept;
@@ -63,7 +69,8 @@ struct ActorResult {
     explicit operator bool() const noexcept { return error == ActorError::None; }
 };
 enum class LethalDisposition : std::uint8_t { AllowDeath, RetainOneHp };
-// Placement-only slots never recycle. Map/catalog must outlive this immovable owner.
+// Only the two prepared vault young slots recycle, with a checked generation. Map/catalog must outlive this
+// immovable owner.
 class ActorWorld {
   public:
     ActorWorld(GeometryView map, const rules::Catalog& catalog, const NpcWorld& placements);
@@ -97,6 +104,8 @@ class ActorWorld {
     }
 
   private:
+    friend class CombatController;
+    ActorId hatch(std::uint16_t slot, const NpcInstance& home, Cell party) noexcept;
     friend class GameSession;
     friend class CampaignRun;
     GeometryView map_;

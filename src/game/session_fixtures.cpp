@@ -34,7 +34,7 @@ void GameSession::discover() noexcept {
     discoveredReady_ = true;
     discoveredPose_ = pose;
     discoveredFixtures_ = floor_.revision();
-    if (objective_.count && !objective_.known &&
+    if (objectiveDefinition_.count && !objective_.known &&
         (floor_.known(objectiveDefinition_.approachDoor) || floor_.known(objectiveDefinition_.gate))) {
         objective_.known = true;
         ++objective_.revision;
@@ -147,7 +147,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
                 preview       ? "Open with the seal key."
                 : f->key == 2 ? "Bronze seal key used. Door opened."
                               : "Silver seal key used. Door opened."};
-    if (firstOpening && objective_.count && r.id.slot == objectiveDefinition_.approachDoor)
+    if (firstOpening && objectiveDefinition_.count && r.id.slot == objectiveDefinition_.approachDoor)
         return {true, !preview,
                 floor_.definition().depth == 3 ? "Final guardians beyond! Combat prevents movement."
                                                : "Guardians beyond! Combat prevents movement."};

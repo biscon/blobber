@@ -14,6 +14,35 @@ const char* siteName(Site s) {
         "Low gallery", "Survey lookout"};
     return names.at(unsigned(s));
 }
+void placeBroodVault(const CaveSites& sites, const std::vector<std::string>& types,
+                     const rules::Catalog& catalog, std::vector<NpcInstance>& occupants) {
+    if (occupants.size() > NpcWorld::maxInstances - 5)
+        throw std::invalid_argument("Vault encounter exceeds actor capacity");
+    // Resolve all bindings before appending to the caller's prepared roster.
+    for (const auto* id : {"broodmother", "vault.clutch", "vault.young"})
+        if (std::find(types.begin(), types.end(), id) == types.end())
+            throw std::invalid_argument("Missing vault appearance");
+    if (!catalog.monster(catalog.findMonster("broodmother")) ||
+        !catalog.monster(catalog.findMonster("vault.young")))
+        throw std::invalid_argument("Missing vault rules");
+    occupants.reserve(occupants.size() + 5);
+    const auto young = catalog.findMonster("vault.young");
+    auto place = [&](VaultPart part, const char* appearance, Site site, Cell subcell) {
+        const auto it = std::find(types.begin(), types.end(), appearance);
+        NpcInstance npc{{std::uint16_t(it - types.begin())}, sites[site], subcell, Heading::South};
+        npc.vault = part;
+        if (part == VaultPart::Mother)
+            npc.facing = Heading::North;
+        if (npc.sac())
+            npc.monster = young;
+        occupants.push_back(npc);
+    };
+    place(VaultPart::Mother, "broodmother", Site::Mother, {0, 0});
+    place(VaultPart::WestSac, "vault.clutch", Site::WestClutch, {1, 0});
+    place(VaultPart::EastSac, "vault.clutch", Site::EastClutch, {0, 0});
+    place(VaultPart::WestYoung, "vault.young", Site::WestHatch, {1, 0});
+    place(VaultPart::EastYoung, "vault.young", Site::EastHatch, {0, 0});
+}
 namespace {
 struct Builder {
     FloorLayout layout;
@@ -606,7 +635,7 @@ struct Builder {
     }
 };
 } // namespace
-CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback) {
+CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback, bool hangingClutches) {
     CaveResult result;
     auto& d = result.diagnostics;
     if (depth < 4 || depth > 6) {
@@ -630,7 +659,20 @@ CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback) 
                 for (int x = 0; x < b.layout.width; ++x)
                     if (floorCell(b.layout, {x, y}))
                         rows[y][x] = '.';
-            CaveFloor floor{std::move(b.layout), b.sites, Map(rows, std::move(b.world))};
+            if (hangingClutches && depth == 6) {
+                // Young drop on the aisle side of the suspended silk.
+                std::swap(b.sites[Site::WestHatch], b.sites[Site::WestMelee]);
+                std::swap(b.sites[Site::EastHatch], b.sites[Site::EastMelee]);
+                auto& props = b.world.scenery;
+                props.erase(std::remove_if(props.begin(), props.end(),
+                                           [](const SceneryPlacement& p) {
+                                               return p.model == "sealed-clutch" ||
+                                                      p.model == "tethered-clutch";
+                                           }),
+                            props.end());
+            }
+            CaveFloor floor{std::move(b.layout), b.sites, Map(rows, std::move(b.world)),
+                            hangingClutches && depth == 6};
             failure = validateCave(floor);
             if (!failure) {
                 if (d.fallback)

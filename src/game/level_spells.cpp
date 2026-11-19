@@ -40,10 +40,14 @@ void CombatController::shatter(const PartyCommand& c, Player pose, std::uint64_t
     const auto dc = party_.spellAccess(c.character, c.spell).difficulty;
     for (std::size_t i = 0; i < affected.recipientCount; ++i) {
         const auto t = affected.recipients[i];
-        const bool immune =
-            t.npc && (actors_.catalog().monster(actors_.actor(t.enemy)->monster)->damageProfile.immunities &
-                      rules::damageBit(rules::DamageType::Thunder));
-        const auto save = immune ? rules::SaveResult{} : effects_.save(t, rules::Ability::Constitution, dc);
+        const auto* actor = t.npc ? actors_.actor(t.enemy) : nullptr;
+        const bool object = actor && actor->npc.sac();
+        const bool immune = actor && !object &&
+                            (actors_.catalog().monster(actor->monster)->damageProfile.immunities &
+                             rules::damageBit(rules::DamageType::Thunder));
+        const bool rollsSave = !object && !immune;
+        const auto save =
+            rollsSave ? effects_.save(t, rules::Ability::Constitution, dc) : rules::SaveResult{};
         CombatOutcome out;
         out.event = CombatEvent::SpellSave;
         out.spell = rules::SpellKind::Shatter;
@@ -57,7 +61,7 @@ void CombatController::shatter(const PartyCommand& c, Player pose, std::uint64_t
         out.saveDifficulty = dc;
         out.hit = save.succeeded;
         out.occurredMs = now;
-        if (!immune)
+        if (rollsSave)
             events.append(out);
         out.event = CombatEvent::Attack;
         out.hit = true;

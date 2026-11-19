@@ -213,6 +213,11 @@ class EffectController {
                                  bool automatic = false) noexcept;
     int cuttingWords(RollDecision, rules::CharacterId& bard) noexcept;
     void mock(ActorId id) noexcept { mockeryUntil_[id.slot] = gameplayMs_ + 6000; }
+    void resetYoung(std::size_t slot) noexcept {
+        guidingUntil_[slot] = mockeryUntil_[slot] = 0;
+        conditions_[rules::partySize + slot] = {};
+        restrained_[rules::partySize + slot] = {};
+    }
     void endMockery(ActorId id) noexcept { mockeryUntil_[id.slot] = 0; }
     bool guiding(ActorId) const noexcept;
     void guide(ActorId, std::uint64_t now, CombatEvents&) noexcept;

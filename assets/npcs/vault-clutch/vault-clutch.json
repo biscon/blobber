@@ -1,0 +1,209 @@
+{
+  "id": "vault.clutch",
+  "width": 0.46,
+  "height": 0.72,
+  "alpha_cutoff": 15,
+  "animations": {
+    "idle": {
+      "durations_ms": [
+        800
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "attack": {
+      "durations_ms": [
+        340,
+        340
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/swollen.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/swollen.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/swollen.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/sealed.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/swollen.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "prone": {
+      "durations_ms": [
+        500
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "death": {
+      "durations_ms": [
+        1000
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/torn.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

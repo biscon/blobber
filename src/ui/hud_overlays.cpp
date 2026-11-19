@@ -288,6 +288,9 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                     ? UiArt::giantRatPortraitIcon
                 : participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Zombie
                     ? UiArt::zombiePortraitIcon
+                : participant.enemy &&
+                        h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Broodmother
+                    ? UiArt::broodmotherPortraitIcon
                 : participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Newt
                     ? UiArt::newtPortraitIcon
                 : participant.enemy && h->enemyPortraits[participant.enemy->slot] == EnemyPortrait::Spider

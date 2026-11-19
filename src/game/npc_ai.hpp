@@ -30,6 +30,7 @@ class NpcAiController {
     void update(std::uint64_t elapsedMs, std::uint64_t sessionTime, Player party,
                 const std::array<bool, NpcWorld::maxInstances>* frozen = nullptr,
                 const std::array<bool, NpcWorld::maxInstances>* incapacitated = nullptr) noexcept;
+    void hatch(ActorId id, Cell party) noexcept;
     void alert(ActorId id, Cell party) noexcept;
     // Direct observation/provocation only; recipients never relay this warning.
     void alertNearby(ActorId source, Cell party) noexcept;

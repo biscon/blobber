@@ -1,5 +1,6 @@
 #pragma once
 #include "generation/floor.hpp"
+#include "world/npc.hpp"
 
 namespace blobber::generation {
 // Reservations are floor-local. Absent sites have cell (-1,-1).
@@ -39,12 +40,16 @@ struct CaveFloor {
     FloorLayout layout;
     CaveSites sites;
     Map map;
+    bool hangingClutches = false;
 };
 struct CaveResult {
     std::optional<CaveFloor> floor;
     GenerationDiagnostics diagnostics;
 };
-CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback = false);
+CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback = false,
+                        bool hangingClutches = false);
+void placeBroodVault(const CaveSites&, const std::vector<std::string>& types, const rules::Catalog&,
+                     std::vector<NpcInstance>& placements);
 Failure validateCave(const CaveFloor&);
 const char* siteName(CaveSite);
 } // namespace blobber::generation

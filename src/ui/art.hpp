@@ -27,7 +27,8 @@ class UiArt {
                               zombiePortraitIcon = giantRatPortraitIcon + 1,
                               shamanPortraitIcon = zombiePortraitIcon + 1,
                               spiderPortraitIcon = shamanPortraitIcon + 1,
-                              newtPortraitIcon = spiderPortraitIcon + 1;
+                              newtPortraitIcon = spiderPortraitIcon + 1,
+                              broodmotherPortraitIcon = newtPortraitIcon + 1;
     static unsigned itemIcon(const rules::ItemDefinition&) noexcept;
     UiArt(GpuResources& resources, const std::filesystem::path& directory,
           const std::filesystem::path& preparedDirectory = {});
@@ -49,7 +50,7 @@ class UiArt {
     GpuResources& resources_;
     TextureHandle equipment_, creator_, atlas_, camp_, loot_, portraitSmall_, portraitLarge_, map_,
         portraitEffects_, feedback_, supportEffects_, classAbilities_;
-    std::array<Rectangle, 66> regions_{};
+    std::array<Rectangle, 67> regions_{};
     GpuLease<TextureHandle> menuTitle_;
     GpuLease<ShaderHandle> menuTitleShader_;
     int menuTitlePhaseLocation_ = -1;

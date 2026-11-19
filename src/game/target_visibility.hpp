@@ -7,7 +7,7 @@ inline CommandReason targetVisibility(const PartyCommand& command, const rules::
     if (command.targetCount > command.enemies.size())
         return CommandReason::InvalidTargets;
     const auto visible = [&](ActorId id) {
-        if (id.slot >= actors.count || !actors.actors[id.slot].hostile())
+        if (id.slot >= actors.count || !actors.actors[id.slot].targetable())
             return false;
         if (id.world != targets.world || targets.world != actors.world || targets.revision != actors.revision)
             return false;

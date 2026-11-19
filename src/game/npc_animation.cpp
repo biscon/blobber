@@ -107,7 +107,7 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
         const bool dying = actor.life == ActorLife::Dead && death.count;
         const bool deathVisible = dying && actor.hasDamage && elapsedMs >= actor.damageTimeMs &&
                                   elapsedMs - actor.damageTimeMs < npcClipDuration(death);
-        const bool visible = actor.life == ActorLife::Alive || (dying ? deathVisible : flash);
+        const bool visible = npc.sac() || actor.life == ActorLife::Alive || (dying ? deathVisible : flash);
         // Legacy death art freezes the exact living pose at the lethal timestamp.
         const auto time = actor.life == ActorLife::Dead && !dying ? actor.damageTimeMs : elapsedMs;
         const auto idleTime = npc.role == NpcRole::Resident ? time + residentDialogueMs_ : time;
@@ -149,6 +149,9 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
             } else if (hurtWins && time - actor.damageTimeMs < npcClipDuration(hurt)) {
                 next.clip = NpcAnimation::Hurt;
                 next.active = sample(hurt, time - actor.damageTimeMs, 0);
+            } else if (combat_ && npc.sac() && combat_->stirring(world_.id(i)) && attack.count) {
+                next.clip = NpcAnimation::Attack;
+                next.active = sample(attack, time, 0);
             } else if (combat_ && combat_->snapshot().biteTargets && attack.count &&
                        combat_->warnedTarget(world_.id(i)).index < rules::partySize) {
                 next.clip = NpcAnimation::Attack;

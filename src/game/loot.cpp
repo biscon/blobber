@@ -18,7 +18,8 @@ LootWorld::LootWorld(const ActorWorld& actors, const RecoveryLevel& level, std::
         if (actors.map().solid(level.sanctuaries[i]))
             throw std::runtime_error("Sanctuary must be walkable");
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
-        if (!actors.snapshot().actors[i].hostile())
+        if (!actors.snapshot().actors[i].hostile() ||
+            actors.snapshot().actors[i].npc.vault != VaultPart::None)
             continue;
         rules::DiceRng rng(seed ^ 0x4c4f4f54u ^ (std::uint32_t(i) * 0x9e3779b9u));
         const auto* m = actors.catalog().monster(actors.snapshot().actors[i].monster);
@@ -54,7 +55,7 @@ void LootWorld::reconcile(const ActorWorld& actors) noexcept {
     actorRevision_ = actors.snapshot().revision;
     for (std::size_t i = 0; i < actors.snapshot().count; ++i) {
         const auto& a = actors.snapshot().actors[i];
-        if (!a.hostile() || !a.hasDeath || deaths_[i])
+        if (!a.hostile() || a.npc.vault != VaultPart::None || !a.hasDeath || deaths_[i])
             continue;
         if (state_.revision == UINT64_MAX)
             return;

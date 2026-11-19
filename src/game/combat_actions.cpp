@@ -105,8 +105,10 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
     if (!c.target)
         return CommandReason::MissingTarget;
     const auto* a = actors_.actor(*c.target);
-    if (!a || !a->hostile() || a->life != ActorLife::Alive)
+    if (!a || !a->targetable() || a->life != ActorLife::Alive)
         return CommandReason::InvalidTarget;
+    if (a->npc.sac() && !ranged)
+        return CommandReason::AboveReach;
     if (ranged) {
         if (!inBowRange(pose.cell, a->npc.cell))
             return CommandReason::OutOfRange;
@@ -122,6 +124,8 @@ CommandReason CombatController::validate(const PartyCommand& c, Player pose) con
     return exposed(*c.target) ? CommandReason::Ready : CommandReason::FrontProtected;
 }
 void CombatController::alert(ActorId target, Player pose) noexcept {
+    if (const auto* a = actors_.actor(target); a && a->npc.sac())
+        target = vaultMother_;
     const auto* a = actors_.actor(target);
     if (!a)
         return;

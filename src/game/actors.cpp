@@ -21,7 +21,8 @@ std::uint8_t bit(Cell subcell) noexcept {
 }
 } // namespace
 float actorElevation(const ActorState& a, GeometryView g, std::uint64_t time) noexcept {
-    const float to = elevation(g.surface(a.npc.cell).floor);
+    const float to = a.npc.sac() ? elevation(g.surface(a.npc.cell).ceiling) - .72f
+                                 : elevation(g.surface(a.npc.cell).floor);
     if (!a.hasTravel)
         return to;
     if (a.life == ActorLife::Dead)
@@ -49,11 +50,11 @@ ActorState initialActorState(const rules::Catalog& catalog, const NpcInstance& n
                              rules::MonsterId appearanceBinding) {
     ActorState actor;
     actor.npc = npc;
-    if (actor.hostile()) {
+    if (actor.targetable()) {
         actor.monster = npc.monster.value_or(appearanceBinding);
         if (!catalog.monster(actor.monster))
             throw std::runtime_error("Hostile NPC appearance has no valid monster definition");
-        actor.hitPoints = actor.maxHitPoints = catalog.monster(actor.monster)->hitPoints;
+        actor.hitPoints = actor.maxHitPoints = npc.sac() ? 6 : catalog.monster(actor.monster)->hitPoints;
     }
     return actor;
 }
@@ -73,18 +74,23 @@ ActorWorld::ActorWorld(GeometryView map, const rules::Catalog& catalog, const Np
         auto& actor = state_.actors[i];
         const auto& npc = placements.instances()[i];
         actor = initialActorState(catalog, npc, bindings[npc.type.index]);
-        if (!map.npcAllowed(actor.npc.cell))
+        if (npc.sac() ? (map.solid(npc.cell) || map.surface(npc.cell).ceiling == noCeiling)
+                      : !map.npcAllowed(npc.cell))
             throw std::runtime_error("Actor placement overlaps runtime map wall or boundary");
-        mask(actor.npc.cell) |= bit(actor.npc.subcell);
+        if (npc.young())
+            actor.life = ActorLife::Removed;
+        else if (!npc.sac())
+            mask(actor.npc.cell) |= bit(actor.npc.subcell);
     }
 }
 ActorId ActorWorld::id(std::size_t slot) const noexcept {
     if (slot >= state_.count || state_.actors[slot].life == ActorLife::Removed)
         return {};
-    return {static_cast<std::uint16_t>(slot), state_.world};
+    return {static_cast<std::uint16_t>(slot), state_.world, state_.actors[slot].generation};
 }
 const ActorState* ActorWorld::actor(ActorId id) const noexcept {
     if (id.world != state_.world || id.slot >= state_.count ||
+        id.generation != state_.actors[id.slot].generation ||
         state_.actors[id.slot].life == ActorLife::Removed)
         return nullptr;
     return &state_.actors[id.slot];
@@ -122,6 +128,8 @@ std::uint8_t& ActorWorld::mask(Cell c) noexcept {
     return occupancy_[static_cast<std::size_t>(c.y) * map_.width() + c.x];
 }
 void ActorWorld::vacate(const ActorState& a) noexcept {
+    if (a.npc.sac())
+        return;
     mask(a.npc.cell) &= static_cast<std::uint8_t>(~bit(a.npc.subcell));
 }
 ActorResult ActorWorld::move(ActorId id, Cell cell, Cell subcell, Cell partyCell) noexcept {
@@ -219,7 +227,7 @@ ActorResult ActorWorld::damage(ActorId id, std::int64_t amount, std::uint64_t ti
         return {ActorError::InvalidHandle};
     if (old->life != ActorLife::Alive)
         return {ActorError::NotAlive};
-    if (!old->hostile())
+    if (!old->targetable())
         return {ActorError::NotCombatant};
     if (amount < 0)
         return {ActorError::InvalidDamage};
@@ -246,7 +254,7 @@ ActorResult ActorWorld::remove(ActorId id) noexcept {
     const auto* old = actor(id);
     if (!old)
         return {ActorError::InvalidHandle};
-    if (!old->hostile())
+    if (!old->targetable())
         return {ActorError::NotCombatant};
     auto& a = state_.actors[id.slot];
     if (a.life == ActorLife::Alive)
@@ -254,6 +262,20 @@ ActorResult ActorWorld::remove(ActorId id) noexcept {
     a.life = ActorLife::Removed;
     ++state_.revision;
     return {ActorError::None, true};
+}
+ActorId ActorWorld::hatch(std::uint16_t slot, const NpcInstance& home, Cell party) noexcept {
+    if (slot >= state_.count || !home.young() || home.cell == party || !map_.npcAllowed(home.cell) ||
+        occupied(home.cell))
+        return {};
+    auto& old = state_.actors[slot];
+    if (old.life == ActorLife::Alive || old.generation == UINT32_MAX || old.npc.vault != home.vault)
+        return {};
+    const auto generation = old.generation + 1;
+    old = initialActorState(catalog_, home, old.monster);
+    old.generation = generation;
+    mask(home.cell) |= bit(home.subcell);
+    ++state_.revision;
+    return id(slot);
 }
 ActorResult ActorWorld::talk(ActorId id, bool talking) noexcept {
     const auto* old = actor(id);

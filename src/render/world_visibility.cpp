@@ -154,8 +154,8 @@ void VisibilityPipeline::build(WorldFrame& out, const FrameInput& in) {
         for (unsigned i = 0; i < in.actors->snapshot().count; ++i) {
             const auto& actor = in.actors->snapshot().actors[i];
             const auto selection = in.animation ? in.animation->frames[i] : NpcFrameSelection{};
-            if (actor.life == ActorLife::Removed || !selection.visible ||
-                (!in.animation && actor.life != ActorLife::Alive))
+            if ((!actor.npc.sac() && actor.life == ActorLife::Removed) || !selection.visible ||
+                (!in.animation && !actor.npc.sac() && actor.life != ActorLife::Alive))
                 continue;
             const auto& npc = actor.npc;
             if (npc.type.index >= assets_.publication.appearances.size())

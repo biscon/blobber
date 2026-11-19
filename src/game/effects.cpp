@@ -29,7 +29,8 @@ bool operator==(EffectSource a, EffectSource b) noexcept {
     return static_cast<EffectTarget>(a) == static_cast<EffectTarget>(b);
 }
 bool operator==(EffectTarget a, EffectTarget b) noexcept {
-    return a.npc == b.npc && (a.npc ? a.enemy.slot == b.enemy.slot && a.enemy.world == b.enemy.world
+    return a.npc == b.npc && (a.npc ? a.enemy.slot == b.enemy.slot && a.enemy.world == b.enemy.world &&
+                                          a.enemy.generation == b.enemy.generation
                                     : a.character.index == b.character.index);
 }
 EffectController::EffectController(Party& party, ActorWorld& actors, rules::DiceRng& rng) noexcept
@@ -96,6 +97,11 @@ std::array<bool, NpcWorld::maxInstances> EffectController::incapacitatedActors()
     return result;
 }
 int EffectController::armorClass(EffectTarget t) const noexcept {
+    if (t.npc) {
+        const auto* object = actors_.actor(t.enemy);
+        if (object && object->npc.sac() && object->life == ActorLife::Alive)
+            return 10;
+    }
     if (!living(t))
         return 0;
     int ac;

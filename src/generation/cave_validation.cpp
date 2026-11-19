@@ -188,9 +188,10 @@ Failure validateCave(const CaveFloor& cave) {
             const auto c = sites[i ? Site::EastClutch : Site::WestClutch];
             const auto melee = i ? Site::EastMelee : Site::WestMelee,
                        hatch = i ? Site::EastHatch : Site::WestHatch;
-            if (!inside(f, c) || m.solid(c) || !m.movementBlocked(c) || !accessible(melee) ||
-                !accessible(hatch) || !(sites[melee] == c + Cell{0, -1}) ||
-                !(sites[hatch] == c + Cell{0, 1}) || defs.npcExcluded[index(m, sites[hatch])])
+            const int dropSide = cave.hangingClutches ? -1 : 1;
+            if (!inside(f, c) || m.solid(c) || m.movementBlocked(c) != !cave.hangingClutches ||
+                !accessible(melee) || !accessible(hatch) || !(sites[melee] == c + Cell{0, -dropSide}) ||
+                !(sites[hatch] == c + Cell{0, dropSide}) || defs.npcExcluded[index(m, sites[hatch])])
                 return {Error::Anchor};
         }
     }

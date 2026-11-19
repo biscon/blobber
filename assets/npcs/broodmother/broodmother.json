@@ -1,0 +1,382 @@
+{
+  "id": "broodmother",
+  "width": 0.5,
+  "height": 0.36,
+  "alpha_cutoff": 15,
+  "animations": {
+    "idle": {
+      "durations_ms": [
+        800
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/idle-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/idle-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/idle-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/idle-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "walk": {
+      "durations_ms": [
+        300,
+        300
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/stride-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/stride-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/stride-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/stride-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "attack": {
+      "durations_ms": [
+        180,
+        140,
+        180,
+        240
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/stride-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/strike-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/stride-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/strike-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/stride-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/strike-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/stride-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/strike-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          },
+          {
+            "image": "frames/idle-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "hurt": {
+      "durations_ms": [
+        220
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/stride-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/stride-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/stride-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/stride-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "prone": {
+      "durations_ms": [
+        500
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/corpse-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/corpse-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/corpse-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/corpse-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    },
+    "death": {
+      "durations_ms": [
+        900
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/corpse-front.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/corpse-back.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/corpse-left.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/corpse-right.png",
+            "anchor": [
+              0.5,
+              1.0
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

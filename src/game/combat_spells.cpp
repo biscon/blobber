@@ -98,7 +98,8 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
     const auto* r = rules::spellRules(kind);
     if (r->hostile) {
         const auto* a = actors_.actor(c.enemies[i]);
-        if (!a || !a->hostile() || a->life != ActorLife::Alive)
+        if (!a || !a->targetable() || a->life != ActorLife::Alive ||
+            (a->npc.sac() && kind != SpellKind::FireBolt))
             return CommandReason::InvalidTarget;
         if (kind == SpellKind::HoldPerson && !actors_.catalog().monster(a->monster)->humanoid)
             return CommandReason::InvalidTarget;

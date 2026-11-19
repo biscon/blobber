@@ -247,7 +247,7 @@ Json encodeObservation(const Observation& o) {
     const auto& actors = g.actors().snapshot();
     for (std::size_t i = 0; i < actors.count; ++i) {
         const auto& a = actors.actors[i];
-        if (!a.hostile()) {
+        if (!a.targetable()) {
             if (o.diagnostic || o.targets.anchors[i].valid)
                 j["residents"].push_back(
                     {{"actor", i},
@@ -267,7 +267,7 @@ Json encodeObservation(const Observation& o) {
         if (!o.diagnostic && !o.visible[i])
             continue;
         Json e = {{"actor", i},
-                  {"type", cat.monster(a.monster)->id},
+                  {"type", a.npc.sac() ? "vault.clutch" : cat.monster(a.monster)->id},
                   {"position", xy(a.npc.cell)},
                   {"subcell", xy(a.npc.subcell)},
                   {"heading", unsigned(a.npc.facing)},
@@ -275,6 +275,10 @@ Json encodeObservation(const Observation& o) {
                   {"statuses", status(g.effects().statuses(g.actors().id(i)))},
                   {"targetable", o.visible[i]},
                   {"guardian", g.guardian(g.actors().id(i))}};
+        if (a.npc.sac())
+            e["stirring"] = g.combat().stirring(g.actors().id(i));
+        if (a.npc.young())
+            e["generation"] = a.generation;
         const auto warned = g.combat().warnedTarget(g.actors().id(i));
         if (warned.index < rules::partySize)
             e["heavy_bite_target"] = warned.index;
@@ -452,7 +456,12 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
                         "spell_save",
                         "guiding_mark",
                         "dash",
-                        "wake", "bite_warning", "bite_abandoned"};
+                        "wake",
+                        "bite_warning",
+                        "bite_abandoned",
+                        "clutch_warning",
+                        "clutch_hatch",
+                        "vault_clear"};
     Json j = {
         {"event", names[unsigned(e.event)]},
         {"time_ms", u(e.occurredMs)},

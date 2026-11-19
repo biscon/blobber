@@ -306,10 +306,17 @@ void CommandController::updateHover() noexcept {
         updateEnemyTooltip(*h.enemy);
         const auto& a = *actors_.actor(*h.enemy);
         std::snprintf(h.lines[0].data(), h.lines[0].size(), "%s%s #%u",
-                      session_.guardian(*h.enemy) ? "Guardian: " : "",
-                      monsterName(actors_.catalog().monster(a.monster)->id), unsigned(h.enemy->slot) + 1);
+                      session_.guardian(*h.enemy) ? "Guardian: " : "", monsterName(actors_, a),
+                      unsigned(h.enemy->slot) + 1);
         h.health = a.maxHitPoints ? float(a.hitPoints) / a.maxHitPoints : 0;
         const auto pose = session_.movement().player;
+        if (a.npc.sac()) {
+            put(1, session_.combat().stirring(*h.enemy) ? "Stirring: a young spider is about to hatch."
+                                                        : "Sealed egg sac.");
+            put(2, "Above melee reach. Use a bow or Fire Bolt.");
+            std::snprintf(h.lines[3].data(), h.lines[3].size(), "HP %d/%d", a.hitPoints, a.maxHitPoints);
+            return;
+        }
         if (state_.magic.armed) {
             const auto& m = state_.magic;
             std::snprintf(h.lines[4].data(), h.lines[4].size(), "HP %d/%d", a.hitPoints, a.maxHitPoints);

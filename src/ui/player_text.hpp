@@ -1,4 +1,5 @@
 #pragma once
+#include "game/actors.hpp"
 #include "rules/spells.hpp"
 #include <string_view>
 namespace blobber {
@@ -17,6 +18,10 @@ inline const char* monsterName(std::string_view id) noexcept {
         return "Goblin Guardian";
     if (id == "goblin_shaman")
         return "Goblin Shaman";
+    if (id == "broodmother")
+        return "Broodmother";
+    if (id == "vault.young")
+        return "Hatchling";
     if (id == "blind.cave.newt")
         return "Blind Cave Newt";
     if (id == "venomous.spider")
@@ -30,6 +35,11 @@ inline const char* monsterName(std::string_view id) noexcept {
     if (id == "zombie")
         return "Zombie";
     return "Creature";
+}
+inline const char* monsterName(const ActorWorld& world, const ActorState& actor) noexcept {
+    if (actor.npc.sac())
+        return actor.npc.vault == VaultPart::WestSac ? "Western egg sac" : "Eastern egg sac";
+    return monsterName(world.catalog().monster(actor.monster)->id);
 }
 // Keep legacy catalog bytes/save fingerprints stable while removing authoring notes from UI.
 inline const char* spellDescription(rules::SpellKind kind, const char* authored) noexcept {

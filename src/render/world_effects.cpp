@@ -257,7 +257,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         if (shot.spell != rules::SpellKind::Count)
             continue;
         const Billboard* body =
-            in.actors && shot.enemy.world == in.actors->snapshot().world && shot.enemy.slot < bodies.size()
+            in.actors && in.actors->actor(shot.enemy) && shot.enemy.slot < bodies.size()
                 ? bodies[shot.enemy.slot]
                 : nullptr;
         Vec enemy{shot.targetPosition.x, elevation(in.geometry.surface(shot.npcOrigin.cell).floor) + .5f,
@@ -297,6 +297,10 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
             size = (shot.ranged ? 12.f : 28.f) * depth(world.camera, to) / focal();
         } else if (std::abs(b.x - a.x) < 25 && std::abs(b.y - a.y) < 35)
             texture = shot.incoming ? 1 : 2;
+        if (!ending && shot.incoming && shot.ranged && shot.npcOrigin.young()) {
+            texture = 1; // Use the pointed tip for the hatchling's short bristles.
+            size = .08f;
+        }
         const float fade = ending ? 1.f - float(in.now - shot.impactMs) / 120.f : 1.f;
         const auto tint = texture == 4 ? std::array<float, 4>{1, 231.f / 255, 155.f / 255, fade}
                                        : std::array<float, 4>{1, 1, 1, fade};

@@ -6,7 +6,7 @@
 
 namespace blobber {
 inline bool sameActor(ActorId a, ActorId b) noexcept {
-    return a.slot == b.slot && a.world == b.world;
+    return a.slot == b.slot && a.world == b.world && a.generation == b.generation;
 }
 enum class PartyAction : std::uint8_t { Melee, BackMelee, Defend, Ranged, Spell, Item, Aid, Feature, Smite, Count };
 enum class CommandReason : std::uint8_t {
@@ -52,6 +52,7 @@ enum class CommandReason : std::uint8_t {
     NoAmmunition,
     InvalidItem,
     StaleInventory,
+    AboveReach,
 };
 const char* actionName(PartyAction action) noexcept;
 const char* commandMessage(CommandReason reason) noexcept;

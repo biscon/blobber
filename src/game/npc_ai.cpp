@@ -279,6 +279,21 @@ void NpcAiController::hearFootstep(Cell cell) noexcept {
             alertNearby(id, cell);
     }
 }
+void NpcAiController::hatch(ActorId id, Cell party) noexcept {
+    const auto* a = actors_.actor(id);
+    if (!a || !a->npc.young() || a->life != ActorLife::Alive)
+        return;
+    const auto facing = headingToward(a->npc.cell, party);
+    auto& ai = state_.actors[id.slot];
+    ai = {};
+    ai.home = a->npc.cell;
+    ai.homeFacing = facing;
+    ai.config = a->npc.ai;
+    discardPreparation(id);
+    navigation_.cancel(id.slot);
+    actors_.face(id, facing);
+    alert(id, party);
+}
 void NpcAiController::alert(ActorId id, Cell party) noexcept {
     const auto* actor = actors_.actor(id);
     if (!actor || !actor->hostile() || actor->life != ActorLife::Alive)

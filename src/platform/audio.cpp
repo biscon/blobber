@@ -401,10 +401,13 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
                 if (e.creature) {
                     const auto* m = game->party().catalog().monster(a->monster);
                     const auto& id = m->id;
-                    const char* species = id == "giant.rat"        ? "rat"
-                                          : id == "goblin_shaman"  ? "shaman"
-                                          : id.find("goblin") == 0 ? "goblin"
-                                                                   : id.c_str();
+                    if (a->npc.sac())
+                        continue;
+                    const char* species = (id == "broodmother" || id == "vault.young") ? "venomous.spider"
+                                          : id == "giant.rat"                          ? "rat"
+                                          : id == "goblin_shaman"                      ? "shaman"
+                                          : id.find("goblin") == 0                     ? "goblin"
+                                                                                       : id.c_str();
                     std::snprintf(buffer, sizeof(buffer), "%s.%s", species, name);
                     name = buffer;
                 }

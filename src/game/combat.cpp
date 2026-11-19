@@ -24,6 +24,7 @@ CombatController::CombatController(GeometryView map, Party& party, ActorWorld& a
                             npcClipDuration(b),
                             npcAttackImpact(b)};
     }
+    prepareVault();
     state_.world = actors.snapshot().world;
     visuals_.world = state_.world;
     spellVisuals_.clear(state_.world);
@@ -329,6 +330,8 @@ void CombatController::begin(std::uint64_t now) noexcept {
         enroll(origin_, false);
         addGroups();
         ++state_.round;
+        if (vaultMother_.world && currentEvents_)
+            vaultBoundary(state_.round, origin_, *currentEvents_);
         roundEndMs_ = state_.gameplayMs + combatRoundMs;
         position_ = enemyCursor_ = 0;
         state_.spent.fill(false);
@@ -387,6 +390,10 @@ void CombatController::selectTurn() noexcept {
                             warning.opportunity = true;
                     }
                 }
+                if (vaultMother_.world && effects_.canAct(id) && normalAction(id))
+                    for (auto& clutch : clutches_)
+                        if (clutch.warningRound && state_.round >= clutch.warningRound)
+                            clutch.opportunity = true;
                 state_.activeCharacter = id;
                 state_.awaitingAction = hasActions(id);
                 ++state_.turn;
@@ -440,6 +447,11 @@ void CombatController::advance(std::uint64_t now) noexcept {
         selectTurn();
 }
 void CombatController::leave() noexcept {
+    if (vaultMother_.world)
+        for (auto& clutch : clutches_) {
+            clutch.warningRound = 0;
+            clutch.opportunity = false;
+        }
     clearBiteWarnings();
     state_.phase = CombatPhase::Exploration;
     state_.enemyCount = 0;

@@ -1,5 +1,6 @@
 #include "game/perception.hpp"
 #include "game/session.hpp"
+#include <algorithm>
 #include <stdexcept>
 namespace blobber {
 void GameSession::prepareObjective() {
@@ -7,6 +8,12 @@ void GameSession::prepareObjective() {
     if (d.count > d.members.size() || d.rewardCount > d.rewards.size() ||
         recovery_.groundCount + d.rewardCount > recovery_.ground.size())
         throw std::invalid_argument("Floor objective capacity exceeded");
+    if (combat_.vaultMother().world) {
+        if (d.count || d.rewardCount)
+            throw std::invalid_argument("Conflicting vault objective");
+        objective_.members[objective_.count++] = combat_.vaultMother();
+        return;
+    }
     if (!d.count) {
         if (d.rewardCount)
             throw std::invalid_argument("Reward without guardians");
@@ -40,12 +47,51 @@ void GameSession::prepareObjective() {
     }
 }
 bool GameSession::guardian(ActorId id) const noexcept {
+    if (combat_.vaultMother().world) {
+        const auto* actor = actors_.actor(id);
+        return actor && (actor->npc.vault == VaultPart::Mother || actor->npc.young());
+    }
     for (unsigned i = 0; i < objective_.count; ++i)
         if (objective_.members[i].world == id.world && objective_.members[i].slot == id.slot)
             return true;
     return false;
 }
 void GameSession::reconcileObjective() noexcept {
+    if (combat_.vaultMother().world) {
+        if (objective_.completed)
+            return;
+        combat_.silenceVault();
+        if (!objective_.known && combat_.member(combat_.vaultMother())) {
+            objective_.known = true;
+            ++objective_.revision;
+        }
+        unsigned members = 1;
+        for (const auto& clutch : combat_.clutches_) {
+            const auto id = actors_.id(clutch.young);
+            if (!id.world)
+                continue;
+            if (!sameActor(objective_.members[members], id)) {
+                objective_.members[members] = id;
+                ++objective_.revision;
+            }
+            ++members;
+        }
+        if (objective_.count != members) {
+            objective_.count = members;
+            ++objective_.revision;
+        }
+        if (combat_.vaultCleared() &&
+            std::any_of(party_.snapshot().characters.begin(), party_.snapshot().characters.end(),
+                        [](const auto& c) { return c.life == rules::Life::Conscious; })) {
+            party_.awardExperience(200);
+            objective_.known = objective_.completed = objective_.rewardIssued = true;
+            ++objective_.revision;
+            CombatOutcome out;
+            out.event = CombatEvent::VaultClear;
+            events_.append(out);
+        }
+        return;
+    }
     if (!objective_.count || objective_.completed)
         return;
     const auto& actors = actors_.snapshot();

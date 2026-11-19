@@ -1,5 +1,6 @@
 #pragma once
 #include "assets/world_assets.hpp"
+#include "game/arena.hpp"
 #include "generation/caves.hpp"
 #include <iosfwd>
 
@@ -14,6 +15,11 @@ void walkTo(GameSession&, Cell, std::optional<Cell> avoid = {}, std::vector<Cell
 void placeGalleries(const generation::CaveSites&, const std::vector<std::string>&,
                     std::vector<NpcInstance>&);
 void equipMeleeProofParty(rules::PresetParty&);
+enum class VaultRoute { Suppress, Burst, OpeningVolley, DoorwayVolley, Replacement };
+ArenaScenario prepareVault(const generation::CaveSites&, const std::vector<std::string>&,
+                           const rules::Catalog&, std::vector<NpcInstance>&);
+void checkVault(GameSession&, const generation::CaveFloor&, const std::vector<NpcTimings>&, VaultRoute,
+                const std::filesystem::path&, WorldRenderer*, Presenter*);
 void checkGalleries(GameSession&, const generation::CaveFloor&, const std::vector<NpcTimings>&, bool north, bool meleeOnly,
                     const std::filesystem::path&, WorldRenderer*, Presenter*);
 void checkSpider(GameSession&, const generation::CaveFloor&, const std::vector<NpcTimings>&,

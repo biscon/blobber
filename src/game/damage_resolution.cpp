@@ -46,7 +46,7 @@ NpcDamageResult damageNpc(ActorWorld& actors, EffectController& effects, ActorId
         out.actor.error = ActorError::NotAlive;
         return out;
     }
-    if (!target->hostile()) {
+    if (!target->targetable()) {
         out.actor.error = ActorError::NotCombatant;
         return out;
     }
@@ -63,7 +63,8 @@ NpcDamageResult damageNpc(ActorWorld& actors, EffectController& effects, ActorId
             return out;
         }
         auto& resolved = out.components[i];
-        resolved = rules::resolveDamage(component.amount, component.type, species.damageProfile);
+        resolved = rules::resolveDamage(component.amount, component.type,
+                                        target->npc.sac() ? rules::DamageProfile{} : species.damageProfile);
         const auto add = [](std::int64_t a, std::int64_t b) { return a + std::min(b, INT64_MAX - a); };
         out.resolved.raw = add(out.resolved.raw, resolved.raw);
         out.resolved.damage = add(out.resolved.damage, resolved.damage);
@@ -76,7 +77,7 @@ NpcDamageResult damageNpc(ActorWorld& actors, EffectController& effects, ActorId
         return out;
     }
     auto disposition = LethalDisposition::AllowDeath;
-    if (out.resolved.damage > 0 && out.resolved.damage >= target->hitPoints &&
+    if (!target->npc.sac() && out.resolved.damage > 0 && out.resolved.damage >= target->hitPoints &&
         rules::hasTrait(species.traits, rules::Trait::UndeadFortitude)) {
         if (radiant)
             out.fortitude.status = FortitudeStatus::RadiantBypass;

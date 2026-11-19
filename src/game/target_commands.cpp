@@ -15,8 +15,8 @@ bool encounterActive(CombatPhase phase) noexcept {
 } // namespace
 bool CommandController::pickerTarget(ActorId id) const noexcept {
     const auto* actor = actors_.actor(id);
-    return encounterActive(session_.combat().snapshot().phase) && actor && actor->hostile() &&
-           actor->life == ActorLife::Alive && session_.combat().member(id);
+    return encounterActive(session_.combat().snapshot().phase) && actor && actor->targetable() &&
+           actor->life == ActorLife::Alive && (session_.combat().member(id) || actor->npc.sac());
 }
 bool CommandController::pickerRecipients() const noexcept {
     const auto& m = state_.magic;
@@ -90,8 +90,8 @@ void CommandController::refreshTargetPicker() noexcept {
     const auto describe = [&](ActorId id, EnemyTargetRow& row) {
         row.id = id;
         const auto& a = *actors_.actor(id);
-        std::snprintf(row.name.data(), row.name.size(), "%s #%u",
-                      monsterName(actors_.catalog().monster(a.monster)->id), unsigned(id.slot) + 1);
+        std::snprintf(row.name.data(), row.name.size(), "%s #%u", monsterName(actors_, a),
+                      unsigned(id.slot) + 1);
         row.reason = enemyEligibility(id);
         const auto pose = session_.movement().player;
         const auto direction = forward(pose.heading);
@@ -102,6 +102,10 @@ void CommandController::refreshTargetPicker() noexcept {
         std::snprintf(row.detail.data(), row.detail.size(), "%s%s / %s", rear ? "Rear" : "Front",
                       state_.targets.anchors[id.slot].valid ? "" : " / Obscured",
                       warning ? warning : row.reason == CommandReason::Ready ? "Ready" : commandMessage(row.reason));
+        if (a.npc.sac())
+            std::snprintf(row.detail.data(), row.detail.size(), "%s / %s",
+                          session_.combat().stirring(id) ? "Stirring" : "Sealed",
+                          row.reason == CommandReason::Ready ? "Ready" : commandMessage(row.reason));
         row.selected = c.target && sameActor(*c.target, id);
     };
     for (std::size_t i = state_.targetPage * 4; i < p.candidateCount && p.count < 4; ++i)

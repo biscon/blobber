@@ -131,15 +131,15 @@ class PickingBuffer {
                 }
             }
         for (std::size_t i = 0; i < actors->snapshot().count; ++i) {
-            if ((seen[i] || exposed_[i]) && actors->snapshot().actors[i].hostile() &&
+            if ((seen[i] || exposed_[i]) && actors->snapshot().actors[i].targetable() &&
                 actors->snapshot().actors[i].life == ActorLife::Alive)
                 targets_.candidates[targets_.candidateCount++] = actors->id(i);
             if (seen[i]) {
-                if (!actors->snapshot().actors[i].hostile() &&
+                if (!actors->snapshot().actors[i].targetable() &&
                     actors->snapshot().actors[i].life == ActorLife::Alive)
                     residents_.ids[residents_.count++] = actors->id(i);
                 bodyBounds_[i] = {minimum[i].x, minimum[i].y, maximum[i].x + 1, maximum[i].y + 1};
-                if (actors->snapshot().actors[i].hostile() &&
+                if (actors->snapshot().actors[i].targetable() &&
                     actors->snapshot().actors[i].life == ActorLife::Alive)
                     targets_.ids[targets_.count++] = actors->id(i);
                 targets_.anchors[i] = {(minimum[i].x + maximum[i].x) / 2,
