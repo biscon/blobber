@@ -39,6 +39,8 @@ class NpcAiController {
         if (id.slot < prepared_.size())
             prepared_[id.slot].reset();
     }
+    bool seesParty(ActorId, Cell) const noexcept;
+    void hearFootstep(Cell) noexcept;
     bool aware(ActorId id) const noexcept;
     bool approach(ActorId id, Player party, std::uint64_t now) noexcept;
     PositioningResult position(ActorId id, Player party, std::uint64_t now) noexcept;
@@ -68,6 +70,8 @@ class NpcAiController {
     std::uint64_t tacticalTime_ = UINT64_MAX;
     std::size_t tacticalWork_ = 0;
     EffectController* effects_ = nullptr;
+    std::array<bool, NpcWorld::maxInstances> hearsFootsteps_{};
+    bool hasListeners_ = false;
     bool turnMovement_ = false;
     std::array<std::optional<Cell>, NpcWorld::maxInstances> prepared_{};
     blobber::Mt19937 rng_;

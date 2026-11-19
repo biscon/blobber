@@ -8,7 +8,7 @@ class WorldVisual final : public Visibility {
         : lease_(c.assets.acquire(c.assets.requirements(map.definition().assetPack, &game.actors().snapshot(),
                                                         true, map.definition().hasFire()))),
           scene_(world_render::prepare(game.geometry(), {}, {}, {}, &c.assets)), pipeline_(scene_, c.assets),
-          animator_(game.actors(), c.timings) {
+          animator_(game.actors(), c.timings, &game.combat()) {
         sample(map, game);
     }
     const TargetSnapshot& sample(const Map&, const GameSession& game) override {

@@ -2204,6 +2204,82 @@
           "provenance": "Csound synthesis; Blobber original recipe"
         }
       ]
+    },
+    "blind.cave.newt.step": {
+      "gain": 0.2,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 1,
+      "range": 3,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/blind.cave.newt.step_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "blind.cave.newt.attack": {
+      "gain": 0.45,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/blind.cave.newt.attack_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "blind.cave.newt.hurt": {
+      "gain": 0.3,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 2,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/blind.cave.newt.hurt_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
+    "blind.cave.newt.death": {
+      "gain": 0.34,
+      "pitch_min": 0.96,
+      "pitch_max": 1.04,
+      "volume_min": 0.9,
+      "category": 1,
+      "priority": 3,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/blind.cave.newt.death_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
     }
   },
   "mix_gain_db": {

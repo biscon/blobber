@@ -27,3 +27,7 @@ venomous.spider.step
 venomous.spider.attack
 venomous.spider.hurt
 venomous.spider.death
+blind.cave.newt.step
+blind.cave.newt.attack
+blind.cave.newt.hurt
+blind.cave.newt.death

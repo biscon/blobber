@@ -275,6 +275,9 @@ Json encodeObservation(const Observation& o) {
                   {"statuses", status(g.effects().statuses(g.actors().id(i)))},
                   {"targetable", o.visible[i]},
                   {"guardian", g.guardian(g.actors().id(i))}};
+        const auto warned = g.combat().warnedTarget(g.actors().id(i));
+        if (warned.index < rules::partySize)
+            e["heavy_bite_target"] = warned.index;
         if (auto concentration = g.effects().concentrationStatus(g.actors().id(i)))
             e["concentration"] = status(StatusSummary{{*concentration}, 1});
         if (o.diagnostic) {
@@ -449,7 +452,7 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
                         "spell_save",
                         "guiding_mark",
                         "dash",
-                        "wake"};
+                        "wake", "bite_warning", "bite_abandoned"};
     Json j = {
         {"event", names[unsigned(e.event)]},
         {"time_ms", u(e.occurredMs)},
@@ -482,6 +485,8 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
                                     : e.attackRollMode == rules::RollMode::Disadvantage ? "disadvantage"
                                                                                         : "normal";
         }
+        if (e.guardedBite)
+            j["guarded_bite"] = true;
         if (e.smiteDamage) {
             j["damage_components"] = Json::array();
             for (unsigned i = 0; i < 2; ++i) {

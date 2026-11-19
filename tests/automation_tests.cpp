@@ -5,6 +5,7 @@
 #include "support/bard_fixtures.hpp"
 #include "support/generation_blueprints.hpp"
 #include "support/paladin_fixtures.hpp"
+#include "support/newt_fixtures.hpp"
 #include "support/ranger_fixtures.hpp"
 #include <iostream>
 #include <sstream>
@@ -26,6 +27,36 @@ class CoveredCandidates final : public Visibility {
     }
     bool lootVisible(LootId) const noexcept override { return false; }
 };
+void biteWarningWire() {
+    const auto cat = blobber::test::newtCatalog();
+    const auto map = combatMap();
+    const Player pose{{3, 3}, Heading::North};
+    const NpcWorld npcs(map, pose.cell, {"test.newt"}, {{{0}, {3, 2}, {0, 1}, Heading::South}});
+    GameSession game(map, cat, npcs, 5, pose, false);
+    for (unsigned tick = 0; tick < 300; ++tick) {
+        for (const auto& event : game.update(.05, false)) {
+            if (event.event != CombatEvent::BiteWarning)
+                continue;
+            Observation o;
+            o.session = &game;
+            o.map = &map;
+            o.visible[0] = true;
+            const auto notice = encodeEvent(event, cat, false);
+            const auto state = encodeObservation(o);
+            check(notice["event"] == "bite_warning" && notice["enemy"] == 0 &&
+                      notice["recipient"] == state["enemies"][0]["heavy_bite_target"],
+                  "Playable headless warning names the same victim as the persistent observation");
+            return;
+        }
+        const auto& state = game.combat().snapshot();
+        if (state.awaitingAction && state.activeCharacter) {
+            auto end = turnCommand(game, PartyAction::Feature);
+            end.feature = rules::Feature::EndTurn;
+            game.submit(end);
+        }
+    }
+    throw std::runtime_error("No headless warning");
+}
 void restorationWire() {
     const auto c = catalog();
     const auto d = definitions();
@@ -841,6 +872,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        biteWarningWire();
         restorationWire();
         paladinWire();
         rangerWire();

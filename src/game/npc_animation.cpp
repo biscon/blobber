@@ -1,5 +1,5 @@
 #include "game/npc_animation.hpp"
-#include "game/effects.hpp"
+#include "game/combat.hpp"
 #include <stdexcept>
 namespace blobber {
 void validateNpcTimings(const NpcTimings& timings) {
@@ -54,7 +54,8 @@ std::uint8_t sample(const NpcClipTiming& clip, std::uint64_t time, std::uint32_t
     return 0;
 }
 } // namespace
-NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings) : world_(world) {
+NpcAnimator::NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings,
+                         const CombatController* combat) : world_(world), combat_(combat) {
     if (timings.size() != world.snapshot().typeCount)
         throw std::invalid_argument("NPC animation/world type counts differ");
     for (std::size_t i = 0; i < timings.size(); ++i) {
@@ -148,6 +149,11 @@ void NpcAnimator::setTime(std::uint64_t elapsedMs, const EffectController* effec
             } else if (hurtWins && time - actor.damageTimeMs < npcClipDuration(hurt)) {
                 next.clip = NpcAnimation::Hurt;
                 next.active = sample(hurt, time - actor.damageTimeMs, 0);
+            } else if (combat_ && combat_->snapshot().biteTargets && attack.count &&
+                       combat_->warnedTarget(world_.id(i)).index < rules::partySize) {
+                next.clip = NpcAnimation::Attack;
+                // The two pre-impact poses show the planted breath while the defender chooses.
+                next.active = attack.count >= 4 ? ((time / 480) % 2) : 0;
             } else if (!hurtWins && attackCue && attackElapsed < npcClipDuration(attack)) {
                 next.clip = attackClip;
                 next.active = sample(attack, attackElapsed, 0);

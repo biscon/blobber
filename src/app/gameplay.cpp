@@ -56,11 +56,11 @@ struct PlayView {
               arena ? prepareArenaParty(catalog, *arena)
                     : std::make_unique<Party>(catalog, starting ? *starting : *catalog.preset()),
               placements, seed, spawn, enableAi, timings, recovery, fixtures, objective)),
-          session(*ownedSession), renderer(world), animator(session.actors(), timings), frames(world, rooms),
+          session(*ownedSession), renderer(world), animator(session.actors(), timings, &session.combat()), frames(world, rooms),
           commands(session, timings), map(m) {}
     PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, WorldRenderer& world,
              const generation::GeneratedFloor* floor = nullptr)
-        : session(game), renderer(world), animator(game.actors(), timings),
+        : session(game), renderer(world), animator(game.actors(), timings, &game.combat()),
           frames(world, floor ? &floor->layout : nullptr), commands(game, timings), map(m) {
         if (floor)
             diagnostics = generation::diagnosticView(*floor);

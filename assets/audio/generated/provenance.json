@@ -7270,5 +7270,121 @@
       "sha256": "d16559977ed2bd721a37ba90ba1c8dce35c2e6d10658aa074c2640ce63c2be08"
     },
     "recipe_sha256": "06d3450913e504f656b3ef18d0b5c2e8d6460e6453bc0079850459a06ee0a8dc"
+  },
+  "generated/blind.cave.newt.step_01.wav": {
+    "cue": "blind.cave.newt.step",
+    "variant": "01",
+    "seed": 15040,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 265,
+      "tone": 0.25,
+      "duration": 0.18,
+      "seed": 15040,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.18,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -16.791368896507013,
+      "dc": 9.300090648509838e-05,
+      "seam": 0.0,
+      "sha256": "ea06cf348725d967ec86aba13882f725e5877c279cad9e6a014f575c9987d8e7"
+    },
+    "recipe_sha256": "62bd9e2466d03711e464089fed424b5f8ea3a2a018719cc48a748a801112b8f8"
+  },
+  "generated/blind.cave.newt.attack_01.wav": {
+    "cue": "blind.cave.newt.attack",
+    "variant": "01",
+    "seed": 15041,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 190,
+      "tone": 0.25,
+      "duration": 0.32,
+      "seed": 15041,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.32,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -17.00667431968746,
+      "dc": 2.465645472208659e-05,
+      "seam": 0.0,
+      "sha256": "b364d9ecd9b04ea40a6a48cbf114fd8ffe0c72a6eac24cc70c3c56b99296be1e"
+    },
+    "recipe_sha256": "186f50b55ccd26121d5880fb8395bf0b3838497e3d67e7e5be43d92b53664d47"
+  },
+  "generated/blind.cave.newt.hurt_01.wav": {
+    "cue": "blind.cave.newt.hurt",
+    "variant": "01",
+    "seed": 15042,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 360,
+      "tone": 0.25,
+      "duration": 0.25,
+      "seed": 15042,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.25,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -23.636080754724674,
+      "dc": 0.0002871602376302083,
+      "seam": 0.0,
+      "sha256": "591d59ff37f0d468ac36f33d74f4d57122f5923a0f687a77ae9278069f0895ec"
+    },
+    "recipe_sha256": "cb0d4c6d5eced854fbaa277b72a0b1f8ab554c53b920571527252f610f63caec"
+  },
+  "generated/blind.cave.newt.death_01.wav": {
+    "cue": "blind.cave.newt.death",
+    "variant": "01",
+    "seed": 15043,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 135,
+      "tone": 0.25,
+      "duration": 0.6,
+      "seed": 15043,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.6,
+      "channels": 1,
+      "peak_dbfs": -6.000477743319013,
+      "rms_dbfs": -19.06113878869048,
+      "dc": 5.279117160373264e-06,
+      "seam": 3.0517578125e-05,
+      "sha256": "db54dea1491ff8d337c6ce085cad5c6d65e899c2ca9c82b04551325692accb56"
+    },
+    "recipe_sha256": "230aaae7fe28973c0d3c21898ba4ab367ee7d0da5f31df2167afa8cc90bdcdae"
   }
 }

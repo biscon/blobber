@@ -25,7 +25,7 @@ class Capture final : public ReplayObserver {
         if (!session)
             throw std::runtime_error("capture_invalid_point: no session at requested operation");
         auto& game = session->replayGame();
-        NpcAnimator animator(game.actors(), definitions.timings);
+        NpcAnimator animator(game.actors(), definitions.timings, &game.combat());
         animator.setTime(game.timeMs(), &game.effects());
         GameView frames(world);
         SpellArea area;

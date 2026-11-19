@@ -363,7 +363,7 @@ void packTraits() {
     check(files.load(root).monster({0})->traits == static_cast<Traits>(Trait::NimbleEscape),
           "Schema 10 retains its original trait vocabulary");
     auto monster = *loaded.monster({0});
-    monster.traits = 8;
+    monster.traits = 0x80;
     bool rejected = false;
     try {
         Catalog invalid({*loaded.attack({0}), *loaded.attack({1})}, {monster});

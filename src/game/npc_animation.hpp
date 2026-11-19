@@ -4,6 +4,7 @@
 
 namespace blobber {
 class EffectController;
+class CombatController;
 constexpr std::size_t npcMaxFrames = 4;
 struct NpcClipTiming {
     std::array<std::uint32_t, npcMaxFrames> durationMs{};
@@ -34,9 +35,10 @@ struct NpcDialogueOverride {
 };
 class NpcAnimator {
   public:
-    NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings);
-    NpcAnimator(ActorWorld&&, const std::vector<NpcTimings>&) = delete;
-    NpcAnimator(const ActorWorld&&, const std::vector<NpcTimings>&) = delete;
+    NpcAnimator(const ActorWorld& world, const std::vector<NpcTimings>& timings,
+                const CombatController* combat = nullptr);
+    NpcAnimator(ActorWorld&&, const std::vector<NpcTimings>&, const CombatController* = nullptr) = delete;
+    NpcAnimator(const ActorWorld&&, const std::vector<NpcTimings>&, const CombatController* = nullptr) = delete;
     void setTime(std::uint64_t elapsedMs, const EffectController* effects = nullptr,
                  std::optional<ActorId> speaker = {}, std::uint64_t speakerMs = 0,
                  const NpcDialogueOverride* override = nullptr) noexcept;
@@ -44,6 +46,7 @@ class NpcAnimator {
 
   private:
     const ActorWorld& world_;
+    const CombatController* combat_;
     std::array<NpcTimings, NpcWorld::maxTypes> timings_{};
     std::array<std::uint32_t, NpcWorld::maxInstances> idlePhases_{};
     // View-owned cosmetic time: keep resident idle phases continuous across dialogue.

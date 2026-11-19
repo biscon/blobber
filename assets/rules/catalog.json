@@ -1,5 +1,5 @@
 {
-  "schema_version": 21,
+  "schema_version": 22,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -89,6 +89,17 @@
         "type": "piercing"
       },
       "venom_dc": 11
+    },
+    {
+      "id": "blind.cave.newt.bite",
+      "kind": "melee",
+      "attack_bonus": 4,
+      "damage": {
+        "count": 3,
+        "sides": 6,
+        "modifier": 3,
+        "type": "piercing"
+      }
     }
   ],
   "monsters": [
@@ -693,6 +704,35 @@
         "venomous.spider.bite"
       ],
       "traits": [],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 50,
+      "humanoid": false,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none",
+      "creature_type": "beast"
+    },
+    {
+      "id": "blind.cave.newt",
+      "abilities": {
+        "strength": 14,
+        "dexterity": 9,
+        "constitution": 14,
+        "intelligence": 2,
+        "wisdom": 10,
+        "charisma": 4
+      },
+      "armor_class": 12,
+      "hit_points": 16,
+      "speed_ft": 15,
+      "attacks": [
+        "blind.cave.newt.bite"
+      ],
+      "traits": [
+        "blind_cave_newt"
+      ],
       "loot": [],
       "metal_armor": false,
       "sleep_immune": false,

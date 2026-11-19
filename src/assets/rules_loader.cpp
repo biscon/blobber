@@ -62,8 +62,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6 &&
             version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 &&
             version != 13 && version != 14 && version != 15 && version != 16 && version != 17 &&
-            version != 18 && version != 19 && version != 20 && version != 21)
-            fail("schema_version", "only versions 1 through 21 are supported");
+            version != 18 && version != 19 && version != 20 && version != 21 && version != 22)
+            fail("schema_version", "only versions 1 through 22 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
         else if (version >= 8)
@@ -203,7 +203,7 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
             }
             definition.id = identifier(m.at("id"), p + ".id");
             if (version >= 3) {
-                array(m.at("traits"), p + ".traits", version >= 12 ? 3 : version >= 11 ? 2 : 1);
+                array(m.at("traits"), p + ".traits", version >= 22 ? 4 : version >= 12 ? 3 : version >= 11 ? 2 : 1);
                 for (const auto& trait : m.at("traits")) {
                     const auto name = string(trait, p + ".traits");
                     Traits bit = 0;
@@ -211,6 +211,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
                         bit = static_cast<Traits>(Trait::NimbleEscape);
                     else if (version >= 11 && name == "pack_tactics")
                         bit = static_cast<Traits>(Trait::PackTactics);
+                    else if (version >= 22 && name == "blind_cave_newt")
+                        bit = static_cast<Traits>(Trait::BlindCaveNewt);
                     else if (version >= 12 && name == "undead_fortitude")
                         bit = static_cast<Traits>(Trait::UndeadFortitude);
                     else

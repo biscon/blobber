@@ -133,7 +133,7 @@ class GameSession {
         if (!enabled && movement().transition.active() &&
             !(movement().transition.from.cell == movement().transition.to.cell)) {
             effects_.followWeapons(movement().transition.from.cell, movement().transition.to.cell);
-            audio_.emit({"party.step"});
+            partyStep(movement().transition.to.cell);
         }
         movement_.setAnimated(enabled);
         if (!enabled) {
@@ -198,6 +198,7 @@ class GameSession {
     void reconcileRewards() noexcept;
     std::uint64_t timeMs_ = 0, restToken_ = 1;
     double remainderMs_ = 0;
+    void partyStep(Cell) noexcept;
     Player discoveredPose_;
     bool discoveredReady_ = false;
     std::uint64_t discoveredFixtures_ = 0;

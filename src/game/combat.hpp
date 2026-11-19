@@ -52,7 +52,9 @@ enum class CombatEvent : std::uint8_t {
     SpellSave,
     GuidingMark,
     Dash,
-    Wake
+    Wake,
+    BiteWarning,
+    BiteAbandoned
 };
 enum class SpentCause : std::uint8_t { NoAction, Cooldown, Surprise, EndTurn };
 struct CombatOutcome {
@@ -74,7 +76,7 @@ struct CombatOutcome {
     int venomDc = 0;
     int roll = 0;
     // Accepted attack-roll context, published only with the resolved attack.
-    bool packTactics = false;
+    bool packTactics = false, guardedBite = false;
     rules::RollMode attackRollMode = rules::RollMode::Normal;
     CombatPhase phase = CombatPhase::Exploration;
     rules::AttackKind kind = rules::AttackKind::Melee;
@@ -150,6 +152,7 @@ struct CombatSnapshot {
     std::array<std::uint64_t, rules::partySize> cooldownMs{};
     std::array<bool, rules::partySize> spent{};
     std::optional<Heading> facing;
+    std::uint8_t biteTargets = 0;
     std::uint8_t knownDirections = 0;
     std::size_t pendingCount = 0;
     std::uint64_t gameplayMs = 0;
@@ -178,6 +181,9 @@ class CombatController {
                      const std::vector<NpcTimings>& timings = {});
     CombatController(const CombatController&) = delete;
     CombatController& operator=(const CombatController&) = delete;
+    rules::CharacterId warnedTarget(ActorId id) const noexcept {
+        return actors_.actor(id) ? bites_[id.slot].target : rules::CharacterId{};
+    }
     const CombatSnapshot& snapshot() const noexcept { return state_; }
     const AttackVisualSnapshot& attacks() const noexcept { return visuals_; }
     const SpellVisualSnapshot& spellVisuals() const noexcept { return spellVisuals_.snapshot(); }
@@ -340,6 +346,14 @@ class CombatController {
     void refreshReadiness() noexcept;
     void leave() noexcept;
     const rules::WeaponPreview* weapon(rules::CharacterId, bool ranged = false) const noexcept;
+    struct BiteWarning {
+        rules::CharacterId target;
+        bool opportunity = false, defended = false;
+    };
+    std::array<BiteWarning, NpcWorld::maxInstances> bites_{};
+    void setDefending(rules::CharacterId) noexcept;
+    void updateBiteWarnings(Player, std::uint64_t, CombatEvents&) noexcept;
+    void clearBiteWarnings() noexcept;
     CombatOutcome enemyAttack(ActorId, bool ranged, std::uint64_t now, bool opening = false) noexcept;
     CombatOutcome enemyTurn(ActorId, std::uint64_t now, bool& waitingForPath) noexcept;
     bool enemyCaster(ActorId) const noexcept;

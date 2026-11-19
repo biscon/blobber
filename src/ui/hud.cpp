@@ -286,6 +286,12 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                       h->combat.resolvingAction  ? "  /  ACTING"
                       : h->combat.awaitingAction ? "  /  CHOOSE AN ACTION"
                                                  : "");
+        if (h->combat.biteTargets)
+            for (const auto& card : h->cards)
+                if (h->combat.biteTargets & (1u << card.id.index)) {
+                    std::snprintf(line, sizeof(line), "%s / Newt targets %s", actor, card.name);
+                    break;
+                }
         p.clipped(line, 12, 308, 284, gold, UiTextStyle::Display);
         for (int i = 0; i < 6; ++i) {
             const auto r = hudLayout::action(i);
@@ -316,6 +322,7 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                 ? (h->campaign ? "This expedition has ended. Return to Main Menu."
                                : "Restart to begin a fresh session.")
             : h->selection.action == PartyAction::Aid ? "Click a dying ally's portrait. Right-click cancels."
+            : h->combat.biteTargets                    ? "Defend to halve bite damage."
             : h->combat.awaitingAction                ? "Click a reachable enemy to attack."
             : h->combat.phase == CombatPhase::Turns   ? "Waiting for the active participant."
                                                       : "WASD move / Q E turn / M map / R camp";

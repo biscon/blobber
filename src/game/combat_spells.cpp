@@ -616,8 +616,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             extraUntil_[c.character.index] = actionReadyMs();
             result.event = CombatEvent::Recovery;
         } else if (c.feature == rules::Feature::CunningAction) {
-            state_.defending[c.character.index] = true;
-            defendDue_[c.character.index] = actionReadyMs();
+            setDefending(c.character);
             result.event = CombatEvent::Defend;
         } else if (c.feature == rules::Feature::PreserveLife) {
             for (std::uint16_t i = 0; i < 4; ++i)

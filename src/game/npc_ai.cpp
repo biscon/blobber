@@ -23,6 +23,8 @@ NpcAiController::NpcAiController(GeometryView map, ActorWorld& actors, std::uint
         if (!actors.snapshot().actors[i].hostile())
             continue;
         const auto& monster = *actors.catalog().monster(actors.snapshot().actors[i].monster);
+        hearsFootsteps_[i] = rules::hasTrait(monster.traits, rules::Trait::BlindCaveNewt);
+        hasListeners_ |= hearsFootsteps_[i];
         bool melee = false, ranged = false;
         for (std::size_t j = 0; j < monster.attackCount; ++j) {
             const auto kind = actors.catalog().attack(monster.attacks[j])->kind;
@@ -196,7 +198,7 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
         seesParty[i] = actor.hostile() && actor.life == ActorLife::Alive &&
                        (!incapacitated || !(*incapacitated)[i]) &&
                        (!effects_ || effects_->sees(actors_.id(i))) &&
-                       npcSees(map_, actor.npc.cell, actor.npc.facing, party.cell);
+                       !hearsFootsteps_[i] && npcSees(map_, actor.npc.cell, actor.npc.facing, party.cell);
     }
     for (std::size_t i = 0; i < state_.count; ++i)
         if (seesParty[i])
@@ -232,13 +234,11 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
             if (result.found && result.from == actor.npc.cell && result.target == goals[i].target &&
                 result.adjacent == goals[i].adjacent && result.preferred == goals[i].preferred)
                 step(i, result.step, party, sessionTime, goals[i].adjacent && goals[i].target == party.cell);
-            a.moveDueMs =
-                state_.timeMs +
-                ((a.awareness == Awareness::Pursuing || a.awareness == Awareness::Investigating) ? 600
-                                                                                                 : 1200) *
-                    (actor.hasWalk && actor.walkTimeMs == sessionTime
-                         ? actor.walkDurationMs / npcWalkDurationMs
-                         : 1);
+            const bool fastPursuit = !hearsFootsteps_[i] &&
+                (a.awareness == Awareness::Pursuing || a.awareness == Awareness::Investigating);
+            const auto terrainFactor = actor.hasWalk && actor.walkTimeMs == sessionTime
+                                           ? actor.walkDurationMs / npcWalkDurationMs : 1;
+            a.moveDueMs = state_.timeMs + (fastPursuit ? 600 : 1200) * terrainFactor;
         } else if (a.awareness == Awareness::Routine && a.config.routine == NpcRoutine::Wander) {
             std::array<Cell, 5> choices{};
             std::size_t count = 1;
@@ -264,6 +264,21 @@ void NpcAiController::update(std::uint64_t elapsedMs, std::uint64_t sessionTime,
     if (state_.count)
         priority_ = (priority_ + 1) % state_.count;
 }
+bool NpcAiController::seesParty(ActorId id, Cell cell) const noexcept {
+    const auto* actor = actors_.actor(id);
+    return actor && !hearsFootsteps_[id.slot] && npcSees(map_, actor->npc.cell, actor->npc.facing, cell);
+}
+void NpcAiController::hearFootstep(Cell cell) noexcept {
+    if (!hasListeners_)
+        return;
+    for (std::size_t i = 0; i < state_.count; ++i) {
+        const auto& a = actors_.snapshot().actors[i];
+        const auto id = actors_.id(i);
+        if (hearsFootsteps_[i] && a.life == ActorLife::Alive && (!effects_ || effects_->canAct(id)) &&
+            distance(a.npc.cell, cell) <= 3 && lineOfSight(map_, a.npc.cell, cell))
+            alertNearby(id, cell);
+    }
+}
 void NpcAiController::alert(ActorId id, Cell party) noexcept {
     const auto* actor = actors_.actor(id);
     if (!actor || !actor->hostile() || actor->life != ActorLife::Alive)
@@ -272,7 +287,7 @@ void NpcAiController::alert(ActorId id, Cell party) noexcept {
     a.awareness = Awareness::Pursuing;
     a.lastSeen = party;
     a.lastSeenMs = state_.timeMs;
-    a.moveDueMs = std::min(a.moveDueMs, state_.timeMs + 600);
+    a.moveDueMs = std::min(a.moveDueMs, state_.timeMs + (hearsFootsteps_[id.slot] ? 1200 : 600));
 }
 void NpcAiController::alertNearby(ActorId source, Cell party) noexcept {
     const auto* actor = actors_.actor(source);

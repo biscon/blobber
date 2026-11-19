@@ -29,8 +29,7 @@ void CombatController::cunningDefend(rules::CharacterId id, std::uint64_t now,
     if (!effects_.canAct(id) || !cunningAvailable(id) || state_.defending[id.index])
         return;
     cunningReady_[id.index] = actionReadyMs();
-    state_.defending[id.index] = true;
-    defendDue_[id.index] = actionReadyMs();
+    setDefending(id);
     CombatOutcome event;
     event.reason = CommandReason::Resolved;
     event.character = event.recipient = id;

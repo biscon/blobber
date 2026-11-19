@@ -14,11 +14,11 @@ def main():
     parser.add_argument('--depth', type=int, choices=(4, 5, 6), default=4)
     parser.add_argument('--seed', type=int, default=5)
     parser.add_argument('--check', action='store_true', help='Walk the routes headlessly and exit')
-    parser.add_argument('--encounter', action='store_true', help='Play the Seep camp and spider fight')
+    parser.add_argument('--encounter', action='store_true', help='Play the Seep or Galleries encounters')
     parser.add_argument('--fallback', action='store_true', help='Walk the checked fallback for this depth')
     args = parser.parse_args()
-    if args.encounter and args.depth != 4:
-        parser.error("--encounter requires depth 4")
+    if args.encounter and args.depth not in (4, 5):
+        parser.error("--encounter requires depth 4 or 5")
     if not 0 <= args.seed <= 0xffffffff:
         parser.error('seed must fit an unsigned 32-bit integer')
     root = Path(__file__).resolve().parent

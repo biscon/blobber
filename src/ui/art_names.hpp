@@ -11,7 +11,7 @@ inline constexpr std::array<const char*, 4> bardArtNames{
 inline constexpr std::array<const char*, 4> barbarianArtNames{
     {"spells/rage", "spells/reckless_attack", "spells/frenzy_strike", "spells/danger_sense"}};
 // UI region order is part of the existing atlas mapping. First four use prepared portraits.
-inline constexpr std::array<const char*, 65> interfaceArtNames{{
+inline constexpr std::array<const char*, 66> interfaceArtNames{{
     "alden",
     "brunna",
     "merrin",
@@ -77,5 +77,6 @@ inline constexpr std::array<const char*, 65> interfaceArtNames{{
     "zombie",
     "goblin-shaman",
     "venomous-spider",
+    "blind-cave-newt",
 }};
 } // namespace blobber

@@ -1171,6 +1171,38 @@
       "duration": 0.48,
       "seed": 14006,
       "review": true
+    },
+    "blind.cave.newt.step": {
+      "instrument": 2,
+      "frequency": 265,
+      "tone": 0.25,
+      "duration": 0.18,
+      "seed": 15040,
+      "review": true
+    },
+    "blind.cave.newt.attack": {
+      "instrument": 2,
+      "frequency": 190,
+      "tone": 0.25,
+      "duration": 0.32,
+      "seed": 15041,
+      "review": true
+    },
+    "blind.cave.newt.hurt": {
+      "instrument": 1,
+      "frequency": 360,
+      "tone": 0.25,
+      "duration": 0.25,
+      "seed": 15042,
+      "review": true
+    },
+    "blind.cave.newt.death": {
+      "instrument": 2,
+      "frequency": 135,
+      "tone": 0.25,
+      "duration": 0.6,
+      "seed": 15043,
+      "review": true
     }
   }
 }

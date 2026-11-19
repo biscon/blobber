@@ -76,6 +76,8 @@ void cave_review::walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid
             require(game.movement().player.cell == from, "Closed door admitted movement");
             game.discover();
             require(bool(game.interact(game.nearbyFixture())), "Review door interaction failed");
+            if (game.opening())
+                game.update(DoorSnapshot::durationMs / 1000., false);
         }
         game.move(Action::Forward);
         game.update(.2, false);
@@ -148,7 +150,7 @@ int main(int argc, char** argv) try {
         --argc;
     std::string mode = argv[1];
     const unsigned depth = number(argv[2]), seed = number(argv[3]);
-    require(!encounter || depth == 4, "Spider encounter requires depth 4");
+    require(!encounter || depth == 4 || depth == 5, "Encounters require depth 4 or 5");
     auto result = generateCave(seed, depth, forced);
     if (!result.floor)
         throw std::runtime_error(std::string("Cave generation failed: ") +
@@ -189,7 +191,12 @@ int main(int argc, char** argv) try {
     const auto combatSeed = encounter ? std::uint32_t(seedFor({seed, depth}, Domain::Runtime)) : seed;
     RecoveryLevel recovery;
     std::vector<NpcInstance> occupants;
-    if (encounter) {
+    const bool galleries = encounter && depth == 5;
+    require(rules.preset() != nullptr, "Cave review requires a starting party");
+    const auto& starting = *rules.preset();
+    if (galleries) {
+        cave_review::placeGalleries(f.sites, defs.types, occupants);
+    } else if (encounter) {
         const auto type = std::find(defs.types.begin(), defs.types.end(), "venomous.spider");
         require(type != defs.types.end(), "Missing spider appearance");
         occupants.push_back({{std::uint16_t(type - defs.types.begin())}, f.sites[Site::SpiderArch],
@@ -199,6 +206,21 @@ int main(int argc, char** argv) try {
         recovery.ground[recovery.groundCount++] = {f.sites[Site::Camp], item, 1};
     }
     const NpcWorld actors(f.map, f.layout.spawn.cell, defs.types, occupants);
+    auto walkGalleries = [&](bool meleeOnly, WorldRenderer* renderer = nullptr, Presenter* presenter = nullptr) {
+        auto party = starting;
+        if (meleeOnly)
+            cave_review::equipMeleeProofParty(party);
+        for (bool north : {true, false}) {
+            GameSession game(f.map, rules, party, actors, combatSeed, f.layout.spawn, true, defs.timings,
+                             recovery, f.layout.fixtures);
+            cave_review::checkGalleries(game, f, defs.timings, north, meleeOnly, output, renderer, presenter);
+        }
+    };
+    if (check && galleries) {
+        walkGalleries(false);
+        walkGalleries(true);
+        return 0;
+    }
     if (check) {
         GameSession game(f.map, rules, actors, combatSeed, f.layout.spawn, encounter, defs.timings, recovery,
                          f.layout.fixtures);
@@ -225,7 +247,10 @@ int main(int argc, char** argv) try {
         const auto baseline = resources.counts();
         {
             WorldRenderer renderer(resources, std::move(pub));
-            if (hidden && encounter) {
+            if (hidden && galleries) {
+                walkGalleries(false, &renderer, &presenter);
+                require(!renderer.memory().textureCount, "Galleries review retained scene textures");
+            } else if (hidden && encounter) {
                 GameSession game(f.map, rules, actors, combatSeed, f.layout.spawn, true, defs.timings,
                                  recovery, f.layout.fixtures);
                 cave_review::checkSpider(game, f, defs.timings, output, &renderer, &presenter);
@@ -406,7 +431,7 @@ int main(int argc, char** argv) try {
                 launch.rooms = &f.layout;
                 launch.fixtures = &f.layout.fixtures;
                 runGameplay(f.map, rules, actors, defs.timings, presenter, options, renderer, recovery,
-                            rules.preset(), &launch);
+                            &starting, &launch);
             }
         }
         require(resources.counts().bytes == baseline.bytes, "Renderer retained GPU resources");

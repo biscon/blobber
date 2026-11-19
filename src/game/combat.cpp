@@ -101,6 +101,7 @@ bool CombatController::presentationBusy(std::uint64_t now) const noexcept {
     return false;
 }
 void CombatController::approach() noexcept {
+    clearBiteWarnings();
     state_.phase = CombatPhase::Approach;
     state_.facing.reset();
     state_.awaitingAction = false;
@@ -244,7 +245,7 @@ void CombatController::enroll(Player pose, bool opening) noexcept {
         members_[i] = true;
         state_.enemies[state_.enemyCount++] = actors_.id(i);
         surprised_[i] = opening && !episodeActors_[i] && !ai_.aware(actors_.id(i)) &&
-                        !npcSees(map_, a.npc.cell, a.npc.facing, pose.cell);
+                        !ai_.seesParty(actors_.id(i), pose.cell);
         episodeActors_[i] = true;
     }
 }
@@ -379,6 +380,13 @@ void CombatController::selectTurn() noexcept {
                     ++position_;
                     continue;
                 }
+                if (state_.biteTargets && effects_.canAct(id) && normalAction(id)) {
+                    for (std::size_t i = 0; i < state_.enemyCount; ++i) {
+                        auto& warning = bites_[state_.enemies[i].slot];
+                        if (warning.target.index == id.index)
+                            warning.opportunity = true;
+                    }
+                }
                 state_.activeCharacter = id;
                 state_.awaitingAction = hasActions(id);
                 ++state_.turn;
@@ -432,6 +440,7 @@ void CombatController::advance(std::uint64_t now) noexcept {
         selectTurn();
 }
 void CombatController::leave() noexcept {
+    clearBiteWarnings();
     state_.phase = CombatPhase::Exploration;
     state_.enemyCount = 0;
     members_.fill(false);
@@ -483,6 +492,7 @@ bool CombatController::finish(std::uint64_t now) noexcept {
         return false;
     if (state_.activeCharacter && currentEvents_)
         effects_.endVictimTurn(*state_.activeCharacter, now, *currentEvents_);
+    clearBiteWarnings();
     state_.phase = conscious ? CombatPhase::Victory : CombatPhase::Defeat;
     state_.awaitingAction = false;
     state_.resolvingAction = false;

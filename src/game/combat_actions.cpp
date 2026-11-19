@@ -16,7 +16,7 @@ CombatController::PartyAttackRoll CombatController::partyAttackRoll(
     bool advantage) const noexcept {
     const auto* enemy = actors_.actor(target);
     const bool opening = ranged && realTime(state_.phase) && !ai_.aware(target) &&
-                         !npcSees(map_, enemy->npc.cell, enemy->npc.facing, pose.cell);
+                         !ai_.seesParty(target, pose.cell);
     const bool pressured = ranged && partyExposed(caster) && adjacent(pose.cell);
     const auto mode = effects_.attackMode(caster, target, combatAdjacent(map_, pose.cell, enemy->npc.cell),
                                           opening || advantage, heavy || pressured);
@@ -170,8 +170,7 @@ CombatOutcome CombatController::submit(const PartyCommand& c, Player pose, std::
     spendAction(c);
     if (c.action == PartyAction::Defend) {
         out.event = CombatEvent::Defend;
-        state_.defending[c.character.index] = true;
-        defendDue_[c.character.index] = actionReadyMs();
+        setDefending(c.character);
     } else if (c.action == PartyAction::Aid) {
         out.event = CombatEvent::Aid;
         out.recipient = *c.ally;
@@ -286,8 +285,23 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
             targets[count++] = target;
     if (!count)
         return out;
+    const bool heavyBite = !ranged && rules::hasTrait(actors_.catalog().monster(a->monster)->traits,
+                                                      rules::Trait::BlindCaveNewt);
+    auto& warning = bites_[id.slot];
+    const bool committing = heavyBite && warning.target.index < rules::partySize;
     unsigned choice = 0;
-    if (count > 1) {
+    if (committing) {
+        out.event = CombatEvent::Spent;
+        if (!warning.opportunity)
+            return out;
+        const auto end = targets.begin() + count;
+        const auto found = std::find_if(targets.begin(), end, [&](auto t) { return t.index == warning.target.index; });
+        if (found == end) {
+            warning = {};
+            return out;
+        }
+        choice = unsigned(found - targets.begin());
+    } else if (count > 1) {
         do {
             choice = static_cast<unsigned>(rng_.roll({1, 4, 0}).value.total - 1);
         } while (choice >= count && count != 2);
@@ -295,8 +309,23 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
             choice %= 2;
     }
     enemyReady_[id.slot] = actionReadyMs();
+    if (heavyBite && !committing) {
+        warning.target = targets[choice];
+        out.event = CombatEvent::BiteWarning;
+        out.recipient = warning.target;
+        out.occurredMs = now;
+        state_.biteTargets |= 1u << warning.target.index;
+        actors_.face(id, headingToward(a->npc.cell, origin_.cell));
+        return out;
+    }
+    out.guardedBite = committing && warning.defended;
+    if (committing) {
+        warning = {};
+        if (currentEvents_)
+            updateBiteWarnings(origin_, now, *currentEvents_);
+    }
     bool allowed = false;
-    for (std::size_t attempt = 0; attempt < count; ++attempt) {
+    for (std::size_t attempt = 0; attempt < (committing ? 1u : count); ++attempt) {
         const auto candidate = targets[(choice + attempt) % count];
         if (!currentEvents_ || effects_.wardAllows(id, candidate, now, *currentEvents_)) {
             out.recipient = candidate;
@@ -305,7 +334,10 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
         }
     }
     if (!allowed) {
-        out.event = CombatEvent::Spent;
+        out.event = committing ? CombatEvent::BiteAbandoned : CombatEvent::Spent;
+        if (committing)
+            out.recipient = targets[choice];
+        out.occurredMs = now;
         return out;
     }
     out.event = CombatEvent::Attack;
@@ -317,7 +349,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     out.packTactics = packSupported(id, origin_.cell);
     out.attackRollMode = effects_.attackMode(
         id, out.recipient, combatAdjacent(map_, a->npc.cell, origin_.cell), opening || out.packTactics,
-        state_.defending[out.recipient.index] || (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell)));
+        out.guardedBite || state_.defending[out.recipient.index] || (ranged && combatAdjacent(map_, a->npc.cell, origin_.cell)));
     const auto roll = rng_.d20(out.attackRollMode).value;
     out.roll = roll.selected;
     effects_.endMockery(id);

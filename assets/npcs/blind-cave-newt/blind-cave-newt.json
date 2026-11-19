@@ -1,0 +1,440 @@
+{
+  "id": "blind.cave.newt",
+  "width": 0.5,
+  "height": 0.375,
+  "alpha_cutoff": 15,
+  "animations": {
+    "idle": {
+      "durations_ms": [
+        800
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/stance-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/stance-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/stance-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/stance-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ]
+      }
+    },
+    "walk": {
+      "durations_ms": [
+        300,
+        300
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/stride-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stride-b-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/stride-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stride-b-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/stride-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stride-b-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/stride-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stride-b-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ]
+      }
+    },
+    "attack": {
+      "durations_ms": [
+        240,
+        180,
+        140,
+        260
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/brace-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/inhale-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/snap-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stance-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/brace-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/inhale-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/snap-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stance-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/brace-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/inhale-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/snap-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stance-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/brace-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/inhale-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/snap-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/stance-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ]
+      }
+    },
+    "hurt": {
+      "durations_ms": [
+        280
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/recoil-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/recoil-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/recoil-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/recoil-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ]
+      }
+    },
+    "prone": {
+      "durations_ms": [
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/prone-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/prone-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/prone-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/prone-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ]
+      }
+    },
+    "death": {
+      "durations_ms": [
+        160,
+        180,
+        620
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/recoil-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/prone-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/corpse-front.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/recoil-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/prone-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/corpse-back.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/recoil-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/prone-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/corpse-left.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/recoil-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/prone-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          },
+          {
+            "image": "frames/corpse-right.png",
+            "anchor": [
+              0.5,
+              0.9666666666666667
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

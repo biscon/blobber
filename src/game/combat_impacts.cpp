@@ -179,6 +179,7 @@ void CombatController::reconcileEffects(std::uint64_t now, CombatEvents& events)
     currentEvents_ = &events;
     noticeTime_ = now;
     effects_.reconcile(now, events);
+    updateBiteWarnings(origin_, now, events);
     for (std::uint16_t i = 0; i < rules::partySize; ++i)
         if (!effects_.canAct(rules::CharacterId{i}))
             state_.defending[i] = false;
@@ -397,10 +398,10 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
     } else if (out.hit) {
         if (out.enemyAttack) {
             const bool conscious = recipient->life == rules::Life::Conscious;
-            const auto result =
-                damageParty(party_, out.recipient, rules::DamagePacket::single(out.damage, out.damageType),
-                            out.critical, state_.gameplayMs);
-            out.rawDamage = result.total.raw;
+            out.rawDamage = out.damage;
+            const auto amount = out.guardedBite ? out.damage / 2 : out.damage;
+            const auto result = damageParty(party_, out.recipient, rules::DamagePacket::single(amount, out.damageType),
+                                            out.critical, state_.gameplayMs);
             out.damage = result.total.damage;
             out.damageAdjustment = result.total.adjustment;
             out.damageComponents = result.components;

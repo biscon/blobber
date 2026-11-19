@@ -137,7 +137,7 @@ void GameSession::importFloor(const FloorState& s) {
     const auto reject = [] { throw std::invalid_argument("Invalid floor snapshot"); };
     if (s.actors.count != actors_.state_.count || s.actors.typeCount != actors_.state_.typeCount ||
         s.ai.state.count != s.actors.count || s.combat.state.phase != CombatPhase::Exploration ||
-        s.effects.turns || s.effects.gameplayMs != s.combat.state.gameplayMs ||
+        s.combat.state.biteTargets || s.effects.turns || s.effects.gameplayMs != s.combat.state.gameplayMs ||
         s.objective.count != objective_.count || !s.effects.nextSerial || !s.effects.nextArea ||
         s.remainderMs < 0 || s.remainderMs >= 1 || !std::isfinite(s.remainderMs))
         reject();
@@ -332,6 +332,7 @@ void GameSession::importFloor(const FloorState& s) {
     effects_.nextArea_ = s.effects.nextArea;
     effects_.groundDueMs_ = s.effects.groundDueMs;
     effects_.turns_ = s.effects.turns;
+    combat_.clearBiteWarnings();
     combat_.state_ = s.combat.state;
     combat_.sneakReady_ = s.combat.sneakReady;
     combat_.cunningReady_ = s.combat.cunningReady;

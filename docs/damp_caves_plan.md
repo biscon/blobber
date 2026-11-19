@@ -1,6 +1,6 @@
 # Damp Caves expansion — design and delivery roadmap
 
-Created 2026-11-18. **DC01–DC03 are Accepted and closed. DC04–DC07 are Planned.**
+Created 2026-11-18. **DC01–DC04 are Accepted and closed. DC05–DC07 are Planned.**
 
 Extend the playable descent from three floors to six. Below the Underkeep, water
 has broken through an old cistern into limestone galleries occupied by venomous
@@ -13,9 +13,9 @@ then decide which threat deserves the party's next action.
 | Field | Current value |
 | --- | --- |
 | Starting point | Three persistent Underkeep floors. The third guardian ends the campaign. |
-| Last closed slice | [DC03 — Venomous spider](dc03_venomous_spider_design.md), accepted and closed by the player on 2026-11-19 after testing the bite and antitoxin cure. |
+| Last closed slice | [DC04 — Blind cave newt and mixed approaches](dc04_blind_cave_newt_design.md), accepted and closed by the player on 2026-11-19 after reviewing the heavier bite. |
 | Current review | None. |
-| Next eligible slice | DC04 — Blind cave newt and mixed approaches (Planned). |
+| Next eligible slice | DC05 — Broodmother and interruptible clutches (Planned). |
 
 ## Floor brief and progression targets
 
@@ -52,7 +52,7 @@ clear finishes relative to it. Earning level four is an open tuning outcome.
 | DC01 | Deterministic cave layouts and three walkable blockouts | Existing floor generation and room review path | [Accepted and closed](dc01_cave_layout_design.md) |
 | DC02 | Limestone kit, distributed ceiling groups, webs, shallow pools, shoreline mist and animated lookout lighting | DC01 placement and clearance contracts | [Accepted and closed](dc02_limestone_kit_design.md) |
 | DC03 | Venomous spider, two-turn poison and accessible cures | DC02 cave palette and scale | [Accepted and closed](dc03_venomous_spider_design.md) |
-| DC04 | Blind cave newt and a mixed approach encounter | DC03 working spider | Planned |
+| DC04 | Blind cave newt and a mixed approach encounter | DC03 working spider | [Accepted and closed](dc04_blind_cave_newt_design.md) |
 | DC05 | Broodmother and two interruptible egg clutches | DC04 encounter handoff and DC02 vault | Planned |
 | DC06 | Populated, playable standalone floors 4–6 with finite XP and rewards | DC01–DC05 content and mechanics | Planned |
 | DC07 | Six-floor New Campaign, persistent travel, Continue and final victory | DC06 play-ready floors | Planned |
@@ -131,6 +131,8 @@ bite cue and status readout at game scale.
 
 ### DC04 — Blind cave newt and mixed approaches
 
+[Implemented design, exit checks and player recipe](dc04_blind_cave_newt_design.md) · [Six native encounter views](screenshots/damp-caves-dc04/README.md).
+
 Deliver the newt as a slow, close-range threat with a readable wind-up. In the
 detailed design specify how a blind creature detects a nearby party using the
 existing perception and sound facilities, when the bite commits, and which
@@ -176,7 +178,7 @@ checkpoints. Provide a review view where both the warning and target are legible
 
 Assemble all three standalone floors from the reviewed pieces using production
 population, encounter planning, fixtures and reward paths. Give floors 4 and 5
-distinct guardian formations using the reviewed creatures. Place optional
+distinct guardian formations using the reviewed creatures. For floor 5, evaluate the approved newt bite against the party level and equipment expected after the Underkeep and Seep. The DC04 standalone review used a level-one party. Place optional
 encounters and finite supplies upstream of each guardian. Keep the first arch a
 solo lesson, the dry camp reachable first, and optional pockets avoidable even
 under local alerts. Budget the depth-6 fight with both clutch outcomes.

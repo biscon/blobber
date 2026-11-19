@@ -182,14 +182,14 @@ const CombatEvents& GameSession::updateSimulation(double seconds, bool paused) n
     if (transition.active() && transition.elapsed + movementSeconds >= transition.durationSeconds) {
         effects_.followWeapons(transition.from.cell, transition.to.cell);
         if (!(transition.from.cell == transition.to.cell))
-            audio_.emit({"party.step"});
+            partyStep(transition.to.cell);
         floor_.discover(movement().player.cell, movement().player.heading);
         detectContact(true);
     }
     movement_.update(map_, movementSeconds, &actors_);
     if (!movement().animated && !(oldCell == movement().player.cell)) {
         effects_.followWeapons(oldCell, movement().player.cell);
-        audio_.emit({"party.step"});
+        partyStep(movement().player.cell);
     }
     effects_.partyPose(movement_.state().player, true);
     driveFacing();
@@ -211,6 +211,11 @@ const CombatEvents& GameSession::updateSimulation(double seconds, bool paused) n
     reconcileRewards();
     discover();
     return events_;
+}
+void GameSession::partyStep(Cell destination) noexcept {
+    audio_.emit({"party.step"});
+    if (enableAi_)
+        ai_.hearFootstep(destination);
 }
 void GameSession::move(Action action, bool fresh) noexcept {
     if (pendingRollDecision().serial)
@@ -249,7 +254,7 @@ void GameSession::moveSimulation(Action action, bool fresh) noexcept {
     movement_.submit(map_, action, fresh, &actors_);
     if (!movement().animated && !(oldCell == movement().player.cell)) {
         effects_.followWeapons(oldCell, movement().player.cell);
-        audio_.emit({"party.step"});
+        partyStep(movement().player.cell);
     }
     effects_.partyPose(movement_.state().player, true);
     detectContact();

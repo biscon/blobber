@@ -175,7 +175,7 @@ struct TravelHud {
     unsigned count = 0, cursor = 0, kits = 0;
     FixtureResult preview;
 };
-enum class EnemyPortrait : std::uint8_t { Goblin, Skeleton, Bugbear, GiantRat, Zombie, Shaman, Spider };
+enum class EnemyPortrait : std::uint8_t { Goblin, Skeleton, Bugbear, GiantRat, Zombie, Shaman, Spider, Newt };
 struct EnemyTargetRow {
     ActorId id;
     std::array<char, 96> name{}, detail{};

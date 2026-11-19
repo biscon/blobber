@@ -127,6 +127,7 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         const auto& species = actors_.catalog().monster(a.monster)->id;
         state_.enemyPortraits[i] = species == "skeleton"        ? EnemyPortrait::Skeleton
                                    : species == "bugbear"       ? EnemyPortrait::Bugbear
+                                   : species == "blind.cave.newt" ? EnemyPortrait::Newt
                                    : species == "venomous.spider" ? EnemyPortrait::Spider
                                    : species == "giant.rat"     ? EnemyPortrait::GiantRat
                                    : species == "zombie"        ? EnemyPortrait::Zombie
@@ -211,10 +212,16 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                                        : "miss",
                           out.roll, disadvantage, static_cast<long long>(out.damage),
                           out.died ? ", dead" : "");
+        if (out.guardedBite && out.hit) {
+            appendLog(line);
+            std::snprintf(line, sizeof(line), "%s's Defend halves the bite (%lld to %lld).", target,
+                          (long long)out.rawDamage, (long long)out.damageComponents[0].raw);
+        }
         if (out.damageAdjustment == rules::DamageAdjustment::Resistant) {
             appendLog(line);
             std::snprintf(line, sizeof(line), "%s resists %s damage (%lld reduced to %lld).", target,
-                          rules::damageTypeName(out.damageType), (long long)out.rawDamage,
+                          rules::damageTypeName(out.damageType),
+                          (long long)(out.guardedBite ? out.damageComponents[0].raw : out.rawDamage),
                           (long long)out.damage);
         }
         if (out.smiteDamage && out.hit) {
@@ -242,6 +249,12 @@ void CommandController::record(const CombatOutcome& out) noexcept {
                               unsigned(out.enemy.slot) + 1,
                               f.status == FortitudeStatus::RadiantBypass ? "radiant damage" : "critical hit");
         }
+        break;
+    case CombatEvent::BiteWarning:
+        std::snprintf(line, sizeof(line), "Newt braces to bite %s. Defend for disadvantage and half damage on a hit.", target);
+        break;
+    case CombatEvent::BiteAbandoned:
+        std::snprintf(line, sizeof(line), "Newt loses its bite on %s.", target);
         break;
     case CombatEvent::Defend:
         std::snprintf(line, sizeof(line), "%s defends until their next turn.", name);
