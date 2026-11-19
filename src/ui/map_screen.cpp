@@ -12,6 +12,7 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
         if (art)
             art->mapMarker(kind, box, facing);
     };
+    constexpr Color poolInk{47, 99, 120, 255}, occupiedInk{127, 95, 73, 255};
     constexpr float iconInset = 1.f / HudPainter::scale;
     constexpr float iconSize = MapGridView::cellSize - 2 * iconInset;
     const auto* floor = hud ? hud->floor : nullptr;
@@ -53,7 +54,10 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
                 continue;
             p.rectangle({view.left(cell), view.top(cell), MapGridView::cellSize - 1.f / HudPainter::scale,
                          MapGridView::cellSize - 1.f / HudPainter::scale},
-                        tile == MapTile::Wall ? edge : Color{64, 79, 73, 255});
+                        tile == MapTile::Wall       ? edge
+                        : tile == MapTile::Pool     ? poolInk
+                        : tile == MapTile::Obstacle ? occupiedInk
+                                                    : Color{64, 79, 73, 255});
         }
     if (floor)
         for (unsigned i = 0; i < floor->definition().count; ++i) {
@@ -80,17 +84,25 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
         p.label(labels[i], {414, y - 6, 82, 12});
     }
     p.line({394, 210}, {496, 210}, edge);
-    p.text("QUEST KEYS", 394, 218, gold, UiTextStyle::Display);
-    int keyY = 236;
-    for (unsigned key : {2u, 3u})
-        if (hud && (hud->questKeys & (1u << key))) {
-            marker(MapMarker::Key, {394, float(keyY - 1), 9, 9});
-            p.text(key == 2 ? "Bronze seal key" : "Silver seal key", 405, float(keyY), text,
-                   UiTextStyle::Small);
-            keyY += 12;
-        }
-    if (keyY == 236)
-        p.text("None collected", 394, 236, muted);
+    if (map.definition().assetPack == "damp-caves" && (!hud || !hud->questKeys)) {
+        p.text("TERRAIN", 394, 218, gold, UiTextStyle::Display);
+        p.rectangle({396, 235, 8, 8}, poolInk);
+        p.text("Pool", 410, 234, text, UiTextStyle::Small);
+        p.rectangle({396, 249, 8, 8}, occupiedInk);
+        p.text("Occupied", 410, 248, text, UiTextStyle::Small);
+    } else {
+        p.text("QUEST KEYS", 394, 218, gold, UiTextStyle::Display);
+        int keyY = 236;
+        for (unsigned key : {2u, 3u})
+            if (hud && (hud->questKeys & (1u << key))) {
+                marker(MapMarker::Key, {394, float(keyY - 1), 9, 9});
+                p.text(key == 2 ? "Bronze seal key" : "Silver seal key", 405, float(keyY), text,
+                       UiTextStyle::Small);
+                keyY += 12;
+            }
+        if (keyY == 236)
+            p.text("None collected", 394, 236, muted);
+    }
     if (hud) {
         const auto clock = hud->gameTime.text();
         p.text(clock.data(), 394, 266, gold, UiTextStyle::Small);

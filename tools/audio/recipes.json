@@ -925,6 +925,159 @@
       "seed": 7868,
       "review": false
     },
+    "cave.drips": {
+      "duration": 12.25,
+      "seed": 402,
+      "review": true,
+      "description": "Irregular drops with a short limestone chamber echo.",
+      "peak_dbfs": -9,
+      "layers": [
+        {
+          "instrument": 12,
+          "start": 1.2,
+          "duration": 0.24,
+          "frequency": 740,
+          "tone": 0.6,
+          "gain": 0.62
+        },
+        {
+          "instrument": 12,
+          "start": 1.314,
+          "duration": 0.24,
+          "frequency": 740,
+          "tone": 0.6,
+          "gain": 0.186
+        },
+        {
+          "instrument": 12,
+          "start": 1.463,
+          "duration": 0.24,
+          "frequency": 740,
+          "tone": 0.6,
+          "gain": 0.074
+        },
+        {
+          "instrument": 12,
+          "start": 3.87,
+          "duration": 0.24,
+          "frequency": 1050,
+          "tone": 0.6,
+          "gain": 0.4
+        },
+        {
+          "instrument": 12,
+          "start": 3.984,
+          "duration": 0.24,
+          "frequency": 1050,
+          "tone": 0.6,
+          "gain": 0.12
+        },
+        {
+          "instrument": 12,
+          "start": 4.133,
+          "duration": 0.24,
+          "frequency": 1050,
+          "tone": 0.6,
+          "gain": 0.048
+        },
+        {
+          "instrument": 12,
+          "start": 4.21,
+          "duration": 0.24,
+          "frequency": 830,
+          "tone": 0.6,
+          "gain": 0.26
+        },
+        {
+          "instrument": 12,
+          "start": 4.324,
+          "duration": 0.24,
+          "frequency": 830,
+          "tone": 0.6,
+          "gain": 0.078
+        },
+        {
+          "instrument": 12,
+          "start": 4.473,
+          "duration": 0.24,
+          "frequency": 830,
+          "tone": 0.6,
+          "gain": 0.031
+        },
+        {
+          "instrument": 12,
+          "start": 7.6,
+          "duration": 0.24,
+          "frequency": 690,
+          "tone": 0.6,
+          "gain": 0.58
+        },
+        {
+          "instrument": 12,
+          "start": 7.714,
+          "duration": 0.24,
+          "frequency": 690,
+          "tone": 0.6,
+          "gain": 0.174
+        },
+        {
+          "instrument": 12,
+          "start": 7.863,
+          "duration": 0.24,
+          "frequency": 690,
+          "tone": 0.6,
+          "gain": 0.07
+        },
+        {
+          "instrument": 12,
+          "start": 10.37,
+          "duration": 0.24,
+          "frequency": 900,
+          "tone": 0.6,
+          "gain": 0.44
+        },
+        {
+          "instrument": 12,
+          "start": 10.484,
+          "duration": 0.24,
+          "frequency": 900,
+          "tone": 0.6,
+          "gain": 0.132
+        },
+        {
+          "instrument": 12,
+          "start": 10.633,
+          "duration": 0.24,
+          "frequency": 900,
+          "tone": 0.6,
+          "gain": 0.053
+        },
+        {
+          "instrument": 12,
+          "start": 10.88,
+          "duration": 0.24,
+          "frequency": 720,
+          "tone": 0.6,
+          "gain": 0.32
+        },
+        {
+          "instrument": 12,
+          "start": 10.994,
+          "duration": 0.24,
+          "frequency": 720,
+          "tone": 0.6,
+          "gain": 0.096
+        },
+        {
+          "instrument": 12,
+          "start": 11.143,
+          "duration": 0.24,
+          "frequency": 720,
+          "tone": 0.6,
+          "gain": 0.038
+        }
+      ]
+    },
     "web.loop": {
       "instrument": 7,
       "frequency": 1800,

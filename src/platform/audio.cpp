@@ -108,7 +108,7 @@ void AudioRuntime::prepare(const std::filesystem::path& assets, bool disabled,
     residentBytes_ = bytes;
     for (unsigned i = 0; i < streams_.size(); ++i) {
         auto& s = streams_[i];
-        s.cue = cue(i < 2 ? "ambience" : i < 6 ? "web.loop" : "spiritual.loop");
+        s.cue = cue(i == 0 ? "ambience" : i == 1 ? "cave.drips" : i < 6 ? "web.loop" : "spiritual.loop");
         if (s.cue == bank_.cues.size())
             continue;
         const auto path =
@@ -321,6 +321,7 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
         music_.detach();
         session_ = game;
         world_ = world;
+        caveAmbience_ = game && game->geometry().base().definition().assetPack == "damp-caves";
         if (game) {
             game->audioEvents().enabled = ready_;
             game->audioEvents().clear();
@@ -494,7 +495,7 @@ void AudioRuntime::streamUpdate(bool suppressAmbience) {
         auto& s = streams_[i];
         if (!s.valid)
             continue;
-        bool wanted = i == 0 && session_ && !sanctuary_;
+        bool wanted = i == unsigned(caveAmbience_) && session_ && !sanctuary_;
         if (i >= 2) {
             wanted = false;
             for (unsigned j = i < 6 ? 0 : 4; j < (i < 6 ? 4 : 6); ++j)

@@ -29,6 +29,28 @@ FloorFixtures definitions(FixtureKind threshold = FixtureKind::Door) {
     f.entries[f.count++] = {{9, 3}, Heading::East, FixtureKind::Downstairs, 0};
     return f;
 }
+void caveFootprints() {
+    auto def = WorldDefinition{};
+    def.assetPack = "damp-caves";
+    def.surfaces.resize(6 * 5);
+    def.surfaces[2 * 6 + 2].floor = -1;
+    def.scenery.push_back({"basin", {2, 2}, {}, Heading::North, 1, 1, true});
+    def.scenery.push_back({"bed", {3, 2}, {}, Heading::North, 1, 1, true});
+    def.scenery.push_back({"cord", {3, 3}, {}, Heading::North, 1, 1, false});
+    const Map map({"######", "#....#", "#....#", "#....#", "######"}, std::move(def));
+    FloorFixtures defs;
+    defs.depth = 5;
+    defs.discovery = true;
+    FloorGeometry geometry(map, defs);
+    MapOverlayModel overlay;
+    overlay.prepare(map);
+    overlay.refresh(&geometry);
+    check(overlay.tile({2, 2}) == MapTile::Hidden && overlay.tile({3, 2}) == MapTile::Hidden,
+          "Cave markings respect unexplored fog");
+    check(overlay.tile({2, 2}, true) == MapTile::Pool && overlay.tile({3, 2}, true) == MapTile::Obstacle &&
+              overlay.tile({3, 3}, true) == MapTile::Floor,
+          "Pool, occupied ground and walkable rope disagree");
+}
 void roomKnowledge() {
     const auto catalog = fixtureCatalog();
     const auto map = roomsMap();
@@ -333,6 +355,7 @@ void keyMemory() {
 } // namespace
 int main() {
     try {
+        caveFootprints();
         roomKnowledge();
         corridorAndFallback();
         revealedFixtures();

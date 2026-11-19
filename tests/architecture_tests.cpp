@@ -82,6 +82,35 @@ int main() try {
         watching = false;
         check(allocations == 0, "Prepared architecture culling allocates nothing");
     }
+    // Exposed corners of an irregular solid shell use the adjacent terrain sampler.
+    for (bool caps : {false, true}) {
+        auto d = def;
+        d.buildings.front().terrainCaps = caps;
+        for (auto& surface : d.surfaces)
+            surface.ceiling = 6;
+        const Map capped(rows, d);
+        const auto scene = world_render::prepare(capped, {}, {}, {}, &assets);
+        unsigned floor = 0, ceiling = 0;
+        for (const auto& range : scene.ranges) {
+            if (range.painted)
+                continue;
+            for (unsigned n = range.first; n < range.first + range.count; n += 3) {
+                world_render::Vec sum{};
+                for (unsigned k = 0; k < 3; ++k) {
+                    const auto& v = scene.vertices[scene.indices[n + k]];
+                    sum.x += v.position.x;
+                    sum.z += v.position.z;
+                }
+                if (int(sum.x / 3) != 7 || int(sum.z / 3) != 7)
+                    continue;
+                const auto& v = scene.vertices[scene.indices[n]];
+                check(v.u == v.position.x && v.v == v.position.z, "Cap lost continuous terrain UVs");
+                floor += v.normal.y == 1 && v.position.y == 0;
+                ceiling += v.normal.y == -1 && v.position.y == 1.5f;
+            }
+        }
+        check(floor == (caps ? 2u : 0u) && ceiling == floor, "Incorrect solid terrain caps");
+    }
     // A roof can enter the far frustum while its anchor chunk is still outside.
     auto reaching = publication;
     for (unsigned i = 0; i < reaching.meshes.size(); ++i)

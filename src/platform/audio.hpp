@@ -46,7 +46,7 @@ class AudioRuntime {
     enum class MusicContext { None, Combat, Sanctuary, Menu };
     MusicPlayer music_, sanctuaryMusic_, menuMusic_;
     MusicContext musicContext_ = MusicContext::None;
-    bool menuMusicActive_ = false, sanctuary_ = false;
+    bool menuMusicActive_ = false, sanctuary_ = false, caveAmbience_ = false;
     bool preserveSanctuaryTravel_ = false;
     void detachWorld() noexcept;
     struct DialogueSound {

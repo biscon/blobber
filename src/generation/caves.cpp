@@ -79,28 +79,250 @@ struct Builder {
             c = c + forward(outA);
         }
     }
-    void prop(const char* id, Cell cell, bool blocking) {
-        world.scenery.push_back({id, cell, {}, Heading::North, 1, 1, blocking});
+    void prop(const char* id, Cell cell, bool blocking, Heading facing = Heading::North) {
+        world.scenery.push_back({id, cell, {}, facing, 1, 1, blocking});
     }
-    void web(unsigned room, Site site) {
+    void overhead(const char* model, Cell cell, float clearance) {
+        world.scenery.push_back({model, cell, {}, Heading::North, 1, 1, false, clearance});
+    }
+    void trail(Cell cell, Heading facing, bool bend = false) {
+        world.scenery.push_back({bend ? "trail-bend" : "trail-straight", cell, {}, facing, 1, 1, false});
+    }
+    // Scan actual room members for corners supported on both sides. The first
+    // match is the DC01 reservation. Extra vault silk uses other available corners.
+    void web(unsigned room, Site site = Site::Count, unsigned limit = 1) {
         const auto& r = layout.rooms[room];
-        // Find a supported corner on the incoming half, starting at the north wall.
-        for (int y = r.origin.y; y < r.origin.y + r.size.y; ++y)
-            for (int x = r.origin.x; x < r.origin.x + r.size.x; ++x) {
-                Cell c{x, y};
+        unsigned placed = 0;
+        for (int y = 0; y < r.size.y; ++y)
+            for (int x = 0; x < r.size.x; ++x) {
+                Cell c = r.origin + Cell{x, y};
                 if (regionAt(layout, c) != room)
                     continue;
                 for (unsigned h = 0; h < 4; ++h) {
                     auto face = Heading(h);
-                    if (floorCell(layout, c + forward(face)) || floorCell(layout, c + right(face)))
+                    if (!naturalWall(c + forward(face)) || !naturalWall(c + right(face)))
                         continue;
-                    world.decorations.push_back(
-                        {c, face, DecorationKind::WebA, 0, .5f, .84f, .95f, .55f, .01f});
-                    sites[site] = c;
-                    return;
+                    const auto variant = site == Site::ArchWeb     ? 0u
+                                         : site == Site::PocketWeb ? 1u
+                                                                   : (room + layout.depth + placed) % 3;
+                    const auto kind = variant == 0   ? DecorationKind::WebA
+                                      : variant == 1 ? DecorationKind::WebB
+                                                     : DecorationKind::Vine;
+                    float elevation = room == 4 && placed % 2 ? 1.35f : .75f;
+                    world.decorations.push_back({c, face, kind, 0, .5f, elevation, variant == 2 ? .67f : .95f,
+                                                 variant == 1 ? .55f : .92f, .01f});
+                    if (!placed && site != Site::Count)
+                        sites[site] = c;
+                    if (++placed == limit)
+                        return;
+                    break;
                 }
             }
-        throw Failure{Error::Anchor, int(room)};
+        if (!placed && site != Site::Count)
+            throw Failure{Error::Anchor, int(room)};
+    }
+    bool groundSceneryAt(Cell cell) const {
+        for (const auto& s : world.scenery) {
+            if (s.clearance > 0)
+                continue;
+            for (unsigned z = 0; z < s.depth; ++z)
+                for (unsigned x = 0; x < s.width; ++x)
+                    if (s.cell(x, z) == cell)
+                        return true;
+        }
+        return false;
+    }
+
+    bool naturalWall(Cell cell) const {
+        if (floorCell(layout, cell))
+            return false;
+        for (const auto& b : world.buildings)
+            for (unsigned x = 0; x < b.width; ++x)
+                if (b.cell(x, 0) == cell)
+                    return false;
+        return true;
+    }
+
+    void wallStore(const char* model, unsigned room) {
+        const auto& r = layout.rooms[room];
+        for (int y = 0; y < r.size.y; ++y)
+            for (int x = 0; x < r.size.x; ++x) {
+                const Cell c = r.origin + Cell{x, y};
+                if (regionAt(layout, c) != room || groundSceneryAt(c))
+                    continue;
+                for (auto h : {Heading::North, Heading::East, Heading::South, Heading::West})
+                    if (naturalWall(c + forward(h))) {
+                        prop(model, c, false, h);
+                        return;
+                    }
+            }
+        throw Failure{Error::Placement, int(room)};
+    }
+
+    bool reservedCell(Cell c) const {
+        return layout.fixtures.npcExcluded[c.y * layout.width + c.x] ||
+               std::find(sites.cells.begin(), sites.cells.end(), c) != sites.cells.end();
+    }
+
+    // A pocket hugs a rock face and leaves a parallel dry shoulder. Keep its
+    // entire neighbourhood clear of passage sockets, even at clipped corners.
+    void shorePool(unsigned room, bool pair) {
+        const auto& r = layout.rooms[room];
+        auto eligible = [&](Cell c, Heading wall) {
+            if (regionAt(layout, c) != room || c == r.anchor || reservedCell(c) || groundSceneryAt(c) ||
+                !naturalWall(c + forward(wall)) || regionAt(layout, c + forward(wall) * -1) != room)
+                return false;
+            for (int y = -1; y <= 1; ++y)
+                for (int x = -1; x <= 1; ++x) {
+                    Cell neighbour = c + Cell{x, y};
+                    if (floorCell(layout, neighbour) && regionAt(layout, neighbour) != room)
+                        return false;
+                }
+            return true;
+        };
+        const int area = r.size.x * r.size.y;
+        Cell first{-1, -1}, second{-1, -1};
+        for (int k = 0; k < area && second.x < 0; ++k) {
+            const int n = (k + room * 11 + layout.depth * 7) % area;
+            Cell c = r.origin + Cell{n % r.size.x, n / r.size.x};
+            for (unsigned h = 0; h < 4; ++h) {
+                const auto wall = Heading(h);
+                if (!eligible(c, wall))
+                    continue;
+                if (first.x < 0)
+                    first = c;
+                if (!pair)
+                    break;
+                Cell next = c + right(wall);
+                if (eligible(next, wall)) {
+                    first = c;
+                    second = next;
+                    break;
+                }
+            }
+            if (!pair && first.x >= 0)
+                break;
+        }
+        if (first.x < 0)
+            throw Failure{Error::Placement, int(room)};
+        for (auto c : {first, second})
+            if (c.x >= 0) {
+                prop("pool-east", c, true);
+                world.surfaces[c.y * layout.width + c.x].floor = -1;
+            }
+    }
+
+    void dressRoof(unsigned room) {
+        constexpr std::array<const char*, 5> clusters{"camp-teeth", "arch-teeth", "lookout-teeth",
+                                                      "vault-teeth", "gallery-teeth"};
+        const auto& r = layout.rooms[room];
+        const int area = r.size.x * r.size.y;
+        const unsigned target = std::clamp(2 + area / 10, 5, 7);
+        std::array<Cell, 7> groups{};
+        unsigned count = 0;
+        for (const auto& prop : world.scenery)
+            if (prop.clearance && regionAt(layout, prop.anchor) == room)
+                groups.at(count++) = prop.anchor;
+        auto distance = [](Cell a, Cell b) {
+            const int dx = a.x - b.x, dy = a.y - b.y;
+            return dx * dx + dy * dy;
+        };
+        // Pick near the centre first, then the candidate farthest from existing
+        // roots. A room-specific scan order breaks ties without consuming RNG.
+        while (count < target) {
+            Cell best{};
+            int bestScore = -10000;
+            for (int k = 0; k < area; ++k) {
+                const int n = (k + 11 * room + r.origin.x) % area;
+                const Cell c = r.origin + Cell{n % r.size.x, n / r.size.x};
+                if (regionAt(layout, c) != room || reservedCell(c))
+                    continue;
+                const auto surface = world.surfaces[c.y * layout.width + c.x];
+                if (surface.floor || surface.ceiling < 5)
+                    continue;
+                int score = count ? 10000 : -distance(c, r.origin + Cell{r.size.x / 2, r.size.y / 2});
+                for (unsigned i = 0; i < count; ++i)
+                    score = std::min(score, distance(c, groups[i]));
+                if (count && score == 0)
+                    continue;
+                // Favor clear spans for the first few groups so the canopy is
+                // visible from the door. Later roots can run into the wall seams.
+                if (count < 3) {
+                    for (unsigned h = 0; h < 4; ++h)
+                        if (regionAt(layout, c + forward(Heading(h))) != room)
+                            score -= area;
+                }
+                if (score > bestScore) {
+                    bestScore = score;
+                    best = c;
+                }
+            }
+            if (bestScore == -10000)
+                throw Failure{Error::Placement, int(room)};
+            const auto ceiling = world.surfaces[best.y * layout.width + best.x].ceiling;
+            world.scenery.push_back({clusters.at(unsigned(ceiling - 5)),
+                                     best,
+                                     {},
+                                     Heading((best.x + best.y + count) % 4),
+                                     1,
+                                     1,
+                                     false,
+                                     std::max(1.02f, elevation(ceiling) - .72f)});
+            groups[count++] = best;
+        }
+    }
+
+    void dressChambers() {
+        for (unsigned room : {5u, 6u, 8u, 9u, 11u, 14u})
+            shorePool(room, (room + layout.depth) % 3 != 0);
+        for (unsigned room : {1u, 6u, 8u, 9u, 11u, 13u, 15u})
+            web(room, Site::Count, 1 + (room + layout.depth) % 2);
+        for (unsigned room = 0; room < layout.roomCount; ++room) {
+            const auto& r = layout.rooms[room];
+            const int count = r.size.x * r.size.y;
+            const unsigned ledgeLimit = room >= 6 && room < 15 ? 1 : 2;
+            dressRoof(room);
+            unsigned ledges = 0;
+            Heading lastWall = Heading::North;
+            for (int k = 0; k < count; ++k) {
+                const int n = (k + 11 * int(room) + r.origin.x) % count;
+                const Cell c = r.origin + Cell{n % r.size.x, n / r.size.x};
+                if (regionAt(layout, c) != room || layout.fixtures.npcExcluded[c.y * layout.width + c.x])
+                    continue;
+                const auto surface = world.surfaces[c.y * layout.width + c.x];
+                if (surface.floor != 0)
+                    continue;
+                const unsigned pattern = unsigned(c.x * 71 + c.y * 37 + room * 13);
+                const bool reserved =
+                    std::find(sites.cells.begin(), sites.cells.end(), c) != sites.cells.end();
+                for (unsigned h = 0; h < 4; ++h) {
+                    const auto facing = Heading((pattern + h) % 4);
+                    if (!naturalWall(c + forward(facing)))
+                        continue;
+                    if (std::any_of(world.decorations.begin(), world.decorations.end(),
+                                    [c](const auto& d) { return d.cell == c; }))
+                        break;
+                    if (!reserved && !groundSceneryAt(c) && ledges < ledgeLimit &&
+                        (!ledges || facing != lastWall)) {
+                        prop((room + ledges) % 2 ? "fungus-ledge" : "flowstone", c, false, facing);
+                        lastWall = facing;
+                        ++ledges;
+                    }
+                    if ((pattern / 4) % 3 != 0) {
+                        const bool hanging = (pattern / 7) % 4 == 0;
+                        const float width = .68f + .07f * (pattern % 5);
+                        const float height =
+                            hanging ? .40f + .08f * ((pattern / 5) % 5) : .24f + .055f * ((pattern / 5) % 5);
+                        const float center =
+                            hanging ? elevation(surface.ceiling) - height / 2 - .09f * (pattern % 3)
+                                    : height / 2;
+                        const auto kind = hanging ? DecorationKind::Crest : DecorationKind::DampA;
+                        world.decorations.push_back({c, facing, kind, 0, .5f, center, width, height, .01f});
+                    }
+                    break;
+                }
+            }
+        }
     }
     void rock(Cell c) {
         auto n = unsigned(c.y * layout.width + c.x);
@@ -231,7 +453,9 @@ struct Builder {
         const Cell lookout{east, lookoutRow};
         chamber(lookout, {2, 3}, Role::Optional, 7);
         sites[Site::Lookout] = lookout;
-        prop("brazier", lookout, false);
+        const Cell hearth = lookout + Cell{0, 3};
+        prop("brazier", hearth, false);
+        world.ambientFires.push_back({hearth.x + .5f, .36f, hearth.y + .5f, 1.f, true});
         // The west/east mouths of the teaching rooms remain fixed for the pool.
         const auto middle = layout.rooms[2].origin + Cell{4, 2};
         const auto& inlet = layout.rooms[base + 3];
@@ -263,7 +487,7 @@ struct Builder {
         f.profile = depth == 4   ? LayoutProfile::Seep
                     : depth == 5 ? LayoutProfile::DrownedGalleries
                                  : LayoutProfile::BroodVault;
-        world.assetPack = "cave-blockout";
+        world.assetPack = "damp-caves";
         f.width = 52 + int(pick(2));
         f.height = 30;
         world.surfaces.resize(unsigned(f.width * f.height));
@@ -275,7 +499,7 @@ struct Builder {
             goal{east, goalRow};
         const Cell pocket{11 + int(pick(3)), 5};
         const int objectiveRadius = depth == 6 ? 4 : 3;
-        chamber(entry, {3, 2}, Role::Entrance, 4);
+        chamber(entry, {3, 2}, Role::Entrance, 5);
         chamber(first, {2, 3}, Role::Junction, 5);
         chamber(middle, {4, 2}, Role::Junction, depth == 5 ? 8 : 6, {-3, 0});
         chamber(approach, {2, 2}, Role::Approach, 6);
@@ -311,28 +535,45 @@ struct Builder {
             for (int y = -1; y <= 1; ++y)
                 for (int x = -1; x <= 1; ++x)
                     fixtures.npcExcluded.set(unsigned((c.y + y) * f.width + c.x + x));
-        prop("crate-small", pocket, false);
+        for (int y = -1; y <= 1; ++y)
+            for (int x = -1; x <= 1; ++x)
+                world.surfaces[(entry.y + y) * f.width + entry.x + x].ceiling = 4;
+        const auto high = sites[Site::HighGallery];
+        for (Cell offset : {Cell{-1, -1}, Cell{1, 1}})
+            world.buildings.push_back({"high-column", high + offset, {}, Heading::North, 1, 1, true});
+        overhead("gallery-teeth", high + Cell{0, 1}, 1.53f);
+        wallStore("crate-small", 5);
         if (depth == 4) {
             sites[Site::Camp] = first + Cell{0, -1};
-            prop("crate-large", sites[Site::Camp], false);
-            prop("sleeping-bay", first + Cell{-1, 1}, true);
+            wallStore("crate-large", 1);
+            prop("bedroll", first + Cell{-2, 0}, true);
             sites[Site::SpiderArch] = middle;
-            prop("footlocker", middle, false);
+            overhead("arch-teeth", middle + Cell{-2, 0}, 1.02f);
+
             web(2, Site::ArchWeb);
             web(5, Site::PocketWeb);
         } else if (depth == 5) {
             sites[Site::SoloNewt] = first;
-            prop("barrel", first, false);
             sites[Site::Fork] = middle + Cell{-3, 0};
             sites[Site::FarBank] = middle + Cell{3, 0};
             sites[Site::NorthContact] = middle + Cell{1, -2};
             sites[Site::SouthContact] = middle + Cell{1, 2};
-            prop("footlocker", sites[Site::NorthContact], false);
-            prop("barrel", sites[Site::SouthContact], false);
             sites[Site::Rope] = middle + Cell{-1, -2};
-            prop("survey-rope", sites[Site::Rope], false);
-            for (int x = -1; x <= 1; ++x)
-                rock(middle + Cell{x, 0});
+            trail(sites[Site::Fork], Heading::East, true);
+            trail(middle + Cell{-3, -1}, Heading::East);
+            trail(middle + Cell{-3, -2}, Heading::West, true);
+            for (int x = -2; x <= 2; ++x)
+                trail(middle + Cell{x, -2}, Heading::North);
+            trail(middle + Cell{3, -2}, Heading::North, true);
+            trail(middle + Cell{3, -1}, Heading::East);
+            trail(sites[Site::FarBank], Heading::South, true);
+            world.buildings.push_back({"limestone-rib", middle, {-1, 0}, Heading::North, 3, 1, true});
+            overhead("vault-teeth", middle + Cell{-2, -2}, 1.28f);
+            for (int x = -1; x <= 1; ++x) {
+                const auto cell = middle + Cell{x, 0};
+                rock(cell);
+                world.surfaces[unsigned(cell.y * f.width + cell.x)].floor = -1;
+            }
             for (const auto& patch : cavePool) {
                 Cell anchor = middle + patch.center;
                 Cell offset{-int(patch.width / 2), 0};
@@ -344,15 +585,24 @@ struct Builder {
             }
         } else {
             sites[Site::Mother] = goal;
-            prop("footlocker", goal, false);
+            web(3);
+            web(4, Site::Count, 5);
+            overhead("vault-teeth", goal + Cell{1, -2}, 1.28f);
+            trail(goal + Cell{0, -4}, Heading::East);
+            trail(goal + Cell{0, -3}, Heading::East, true);
+            trail(goal + Cell{-1, -3}, Heading::North);
+            trail(goal + Cell{-2, -3}, Heading::West, true);
+            for (int y : {-2, -1})
+                trail(goal + Cell{-2, y}, Heading::East);
             for (unsigned i = 0; i < 2; ++i) {
                 const Cell c = goal + Cell{i ? 2 : -2, 0};
                 sites[i ? Site::EastClutch : Site::WestClutch] = c;
                 sites[i ? Site::EastMelee : Site::WestMelee] = c + Cell{0, -1};
                 sites[i ? Site::EastHatch : Site::WestHatch] = c + Cell{0, 1};
-                prop("clutch-blockout", c, true);
+                prop(i ? "sealed-clutch" : "tethered-clutch", c, true);
             }
         }
+        dressChambers();
     }
 };
 } // namespace

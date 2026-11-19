@@ -61,6 +61,8 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         add(b.footprint.y);
         add(b.width);
         add(b.depth);
+        if (b.terrainCaps)
+            add(0x63617073);
     }
     add(scenery.size());
     for (const auto& s : scenery) {
@@ -87,6 +89,8 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
         real(hearth->x);
         real(hearth->y);
         real(hearth->z);
+        if (hearth->illuminates)
+            add(0x676c6f77ull);
         if (hearth->scale != 1) {
             add(0x7363616c65ull);
             real(hearth->scale);
@@ -99,6 +103,8 @@ std::uint64_t WorldDefinition::fingerprint() const noexcept {
             real(f.x);
             real(f.y);
             real(f.z);
+            if (f.illuminates)
+                add(0x676c6f77ull);
             if (f.scale != 1) {
                 add(0x7363616c65ull);
                 real(f.scale);

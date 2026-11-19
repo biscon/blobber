@@ -32,6 +32,7 @@ struct Texture {
     std::uint64_t offset = 0, bytes = 0, alphaOffset = 0, alphaBytes = 0, checksum = 0, alphaChecksum = 0;
     bool material = true;
     SpriteCanvas canvas{};
+    bool current = false; // Opaque, repeating world-space scrolling water material.
 };
 struct Clip {
     NpcClipTiming timing{};
@@ -98,14 +99,11 @@ struct Pack {
     // Start distance, transition span, maximum opacity; daylight only.
     std::array<float, 3> daylightFog{10.f, 4.5f, 1.f};
 };
-// Optional preparation-owned current tile for a standalone review publication.
+// Fixed mapping shared by the offline tile and the game clock.
 struct WaterCurrent {
     static constexpr unsigned tileSize = 256, periodMs = 32000;
-    std::uint16_t texture = UINT16_MAX;
-    std::vector<unsigned char> pixels; // Opaque RGBA mip chain.
 };
 struct Publication {
-    WaterCurrent current;
     EffectClips effects{};
     std::filesystem::path payload;
     std::uint64_t fingerprint = 0, definitions = 0, textureBytes = 0, alphaBytes = 0;
@@ -189,6 +187,7 @@ class Writer {
     unsigned add(const std::string& name, unsigned width, unsigned height, bool sprite,
                  const std::vector<unsigned char>& rgba, unsigned cutoff = 0, Anchor anchor = {},
                  bool material = true, bool crop = false, bool cutoutMaterial = false);
+    void markCurrent(unsigned texture);
     void effects(const EffectClips& clips) { publication_.effects = clips; }
     void finish(const std::vector<Appearance>&, std::uint64_t definitions = 0,
                 const std::vector<Pack>& packs = {}, const std::vector<PropMesh>& meshes = {});

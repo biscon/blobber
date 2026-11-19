@@ -1,10 +1,11 @@
 #include "game/perception.hpp"
 #include "generation/caves.hpp"
 #include "support/check.hpp"
+#include <algorithm>
 #include <iostream>
 using namespace blobber;
 using namespace blobber::generation;
-void checkCaveWater(const CaveFloor&);
+void checkCaveWater();
 namespace {
 CaveFloor sample(unsigned seed, unsigned depth, bool forced = false) {
     auto r = generateCave(seed, depth, forced);
@@ -45,9 +46,64 @@ void run() {
                   frozen.map.definition().fingerprint() == otherFrozen.map.definition().fingerprint(),
               "Fallback depends on seed");
         check(passages(a.layout) != passages(other.layout), "Seeds only moved rooms without changing routes");
-        for (const auto* f : {&a, &frozen}) {
+        for (const auto* f : {&a, &other, &frozen}) {
             check(f->layout.roomCount - 2 >= 12 && f->layout.connectionCount >= f->layout.roomCount + 1,
                   "Exploration collapsed to a short spine");
+            for (const auto& prop : f->map.definition().scenery)
+                if (prop.clearance)
+                    check(!prop.blocking && prop.clearance >= 1 &&
+                              prop.clearance < elevation(f->map.surface(prop.anchor).ceiling),
+                          "Ceiling placement obstructs a lane");
+            const auto& world = f->map.definition();
+            std::array<unsigned, maxRooms> roofs{}, poolCells{}, silk{};
+            unsigned relief = 0;
+            for (const auto& prop : world.scenery) {
+                const auto room = regionAt(f->layout, prop.anchor);
+                if (prop.clearance)
+                    ++roofs.at(room);
+                if (prop.model.compare(0, 5, "pool-") == 0) {
+                    poolCells.at(room) += prop.width * prop.depth;
+                    for (unsigned x = 0; x < prop.width; ++x) {
+                        const auto c = prop.cell(x, 0);
+                        check(!f->map.solid(c) && f->map.movementBlocked(c) && f->map.npcBlocked(c) &&
+                                  f->map.surface(c).floor == -1,
+                              "Rendered water disagrees with terrain");
+                    }
+                }
+                if (prop.model == "flowstone" || prop.model == "fungus-ledge") {
+                    ++relief;
+                    check(!prop.blocking && f->map.solid(prop.anchor + forward(prop.facing)),
+                          "Wall relief lacks solid backing or obstructs the lane");
+                }
+                if (prop.model == "crate-small" || prop.model == "crate-large")
+                    check(f->map.solid(prop.anchor + forward(prop.facing)), "Supply crate in open space");
+                if (prop.model == "brazier")
+                    check(world.ambientFires.size() == 1 && world.ambientFires[0].illuminates &&
+                              world.ambientFires[0].x == prop.anchor.x + .5f &&
+                              world.ambientFires[0].z == prop.anchor.y + .5f,
+                          "Lookout flame lost its bowl");
+            }
+            for (const auto& decal : world.decorations)
+                if (decal.web() || decal.kind == DecorationKind::Vine)
+                    ++silk.at(regionAt(f->layout, decal.cell));
+            unsigned wetRooms = 0, webRooms = 0;
+            for (unsigned room = 0; room < f->layout.roomCount; ++room) {
+                check(roofs[room] >= 5 && roofs[room] <= 7, "Chamber missing its canopy of stalactites");
+                if (room == 2 && d == 5)
+                    check(poolCells[room] == 12, "Main basin lost its continuous waterline");
+                else if (poolCells[room]) {
+                    check(poolCells[room] <= 2, "Side pool outgrew its dry shoulder");
+                    ++wetRooms;
+                }
+                webRooms += silk[room] > 0;
+            }
+            check(silk[1] && webRooms >= 6 && wetRooms >= 6 && relief >= 16,
+                  "Cave profile lost its early silk, dispersed webs, pools or wall relief");
+            for (const auto& surface : world.surfaces)
+                check(surface.wallMaterial == 0 && surface.floorMaterial == 1,
+                      "Cave passage changed terrain palette");
+            for (const auto& pillar : world.buildings)
+                check(f->map.buildingHasTerrainCaps(pillar.anchor), "Exposed pillar base lost cave terrain");
             check(!(f->sites[CaveSite::Lookout] == f->sites[CaveSite::Optional]),
                   "Both detours share a destination");
         }
@@ -76,7 +132,7 @@ void run() {
             check(bool(validateCave(bad)), "Camp can follow first spider");
         }
         if (d == 5) {
-            checkCaveWater(a);
+            checkCaveWater();
             const Cell center = a.sites[CaveSite::Fork] + Cell{3, 0};
             const auto bank = center + Cell{0, -2}, pool = bank + Cell{0, 1};
             Player player{bank, Heading::South};
@@ -88,6 +144,13 @@ void run() {
             // Obstruct just one bank in the final published world. The other still connects the floor.
             for (int side : {-1, 1}) {
                 auto world = a.map.definition();
+                const Cell obstacle = center + Cell{0, side * 2};
+                // Replace the walkable rope segment on the north bank to make room for the fixture.
+                world.scenery.erase(std::remove_if(world.scenery.begin(), world.scenery.end(),
+                                                   [&](const SceneryPlacement& p) {
+                                                       return p.anchor == obstacle && !p.clearance;
+                                                   }),
+                                    world.scenery.end());
                 world.scenery.push_back(
                     {"test-rock", center + Cell{0, side * 2}, {}, Heading::North, 1, 1, true});
                 std::vector<std::string> rows(a.map.height(), std::string(a.map.width(), '#'));

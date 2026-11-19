@@ -33,9 +33,9 @@ unsigned compare(GpuResources& resources, WorldRenderer& renderer, TargetHandle 
     return differences;
 }
 int main() try {
-    for (unsigned mode = 0; mode < 4; ++mode) {
-        const bool gate = mode == 1, foliage = mode == 2, water = mode == 3;
-        test::ArchitectureFixture fixture(foliage, water);
+    for (unsigned mode = 0; mode < 5; ++mode) {
+        const bool gate = mode == 1, foliage = mode == 2, water = mode >= 3, current = mode == 4;
+        test::ArchitectureFixture fixture(foliage, water, {10.f, 4.5f, 1.f}, 16, current);
         auto publication = gate ? test::gatePublication(fixture.publication()) : fixture.publication();
         auto assets = std::make_shared<const world_assets::CpuAssets>(std::move(publication));
         const auto catalog = creationCatalog(true);
@@ -134,11 +134,11 @@ int main() try {
                     return std::array<unsigned char, 3>{rgba[at], rgba[at + 1], rgba[at + 2]};
                 };
                 const auto firstColor = sample();
-                frame.now = 124;
+                frame.now = current ? 15 : 124;
                 renderer.render(frame);
                 check(renderer.stats.cached && renderer.image().revision == first,
-                      "Water keeps color cache within its 125ms phase");
-                frame.now = 125;
+                      "Water keeps color cache within its clock phase");
+                frame.now = current ? 8000 : 125;
                 renderer.render(frame);
                 check(!renderer.stats.cached && renderer.image().revision != first && sample() != firstColor,
                       "Visible water advances painted color at the phase boundary");
@@ -148,12 +148,12 @@ int main() try {
                 renderer.render(frame);
                 check(renderer.stats.cached && renderer.image().revision == phaseOne,
                       "Paused gameplay clock retains water image");
-                frame.now = 999;
+                frame.now = current ? 24000 : 999;
                 renderer.render(frame);
                 check(sample() != firstColor, "Last water frame is selected before wrap");
-                frame.now = 1000;
+                frame.now = current ? world_assets::WaterCurrent::periodMs : 1000;
                 renderer.render(frame);
-                check(sample() == firstColor, "Eight water phases wrap exactly after one second");
+                check(sample() == firstColor, "Water returns to its source sample at period wrap");
                 differences += compare(resources, renderer, ids.get());
                 allocations = 0;
                 watching = true;
@@ -186,7 +186,8 @@ int main() try {
             check(again.textures == baseline.textures && again.meshes == baseline.meshes &&
                       again.targets == baseline.targets,
                   "Revisit returns to retained renderer resource baseline");
-            std::cout << (water     ? "Animated water"
+            std::cout << (current   ? "Scrolling current"
+                          : water   ? "Animated water"
                           : foliage ? "Cutout scenery"
                           : gate    ? "Wide gate"
                                     : "Architecture")

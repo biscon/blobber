@@ -10,7 +10,13 @@ three independent circuits and two optional destinations. The Galleries pool use
 a seamless 256-texel-per-cell painting with a slow eastward current. The
 [water revision](dc01_cave_layout_design.md#pool-density-and-current-revision) records the mapping and rate.
 The [gallery](screenshots/damp-caves-dc01/README.md) includes both banks and a north-facing motion sample.
-Campaign descent ends on floor 3. DC02–DC07 are Planned.
+[DC02 limestone kit and survey trail](dc02_limestone_kit_design.md) is **Ready for review**. Its [third walkthrough design](dc02_limestone_kit_design.md#third-walkthrough-design) covers roof density, small pools, distributed silk and animated local brazier lighting.
+The standalone walks use moss-grown limestone from the threshold onward, solid
+wall and roof formations, perimeter survey stores, three silk silhouettes and
+a lit lookout bowl. Prepared terrain continues through exposed column corners.
+[Native review views](screenshots/damp-caves-dc02/README.md) cover the revised
+camp, rockwork, water and vault. Campaign descent ends on floor 3.
+DC03–DC07 are Planned.
 
 [Linux distribution roadmap](linux_distribution_plan.md): **LD01 accepted and closed
 by the user, 2026-11-11**; implemented and mechanically verified.

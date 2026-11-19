@@ -44,6 +44,7 @@ bool MapOverlayModel::inside(Cell c) const noexcept {
 }
 void MapOverlayModel::prepare(const Map& map, const generation::FloorLayout* rooms) noexcept {
     map_ = &map;
+    cave_ = map.definition().assetPack == "damp-caves";
     Cell minimum{map.width(), map.height()}, maximum{-1, -1};
     for (int y = 0; y < map.height(); ++y)
         for (int x = 0; x < map.width(); ++x)
@@ -133,10 +134,14 @@ MapTile MapOverlayModel::tile(Cell c, bool reveal) const noexcept {
         return MapTile::Hidden;
     if (fog_ && !reveal) {
         const auto n = std::size_t(c.y * map_->width() + c.x);
-        return floors_[n] ? MapTile::Floor : walls_[n] ? MapTile::Wall : MapTile::Hidden;
+        if (!floors_[n])
+            return walls_[n] ? MapTile::Wall : MapTile::Hidden;
     }
-    if (!map_->solid(c))
+    if (!map_->solid(c)) {
+        if (cave_ && map_->movementBlocked(c))
+            return map_->surface(c).floor < 0 ? MapTile::Pool : MapTile::Obstacle;
         return MapTile::Floor;
+    }
     for (int dy = -1; dy <= 1; ++dy)
         for (int dx = -1; dx <= 1; ++dx) {
             const Cell adjacent{c.x + dx, c.y + dy};

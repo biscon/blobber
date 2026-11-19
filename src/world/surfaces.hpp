@@ -73,12 +73,13 @@ struct BuildingPlacement {
     Cell anchor, footprint;
     Heading facing = Heading::North;
     unsigned width = 1, depth = 1;
+    bool terrainCaps = false; // Fill exposed floor and ceiling around an irregular solid shell.
     Cell cell(unsigned x, unsigned z) const noexcept {
         const auto r = right(facing), f = forward(facing);
         return anchor + r * (footprint.x + int(x)) + f * -(footprint.y + int(z));
     }
 };
-constexpr unsigned sceneryCapacity = 36;
+constexpr unsigned sceneryCapacity = 144;
 // Open-terrain physical base; visual overhangs do not reserve extra cells.
 struct SceneryPlacement {
     std::string model;
@@ -94,6 +95,7 @@ struct SceneryPlacement {
 struct AmbientFire {
     float x = 0, y = 0, z = 0;
     float scale = 1; // Immutable native size multiplier in (0,1]; legacy fires retain size 1.
+    bool illuminates = false;
 };
 constexpr unsigned ambientFireCapacity = 6;
 struct WorldDefinition {

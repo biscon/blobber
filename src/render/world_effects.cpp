@@ -76,6 +76,7 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
     const auto& definition = in.geometry.base().definition();
     std::array<const AmbientFire*, ambientFireCapacity + 1> fires{};
     std::array<bool, ambientFireCapacity + 1> visibleFires{};
+    std::array<bool, ambientFireCapacity + 1> visibleGlow{};
     unsigned fireCount = 0;
     if (definition.hearth)
         fires[fireCount++] = &*definition.hearth;
@@ -90,7 +91,11 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
                            (anchor.z - world.camera.position.z) * world.camera.right.z;
         visibleFires[i] = d > nearPlane - .6f && d < world.camera.farClip + .6f &&
                           std::abs(side) <= std::max(0.f, d) * (viewWidth * .5f / focal()) + .6f;
-        visibleFire |= visibleFires[i];
+        const float radius = 1.5f * fire.scale;
+        const float slope = viewWidth * .5f / focal();
+        visibleGlow[i] = fire.illuminates && d >= nearPlane - radius && d <= world.camera.farClip + radius &&
+                         std::abs(side) <= d * slope + radius * std::sqrt(1.f + slope * slope);
+        visibleFire |= visibleFires[i] || visibleGlow[i];
     }
     const auto tick = visibleFire ? in.now / 50 + 1 : 0;
     bool visibleWeapon = false, attackingWeapon = false;
@@ -185,11 +190,25 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         for (unsigned i = 0; i < 24; ++i) {
             const bool ember = i >= 16;
             const float phase = std::fmod(t * (ember ? .48f : .8f) + float(i) * .618034f, 1.f);
-            const float spread = ((definition.hearth && fireIndex == 0) ? 1.f : .4f) * fire->scale;
-            const float lane = (float(i % 5) * .065f - .13f) * spread;
-            Vec center{fire->x + spread * .035f * std::sin(t * 2.3f + float(i)),
+            // A fireplace has a long fuel bed. A bowl has concentric flame roots
+            // in world space so its breadth survives a quarter turn of the camera.
+            const bool hearth = definition.hearth && fireIndex == 0;
+            static constexpr std::array<Vec, 8> ring{{{1, 0, 0},
+                                                      {.707107f, 0, .707107f},
+                                                      {0, 0, 1},
+                                                      {-.707107f, 0, .707107f},
+                                                      {-1, 0, 0},
+                                                      {-.707107f, 0, -.707107f},
+                                                      {0, 0, -1},
+                                                      {.707107f, 0, -.707107f}}};
+            const auto direction = ring[i % ring.size()];
+            const float radius = i < 8 ? .060f : .036f;
+            const float rootX = hearth ? 0.f : direction.x * radius;
+            const float rootZ = hearth ? float(i % 5) * .065f - .13f : direction.z * radius;
+            const float sway = hearth ? 1.f : .18f;
+            Vec center{fire->x + fire->scale * (rootX + sway * .035f * std::sin(t * 2.3f + float(i))),
                        fire->y + fire->scale * (ember ? .08f + phase * .52f : .07f + phase * .20f),
-                       fire->z + lane + spread * .025f * std::sin(t * 3.f + float(i) * 2.f)};
+                       fire->z + fire->scale * (rootZ + sway * .025f * std::sin(t * 3.f + float(i) * 2.f))};
             const float h = fire->scale * (ember ? .025f : .22f + .12f * (1.f - phase));
             const unsigned before = frame_.count;
             billboard(center, fire->scale * (ember ? .012f : .13f), h, 9, .08f * std::sin(t + float(i)),
@@ -298,6 +317,21 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         }
     }
     spells_.append(in, world, frame_);
+    // Combat lights get first use of the shared occlusion/attenuation slots.
+    for (unsigned i = 0; i < fireCount && frame_.lightCount < frame_.lights.size(); ++i) {
+        if (!visibleGlow[i])
+            continue;
+        const auto& fire = *fires[i];
+        const float phase = float((in.now / 50) % 1200) * (6.2831853f / 1200.f) + i * .73f;
+        const float flicker =
+            .55f * std::sin(phase * 47) + .30f * std::sin(phase * 89) + .15f * std::sin(phase * 149);
+        const Vec core{fire.x, fire.y + fire.scale * (.12f + .03f * flicker), fire.z};
+        frame_.lights[frame_.lightCount++] = {core,
+                                              {1.f, .39f + .045f * flicker, .095f},
+                                              1.5f * fire.scale,
+                                              (.94f + .38f * flicker) * fire.scale,
+                                              0};
+    }
     // Stable bounded insertion sort: ground layers retain submission order, airborne packets far-first.
     for (unsigned i = 1; i < frame_.count; ++i) {
         const auto v = frame_.packets[i];

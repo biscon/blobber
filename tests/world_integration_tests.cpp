@@ -9,6 +9,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <string_view>
 using namespace blobber;
 using namespace blobber::world_render;
 namespace {
@@ -56,7 +57,7 @@ void multipleFires() {
     const std::vector<std::string> rows{"#######", "#.....#", "#.....#", "#.....#",
                                         "#.....#", "#.....#", "#######"};
     WorldDefinition definition;
-    definition.ambientFires = {{3.2f, .2f, 2.5f, .5f}, {3.8f, .2f, 2.5f}};
+    definition.ambientFires = {{3.2f, .2f, 2.5f, .5f}, {3.8f, .2f, 2.5f, 1.f, true}};
     const Map map(rows, definition);
     MovementState movement;
     movement.player = {{3, 4}, Heading::North};
@@ -68,10 +69,17 @@ void multipleFires() {
     check(effects.update(input, world) && effects.frame().count == 48,
           "Two braziers submit independent flames");
     check(!effects.update(input, world), "Paused braziers reuse their frame");
+    const auto glow = effects.frame().lights[0];
+    check(effects.frame().lightCount == 1 && glow.position.x == 3.8f && glow.position.z == 2.5f &&
+              glow.radius == 1.5f && glow.position.y > .2f && glow.color[0] > glow.color[2],
+          "Only the opted-in bowl casts warm local light");
     const auto first = effects.frame().packets[0].points;
     input.now = 200;
     check(effects.update(input, world) && first[0].y != effects.frame().packets[0].points[0].y,
           "Brazier animation advances with presentation time");
+    check(effects.frame().lights[0].strength != glow.strength &&
+              effects.frame().lights[0].position.x == glow.position.x,
+          "Firelight must flicker at a stationary bowl");
     allocations = 0;
     watching = true;
     for (unsigned i = 0; i < 60; ++i) {
@@ -81,6 +89,18 @@ void multipleFires() {
     watching = false;
     check(!allocations && effects.frame().count == 48,
           "Two-fire frame work remains bounded and allocation-free");
+    // Look north with both bowls behind the eye. Only the larger light's
+    // influence reaches the forward floor. Pausing still caches that glow.
+    const auto originalCamera = world.camera;
+    world.camera.position = {3.8f, .5f, 1.65f};
+    ++world.revision;
+    effects.update(input, world);
+    check(!effects.frame().count && effects.frame().lightCount == 1 && !effects.update(input, world),
+          "Light on visible stone disappears when an offscreen flame is culled");
+    input.now += 200;
+    check(effects.update(input, world), "Offscreen bowl with a visible light volume still flickers");
+    world.camera = originalCamera;
+    ++world.revision;
     // All flame quad corners remain within the .15-cell bowl radius, even mid-turn.
     // Sampling 60 presentation ticks covers multiple phases without loading game artwork.
     for (unsigned angle = 0; angle < 8; ++angle) {
@@ -117,6 +137,18 @@ void multipleFires() {
     halfEffects.update(halfInput, world);
     check(fullEffects.frame().count == 24 && halfEffects.frame().count == 24,
           "Scaling retains bounded particles");
+    // Measure root spread independently of billboard width. A row of particles
+    // can fit the bowl but collapses in one of these perpendicular projections.
+    for (bool alongX : {false, true}) {
+        float low = 1.f, high = -1.f;
+        for (unsigned i = 0; i < fullEffects.frame().count; ++i) {
+            const auto& q = fullEffects.frame().packets[i].points;
+            const float offset = alongX ? (q[0].x + q[2].x) * .5f - 3.5f : (q[0].z + q[2].z) * .5f - 2.5f;
+            low = std::min(low, offset);
+            high = std::max(high, offset);
+        }
+        check(low < -.05f && high > .05f, "Brazier roots occupy both sides on each horizontal axis");
+    }
     for (unsigned i = 0; i < 24; ++i)
         for (unsigned j = 0; j < 4; ++j) {
             const auto a = fullEffects.frame().packets[i].points[j];
@@ -551,10 +583,14 @@ void combinedEffects(bool stress) {
     }
 }
 } // namespace
-int main(int argc, char**) {
+int main(int argc, char** argv) {
     try {
         hearthEffects();
         multipleFires();
+        if (argc == 2 && std::string_view(argv[1]) == "--fires") {
+            std::cout << "Hearth and bowl fire checks passed\n";
+            return 0;
+        }
         barriers();
         doorsAndEffects();
         acceptedImpacts();

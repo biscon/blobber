@@ -1,0 +1,156 @@
+{
+  "id": "damp-caves",
+  "worldScale": 1.0,
+  "horizon": [
+    0.23,
+    0.26,
+    0.25
+  ],
+  "stairWall": "packs/damp-caves/source/wall.png",
+  "stairFloor": "packs/damp-caves/source/floor.png",
+  "door": "packs/damp-caves/source/survey-door.png",
+  "lockedDoor": "packs/damp-caves/source/survey-door.png",
+  "doorEdge": "packs/damp-caves/source/survey-door.png",
+  "sky": "packs/damp-caves/source/ceiling.png",
+  "crest": "packs/damp-caves/source/moss.png",
+  "vine": "packs/damp-caves/source/veil.png",
+  "currentMaster": "packs/sanctuary-city/source/water-master.png",
+  "decorations": {
+    "damp-a": "packs/damp-caves/source/moss-bank.png",
+    "web-a": "packs/damp-caves/source/web.png",
+    "web-b": "packs/damp-caves/source/sling.png"
+  },
+  "wall": "packs/damp-caves/source/wall.png",
+  "floor": "packs/damp-caves/source/floor.png",
+  "ceiling": "packs/damp-caves/source/ceiling.png",
+  "buildings": [
+    {
+      "id": "limestone-rib",
+      "parts": [
+        "packs/damp-caves/models/limestone-rib.mesh.json",
+        "packs/damp-caves/models/pool-inner.mesh.json"
+      ]
+    },
+    {
+      "id": "high-column",
+      "parts": [
+        "packs/damp-caves/models/high-column.mesh.json"
+      ]
+    },
+    {
+      "id": "camp-teeth",
+      "parts": [
+        "packs/damp-caves/models/camp-teeth.mesh.json"
+      ]
+    },
+    {
+      "id": "arch-teeth",
+      "parts": [
+        "packs/damp-caves/models/arch-teeth.mesh.json"
+      ]
+    },
+    {
+      "id": "lookout-teeth",
+      "parts": [
+        "packs/damp-caves/models/lookout-teeth.mesh.json"
+      ]
+    },
+    {
+      "id": "vault-teeth",
+      "parts": [
+        "packs/damp-caves/models/vault-teeth.mesh.json"
+      ]
+    },
+    {
+      "id": "gallery-teeth",
+      "parts": [
+        "packs/damp-caves/models/gallery-teeth.mesh.json"
+      ]
+    },
+    {
+      "id": "flowstone",
+      "parts": [
+        "packs/damp-caves/models/flowstone.mesh.json"
+      ]
+    },
+    {
+      "id": "fungus-ledge",
+      "parts": [
+        "packs/damp-caves/models/fungus-ledge.mesh.json"
+      ]
+    },
+    {
+      "id": "crate-small",
+      "parts": [
+        "packs/damp-caves/models/crate-small.mesh.json"
+      ]
+    },
+    {
+      "id": "crate-large",
+      "parts": [
+        "packs/damp-caves/models/crate-large.mesh.json"
+      ]
+    },
+    {
+      "id": "brazier",
+      "parts": [
+        "packs/damp-caves/models/brazier.mesh.json"
+      ]
+    },
+    {
+      "id": "bedroll",
+      "parts": [
+        "packs/damp-caves/models/bedroll.mesh.json"
+      ]
+    },
+    {
+      "id": "sealed-clutch",
+      "parts": [
+        "packs/damp-caves/models/sealed-clutch.mesh.json"
+      ]
+    },
+    {
+      "id": "trail-straight",
+      "parts": [
+        "packs/damp-caves/models/trail-straight.mesh.json"
+      ]
+    },
+    {
+      "id": "trail-bend",
+      "parts": [
+        "packs/damp-caves/models/trail-bend.mesh.json"
+      ]
+    },
+    {
+      "id": "tethered-clutch",
+      "parts": [
+        "packs/damp-caves/models/sealed-clutch.mesh.json",
+        "packs/damp-caves/models/buried-cord.mesh.json"
+      ]
+    },
+    {
+      "id": "pool-north",
+      "parts": [
+        "packs/damp-caves/models/pool-long.mesh.json"
+      ]
+    },
+    {
+      "id": "pool-south",
+      "parts": [
+        "packs/damp-caves/models/pool-long.mesh.json"
+      ]
+    },
+    {
+      "id": "pool-west",
+      "parts": [
+        "packs/damp-caves/models/pool-end.mesh.json"
+      ]
+    },
+    {
+      "id": "pool-east",
+      "parts": [
+        "packs/damp-caves/models/pool-end.mesh.json"
+      ]
+    }
+  ]
+}

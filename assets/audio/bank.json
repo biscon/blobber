@@ -1952,6 +1952,26 @@
         }
       ]
     },
+    "cave.drips": {
+      "gain": 0.25,
+      "pitch_min": 1,
+      "pitch_max": 1,
+      "volume_min": 0.9,
+      "category": 2,
+      "priority": 1,
+      "range": 6,
+      "cooldown": 0.06,
+      "concurrency": 4,
+      "aliases": 4,
+      "loop": true,
+      "variants": [
+        {
+          "id": "01",
+          "path": "generated/cave_drips_01.wav",
+          "provenance": "Csound synthesis; Blobber original recipe"
+        }
+      ]
+    },
     "web.loop": {
       "gain": 0.13,
       "pitch_min": 1,

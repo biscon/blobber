@@ -1,8 +1,8 @@
 #include "app/gameplay.hpp"
-#include "assets/image.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "cave_review.hpp"
+#include "platform/audio.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
 #include "rlgl.h"
@@ -90,7 +90,7 @@ Player reviewRoute(GameSession& game, const CaveFloor& f) {
     if (f.layout.depth == 4) {
         walkTo(game, s[Site::Camp]);
         walkTo(game, s[Site::SpiderArch]);
-        photo = {f.layout.rooms[1].anchor + Cell{-2, 0}, Heading::East};
+        photo = {f.layout.rooms[1].anchor, Heading::West};
     } else if (f.layout.depth == 5) {
         walkTo(game, s[Site::SoloNewt]);
         const Cell center = s[Site::Fork] + Cell{3, 0};
@@ -181,28 +181,23 @@ int main(int argc, char** argv) try {
     }
     auto pub = world_assets::load(prepared / "world");
     require(pub.definitions == defs.definitionFingerprint, "Prepared world and NPC definitions differ");
-    {
-        OwnedImage master(LoadImage((root / "packs/sanctuary-city/source/water-master.png").u8string().c_str()));
-        require(master.value.data, "Missing cave water painting");
-        constexpr int side = cave_review::waterSourceSize;
-        ImageResize(&master.value, side, side);
-        ImageFormat(&master.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-        require(master.value.data && master.value.width == side && master.value.height == side &&
-                    master.value.format == PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
-                "Cannot prepare cave water");
-        const auto* pixels = static_cast<const unsigned char*>(master.value.data);
-        cave_review::bindBlockouts(pub, {pixels, pixels + side * side * 4});
-    }
     SetTraceLogLevel(LOG_WARNING);
     Window window(1920, 1080, hidden, hidden);
     require(!hidden || IsWindowState(FLAG_WINDOW_HIDDEN), "Capture window must be hidden");
     GpuResources resources;
     {
+        AudioRuntime audio;
+        if (!hidden)
+            audio.prepare(root, false, output / "settings.json");
         Presenter presenter(resources, root, nullptr, prepared);
+        presenter.audio = hidden ? nullptr : &audio;
         const auto baseline = resources.counts();
         {
             WorldRenderer renderer(resources, std::move(pub));
             if (hidden) {
+                cave_review::checkPreparedDressing(renderer.assets(), f);
+                if (depth == 5)
+                    cave_review::biomeChange(renderer, f, root, seed);
                 GameSession game(f.map, rules, actors, seed, f.layout.spawn, false, defs.timings, {},
                                  f.layout.fixtures);
                 auto photo = reviewRoute(game, f);
@@ -212,18 +207,121 @@ int main(int argc, char** argv) try {
                 {
                     GameView view(renderer, &f.layout);
                     CommandController commands(game, defs.timings);
-                    auto capture = [&](const std::string& file) {
+                    auto capture = [&](const std::string& file, bool mapOpen = false) {
                         animator.setTime(game.timeMs(), &game.effects());
                         view.update(game, animator.snapshot(), {});
                         commands.refresh(view.picking()->targets(), false, false, true);
-                        view.present(presenter, game, f.map, false, true, &commands.snapshot());
+                        view.present(presenter, game, f.map, mapOpen, true, &commands.snapshot());
                         presenter.capture(output / file);
                         using GetError = unsigned (*)();
                         const auto glError = reinterpret_cast<GetError>(rlGetProcAddress("glGetError"));
                         require(glError && glError() == 0, "OpenGL error in cave capture");
                     };
                     capture("view.png");
+                    auto photograph = [&](Cell cell, Heading heading, const char* file) {
+                        walkTo(game, cell);
+                        face(game, heading);
+                        capture(file);
+                    };
+                    auto facingFeature = [&](Cell feature, unsigned room, const char* file) {
+                        for (int distance : {2, 1})
+                            for (unsigned h = 0; h < 4; ++h) {
+                                const auto facing = Heading(h);
+                                const auto step = forward(facing);
+                                const auto stance = feature + step * -distance;
+                                if (regionAt(f.layout, stance) != room || f.map.movementBlocked(stance) ||
+                                    (distance == 2 && f.map.movementBlocked(stance + step)))
+                                    continue;
+                                photograph(stance, facing, file);
+                                std::cout << file << " from (" << stance.x << "," << stance.y
+                                          << ") heading=" << h << '\n';
+                                return true;
+                            }
+                        return false;
+                    };
+                    // Use the first exploration junction even when its shoreline
+                    // changes orientation with the room shape or seed.
+                    const auto& scenery = f.map.definition().scenery;
+                    const auto shore = std::find_if(scenery.begin(), scenery.end(), [&](const auto& patch) {
+                        return patch.model == "pool-east" && regionAt(f.layout, patch.anchor) == 9;
+                    });
+                    require(shore != scenery.end() && facingFeature(shore->anchor, 9, "shore.png"),
+                            "No dry viewpoint for the exploration pool");
+                    if (depth == 4) {
+                        photograph(f.layout.connections[0].socketA + Cell{-1, 0}, Heading::East,
+                                   "threshold.png");
+                        const auto camp = f.layout.rooms[1].anchor;
+                        photograph(camp + Cell{-2, 1}, Heading::North, "bed-end.png");
+                        photograph(camp + Cell{-1, 0}, Heading::West, "bed-side.png");
+                        for (const auto& ledge : f.map.definition().scenery) {
+                            if (ledge.model != "fungus-ledge")
+                                continue;
+                            const Cell stance = ledge.anchor + forward(ledge.facing) * -1;
+                            if (!f.map.movementBlocked(stance) && game.fixtures().at(stance) < 0) {
+                                photograph(stance, ledge.facing, "wall-fungi.png");
+                                break;
+                            }
+                        }
+                        for (const auto& store : f.map.definition().scenery) {
+                            if (store.model != "crate-large")
+                                continue;
+                            for (int distance : {2, 1}) {
+                                const Cell stance = store.anchor + forward(store.facing) * -distance;
+                                if (regionAt(f.layout, stance) == 1 && !f.map.movementBlocked(stance)) {
+                                    photograph(stance, store.facing, "wall-crate.png");
+                                    break;
+                                }
+                            }
+                        }
+                        photograph(camp + Cell{-2, -1}, Heading::West, "moss-close.png");
+                        photograph(camp + Cell{-1, -1}, Heading::East, "camp-roof.png");
+                        const auto arch = f.sites[Site::ArchWeb];
+                        photograph({arch.x, f.sites[Site::SpiderArch].y}, Heading::North, "arch-in.png");
+                        photograph(arch + Cell{2, 0}, Heading::West, "arch-out.png");
+                        photograph(f.sites[Site::SpiderArch], Heading::West, "near-ceiling.png");
+                        photograph(f.sites[Site::SpiderArch] + Cell{-4, 0}, Heading::East, "arch-roof.png");
+                        photograph(f.sites[Site::HighGallery] + Cell{0, -3}, Heading::South,
+                                   "gallery-roof.png");
+                    }
+                    if (depth == 6) {
+                        photograph(f.sites[Site::Mother], Heading::North, "vault-silk.png");
+                        photograph(f.sites[Site::EastMelee], Heading::South, "clutch-east.png");
+                        photograph(f.sites[Site::WestMelee] + Cell{0, -1}, Heading::South, "clutch-cord.png");
+                    }
                     if (depth == 5) {
+                        for (const auto& d : f.map.definition().decorations)
+                            if ((d.web() || d.kind == DecorationKind::Vine) &&
+                                regionAt(f.layout, d.cell) == 1 && facingFeature(d.cell, 1, "early-web.png"))
+                                break;
+                        walkTo(game, photo.cell);
+                        face(game, photo.heading);
+                        capture("discovery.png", true);
+                        photograph(f.sites[Site::HighGallery] + Cell{1, 0}, Heading::South, "column.png");
+                        walkTo(game, f.sites[Site::Lookout] + Cell{0, 2});
+                        face(game, Heading::South);
+                        // Sample the wall/floor at a fixed bright and dim phase.
+                        const auto toBright = (60150 - game.timeMs() % 60000) % 60000;
+                        game.update(double(toBright) / 1000., false);
+                        capture("glow-high.png");
+                        game.update(.95, false);
+                        capture("glow-low.png");
+                        // Compare equal-distance views without advancing the fire animation.
+                        const auto bowl = f.sites[Site::Lookout] + Cell{0, 3};
+                        for (auto heading : {Heading::West, Heading::East}) {
+                            const auto side = bowl + forward(heading) * -1;
+                            if (!f.map.movementBlocked(side)) {
+                                game.restorePose({side, heading}, false);
+                                capture("fire-side.png");
+                                break;
+                            }
+                        }
+                        const auto door = f.layout.connections[0].socketA;
+                        walkTo(game, door + Cell{1, 0});
+                        face(game, Heading::West);
+                        require(bool(game.interact(game.nearbyFixture())), "Could not close survey door");
+                        game.update(.5, false);
+                        capture("door.png");
+                        photograph(f.sites[Site::Fork] + Cell{0, -2}, Heading::East, "rope-bank.png");
                         walkTo(game, f.sites[Site::Fork] + Cell{3, -2});
                         face(game, Heading::South);
                         capture("north-bank.png");
@@ -233,10 +331,21 @@ int main(int argc, char** argv) try {
                         constexpr unsigned period = world_assets::WaterCurrent::periodMs;
                         const auto untilStart = (period - 2000 + period - game.timeMs() % period) % period;
                         game.update(double(untilStart) / 1000, false);
-                        for (unsigned i = 0; i <= 32; ++i) {
+                        // The first and last images are four seconds apart and straddle the wrap.
+                        animator.setTime(game.timeMs(), &game.effects());
+                        view.update(game, animator.snapshot(), {});
+                        const auto reads = renderer.assets().residency().reads;
+                        const auto uploads = resources.transfers().uploads;
+                        const auto pickRevision = renderer.visibility()->frame().revision;
+                        for (unsigned i = 0; i <= 4; ++i) {
                             capture("south-bank-" + std::to_string(i) + ".png");
-                            game.update(.125, false);
+                            game.update(1., false);
                         }
+                        require(reads == renderer.assets().residency().reads &&
+                                    uploads == resources.transfers().uploads,
+                                "Warmed water reloaded or uploaded scene resources");
+                        require(renderer.visibility()->frame().revision == pickRevision,
+                                "Water animation changed picking at a fixed pose");
                     }
                 }
                 require(!renderer.memory().textureCount && !renderer.assets().residency().meshes,
@@ -245,12 +354,12 @@ int main(int argc, char** argv) try {
                 Options options;
                 options.assets = root;
                 options.preparedAssets = prepared;
-                options.noAudio = true;
                 options.settings = output / "settings.json";
                 GameplayLaunch launch;
                 launch.spawn = f.layout.spawn;
                 launch.seed = seed;
                 launch.enableAi = false;
+                launch.rooms = &f.layout;
                 launch.fixtures = &f.layout.fixtures;
                 runGameplay(f.map, rules, actors, defs.timings, presenter, options, renderer, {},
                             rules.preset(), &launch);

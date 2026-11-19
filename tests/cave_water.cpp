@@ -1,23 +1,13 @@
-#include "../tools/cave_review.hpp"
+#include "assets/current_tile.hpp"
 #include "support/check.hpp"
+#include "support/world_fixtures.hpp"
 #include <algorithm>
 #include <cmath>
 
 using namespace blobber;
 // A generated painting has smooth ramps across each far edge and a fine interior ripple.
-void checkCaveWater(const generation::CaveFloor& cave) {
-    world_assets::Publication art;
-    art.textures.emplace_back();
-    art.packs.emplace_back();
-    auto& pack = art.packs.front();
-    pack.id = "underkeep";
-    pack.buildings.push_back({"grain-sack", {0}});
-    world_assets::PropMesh bag;
-    bag.name = "test-sack";
-    bag.architecture = true;
-    bag.vertices = {{{0, 0, 0, 0, 1, 0, 0, 0}}, {{0, 0, 1, 0, 1, 0, 0, 1}}, {{1, 0, 1, 0, 1, 0, 1, 1}}};
-    art.meshes.push_back(bag);
-    constexpr unsigned extent = cave_review::waterSourceSize;
+void checkCaveWater() {
+    constexpr unsigned extent = world_assets::waterSourceSize;
     constexpr unsigned side = world_assets::WaterCurrent::tileSize;
     std::vector<unsigned char> source(extent * extent * 4, 255);
     for (unsigned y = 0; y < extent; ++y)
@@ -27,13 +17,15 @@ void checkCaveWater(const generation::CaveFloor& cave) {
             pixel[1] = y / 2;
             pixel[2] = x % 2 ? 120 : 130;
         }
-    cave_review::bindBlockouts(art, source);
-    const auto& preview = art.packs.back();
-    const auto material = art.current.texture;
-    check(material < art.textures.size() && art.textures[material].width == 256 &&
-              art.textures[material].height == 256 && !art.textures[material].clamp,
-          "Pool needs one repeating wall-density tile per cell");
-    const auto pixels = art.read(material);
+    test::WorldFixture fixture;
+    world_assets::Writer writer(fixture.directory);
+    const auto tile = world_assets::prepareCurrentTile(source);
+    const auto id = writer.add("current", side, side, false, tile);
+    writer.markCurrent(id);
+    writer.finish({});
+    auto art = world_assets::load(fixture.directory);
+    check(art.textures.at(id).current, "Current binding lost on disk");
+    const auto pixels = art.read(id);
     check(pixels.size() == world_assets::mipBytes(side, side), "Missing current mip chain");
     auto sample = [&](unsigned x, unsigned y, unsigned c) { return pixels[(y * side + x) * 4 + c]; };
     for (unsigned i = 0; i < side; ++i) {
@@ -43,16 +35,17 @@ void checkCaveWater(const generation::CaveFloor& cave) {
     }
     check(sample(140, 100, 2) == 130 && sample(141, 100, 2) == 120,
           "Native-resolution detail lost in water preparation");
-    unsigned occupied = 0;
-    for (const auto& s : cave.map.definition().scenery) {
-        if (!s.blocking)
-            continue;
-        occupied += s.width * s.depth;
-        const auto& model = preview.buildings.at(preview.building(s.model).index);
-        for (const auto part : model.parts) {
-            const auto& mesh = art.meshes.at(part);
-            check(mesh.texture == material && !mesh.water, "Pool strip lost the shared current material");
-        }
+    // Tamper with an otherwise valid current descriptor. Filtering must never be applied
+    // to an unrelated sprite or material size.
+    world_assets::Writer invalid(fixture.directory);
+    const auto tiny = invalid.add("wrong-size", 1, 1, false, {20, 30, 40, 255});
+    bool rejected = false;
+    try {
+        invalid.markCurrent(tiny);
+        invalid.finish({});
+        (void)world_assets::load(fixture.directory);
+    } catch (const std::exception&) {
+        rejected = true;
     }
-    check(occupied == 12, "Water coverage differs from collision");
+    check(rejected, "Invalid current tile size was admitted");
 }

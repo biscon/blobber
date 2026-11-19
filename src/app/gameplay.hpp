@@ -24,6 +24,7 @@ struct GameplayLaunch {
     CampaignStore* saves = nullptr;
     const ArenaScenario* arenaScenario = nullptr;
     bool showWelcome = false; // Fresh campaigns only; never persisted or inferred from pose.
+    const generation::FloorLayout* rooms = nullptr; // Standalone discovery membership.
 };
 PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const NpcWorld& placements,
                         const std::vector<NpcTimings>& timings, Presenter& presenter, const Options& options,

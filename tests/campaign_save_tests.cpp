@@ -151,7 +151,7 @@ void environmentRoundtrip() {
     world.scenery.push_back({"owned-tree", sceneryCell, {0, 0}, Heading::East, 1, 1, false, 1.25f});
     world.surfaces[std::size_t(sceneryCell.y * state->locations[1].rows[0].size() + sceneryCell.x)].ceiling =
         8;
-    world.ambientFires = {{sceneryCell.x + .3f, .3f, sceneryCell.y + .5f, .5f},
+    world.ambientFires = {{sceneryCell.x + .3f, .3f, sceneryCell.y + .5f, .5f, true},
                           {sceneryCell.x + .7f, .3f, sceneryCell.y + .5f}};
     // Own a one-cell static shell on an existing generated wall, away from dressing.
     auto& architecture = state->locations[1];
@@ -197,6 +197,7 @@ void environmentRoundtrip() {
               !restoredWorld.scenery.back().blocking && restoredWorld.scenery.back().clearance == 1.25f &&
               restoredWorld.ambientFires.size() == 2 &&
               restoredWorld.ambientFires[1].x == world.ambientFires[1].x &&
+              restoredWorld.ambientFires[0].illuminates && !restoredWorld.ambientFires[1].illuminates &&
               restoredWorld.ambientFires[0].scale == .5f && restoredWorld.ambientFires[1].scale == 1.f,
           "Scenery identity, orientation and physical base survive campaign codec roundtrip");
     auto legacyFire = blobber::automation::Json::parse(text);

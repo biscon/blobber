@@ -1,6 +1,7 @@
 #include "assets/blueprint_art.hpp"
 #include "assets/blueprint_blockouts.hpp"
 #include "assets/blueprint_loader.hpp"
+#include "assets/current_tile.hpp"
 #include "assets/fingerprint.hpp"
 #include "assets/image.hpp"
 #include "assets/npc_sheet.hpp"
@@ -26,6 +27,23 @@ std::vector<unsigned char> pixels(const fs::path& path, unsigned& w, unsigned& h
     h = unsigned(image.value.height);
     const auto* first = static_cast<const unsigned char*>(image.value.data);
     return {first, first + std::size_t(w) * h * 4};
+}
+unsigned bakeCurrent(world_assets::Writer& writer, const fs::path& master, const std::string& pack) {
+    OwnedImage image(LoadImage(master.u8string().c_str()));
+    if (!image.value.data)
+        throw std::runtime_error("Missing scrolling water painting");
+    constexpr int extent = world_assets::waterSourceSize;
+    ImageResize(&image.value, extent, extent);
+    ImageFormat(&image.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    if (!image.value.data || image.value.width != extent || image.value.height != extent ||
+        image.value.format != PIXELFORMAT_UNCOMPRESSED_R8G8B8A8)
+        throw std::runtime_error("Cannot prepare scrolling water painting");
+    const auto* rgba = static_cast<const unsigned char*>(image.value.data);
+    const auto tile = world_assets::prepareCurrentTile({rgba, rgba + extent * extent * 4});
+    constexpr unsigned side = world_assets::WaterCurrent::tileSize;
+    const auto id = writer.add("pack/" + pack + "/current", side, side, false, tile);
+    writer.markCurrent(id);
+    return id;
 }
 Json read(const fs::path& p) {
     if (fs::file_size(p) > 1024 * 1024)
@@ -88,6 +106,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool bloc
         return writer.add(name, w, h, sprite, rgba, cutoff, anchor, true, crop, cutoutMaterial);
     };
     std::map<std::string, std::uint16_t> preparedPackTextures;
+    std::map<std::pair<std::string, bool>, unsigned> sharedAtlases;
     std::vector<world_assets::Pack> packs;
     std::vector<world_assets::PropMesh> meshes;
     std::vector<fs::path> packDirectories;
@@ -98,6 +117,7 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool bloc
     for (const auto& directory : packDirectories) {
         const auto manifest = read(directory / "pack.json");
         world_assets::Pack pack;
+        bool currentBound = false;
         pack.id = manifest.at("id");
         pack.worldScale = manifest.value("worldScale", 1.f);
         pack.viewDistance = manifest.value("viewDistance", pack.viewDistance);
@@ -253,9 +273,21 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool bloc
                     if (found == atlases.end()) {
                         if (pack.materialCount == pack.materials.size())
                             throw std::runtime_error("Building material palette full");
-                        textureId =
-                            add("pack/" + pack.id + "/atlas/" + texture, source / relative(texture), cutout,
-                                cutout ? world_assets::meshAlphaThreshold - 1 : 0, {}, false, cutout);
+                        if (manifest.contains("currentMaster") && texture == manifest.at("currentMaster")) {
+                            if (cutout)
+                                throw std::runtime_error("Current mesh must be opaque");
+                            textureId = bakeCurrent(writer, source / relative(texture), pack.id);
+                            currentBound = true;
+                        } else {
+                            const auto key = std::make_pair(texture, cutout);
+                            auto [shared, inserted] = sharedAtlases.try_emplace(key);
+                            if (inserted)
+                                shared->second =
+                                    add("pack/" + pack.id + "/atlas/" + texture, source / relative(texture),
+                                        cutout, cutout ? world_assets::meshAlphaThreshold - 1 : 0, {}, false,
+                                        cutout);
+                            textureId = shared->second;
+                        }
                         atlases.emplace(texture, textureId);
                         pack.materials[pack.materialCount++] = std::uint16_t(textureId);
                     } else
@@ -288,6 +320,8 @@ int run(const fs::path& source, const fs::path& output, bool cropNpcs, bool bloc
                 blueprints::validateKitArt(kit, meshes[binding.parts.front()]);
             }
         }
+        if (manifest.contains("currentMaster") && !currentBound)
+            throw std::runtime_error("Current master must be referenced by a pack mesh");
         packs.push_back(std::move(pack));
     }
     if (packs.empty() || packs.size() > world_assets::packCapacity)

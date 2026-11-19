@@ -89,7 +89,8 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
     };
     for (int z = cz; z < std::min(cz + 8, m.height()); ++z)
         for (int x = cx; x < std::min(cx + 8, m.width()); ++x) {
-            if (m.base().solid({x, z}))
+            const bool solid = m.base().solid({x, z});
+            if (solid && !m.base().buildingHasTerrainCaps({x, z}))
                 continue;
             const auto h = m.surface({x, z});
             auto s = overrides.empty() ? Surfaces{h.wallMaterial, h.floorMaterial, h.ceilingMaterial}
@@ -115,6 +116,8 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
             if (h.ceiling != noCeiling)
                 add({Vec{a, hi, b}, Vec{a + 1, hi, b}, Vec{a + 1, hi, b + 1}, Vec{a, hi, b + 1}}, {0, -1, 0},
                     s.ceiling, false);
+            if (solid)
+                continue;
             for (unsigned d = 0; d < 4; ++d) {
                 const auto f = forward(Heading(d)), r = right(Heading(d));
                 const Cell next = Cell{x, z} + f;

@@ -112,8 +112,10 @@ The guarantee excludes raylib, decoder, driver and system internals.
 
 Travel uses the existing 250 ms fade: world gain follows the visual fade; playback
 pauses during loading, old voices stop on successful world replacement, and failure
-resumes the source session. Eight streams are preloaded: two ambience slots (one
-active; one reserved), four selected burning-Web locations and two spiritual weapons.
+resumes the source session. Eight streams are preloaded. Two ambience slots serve
+the Underkeep and the Damp Caves, and the active map selects one during exploration.
+Four streams serve selected burning-Web locations and two serve spiritual weapons.
+[DC02 drip routing and verification](dc02_limestone_kit_design.md#art-placement-and-ownership)
 Co-located burning areas share one emitter. Stable selected identities keep their
 streams while nearest ordering changes. Live effect reconciliation stops expired,
 dismissed or replaced effects even if journal entries were dropped.

@@ -61,6 +61,9 @@ bool Map::movementBlocked(Cell c) const noexcept {
 bool Map::npcBlocked(Cell c) const noexcept {
     return solid(c) || (!occupied_.empty() && occupied_[std::size_t(c.y * width_ + c.x)]);
 }
+bool Map::buildingHasTerrainCaps(Cell c) const noexcept {
+    return buildingOwned(c) && buildings_[std::size_t(c.y * width_ + c.x)] == 2;
+}
 bool Map::buildingOwned(Cell c) const noexcept {
     return !buildings_.empty() && c.x >= 0 && c.y >= 0 && c.x < width_ && c.y < height_ &&
            buildings_[std::size_t(c.y * width_ + c.x)] != 0;
@@ -139,7 +142,7 @@ void Map::validateWorld() {
                     surface(c).floor != floor || buildingOwned(c))
                     throw std::invalid_argument(
                         "Building footprint overlaps, is unlevel or lacks solid backing");
-                buildings_[std::size_t(c.y * width_ + c.x)] = 1;
+                buildings_[std::size_t(c.y * width_ + c.x)] = b.terrainCaps ? 2 : 1;
             }
         if (!buildingOwned(b.anchor))
             throw std::invalid_argument("Building anchor must be inside its footprint");

@@ -49,13 +49,14 @@ struct PlayView {
              const std::vector<NpcTimings>& timings, WorldRenderer& world, std::uint32_t seed, Player spawn,
              bool enableAi = true, const RecoveryLevel& recovery = {},
              const rules::PresetParty* starting = nullptr, const FloorFixtures& fixtures = {},
-             const FloorObjectiveDefinition& objective = {}, const ArenaScenario* arena = nullptr)
+             const FloorObjectiveDefinition& objective = {}, const ArenaScenario* arena = nullptr,
+             const generation::FloorLayout* rooms = nullptr)
         : ownedSession(std::make_unique<GameSession>(
               m,
               arena ? prepareArenaParty(catalog, *arena)
                     : std::make_unique<Party>(catalog, starting ? *starting : *catalog.preset()),
               placements, seed, spawn, enableAi, timings, recovery, fixtures, objective)),
-          session(*ownedSession), renderer(world), animator(session.actors(), timings), frames(world),
+          session(*ownedSession), renderer(world), animator(session.actors(), timings), frames(world, rooms),
           commands(session, timings), map(m) {}
     PlayView(GameSession& game, const Map& m, const std::vector<NpcTimings>& timings, WorldRenderer& world,
              const generation::GeneratedFloor* floor = nullptr)
@@ -150,7 +151,7 @@ PlayOutcome runGameplay(const Map& map, const rules::Catalog& catalog, const Npc
                       map, catalog, *idle, timings, world, seed, spawn, launch ? launch->enableAi : true,
                       recovery, starting, launch && launch->fixtures ? *launch->fixtures : FloorFixtures{},
                       launch && launch->objective ? *launch->objective : FloorObjectiveDefinition{},
-                      launch ? launch->arenaScenario : nullptr);
+                      launch ? launch->arenaScenario : nullptr, launch ? launch->rooms : nullptr);
         auto& initial = *current;
         initial.commands.bindDialogue(&dialogueCatalog,
                                       campaign ? &campaign->dialogue() : &standaloneDialogue);

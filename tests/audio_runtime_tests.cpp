@@ -195,8 +195,9 @@ int main() {
     }
     {
         std::ofstream f(dir / "audio/bank.json");
-        f << R"({"mix_gain_db":{"effects":12},"cues":{"test":{"gain":0.8,"volume_min":1,"cooldown":0,"concurrency":8,"variants":[{"id":"01","path":"sample.wav"}]},"ambience":{"loop":true,"category":2,"variants":[{"id":"01","path":"sample.wav"}]}}})";
+        f << R"({"mix_gain_db":{"effects":12},"cues":{"test":{"gain":0.8,"volume_min":1,"cooldown":0,"concurrency":8,"variants":[{"id":"01","path":"sample.wav"}]},"cave.drips":{"loop":true,"category":2,"variants":[{"id":"01","path":"drips.wav"}]},"ambience":{"loop":true,"category":2,"variants":[{"id":"01","path":"sample.wav"}]}}})";
     }
+    std::ofstream(dir / "audio/drips.wav") << "owned mock cave stream";
     AudioRuntime runtime;
     runtime.prepare(dir, true, dir / "settings.json");
     check(!runtime.ready(), "Disabled never opens device");
@@ -248,6 +249,24 @@ int main() {
     NpcWorld places(map, {5, 8}, {}, {});
     GameSession session(map, catalog, places, 5, {{5, 8}, Heading::North}, false);
     runtime.update(&session, false, true, .01f);
+    {
+        WorldDefinition definition;
+        definition.assetPack = "damp-caves";
+        const Map cave({"#####", "#...#", "#...#", "#####"}, std::move(definition));
+        NpcWorld empty(cave, {1,1}, {}, {});
+        GameSession visit(cave, catalog, empty, 5, {{1,1}, Heading::East}, false);
+        const auto dungeon = fake::lastMusic;
+        runtime.update(&visit, false, true, .01f);
+        const auto drip = fake::lastMusic;
+        check(fake::musicBuffers[drip].path == (dir / "audio/drips.wav").string() &&
+                  !fake::musicBuffers[dungeon].playing, "Cave replaces the dungeon ambience");
+        runtime.update(&visit, true, true, .01f);
+        check(fake::musicBuffers[drip].paused, "Map pauses cave drips");
+        runtime.update(&visit, false, true, .01f);
+        check(!fake::musicBuffers[drip].paused, "Leaving map resumes cave drips");
+        runtime.update(&session, false, true, .01f);
+        check(!fake::musicBuffers[drip].playing && fake::lastMusic == dungeon, "Cave drips stop on return");
+    }
     const auto ambient = fake::lastMusic;
     const auto ambientStarts = fake::musicPlays;
     const auto ambientVolume = fake::musicBuffers[ambient].volume;

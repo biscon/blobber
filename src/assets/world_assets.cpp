@@ -74,6 +74,11 @@ void validPack(const Pack& p, const std::vector<Texture>& textures) {
     for (unsigned i = 0; i < p.materialCount; ++i)
         require(p.materials[i] < textures.size() && textures[p.materials[i]].material &&
                 (i >= 3 || !textures[p.materials[i]].clamp));
+    unsigned currents = 0;
+    for (unsigned i = 0; i < p.materialCount; ++i)
+        if (textures[p.materials[i]].current)
+            ++currents;
+    require(currents <= 1);
     for (auto i : {p.door, p.lockedDoor, p.doorEdge, p.sky})
         require(i < textures.size() && !textures[i].clamp && !textures[i].material);
     for (auto i : {p.crest, p.vine})
@@ -318,6 +323,11 @@ unsigned Writer::add(const std::string& name, unsigned w, unsigned h, bool sprit
     publication_.anchors.push_back(anchor);
     return unsigned(publication_.textures.size() - 1);
 }
+void Writer::markCurrent(unsigned texture) {
+    auto& t = publication_.textures.at(texture);
+    require(t.material && !t.clamp && t.width == WaterCurrent::tileSize && t.height == t.width);
+    t.current = true;
+}
 void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t definitions,
                     const std::vector<Pack>& packs, const std::vector<PropMesh>& meshes) {
     for (const auto& mesh : meshes)
@@ -357,6 +367,8 @@ void Writer::finish(const std::vector<Appearance>& appearances, std::uint64_t de
                             {"checksum", t.checksum},
                             {"alpha_checksum", t.alphaChecksum},
                             {"anchor", {a.x, a.y}}});
+        if (t.current)
+            textures.back()["current"] = true;
     }
     for (const auto& a : appearances)
         actors.push_back(appearanceJson(a));
@@ -486,7 +498,9 @@ Publication load(const std::filesystem::path& directory) {
             boundedAdd(offset, t.alphaBytes, length);
             boundedAdd(p.textureBytes, t.bytes, installedBudget);
             boundedAdd(p.alphaBytes, t.alphaBytes, installedBudget);
+            t.current = v.value("current", false);
             t.material = v.at("material").get<bool>();
+            require(!t.current || (t.material && !t.clamp && t.width == WaterCurrent::tileSize && t.height == t.width));
             const auto& a = v.at("anchor");
             require(a.is_array() && a.size() == 2);
             Anchor anchor{a[0].get<float>(), a[1].get<float>()};
@@ -654,12 +668,6 @@ std::vector<unsigned char> Publication::read(unsigned index, bool alpha) const {
     if (index >= textures.size())
         throw std::out_of_range("World texture index");
     const auto& t = textures[index];
-    if (index == current.texture) {
-        if (alpha)
-            return {};
-        require(current.pixels.size() == t.bytes);
-        return current.pixels;
-    }
     const auto bytes = alpha ? t.alphaBytes : t.bytes;
     require(bytes <= 128 * MiB);
     std::vector<unsigned char> data(static_cast<std::size_t>(bytes));
@@ -723,13 +731,6 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
             publication.anchors.size() == publication.textures.size() &&
             publication.alphaBytes <= installedBudget && publication.textureBytes <= installedBudget);
     require(publication.packs.size() <= packCapacity);
-    const auto& current = publication.current;
-    if (current.texture != UINT16_MAX) {
-        require(current.texture < publication.textures.size());
-        const auto& t = publication.textures[current.texture];
-        require(!t.clamp && t.material && t.width == WaterCurrent::tileSize && t.height == t.width &&
-                current.pixels.size() == mipBytes(t.width, t.height));
-    }
     validMeshes(publication.meshes, publication.textures, publication.packs);
     std::set<std::string> ids;
     for (const auto& p : publication.packs) {
@@ -739,6 +740,7 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
     std::uint64_t totalAlpha = 0, totalColor = 0;
     for (const auto& t : publication.textures) {
         validCanvas(t);
+        require(!t.current || (t.material && !t.clamp && t.width == WaterCurrent::tileSize && t.height == t.width));
         require(t.width && t.height && t.width <= 4096 && t.height <= 4096 &&
                 t.alphaBytes == (t.clamp ? std::uint64_t(t.width) * t.height : 0));
         require(t.levels == mipLevels(t.width, t.height) && t.bytes == mipBytes(t.width, t.height));
@@ -831,7 +833,7 @@ std::size_t CpuAssets::bytes() const noexcept {
     std::size_t meshBytes = publication.meshes.capacity() * sizeof(PropMesh);
     for (const auto& m : publication.meshes)
         meshBytes += m.name.capacity() + m.vertices.capacity() * sizeof(std::array<float, 8>);
-    std::size_t n = sizeof(*this) + publication.current.pixels.capacity() + meshBytes +
+    std::size_t n = sizeof(*this) + meshBytes +
                     publication.packs.capacity() * sizeof(Pack) + masks.capacity() * sizeof(masks[0]) +
                     bounds.capacity() * sizeof(AlphaBounds) +
                     publication.textures.capacity() * sizeof(Texture) +

@@ -85,6 +85,7 @@ template <class A> void visit(A& a, Decoration& v, const Decoration& base) {
     a("depth", v.depth, base.depth);
 }
 template <class A> void visit(A& a, BuildingPlacement& v, const BuildingPlacement& base) {
+    a("terrainCaps", v.terrainCaps, base.terrainCaps);
     a("model", v.model, base.model);
     a("anchor", v.anchor, base.anchor);
     a("footprint", v.footprint, base.footprint);
@@ -97,6 +98,7 @@ template <class A> void visit(A& a, AmbientFire& v, const AmbientFire& base) {
     a("y", v.y, base.y);
     a("z", v.z, base.z);
     a("scale", v.scale, base.scale);
+    a("illuminates", v.illuminates, base.illuminates);
 }
 template <class A> void visit(A& a, WorldDefinition& v, const WorldDefinition& base) {
     a("hearth", v.hearth, base.hearth);

@@ -85,7 +85,7 @@ def main():
                     if loop:
                         rate,data=wavfile.read(raw);n=12000;blend=np.linspace(0,1,n,dtype=np.float32)
                         y=data[:-n].copy();y[:n]=data[-n:]*(1-blend)+data[:n]*blend
-                        if name=='ambience':y=np.column_stack((y,np.roll(y,2387)*.92))
+                        if c.get('category')==2:y=np.column_stack((y,np.roll(y,2387)*.92))
                         wavfile.write(raw,rate,y.astype(np.float32))
                     output.parent.mkdir(exist_ok=True)
                     final=tmp/'final.wav'

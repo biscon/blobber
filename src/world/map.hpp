@@ -17,6 +17,7 @@ class Map {
     CellSurface surface(Cell cell) const noexcept;
     bool movementBlocked(Cell cell) const noexcept;
     bool npcBlocked(Cell cell) const noexcept;
+    bool buildingHasTerrainCaps(Cell cell) const noexcept;
     bool buildingOwned(Cell cell) const noexcept;
     bool canStep(Cell from, Cell to) const noexcept;
     const WorldDefinition& definition() const noexcept { return world_; }

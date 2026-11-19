@@ -5,7 +5,8 @@ namespace blobber::test {
 struct ArchitectureFixture {
     WorldFixture storage;
     explicit ArchitectureFixture(bool foliage = false, bool water = false,
-                                 std::array<float, 3> fog = {10.f, 4.5f, 1.f}, float viewDistance = 16) {
+                                 std::array<float, 3> fog = {10.f, 4.5f, 1.f}, float viewDistance = 16,
+                                 bool current = false) {
         world_assets::Writer writer(storage.directory);
         std::vector<unsigned char> rgba(4 * 4 * 4, 255);
         const auto opaque = std::uint16_t(writer.add("door", 4, 4, false, rgba, 0, {}, false));
@@ -76,22 +77,27 @@ struct ArchitectureFixture {
             pack.buildings.push_back({"leaf-screen", {2}});
         }
         if (water) {
-            std::vector<unsigned char> sheet(64 * 32 * 4, 255);
-            for (unsigned y = 0; y < 32; ++y)
-                for (unsigned x = 0; x < 64; ++x) {
+            const unsigned width = current ? world_assets::WaterCurrent::tileSize : 64;
+            const unsigned height = current ? width : 32;
+            std::vector<unsigned char> sheet(width * height * 4, 255);
+            for (unsigned y = 0; y < height; ++y)
+                for (unsigned x = 0; x < width; ++x) {
                     const auto phase = x / 16 + (y / 16) * 4;
-                    const auto p = (y * 64 + x) * 4;
-                    sheet[p] = 20 + phase * 25;
-                    sheet[p + 1] = 180 - phase * 15;
+                    const auto p = (y * width + x) * 4;
+                    sheet[p] = current ? x : 20 + phase * 25;
+                    sheet[p + 1] = current ? 120 : 180 - phase * 15;
                     sheet[p + 2] = 90;
                 }
-            const auto texture = std::uint16_t(writer.add("water", 64, 32, false, sheet));
+            const auto texture = std::uint16_t(writer.add("water", width, height, false, sheet));
+            if (current)
+                writer.markCurrent(texture);
             pack.materials[pack.materialCount++] = texture;
             const auto index = unsigned(meshes.size());
             meshes.emplace_back();
             meshes.back().name = "water";
             meshes.back().texture = texture;
-            meshes.back().architecture = meshes.back().water = true;
+            meshes.back().architecture = true;
+            meshes.back().water = !current;
             quad(index, {{{-.8f, .1f, 0}, {-.8f, 1.5f, 0}, {.8f, 1.5f, 0}, {.8f, .1f, 0}}}, {0, 0, -1});
             quad(index, {{{.8f, .1f, 0}, {.8f, 1.5f, 0}, {-.8f, 1.5f, 0}, {-.8f, .1f, 0}}}, {0, 0, 1});
             for (auto& v : meshes.back().vertices) {

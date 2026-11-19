@@ -1,6 +1,6 @@
 # Damp Caves expansion — design and delivery roadmap
 
-Created 2026-11-18. **DC01 is Accepted and closed. DC02–DC07 are Planned.**
+Created 2026-11-18. **DC01 is Accepted and closed. DC02 is Ready for review. DC03–DC07 are Planned.**
 
 Extend the playable descent from three floors to six. Below the Underkeep, water
 has broken through an old cistern into limestone galleries occupied by venomous
@@ -14,14 +14,15 @@ then decide which threat deserves the party's next action.
 | --- | --- |
 | Starting point | Three persistent Underkeep floors. The third guardian ends the campaign. |
 | Last closed slice | DC01 — Accepted and closed by the player on 2026-11-19 after review of the expanded layouts and revised pool. |
-| Next eligible slice | DC02 — Limestone kit and survey trail (Planned). |
-| Next action | Use the accepted room sockets, reserved cells and ceiling clearances when planning DC02. [Generator and artist handoff](dc01_cave_layout_design.md#generator-and-artist-handoff) |
+| Current review | [DC02 — Limestone kit and survey trail](dc02_limestone_kit_design.md) · Ready for review. |
+| Next action | Replay seed 5. Inspect the roof groups in each room, web distribution and dry footing around the new pools on all three floors. Pause at the lookout and watch the firelight change on the floor and wall. [Player recipe](dc02_limestone_kit_design.md#player-review) · [Gallery](screenshots/damp-caves-dc02/README.md) |
+| Next eligible slice | DC03 after player acceptance of DC02. |
 
 ## Floor brief and progression targets
 
 | Depth | What the player sees | Decision or payoff |
 | --- | --- | --- |
-| 4 · The Seep | Cistern masonry gives way to low limestone. A dry survey camp holds antitoxin. Beyond it, one spider waits by a webbed arch. | Learn the bite in isolation. Recognize the same webbing at an optional shortcut or cache and decide whether to enter. |
+| 4 · The Seep | A limestone dogleg below the cistern opens into a low, mossy cave. A dry survey camp holds antitoxin. Beyond it, one spider waits by a webbed arch. | Learn the bite in isolation. Recognize the same webbing at an optional shortcut or cache and decide whether to enter. |
 | 5 · The Drowned Galleries | Higher chambers, shallow pools, broad stone ribs. The surveyors' rope marks a walkable way around the water. A lone blind newt introduces its heavy bite before the mixed encounter. | Pick a side of the pillar during approach. One route brings the spider within reach sooner, the other brings the newt into contact first. Both must work with actual sightlines, alert range and contact locking. |
 | 6 · The Brood Vault | Web density rises toward the guardian. The rope disappears into one of two sealed egg clutches. Moving silk announces an impending hatch. | Spend an attack on a clutch or concentrate damage on the broodmother and deal with a finite number of young. |
 
@@ -50,7 +51,7 @@ clear finishes relative to it. Earning level four is an open tuning outcome.
 | Slice | Reviewable deliverable | Dependency | Status |
 | --- | --- | --- | --- |
 | DC01 | Deterministic cave layouts and three walkable blockouts | Existing floor generation and room review path | [Accepted and closed](dc01_cave_layout_design.md) |
-| DC02 | Finished limestone kit, survey trail and readable cave lighting | DC01 placement and clearance contracts | Planned |
+| DC02 | Limestone kit, distributed ceiling groups, webs, shallow pools and animated lookout lighting | DC01 placement and clearance contracts | [Ready for review](dc02_limestone_kit_design.md) |
 | DC03 | Venomous spider, two-turn poison and accessible cures | DC02 cave palette and scale | Planned |
 | DC04 | Blind cave newt and a mixed approach encounter | DC03 working spider | Planned |
 | DC05 | Broodmother and two interruptible egg clutches | DC04 encounter handoff and DC02 vault | Planned |
@@ -84,8 +85,10 @@ for the artist. Review route choices before dressing them.
 
 ### DC02 — Limestone kit and survey trail
 
+[Implemented design, exit checks and player recipe](dc02_limestone_kit_design.md) · [Native walkthrough views](screenshots/damp-caves-dc02/README.md).
+
 Build and publish a reusable cave pack through the current prepared terrain,
-scenery and audio paths. Start with a cistern-to-limestone threshold to establish
+scenery and audio paths. Use cave materials throughout the threshold below the cistern to establish
 scale and lighting. Finish wet stone, mineral streaks, shallow water, ceiling
 clusters, broad floor formations, webs, bedroll and rope. Use the existing
 painted-prop workflow and retain editable sources and preparation inputs.

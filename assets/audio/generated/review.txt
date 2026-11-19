@@ -22,3 +22,4 @@ door.close
 gate.open
 chest.open
 potion
+cave.drips

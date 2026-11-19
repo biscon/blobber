@@ -1,0 +1,39 @@
+# Damp Caves source artwork
+
+The retained ImageGen masters are source paintings for the terrain, fitted prop atlases and silk cutout. The tool samples face-local UVs at 256 texels per cell, adds four pixels of gutter and shades recesses before publication. The Galleries current uses the accepted Sanctuary water master and the baker's periodic overlap.
+
+Run `python3 tools/prepare_cave_art.py` from the checkout to prepare the tiles, fitted atlases, runtime triangles and pack manifest. Run `blender --background --factory-startup -t 2 --python tools/export_cave_blender.py` to rebuild the packed Blender kit and GLB. Object positions in the Blender contact sheet separate the pieces for inspection. Mesh-local origins are the runtime cell-floor pivots.
+
+## Painting prompts
+
+**Limestone, floor, ceiling and field linen**
+
+Create a square professional fantasy dungeon hand-painted material source sheet, precise 2 by 2 grid of equal square seamless texture swatches, fully edge to edge, no borders no gutters no text. Each quadrant is one flat orthographic seamless painted texture swatch for a 1990s style high fidelity finely pixel-detailed dungeon crawler. Upper left is natural damp cave WALL cool gray olive limestone with slanted broad bedded broken stone plates and subtle pale calcite mineral streaks and wet facets, NO masonry. Upper right is walkable limestone FLOOR seen straight overhead, dark slate blue gray flat irregular worn plates small sandy gravel, quiet and readable. Lower left is a cave CEILING underside, shadowed cool eroded rock irregular scalloped dark layers. Lower right is a macro material of gritty warm ochre beige rough woven linen backpack fabric, closeup with visible coarse threads. All four quadrants completely filled, flat diffuse painted texture with readable medium value, no highlights blown out, no picture of a cave or landscape, no perspective. Native intended resolution 256 per swatch. Keep per-swatch illumination even. Irregular fine etched fantasy illustration detail mixed with broad painterly shading.
+
+**Wet limestone wall revision**
+
+A single seamless edge-to-edge square albedo texture of wet stratified limestone bedrock for the walls of a dark fantasy hand-painted dungeon crawler. One meter of irregular cave wall seen straight on. Fine, low-relief, gently HORIZONTAL irregular rock layers and broad grey-green stone faces. Some thin veins of cool pale calcite, a little iron stain. Water trickles at small localized cracks and dark wet sheen down the vertical plane. Broad calm regions dominate. Moderately dark value and a subtle cool desaturated olive/blue-grey palette. Gentle painterly form shading as if lit with soft diffuse light, sharp fine rock texture and small mineral highlights, carved fantasy illustration aesthetic. Natural bedrock throughout, no blocks, chevrons, V patterns, diagonals across the tile, bedding that spans the full tile, global gradient, central focus, conspicuous white bands, strong contrast, borders, text, objects or perspective. Intended to repeat at 256 texels per meter.
+
+**Expedition materials and clutch silk**
+
+Square hand-painted dark fantasy game material atlas, four flat texture panels in a precise borderless 2 x 2 grid with no gaps no text. Upper left quarter: pale oyster-gray tangled spider egg-sac silk winding and wrapping in irregular diagonal threads, thicker ropey streaks crossing tightly packed tiny mottled oval egg shapes, restrained ivory highlights and dark cool shadow pockets. Upper right quarter: tight golden ochre braided hemp rope laid in a continuous macro diagonal herringbone weave filling the square. Lower left quarter: weathered deep gray-green finely woven bedroll cloth with diagonal creased folds, seams, restrained faded ochre stitching. Lower right quarter: finely detailed dark oxblood leather expedition straps with russet and umber grain, horizontal rows of old brass stitching. Orthographic material samples only, full square filled, evenly lit hand-painted diffuse surfaces with built-in form shading. No letters, gaps, frames, labels, objects or perspective. Render high fidelity matte-painted dungeon crawler style.
+
+**Abandoned corner web**
+
+Paint a game asset on transparent background: one old drooping triangular sheet of tangled cave spider silk stretched between the upper left and upper right corners of the image and down to bottom right, entire image filled with this corner of an abandoned cobweb. Coarse individually readable pale warm grey strands with accumulated white strands bunched along the top and right edges, many irregular gaps with transparent alpha, torn tips and condensation beads, cobweb in an illustrated dark fantasy dungeon crawler painted with fine penwork and selective ivory highlights, human scale. Flat front-on isolated cutout, no supports, no rock, no spider, no lettering, no glow or magic. Silhouette obvious on dark stone. Medium thick strands so it survives downsampling to 256 pixels.
+
+
+## November 19 player review paintings
+
+The built-in ImageGen tool supplied the four additional masters below. The preparation script extracts the painted elements, preserves the silk and leaf alpha, and fits the opaque paint to the metric mesh atlases. The shelf fungi, calcite clusters and wall ribs are solid editable meshes.
+
+- **wall-life-master.png** — Square 2×2 UV sheet. Upper left is a dense ragged mat of damp emerald, olive and ochre moss with tapering tendrils. Upper right is an airy irregular hanging swag of off-white silk suspended between two upper points, with a low drooping belly. Both are isolated on transparency. Lower left is full-bleed wet horizontal split timber with oxidized iron pins. Lower right is a cluster of buff shelf mushroom caps with concentric stripes and pale gills on mossy rock. Painted dungeon crawler textures legible at 256 pixels, with no borders or lettering.
+- **veil-master.png** — A weathered narrow veil of aged silk snagged along a crack. A broken radial oval in the upper left with ragged curtains below, large holes and loose strands. Cream and cool silver gouache, frontal view on transparency. No spider or right-angle frame.
+- **moss-bank-master.png** — A face-on diagonal colony of wet velvety green moss, olive liverwort rosettes and small pale fern sprouts growing along a low horizontal crack. Separate islands and branching tails, mounded cushions rising at the left third. An isolated low wide growth with muted emerald highlights, painted for a dim cave wall.
+- **moss-limestone-master.png** — Seamless orthographic diffuse painting of damp, roughly horizontal, eroded cool-gray limestone beds. Short green moss and olive liverwort creep through the cracks in irregular islands. Broad wet stone faces, subdued highlights and fine even grain. No hanging vines, masonry or perspective. This painting supplies mineral ledges and 85% of the cave wall blend.
+
+## Roof, moss and door close-ups
+
+Both moss cutouts now come from olive seams in `moss-limestone-master.png`, sampled from the 256-texel terrain tile. The preparation script uses the cool rock/olive color difference as its alpha mask and softens the outer edge. The original hanging-moss and fern paintings are earlier art directions. Only the ceiling-mounted meshes receive descending stone. Their atlas samples the ceiling painting with subdued baked shading.
+
+The built-in ImageGen door prompt requested an edge-to-edge 2:3 orthographic leaf made of roughly fourteen narrow horizontal gray-brown oak boards, small dark iron nail heads about one hundredth of the leaf width, and a small forged latch near the right edge. The complete face is lit evenly, in damp muted umber with fine painted grain and no surrounding frame. The retained source is `survey-door-master.png`. The pack references `survey-door.png` for the door faces and edge. Crate wood still comes from the expedition material sheet.

@@ -207,7 +207,7 @@ void WorldRenderer::stagePrepared(GeometryView geometry, const MovementState& st
     acquireTextures(*candidate, required);
     for (unsigned i = 0; i < candidate->pack.materialCount; ++i) {
         candidate->materials[i] = candidate->textures.at(candidate->pack.materials[i]);
-        if (candidate->pack.materials[i] == publication_.current.texture)
+        if (publication_.textures[candidate->pack.materials[i]].current)
             candidate->currentMaterial = i;
     }
     preparationPoint("Preparing dungeon");
@@ -1002,7 +1002,7 @@ void WorldRenderer::acquireTextures(View& v, const world_assets::AssetRequiremen
                 lease = std::make_shared<GpuLease<TextureHandle>>();
                 *lease = {resources_, resources_.createTexture(im)};
                 const auto texture = resources_.texture(lease->get());
-                if (i == publication_.current.texture) {
+                if (t.current) {
                     SetTextureWrap(texture, TEXTURE_WRAP_REPEAT);
                     SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR);
                 } else {

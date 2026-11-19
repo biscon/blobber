@@ -6,7 +6,7 @@ namespace blobber {
 namespace generation {
 struct FloorLayout;
 }
-enum class MapTile : std::uint8_t { Hidden, Floor, Wall };
+enum class MapTile : std::uint8_t { Hidden, Floor, Wall, Obstacle, Pool };
 enum class MapMarker : std::uint8_t {
     None,
     Party,
@@ -51,7 +51,7 @@ class MapOverlayModel {
     std::array<std::uint8_t, discoveryCapacity> rooms_{};
     std::bitset<discoveryCapacity> floors_, walls_;
     unsigned roomCount_ = 0;
-    bool fog_ = false, ready_ = false;
+    bool fog_ = false, ready_ = false, cave_ = false;
     std::uint64_t world_ = 0, discovery_ = 0;
     bool inside(Cell) const noexcept;
 };
