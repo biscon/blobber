@@ -321,6 +321,14 @@ int main(int argc, char** argv) try {
                         require(bool(game.interact(game.nearbyFixture())), "Could not close survey door");
                         game.update(.5, false);
                         capture("door.png");
+                        // The player's reference faces west, one step back from the rope.
+                        walkTo(game, f.sites[Site::FarBank] + Cell{1, 0});
+                        face(game, Heading::West);
+                        const auto toDrip = (20960 - game.timeMs() % 16000) % 16000;
+                        game.update(double(toDrip) / 1000., false);
+                        capture("basin-west.png");
+                        game.update(.38, false);
+                        capture("basin-west-ring.png");
                         photograph(f.sites[Site::Fork] + Cell{0, -2}, Heading::East, "rope-bank.png");
                         walkTo(game, f.sites[Site::Fork] + Cell{3, -2});
                         face(game, Heading::South);

@@ -1,6 +1,6 @@
 # Damp Caves expansion — design and delivery roadmap
 
-Created 2026-11-18. **DC01 is Accepted and closed. DC02 is Ready for review. DC03–DC07 are Planned.**
+Created 2026-11-18. **DC01 and DC02 are Accepted and closed. DC03–DC07 are Planned.**
 
 Extend the playable descent from three floors to six. Below the Underkeep, water
 has broken through an old cistern into limestone galleries occupied by venomous
@@ -13,10 +13,9 @@ then decide which threat deserves the party's next action.
 | Field | Current value |
 | --- | --- |
 | Starting point | Three persistent Underkeep floors. The third guardian ends the campaign. |
-| Last closed slice | DC01 — Accepted and closed by the player on 2026-11-19 after review of the expanded layouts and revised pool. |
-| Current review | [DC02 — Limestone kit and survey trail](dc02_limestone_kit_design.md) · Ready for review. |
-| Next action | Replay seed 5. Inspect the roof groups in each room, web distribution and dry footing around the new pools on all three floors. Pause at the lookout and watch the firelight change on the floor and wall. [Player recipe](dc02_limestone_kit_design.md#player-review) · [Gallery](screenshots/damp-caves-dc02/README.md) |
-| Next eligible slice | DC03 after player acceptance of DC02. |
+| Last closed slice | [DC02 — Limestone kit and survey trail](dc02_limestone_kit_design.md), accepted and closed by the player on 2026-11-19 after the pool atmosphere revision. |
+| Current review | None. |
+| Next eligible slice | DC03 — Venomous spider, two-turn poison and accessible cures. Planned. Start from the accepted Seep camp and teaching arch reservations. |
 
 ## Floor brief and progression targets
 
@@ -51,7 +50,7 @@ clear finishes relative to it. Earning level four is an open tuning outcome.
 | Slice | Reviewable deliverable | Dependency | Status |
 | --- | --- | --- | --- |
 | DC01 | Deterministic cave layouts and three walkable blockouts | Existing floor generation and room review path | [Accepted and closed](dc01_cave_layout_design.md) |
-| DC02 | Limestone kit, distributed ceiling groups, webs, shallow pools and animated lookout lighting | DC01 placement and clearance contracts | [Ready for review](dc02_limestone_kit_design.md) |
+| DC02 | Limestone kit, distributed ceiling groups, webs, shallow pools, shoreline mist and animated lookout lighting | DC01 placement and clearance contracts | [Accepted and closed](dc02_limestone_kit_design.md) |
 | DC03 | Venomous spider, two-turn poison and accessible cures | DC02 cave palette and scale | Planned |
 | DC04 | Blind cave newt and a mixed approach encounter | DC03 working spider | Planned |
 | DC05 | Broodmother and two interruptible egg clutches | DC04 encounter handoff and DC02 vault | Planned |

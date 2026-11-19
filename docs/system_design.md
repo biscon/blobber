@@ -10,7 +10,8 @@ three independent circuits and two optional destinations. The Galleries pool use
 a seamless 256-texel-per-cell painting with a slow eastward current. The
 [water revision](dc01_cave_layout_design.md#pool-density-and-current-revision) records the mapping and rate.
 The [gallery](screenshots/damp-caves-dc01/README.md) includes both banks and a north-facing motion sample.
-[DC02 limestone kit and survey trail](dc02_limestone_kit_design.md) is **Ready for review**. Its [third walkthrough design](dc02_limestone_kit_design.md#third-walkthrough-design) covers roof density, small pools, distributed silk and animated local brazier lighting.
+[DC02 limestone kit and survey trail](dc02_limestone_kit_design.md) was **accepted and closed by the player on 2026-11-19**. Its [third walkthrough design](dc02_limestone_kit_design.md#third-walkthrough-design) covers roof density, small pools, distributed silk and animated local brazier lighting.
+The [pool atmosphere design](dc02_limestone_kit_design.md#pool-atmosphere) scopes shoreline stains, low mist, water palette and near-field lighting to the Damp Caves pack.
 The standalone walks use moss-grown limestone from the threshold onward, solid
 wall and roof formations, perimeter survey stores, three silk silhouettes and
 a lit lookout bowl. Prepared terrain continues through exposed column corners.

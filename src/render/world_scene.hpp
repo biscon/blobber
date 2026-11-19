@@ -56,6 +56,7 @@ struct Chunk {
     std::uint32_t first = 0, count = 0;
     float low = 0, high = 1;
     int left = 0, top = 0, width = 8, depth = 8;
+    bool shore = false;
 };
 struct Limits {
     std::size_t quads = 262144, ranges = 65536, cpuBytes = 64u * 1024 * 1024;
@@ -89,6 +90,7 @@ struct DrawList {
                buildingCullChunks * materialCapacity * 4 + fixtureCapacity * 3 + 128 + containerCapacity * 2>
         ranges{};
     unsigned count = 0, tested = 0;
+    bool shore = false;
 };
 void cull(const Scene&, const Camera&, DrawList&) noexcept;
 } // namespace blobber::world_render

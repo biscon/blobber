@@ -32,11 +32,53 @@ unsigned compare(GpuResources& resources, WorldRenderer& renderer, TargetHandle 
     check(interior == 0, "Architecture CPU/GPU interiors agree within one-pixel edge tolerance");
     return differences;
 }
+// Use identical synthetic terrain, water art and camera for all packs. This
+// exercises the real material switch and catches state leaking on scene swaps.
+void caveWaterIsolation(GpuResources& resources, WorldRenderer& renderer, WorldDefinition definition) {
+    definition.surfaces[6 * 12 + 7].floor = -1;
+    for (auto& surface : definition.surfaces) {
+        surface.ceiling = 8;
+        surface.environment = Environment::Dungeon;
+    }
+    auto mapFor = [&](const char* pack) {
+        definition.assetPack = pack;
+        return Map(test::sceneryRows(), definition);
+    };
+    const auto reference = mapFor("architecture"), cave = mapFor("damp-caves"),
+               hub = mapFor("sanctuary-city"), stone = mapFor("underkeep");
+    MovementState movement;
+    movement.player = {{7, 4}, Heading::South};
+    renderer.dungeonLighting(world_render::DungeonLighting::Current);
+    auto snapshot = [&](const Map& map) {
+        renderer.stage(map, movement);
+        renderer.commit();
+        OwnedImage im(LoadImageFromTexture(resources.target(renderer.image().target).texture));
+        ImageFlipVertical(&im.value);
+        ImageFormat(&im.value, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+        const auto* bytes = static_cast<unsigned char*>(im.value.data);
+        return std::vector<unsigned char>(bytes, bytes + viewWidth * viewHeight * 4);
+    };
+    const auto neutral = snapshot(reference), wet = snapshot(cave);
+    const auto p = world_render::project(world_render::camera(movement, cave), {7.5f, .55f, 6.5f});
+    const int i = 4 * (int(p.y) * viewWidth + int(p.x));
+    check(wet[i + 1] > wet[i + 2] && wet[i + 1] + 20 < neutral[i + 1],
+          "Shared current takes its dark olive palette in caves");
+    check(snapshot(hub) == neutral && snapshot(stone) == neutral,
+          "Sanctuary and neutral Underkeep recover the original water and lighting after cave staging");
+    renderer.clear();
+}
 int main() try {
     for (unsigned mode = 0; mode < 5; ++mode) {
         const bool gate = mode == 1, foliage = mode == 2, water = mode >= 3, current = mode == 4;
         test::ArchitectureFixture fixture(foliage, water, {10.f, 4.5f, 1.f}, 16, current);
         auto publication = gate ? test::gatePublication(fixture.publication()) : fixture.publication();
+        if (current) {
+            for (const char* id : {"damp-caves", "sanctuary-city", "underkeep"}) {
+                auto copy = publication.packs.front();
+                copy.id = id;
+                publication.packs.push_back(std::move(copy));
+            }
+        }
         auto assets = std::make_shared<const world_assets::CpuAssets>(std::move(publication));
         const auto catalog = creationCatalog(true);
         auto scenery = test::sceneryWorld();
@@ -186,6 +228,8 @@ int main() try {
             check(again.textures == baseline.textures && again.meshes == baseline.meshes &&
                       again.targets == baseline.targets,
                   "Revisit returns to retained renderer resource baseline");
+            if (current)
+                caveWaterIsolation(resources, renderer, scenery);
             std::cout << (current   ? "Scrolling current"
                           : water   ? "Animated water"
                           : foliage ? "Cutout scenery"

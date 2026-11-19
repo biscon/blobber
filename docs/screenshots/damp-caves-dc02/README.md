@@ -1,6 +1,6 @@
 # DC02 · Damp Caves player review
 
-**Ready for review.** Seed 5 with normal dungeon lighting. Single views are the game's 1920×1080 captures. Grouped views stack native game pixels in the order listed. [Launcher and controls](../../dc02_limestone_kit_design.md#player-review) · [DC01 plans](../damp-caves-dc01/README.md).
+**Accepted and closed by the player on 2026-11-19.** Seed 5 with normal dungeon lighting. Single views are the game's 1920×1080 captures. Grouped views stack native game pixels in the order listed. [Launcher and controls](../../dc02_limestone_kit_design.md#player-review) · [DC01 plans](../damp-caves-dc01/README.md).
 
 | Depth | View | What to inspect |
 | --- | --- | --- |
@@ -10,11 +10,11 @@
 | IV | [Fungus ledge and wall moss](wall-fungi.png) | The brackets project from the damp rock. The second view is against the west wall at (3,13), close enough to inspect the moss grain. |
 | IV | [Teaching web, both approaches](arch.png) | (11,14) north and (13,12) west show the same teaching landmark. |
 | IV | [Ceiling formations](ceiling.png) | At (10,14) face east into the teaching chamber. At (31,2) face south through the high gallery. Look for separate clusters over the open walking lanes and around the outer span. |
-| V | [Dry column](column.png) | From (32,5) face south. Follow the continuous floor around both exposed corners. |
+| V | [West-facing basin](basin-west.png) | From (18,15) face west, one step back from the rope. A drip ring expands in the near water. Follow the muddy lip around the low wisps and look for damp patches crossing the foreground tile seams. |
 | V | [Lookout fire](lookout.png) | From (47,7) face south. The first two views show the same wall and slate floor at a bright and a dim moment 950 ms apart. The third faces west from (48,8) at the same dim tick. |
-| V | [Both sides of the pool rib](pool-banks.png) | From (14,13) face south, then from (13,17) face north. Inspect the curved waterline and the sightline beyond each end. |
+| V | [Pool banks and dry column](pool-banks.png) | From (14,13) face south, then from (13,17) face north. Inspect the curved waterline and the sightline beyond each end. The third view faces south from (32,5) around a dry column base. |
 | V | [Dry rope bank and discovery map](rope-and-map.png) | The first view follows the marked north route. The second shows the blocked basin and both dry shoulders on the discovery map. |
 | V / VI | [Early web and vault silk](vault-webs.png) | At (4,14) in the Galleries face north before reaching the main pool. In the vault, face north from (47,15) toward the door. The Seep teaching web and shoreline view above show the depth IV silk. |
 | VI | [Clutches and tether](vault.png) | From (47,11) face south to see both sealed bodies. Approach the western clutch from (45,13) to see where the cord enters the silk. |
 
-Twelve images are retained for the current player review. Gameplay, listening and visual acceptance are pending.
+The twelve entries preserve the distinct cases listed above. The camp and teaching arch give DC03 its scale and approach references, the basin and map show the two dry routes for DC04, and the vault views locate the silk, tethers and clutch approaches for DC05. The other views document the accepted cave materials, formations and lighting.

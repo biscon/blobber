@@ -73,6 +73,27 @@ struct Face {
     bool cutout = false;
     bool water = false;
 };
+// Broken flakes share the opaque limestone batch and have no movement footprint.
+template <class F> void wallChips(int x, int z, Cell f, Cell r, unsigned material, F& add) {
+    for (int chip = 0; chip < 2; ++chip) {
+        const float offset = chip ? .13f : -.08f, toe = chip ? .37f : .29f;
+        const float px = x + .5f + toe * f.x + offset * r.x;
+        const float pz = z + .5f + toe * f.y + offset * r.y;
+        const float size = chip ? .065f : .11f;
+        const std::array<Vec, 4> base{{{px - size, 0, pz - size * .28f},
+                                       {px - size * .4f, 0, pz + size * .77f},
+                                       {px + size, 0, pz + size * .12f},
+                                       {px + size * .44f, 0, pz - size * .65f}}};
+        const Vec ridge{px + size * .21f, size * .53f, pz - size * .17f};
+        for (unsigned edge = 0; edge < base.size(); ++edge) {
+            const Vec l = base[edge], h = base[(edge + 1) % base.size()];
+            const float dx = h.x - l.x, dz = h.z - l.z;
+            Vec n{-dz * ridge.y, dz * (ridge.x - l.x) - dx * (ridge.z - l.z), dx * ridge.y};
+            const float length = std::sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
+            add({l, h, ridge, ridge}, {n.x / length, n.y / length, n.z / length}, material, false);
+        }
+    }
+}
 template <class F>
 void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<Surfaces>& overrides, F emit,
            const world_assets::CpuAssets* assets, const world_assets::Pack& pack,
@@ -118,6 +139,8 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                     s.ceiling, false);
             if (solid)
                 continue;
+            const unsigned scatter = (unsigned(x) * 73856093u) ^ (unsigned(z) * 19349663u);
+            bool chips = pack.id == "damp-caves" && lo == 0 && fixtureSlot < 0 && scatter % 11 == 0;
             for (unsigned d = 0; d < 4; ++d) {
                 const auto f = forward(Heading(d)), r = right(Heading(d));
                 const Cell next = Cell{x, z} + f;
@@ -132,8 +155,13 @@ void faces(GeometryView m, int cx, int cz, Surfaces defaults, const std::vector<
                         {float(-f.x), 0, float(-f.y)}, s.wall, true);
                 };
                 if (m.base().solid(next)) {
-                    if (!m.base().buildingOwned(next))
+                    if (!m.base().buildingOwned(next)) {
                         wall(lo, hi);
+                        if (chips) {
+                            wallChips(x, z, f, r, s.wall, add);
+                            chips = false;
+                        }
+                    }
                 } else {
                     wall(lo, std::min(hi, elevation(n.floor)));
                     if (n.ceiling != noCeiling)
@@ -519,6 +547,7 @@ bool visible(const Camera& c, int x, int z, int width, int height, float low, fl
 }
 void cull(const Scene& s, const Camera& c, DrawList& out) noexcept {
     out.count = out.tested = 0;
+    out.shore = false;
     const int left = std::max(0, int(std::floor((c.position.x - s.cullRadius) / 8))),
               right = std::min(s.columns - 1, int(std::floor((c.position.x + s.cullRadius) / 8)));
     const int top = std::max(0, int(std::floor((c.position.z - s.cullRadius) / 8))),
@@ -529,8 +558,10 @@ void cull(const Scene& s, const Camera& c, DrawList& out) noexcept {
         for (int x = left; x <= right; ++x) {
             ++out.tested;
             const auto& chunk = s.chunks[z * s.columns + x];
-            if (visible(c, chunk.left, chunk.top, chunk.width, chunk.depth, chunk.low, chunk.high))
+            if (visible(c, chunk.left, chunk.top, chunk.width, chunk.depth, chunk.low, chunk.high)) {
                 chunks[n++] = z * s.columns + x;
+                out.shore |= chunk.shore;
+            }
         }
     for (unsigned mat = 0; mat < 32; ++mat)
         for (unsigned i = 0; i < n; ++i) {

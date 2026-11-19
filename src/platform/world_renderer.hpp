@@ -94,7 +94,7 @@ class WorldRenderer {
         std::array<TextureHandle, 32> materials{};
         std::unique_ptr<world_render::VisibilityPipeline> visibility;
         std::unique_ptr<world_render::EffectsPipeline> effects;
-        GpuLease<TextureHandle> lightTexture;
+        GpuLease<TextureHandle> lightTexture, caveShore;
         world_render::SpellLightData lights;
         std::uint64_t geometryRevision = 0, doorRevision = 0, doorTime = 0;
 
