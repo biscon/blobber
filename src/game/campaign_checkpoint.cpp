@@ -280,6 +280,9 @@ CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const r
         }
         validateSurfaceProgression(to);
         if (i != location_ && to.saved) {
+            for (auto remaining : to.saved->effects.poisonRemaining)
+                if (remaining)
+                    throw std::invalid_argument("Inactive floor owns party poison");
             for (unsigned c = 0; c < 4; ++c)
                 for (const auto& condition : to.saved->effects.conditions[c])
                     if (condition.active)

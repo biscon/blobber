@@ -239,6 +239,7 @@ struct Canonical {
         add(v.gameplayMs);
         add(v.conditions);
         add(v.casterTurns);
+        add(v.poisonRemaining);
         add(v.ground);
         add(v.restrained);
         add(v.nextArea);

@@ -17,7 +17,7 @@ wall and roof formations, perimeter survey stores, three silk silhouettes and
 a lit lookout bowl. Prepared terrain continues through exposed column corners.
 [Native review views](screenshots/damp-caves-dc02/README.md) cover the revised
 camp, rockwork, water and vault. Campaign descent ends on floor 3.
-DC03–DC07 are Planned.
+The [DC03 teaching spider and poison](dc03_venomous_spider_design.md) was **accepted and closed by the player on 2026-11-19** after an in-game poison and antitoxin test. The isolated Seep encounter connects the camp's single antitoxin to a targetable spider at the arch. Combat resolves its venom save at bite impact. The effect controller owns the victim's two-turn clock, attack disadvantage and cure, including portable checkpoint state. [Player recipe](dc03_venomous_spider_design.md#player-review) · [Native encounter views](screenshots/damp-caves-dc03/README.md). DC04–DC07 are Planned.
 
 [Linux distribution roadmap](linux_distribution_plan.md): **LD01 accepted and closed
 by the user, 2026-11-11**; implemented and mechanically verified.

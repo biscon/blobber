@@ -62,8 +62,8 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         if (version != 1 && version != 2 && version != 3 && version != 4 && version != 5 && version != 6 &&
             version != 7 && version != 8 && version != 9 && version != 10 && version != 11 && version != 12 &&
             version != 13 && version != 14 && version != 15 && version != 16 && version != 17 &&
-            version != 18 && version != 19 && version != 20)
-            fail("schema_version", "only versions 1 through 20 are supported");
+            version != 18 && version != 19 && version != 20 && version != 21)
+            fail("schema_version", "only versions 1 through 21 are supported");
         if (version == 1)
             fields(root, "catalog", {"schema_version", "attacks", "monsters"});
         else if (version >= 8)
@@ -86,8 +86,14 @@ rules::Catalog loadRules(const std::filesystem::path& path) {
         for (std::size_t i = 0; i < attackJson.size(); ++i) {
             const auto p = "attacks[" + std::to_string(i) + "]";
             const auto& a = attackJson[i];
-            fields(a, p, {"id", "kind", "attack_bonus", "damage"});
             AttackDefinition definition;
+            if (version >= 21 && a.contains("venom_dc")) {
+                fields(a, p, {"id", "kind", "attack_bonus", "damage", "venom_dc"});
+                definition.venomDc = integer(a.at("venom_dc"), p + ".venom_dc");
+                if (definition.venomDc < 1)
+                    fail(p + ".venom_dc", "expected positive save difficulty");
+            } else
+                fields(a, p, {"id", "kind", "attack_bonus", "damage"});
             definition.id = identifier(a.at("id"), p + ".id");
             const auto kind = string(a.at("kind"), p + ".kind");
             if (kind != "melee" && kind != "ranged")

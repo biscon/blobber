@@ -1,5 +1,9 @@
 # SRD 5.1 source and adaptation ledger
 
+## The Seep's venomous spider
+
+The spider's profile and DC 11 bite are authored for the Seep. The SRD Poisoned condition supplies disadvantage on attack rolls. The game applies it for two victim initiative turns, or twelve seconds of exploration, with no damage over time. Ability checks are outside this condition implementation. Repeated bites retain the remaining duration. The camp dose adapts antitoxin into an immediate single-target cure. Lesser Restoration can remove poison for its ordinary mana and action cost. Preventive antitoxin, Lay on Hands cleansing and ancestry-specific poison traits are deferred. Poison Spray continues to use its Constitution save and poison damage. [Encounter design](dc03_venomous_spider_design.md) · [SRD attribution](../assets/rules/ATTRIBUTION.md).
+
 ## Path of the Berserker through level four
 
 The Barbarian’s Hit Die, proficiencies, Rage, Unarmored Defense, Reckless Attack, Danger Sense and Berserker progression use SRD 5.1 as their baseline. Blobber uses a fixed minute of gameplay for Rage and adapts Frenzy to one player-timed bonus-action swing per Rage, with no exhaustion. The shared grid and normal melee reach govern target selection. [Berserker mechanics](barbarian_design.md) and [shipping attribution](../assets/rules/ATTRIBUTION.md).

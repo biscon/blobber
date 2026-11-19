@@ -17,6 +17,8 @@ inline const char* monsterName(std::string_view id) noexcept {
         return "Goblin Guardian";
     if (id == "goblin_shaman")
         return "Goblin Shaman";
+    if (id == "venomous.spider")
+        return "Venomous Spider";
     if (id == "giant.rat")
         return "Giant Rat";
     if (id == "skeleton")
@@ -36,7 +38,7 @@ inline const char* spellDescription(rules::SpellKind kind, const char* authored)
         return "One or two enemies within one cell of each other, including across cell boundaries. "
                "Walls block the splash. Dexterity save negates 1d6 acid damage.";
     return kind == rules::SpellKind::LesserRestoration
-               ? "End one selected blindness or paralysis on a living ally."
+               ? "End blindness, paralysis or poison on a living ally."
                : authored;
 }
 } // namespace blobber

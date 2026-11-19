@@ -7154,5 +7154,121 @@
       "sha256": "d76ffd35258b4d00413ec629371aac46f9e678c645a57f6df350c17d4e2a2e01"
     },
     "recipe_sha256": "b21d77a549d442b702367828a15d9cc44d0d797d3c73b0e396c8d2d8242ff3b6"
+  },
+  "generated/venomous.spider.attack_01.wav": {
+    "cue": "venomous.spider.attack",
+    "variant": "01",
+    "seed": 14004,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 2350,
+      "tone": 0.08,
+      "duration": 0.24,
+      "seed": 14004,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.24,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -20.36859007685579,
+      "dc": 2.26895014444987e-05,
+      "seam": 0.0,
+      "sha256": "435003912dcb53dcdeb4725cbf295ead7693686e8bde685287d9e273bb1163df"
+    },
+    "recipe_sha256": "eba91ee94d245640d65e8fbe91fa28bf065f85c463218067b65a6b5f9e98fe79"
+  },
+  "generated/venomous.spider.step_01.wav": {
+    "cue": "venomous.spider.step",
+    "variant": "01",
+    "seed": 14003,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 1150,
+      "tone": 0.04,
+      "duration": 0.12,
+      "seed": 14003,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.12,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -18.575297949886284,
+      "dc": 9.76668463812934e-05,
+      "seam": 3.0517578125e-05,
+      "sha256": "f659b52fa777ade7199e645a2a09b175e1ec74c606a2a3c117a5719342e72a44"
+    },
+    "recipe_sha256": "7dd54045d78ea5fc1ac464cecf2aa2c1c9ed43a5344dcfa4a7c0d87732267433"
+  },
+  "generated/venomous.spider.hurt_01.wav": {
+    "cue": "venomous.spider.hurt",
+    "variant": "01",
+    "seed": 14005,
+    "recipe": {
+      "instrument": 1,
+      "frequency": 710,
+      "tone": 0.05,
+      "duration": 0.16,
+      "seed": 14005,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.16,
+      "channels": 1,
+      "peak_dbfs": -5.999419971943649,
+      "rms_dbfs": -21.542286128796647,
+      "dc": 0.0002689798672993978,
+      "seam": 0.0,
+      "sha256": "03314be93bd2a1fb36b14e0ef227190da8aa128ed864451d98ca551b6df74139"
+    },
+    "recipe_sha256": "b475cc4ed8d8478d92d7d646d791be66aecd33d68ca7f250782f9e32c7ab51f4"
+  },
+  "generated/venomous.spider.death_01.wav": {
+    "cue": "venomous.spider.death",
+    "variant": "01",
+    "seed": 14006,
+    "recipe": {
+      "instrument": 2,
+      "frequency": 600,
+      "tone": 0.06,
+      "duration": 0.48,
+      "seed": 14006,
+      "review": true
+    },
+    "tools": {
+      "csound": "--Csound version 6.18 (double samples) Apr  3 2026",
+      "sox": "sox:      SoX_ng v14.8.0.1"
+    },
+    "generated": true,
+    "review": true,
+    "metrics": {
+      "seconds": 0.48,
+      "channels": 1,
+      "peak_dbfs": -5.99994884152935,
+      "rms_dbfs": -19.756700155230075,
+      "dc": 2.4975670708550348e-05,
+      "seam": 3.0517578125e-05,
+      "sha256": "d16559977ed2bd721a37ba90ba1c8dce35c2e6d10658aa074c2640ce63c2be08"
+    },
+    "recipe_sha256": "06d3450913e504f656b3ef18d0b5c2e8d6460e6453bc0079850459a06ee0a8dc"
   }
 }

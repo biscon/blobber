@@ -54,6 +54,9 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
         reject("deadline capacity");
     clocks(s.effects.guidingUntil);
     clocks(s.effects.mockeryUntil);
+    for (auto remaining : s.effects.poisonRemaining)
+        if (remaining > 2 * combatRoundMs)
+            reject("poison duration");
     clocks(s.combat.partyReady);
     clocks(s.combat.saveDue);
     clocks(s.combat.defendDue);
@@ -174,7 +177,7 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
                 if (t == e.targets[k])
                     reject("effect state");
         }
-        if (e.kind >= EffectKind::Count)
+        if (e.kind >= EffectKind::Poisoned)
             reject("effect kind");
         if (e.kind == EffectKind::ProtectionFromEvilAndGood &&
             (e.count != 1 || e.targets[0].npc))

@@ -293,7 +293,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!content.blueprints || !j.is_object() || j.size() != 12 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 27 || j.at("simulation") != 29 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 28 || j.at("simulation") != 30 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) ||
@@ -382,9 +382,9 @@ std::string encode(const rules::Catalog& catalog, const NpcDefinitions& definiti
         summary["party"].push_back(member.build.name);
     if (!content.blueprints)
         invalid("Missing blueprint catalog");
-    Json j = {{"schema", 27},
+    Json j = {{"schema", 28},
               {"blueprints", std::to_string(blueprints::fingerprint(*content.blueprints))},
-              {"simulation", 29},
+              {"simulation", 30},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

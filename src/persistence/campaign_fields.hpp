@@ -321,6 +321,7 @@ template <class A> void visit(A& a, EffectController::Saved& v, const EffectCont
     a("gameplayMs", v.gameplayMs, base.gameplayMs);
     a("conditions", v.conditions, base.conditions);
     a("casterTurns", v.casterTurns, base.casterTurns);
+    a("poisonRemaining", v.poisonRemaining, base.poisonRemaining);
     a("ground", v.ground, base.ground);
     a("restrained", v.restrained, base.restrained);
     a("nextArea", v.nextArea, base.nextArea);

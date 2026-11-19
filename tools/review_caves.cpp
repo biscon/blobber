@@ -34,8 +34,9 @@ void face(GameSession& game, Heading wanted) {
 }
 // Route planning is review-only. Replay each edge through ordinary game commands,
 // including discovering and opening closed doors from their reachable side.
-void walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid = {},
-            std::vector<Cell>* trace = nullptr) {
+} // namespace
+void cave_review::walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid,
+                         std::vector<Cell>* trace, bool stopAtContact) {
     const auto& map = game.geometry().base();
     auto index = [&](Cell c) { return c.y * map.width() + c.x; };
     const auto start = game.movement().player.cell;
@@ -80,9 +81,18 @@ void walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid = {},
         game.update(.2, false);
         if (trace)
             trace->push_back(*it);
-        require(game.movement().player.cell == *it, "Walkthrough failed to reach next cell");
+        if (stopAtContact && (!realTime(game.combat().snapshot().phase) || game.actors().occupied(*it)))
+            return;
+        if (!(game.movement().player.cell == *it)) {
+            std::cerr << "Blocked review step (" << from.x << "," << from.y << ") to ("
+                      << it->x << "," << it->y << "), phase " << unsigned(game.combat().snapshot().phase)
+                      << ", goal (" << goal.x << "," << goal.y << ")\n";
+            throw std::runtime_error("Walkthrough failed to reach next cell");
+        }
     }
 }
+namespace {
+using cave_review::walkTo;
 Player reviewRoute(GameSession& game, const CaveFloor& f) {
     const auto& s = f.sites;
     game.restorePose(f.layout.spawn, false);
@@ -133,8 +143,12 @@ int main(int argc, char** argv) try {
     const bool forced = std::string_view(argv[argc - 1]) == "--fallback";
     if (forced)
         --argc;
+    const bool encounter = std::string_view(argv[argc - 1]) == "--encounter";
+    if (encounter)
+        --argc;
     std::string mode = argv[1];
     const unsigned depth = number(argv[2]), seed = number(argv[3]);
+    require(!encounter || depth == 4, "Spider encounter requires depth 4");
     auto result = generateCave(seed, depth, forced);
     if (!result.floor)
         throw std::runtime_error(std::string("Cave generation failed: ") +
@@ -171,10 +185,27 @@ int main(int argc, char** argv) try {
     const std::filesystem::path root = argv[5], prepared = argv[6];
     const auto rules = loadRules(root / "rules/catalog.json");
     const auto defs = loadNpcDefinitions(root / "npcs/level.json");
-    const NpcWorld actors(f.map, f.layout.spawn.cell, defs.types, {});
+    // Keep the combat stream independent of the cave layout stream.
+    const auto combatSeed = encounter ? std::uint32_t(seedFor({seed, depth}, Domain::Runtime)) : seed;
+    RecoveryLevel recovery;
+    std::vector<NpcInstance> occupants;
+    if (encounter) {
+        const auto type = std::find(defs.types.begin(), defs.types.end(), "venomous.spider");
+        require(type != defs.types.end(), "Missing spider appearance");
+        occupants.push_back({{std::uint16_t(type - defs.types.begin())}, f.sites[Site::SpiderArch],
+                             {0, 1}, Heading::West});
+        const auto item = rules.findItem("antitoxin");
+        require(rules.item(item), "Missing camp antitoxin");
+        recovery.ground[recovery.groundCount++] = {f.sites[Site::Camp], item, 1};
+    }
+    const NpcWorld actors(f.map, f.layout.spawn.cell, defs.types, occupants);
     if (check) {
-        GameSession game(f.map, rules, actors, seed, f.layout.spawn, false, defs.timings, {},
+        GameSession game(f.map, rules, actors, combatSeed, f.layout.spawn, encounter, defs.timings, recovery,
                          f.layout.fixtures);
+        if (encounter) {
+            cave_review::checkSpider(game, f, defs.timings, output);
+            return 0;
+        }
         reviewRoute(game, f);
         std::cout << "Walked the required route, optional pocket and return landing.\n";
         return 0;
@@ -194,7 +225,12 @@ int main(int argc, char** argv) try {
         const auto baseline = resources.counts();
         {
             WorldRenderer renderer(resources, std::move(pub));
-            if (hidden) {
+            if (hidden && encounter) {
+                GameSession game(f.map, rules, actors, combatSeed, f.layout.spawn, true, defs.timings,
+                                 recovery, f.layout.fixtures);
+                cave_review::checkSpider(game, f, defs.timings, output, &renderer, &presenter);
+                require(!renderer.memory().textureCount, "Spider review retained scene textures");
+            } else if (hidden) {
                 cave_review::checkPreparedDressing(renderer.assets(), f);
                 if (depth == 5)
                     cave_review::biomeChange(renderer, f, root, seed);
@@ -365,11 +401,11 @@ int main(int argc, char** argv) try {
                 options.settings = output / "settings.json";
                 GameplayLaunch launch;
                 launch.spawn = f.layout.spawn;
-                launch.seed = seed;
-                launch.enableAi = false;
+                launch.seed = combatSeed;
+                launch.enableAi = encounter;
                 launch.rooms = &f.layout;
                 launch.fixtures = &f.layout.fixtures;
-                runGameplay(f.map, rules, actors, defs.timings, presenter, options, renderer, {},
+                runGameplay(f.map, rules, actors, defs.timings, presenter, options, renderer, recovery,
                             rules.preset(), &launch);
             }
         }

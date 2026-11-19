@@ -1,6 +1,6 @@
 # Damp Caves expansion — design and delivery roadmap
 
-Created 2026-11-18. **DC01 and DC02 are Accepted and closed. DC03–DC07 are Planned.**
+Created 2026-11-18. **DC01–DC03 are Accepted and closed. DC04–DC07 are Planned.**
 
 Extend the playable descent from three floors to six. Below the Underkeep, water
 has broken through an old cistern into limestone galleries occupied by venomous
@@ -13,9 +13,9 @@ then decide which threat deserves the party's next action.
 | Field | Current value |
 | --- | --- |
 | Starting point | Three persistent Underkeep floors. The third guardian ends the campaign. |
-| Last closed slice | [DC02 — Limestone kit and survey trail](dc02_limestone_kit_design.md), accepted and closed by the player on 2026-11-19 after the pool atmosphere revision. |
+| Last closed slice | [DC03 — Venomous spider](dc03_venomous_spider_design.md), accepted and closed by the player on 2026-11-19 after testing the bite and antitoxin cure. |
 | Current review | None. |
-| Next eligible slice | DC03 — Venomous spider, two-turn poison and accessible cures. Planned. Start from the accepted Seep camp and teaching arch reservations. |
+| Next eligible slice | DC04 — Blind cave newt and mixed approaches (Planned). |
 
 ## Floor brief and progression targets
 
@@ -39,7 +39,7 @@ ordinary route**. Level 3 requires 900. That leaves **425 or 900 party XP**,
 respectively. Aim to cross 900 per member in the first two Seep encounters after
 a full clear, and by the Seep guardian on the ordinary route without cave
 optionals. Count XP actually available along each route. Keep the lone teaching
-spider approachable. If ordinary enemy rewards make the early target implausible,
+spider approachable. The DC03 demo uses a level-one party. For campaign balance, use the incoming party’s earned XP as it approaches level three and keep ordinary spiders at their approved level-one strength. If ordinary enemy rewards make the early target implausible,
 show the earliest defensible encounter in DC06 planning for review. Retain manual
 advancement and the existing 2,700 XP level-four threshold. Report where a full
 clear finishes relative to it. Earning level four is an open tuning outcome.
@@ -51,7 +51,7 @@ clear finishes relative to it. Earning level four is an open tuning outcome.
 | --- | --- | --- | --- |
 | DC01 | Deterministic cave layouts and three walkable blockouts | Existing floor generation and room review path | [Accepted and closed](dc01_cave_layout_design.md) |
 | DC02 | Limestone kit, distributed ceiling groups, webs, shallow pools, shoreline mist and animated lookout lighting | DC01 placement and clearance contracts | [Accepted and closed](dc02_limestone_kit_design.md) |
-| DC03 | Venomous spider, two-turn poison and accessible cures | DC02 cave palette and scale | Planned |
+| DC03 | Venomous spider, two-turn poison and accessible cures | DC02 cave palette and scale | [Accepted and closed](dc03_venomous_spider_design.md) |
 | DC04 | Blind cave newt and a mixed approach encounter | DC03 working spider | Planned |
 | DC05 | Broodmother and two interruptible egg clutches | DC04 encounter handoff and DC02 vault | Planned |
 | DC06 | Populated, playable standalone floors 4–6 with finite XP and rewards | DC01–DC05 content and mechanics | Planned |
@@ -102,6 +102,8 @@ and memory costs. Verify drip cue routing and note listening review separately.
 [Painted prop guide](prop_modelling_guide.md) · [Environment rendering](renderer_environment_design.md) · [Audio](audio_design.md)
 
 ### DC03 — Venomous spider and the first poison encounter
+
+[Implemented design, exit checks and player recipe](dc03_venomous_spider_design.md) · [Native encounter views](screenshots/damp-caves-dc03/README.md).
 
 Deliver one finished, targetable spider in an isolated version of the Seep arch.
 Reuse the creature catalog, prepared directional poses, attack/impact schedule and

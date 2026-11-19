@@ -43,7 +43,7 @@ inline void se03Commands() {
             r.count = 1;
             r.difficulty = 100;
             check(bool(game.applyEffect(r)), "Restore setup applies paralysis");
-            command.restoreParalysis = true;
+            command.restoration = blobber::RestorationChoice::Paralysis;
         }
         const auto before = game.supportVisuals().revision;
         CommandController hud(game);

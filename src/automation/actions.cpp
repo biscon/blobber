@@ -119,6 +119,8 @@ Json describeActions(const GameSession& g, const Observation& o) {
                                        {"self", rule.self},
                                        {"max_targets", rule.maxTargets},
                                        {"eligibility", eligibility(c)}});
+            if (spell.kind == rules::SpellKind::LesserRestoration)
+                entry["spells"].back()["restore_condition"] = {"blindness", "paralysis", "poison"};
             if (spell.kind == rules::SpellKind::Goodberry)
                 entry["spells"].back()["party"] = true;
         }

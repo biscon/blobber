@@ -12,7 +12,8 @@
     "boric/boric.json",
     "balin/balin.json",
     "blacksmith/blacksmith.json",
-    "shadowtart/shadowtart.json"
+    "shadowtart/shadowtart.json",
+    "venomous-spider/venomous-spider.json"
   ],
   "instances": [
     {

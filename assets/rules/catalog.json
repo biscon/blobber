@@ -1,5 +1,5 @@
 {
-  "schema_version": 20,
+  "schema_version": 21,
   "attacks": [
     {
       "id": "goblin.scimitar",
@@ -77,6 +77,18 @@
         "modifier": 0,
         "type": "bludgeoning"
       }
+    },
+    {
+      "id": "venomous.spider.bite",
+      "kind": "melee",
+      "attack_bonus": 4,
+      "damage": {
+        "count": 1,
+        "sides": 4,
+        "modifier": 2,
+        "type": "piercing"
+      },
+      "venom_dc": 11
     }
   ],
   "monsters": [
@@ -663,6 +675,33 @@
       "damage_vulnerabilities": [],
       "spellcasting": "none",
       "creature_type": "humanoid"
+    },
+    {
+      "id": "venomous.spider",
+      "abilities": {
+        "strength": 7,
+        "dexterity": 15,
+        "constitution": 11,
+        "intelligence": 2,
+        "wisdom": 10,
+        "charisma": 4
+      },
+      "armor_class": 12,
+      "hit_points": 11,
+      "speed_ft": 30,
+      "attacks": [
+        "venomous.spider.bite"
+      ],
+      "traits": [],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 50,
+      "humanoid": false,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none",
+      "creature_type": "beast"
     }
   ],
   "races": [
@@ -1729,6 +1768,15 @@
       "stack_limit": 1,
       "ammunition": "none",
       "enchantment": 1
+    },
+    {
+      "id": "antitoxin",
+      "name": "Antitoxin",
+      "description": "Administer one dose to cure a living ally of poison.",
+      "weight": 50,
+      "kind": "consumable",
+      "stack_limit": 20,
+      "effect": "antitoxin"
     }
   ],
   "preset_party": {
@@ -2144,7 +2192,7 @@
       "id": "lesser_restoration",
       "kind": "lesser_restoration",
       "name": "Lesser Restoration",
-      "description": "End one selected blindness or paralysis on a living ally. Disease, deafness and poison conditions are not supported."
+      "description": "End one selected condition on a living ally: blindness, paralysis or poison."
     },
     {
       "id": "spiritual_weapon",

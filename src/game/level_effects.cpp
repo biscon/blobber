@@ -31,6 +31,10 @@ bool EffectController::restoreCondition(rules::CharacterId id, EffectKind kind, 
                                         CombatEvents& events) noexcept {
     if (!living(id) || !has(id, kind))
         return false;
+    if (kind == EffectKind::Poisoned) {
+        endPoison(id, EffectEnd::Recovered, now, events);
+        return true;
+    }
     if (kind == EffectKind::Blind) {
         auto& c = conditions_[id.index][1];
         c.active = false;

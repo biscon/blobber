@@ -1,0 +1,437 @@
+{
+  "id": "venomous.spider",
+  "width": 0.5,
+  "height": 0.328125,
+  "alpha_cutoff": 15,
+  "animations": {
+    "idle": {
+      "durations_ms": [
+        600,
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/stance-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-a-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/stance-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-a-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/stance-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-a-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/stance-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-a-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ]
+      }
+    },
+    "walk": {
+      "durations_ms": [
+        300,
+        300
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/step-a-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/step-a-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/step-a-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/step-a-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ]
+      }
+    },
+    "hurt": {
+      "durations_ms": [
+        150,
+        150
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/recoil-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/recoil-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/recoil-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/recoil-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ]
+      }
+    },
+    "prone": {
+      "durations_ms": [
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/prone-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/prone-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/prone-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/prone-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ]
+      }
+    },
+    "death": {
+      "durations_ms": [
+        200,
+        200,
+        200,
+        600
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/recoil-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/corpse-front.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "back": [
+          {
+            "image": "frames/recoil-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/corpse-back.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "left": [
+          {
+            "image": "frames/recoil-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/corpse-left.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ],
+        "right": [
+          {
+            "image": "frames/recoil-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/step-b-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/prone-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/corpse-right.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ]
+      }
+    },
+    "attack": {
+      "durations_ms": [
+        300,
+        150,
+        150,
+        300
+      ],
+      "views": {
+        "front": [
+          {
+            "image": "frames/bite-0.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/bite-1.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/bite-2.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          },
+          {
+            "image": "frames/bite-3.png",
+            "anchor": [
+              0.5,
+              0.9523809523809523
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

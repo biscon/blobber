@@ -51,7 +51,7 @@ void HudPainter::loot(const HudSnapshot& h) const {
         else if (d.kind == K::Consumable)
             std::snprintf(buffer, sizeof(buffer), "%s",
                           d.consumable == rules::Consumable::Healing ? "Restores 2d4 + 2 HP"
-                                                                     : "Restores 2 mana");
+                          : d.consumable == rules::Consumable::Antitoxin ? "Cures poison" : "Restores 2 mana");
         else
             std::snprintf(buffer, sizeof(buffer), "Stack limit %u", rules::stackLimit(d));
         clipped(buffer, 330, 180, 116, teal, UiTextStyle::Small);

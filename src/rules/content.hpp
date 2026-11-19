@@ -21,6 +21,7 @@ struct AttackDefinition {
     std::int32_t bonus = 0;
     Dice damage;
     DamageType damageType = DamageType::Bludgeoning;
+    int venomDc = 0;
 };
 enum class Trait : std::uint8_t { NimbleEscape = 1, PackTactics = 2, UndeadFortitude = 4 };
 using Traits = std::uint8_t;

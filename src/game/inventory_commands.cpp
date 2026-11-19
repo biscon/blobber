@@ -72,7 +72,7 @@ void CommandController::refreshInventoryActions() noexcept {
     transfer.reason = inventoryMessage(transferError);
     auto& use = i.actions[static_cast<unsigned>(InventoryAction::Use)];
     use.visible = item.kind == rules::ItemKind::Consumable;
-    use.label = "U  USE POTION";
+    use.label = item.consumable == rules::Consumable::Antitoxin ? "U  USE ANTITOXIN" : "U  USE POTION";
     if (use.visible) {
         auto c = inventoryUseCommand();
         auto reason = CommandReason::MissingTarget;
@@ -85,6 +85,7 @@ void CommandController::refreshInventoryActions() noexcept {
             }
         }
         use.reason = reason == CommandReason::FullHealth ? "All living allies are at full health."
+                     : reason == CommandReason::InvalidTargets ? "No living ally is poisoned."
                      : reason == CommandReason::FullMana ? "No ally needs mana."
                                                          : commandMessage(reason);
     }
@@ -212,7 +213,8 @@ void CommandController::refreshInventory() noexcept {
                                             i.itemCommand.ally->index == state_.cards[n].id.index;
             state_.cards[n].castCaster = i.itemCommand.character.index == state_.cards[n].id.index;
             state_.cards[n].castPreview =
-                i.usingItem && i.usingItem->consumable == rules::Consumable::Healing ? "2d4+2 HP" : "+2 mana";
+                i.usingItem && i.usingItem->consumable == rules::Consumable::Healing ? "2d4+2 HP"
+                : i.usingItem && i.usingItem->consumable == rules::Consumable::Antitoxin ? "Cure poison" : "+2 mana";
         }
     }
 }
@@ -311,7 +313,7 @@ void CommandController::inventoryAction(InventoryAction action) noexcept {
         auto c = inventoryUseCommand();
         auto reason = session_.combat().validate(c, session_.movement().player);
         if (reason != CommandReason::Ready && reason != CommandReason::FullHealth &&
-            reason != CommandReason::FullMana && reason != CommandReason::DeadAlly) {
+            reason != CommandReason::FullMana && reason != CommandReason::InvalidTargets && reason != CommandReason::DeadAlly) {
             inventoryFeedback(commandMessage(reason));
             return;
         }

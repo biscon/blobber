@@ -210,3 +210,7 @@ generated/inventory.unequip_03.wav
 generated/weapon.heavy_01.wav
 generated/weapon.heavy_02.wav
 generated/weapon.heavy_03.wav
+generated/venomous.spider.step_01.wav
+generated/venomous.spider.attack_01.wav
+generated/venomous.spider.hurt_01.wav
+generated/venomous.spider.death_01.wav

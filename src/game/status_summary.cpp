@@ -15,7 +15,7 @@ rules::SpellKind effectSpell(EffectKind kind) noexcept {
 bool harmfulEffect(EffectKind kind) noexcept {
     return kind == EffectKind::Bane || kind == EffectKind::HoldPerson ||
            (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) || kind == EffectKind::Restrained ||
-           kind == EffectKind::HuntersMark;
+           kind == EffectKind::HuntersMark || kind == EffectKind::Poisoned;
 }
 void statusDuration(const StatusEntry& s, char* output, std::size_t bytes) noexcept {
     if (s.clock == StatusClock::Escape)
@@ -61,7 +61,9 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
                       : kind == EffectKind::Knockdown ? "Grease - Prone"
                                                       : effectName(kind);
         status.harmful = harmfulEffect(kind);
-        if (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) {
+        if (kind == EffectKind::Poisoned)
+            status.remainingMs = poisonRemaining(target.character);
+        else if (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) {
             const auto& c = conditions_[conditionIndex(target)][k - unsigned(EffectKind::Sleep)];
             status.remainingMs = remaining(c.untilMs);
             if (kind == EffectKind::Knockdown && turns_)
@@ -83,7 +85,8 @@ StatusSummary EffectController::statuses(EffectTarget target) const noexcept {
         if (kind == EffectKind::Restrained)
             status.clock = StatusClock::Escape;
         status.ending =
-            kind == EffectKind::Restrained    ? "Escape uses an action and Strength check."
+            kind == EffectKind::Poisoned      ? "Attack rolls have disadvantage. Antitoxin or Lesser Restoration cures it."
+            : kind == EffectKind::Restrained    ? "Escape uses an action and Strength check."
             : kind == EffectKind::Aid         ? "Maximum HP +5. Does not stack or heal on refresh."
             : kind == EffectKind::MirrorImage ? "Attacks can destroy duplicates; areas bypass them."
             : kind == EffectKind::Sleep       ? "Ends early on damage or Aid."

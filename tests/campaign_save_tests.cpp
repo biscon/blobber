@@ -401,6 +401,36 @@ std::unique_ptr<CampaignRun> copy(const rules::Catalog& c, const NpcDefinitions&
           "exact logical campaign round trip");
     return result;
 }
+void poisonPersistence() {
+    const auto c = catalog();
+    const auto d = definitions();
+    const auto& blueprints = blobber::test::campaignBlueprints();
+    auto run = std::make_unique<CampaignRun>(blueprints, c, *c.preset(), d.types, d.timings, 5);
+    auto state = run->checkpoint();
+    state->locations[state->activeLocation].state->effects.poisonRemaining[1] = 11750;
+    run = std::make_unique<CampaignRun>(blueprints, c, std::move(*state), d.timings);
+    run->game().update(.25, false);
+    run = copy(c, d, *run);
+    const auto remaining = [&] {
+        auto saved = run->checkpoint();
+        return saved->locations[saved->activeLocation].state->effects.poisonRemaining[1];
+    };
+    check(remaining() == 11500, "Safe campaign save preserves fractional poison duration");
+    enterInn(*run);
+    check(remaining() == 11500, "Travel carries the exact condition duration");
+    auto corrupt = run->checkpoint();
+    auto& outside = corrupt->locations[unsigned(CampaignLocationId::City)].state->effects;
+    check(outside.poisonRemaining[1] == 0, "Inactive location released the party condition");
+    outside.poisonRemaining[1] = 1;
+    rejects([&] { CampaignRun invalid(blueprints, c, std::move(*corrupt), d.timings); },
+            "Inactive location cannot retain a second poison clock");
+    run->game().update(1.5, false);
+    leaveInn(*run);
+    run = copy(c, d, *run);
+    check(remaining() == 10000, "Return travel does not resurrect the old clock");
+    run->game().update(10, false);
+    check(remaining() == 0, "Restored poison expires in exploration");
+}
 void magicRewardPersistence() {
     const auto c = blobber::test::withMagicItems(catalog());
     const auto d = definitions();
@@ -698,10 +728,10 @@ void rangerPersistence() {
     const CampaignContent content{"fixture", 0, &blueprints};
     auto current = run->checkpoint();
     auto legacy = blobber::automation::Json::parse(encodeCampaign(c, d, content, *current));
-    check(legacy["schema"] == 27 && legacy["simulation"] == 29, "Ranger campaigns carry the new versions");
-    legacy["schema"] = 24;
-    legacy["simulation"] = 26;
-    rejects([&] { decodeCampaign(c, d, content, legacy.dump()); }, "Pre-Ranger campaigns require their original build");
+    check(legacy["schema"] == 28 && legacy["simulation"] == 30, "DC03 campaigns carry the new versions");
+    legacy["schema"] = 27;
+    legacy["simulation"] = 29;
+    rejects([&] { decodeCampaign(c, d, content, legacy.dump()); }, "Pre-DC03 campaigns require their original build");
 }
 void progressionAndFloors() {
     const auto c = catalog(false, 50, 7);
@@ -1761,6 +1791,7 @@ int main(int argc, char** argv) {
         if (argc == 2 && std::string(argv[1]) == "--smoke") {
             terminalWorker();
             sparsePersistence();
+            poisonPersistence();
             magicRewardPersistence();
             ignoredCampaigns();
             environmentRoundtrip();

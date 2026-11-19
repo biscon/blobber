@@ -63,6 +63,8 @@ bool EffectController::unarmored(rules::CharacterId id) const noexcept {
 bool EffectController::has(EffectTarget target, EffectKind kind) const noexcept {
     if (!living(target))
         return false;
+    if (kind == EffectKind::Poisoned)
+        return !target.npc && poisonRemaining(target.character) > 0;
     if (kind >= EffectKind::Sleep && kind <= EffectKind::Knockdown) {
         const auto i = conditionIndex(target);
         return i < conditions_.size() && conditions_[i][unsigned(kind) - unsigned(EffectKind::Sleep)].active;
@@ -259,7 +261,7 @@ EffectError EffectController::validate(const EffectRequest& request) const noexc
           actors_.catalog().monster(actors_.actor(request.caster.enemy)->monster)->spellcasting !=
               rules::EnemyCasting::AcolyteSupport)))
         return EffectError::InvalidCaster;
-    if (request.kind >= EffectKind::Count || request.kind == EffectKind::Restrained ||
+    if (request.kind >= EffectKind::Poisoned || request.kind == EffectKind::Restrained ||
         (request.kind >= EffectKind::Sleep && request.kind <= EffectKind::Knockdown))
         return EffectError::InvalidKind;
     if (request.caster.npc && request.kind != EffectKind::Bless)
@@ -388,6 +390,9 @@ void EffectController::reconcile(std::uint64_t now, CombatEvents& events) noexce
     bindEvents(events, now);
     reconcileWeb(now, events);
     reconcileAid();
+    for (std::uint16_t i = 0; i < poisonClock_.size(); ++i)
+        if (poisonClock_[i] && !living(rules::CharacterId{i}))
+            endPoison({i}, EffectEnd::InvalidTarget, now, events);
     for (std::size_t i = 0; i < guidingUntil_.size(); ++i)
         if (guidingUntil_[i] && !living(actors_.id(i)))
             consumeGuiding(actors_.id(i), now, events);

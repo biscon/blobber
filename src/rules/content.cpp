@@ -123,7 +123,7 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
                                   : i.kind == ItemKind::Consumable ? 20
                                                                    : 1;
         if (stackLimit(i) != expected || static_cast<unsigned>(i.ammunition) > 2 ||
-            static_cast<unsigned>(i.consumable) > 2 ||
+            i.consumable > Consumable::Antitoxin ||
             (i.kind == ItemKind::Consumable) != (i.consumable != Consumable::None) ||
             (i.ammunition != Ammunition::None && i.kind != ItemKind::Ammunition &&
              (i.kind != ItemKind::Weapon || !i.ranged)))
@@ -207,6 +207,8 @@ Catalog::Catalog(std::vector<AttackDefinition> attacks, std::vector<MonsterDefin
         }
     }
     for (const auto& a : attacks_) {
+        if (a.venomDc < 0 || a.venomDc > 30 || (a.venomDc && a.kind != AttackKind::Melee))
+            throw std::runtime_error("attacks." + a.id + ": invalid venom DC or attack kind");
         if (a.kind != AttackKind::Melee && a.kind != AttackKind::Ranged)
             throw std::runtime_error("attacks." + a.id + ".kind: invalid attack kind");
         if (!validDice(a.damage))

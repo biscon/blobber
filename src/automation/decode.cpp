@@ -256,7 +256,7 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
     if (op != "combat")
         throw std::invalid_argument("Unknown action kind");
     fields(j, {"kind", "character", "action", "target", "ally", "spell", "feature", "item", "enemies",
-               "allies", "darts", "cell", "restore_paralysis", "aim_subcell", "healing_amount"});
+               "allies", "darts", "cell", "restore_paralysis", "restore_condition", "aim_subcell", "healing_amount"});
     auto& c = r.combat;
     c.world = g.actors().snapshot().world;
     c.turn = g.combat().snapshot().turn;
@@ -349,7 +349,17 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
                                   int(bounded(aim.at("y"), Map::maxDimension * 2))};
     }
     if (j.contains("restore_paralysis"))
-        c.restoreParalysis = j.at("restore_paralysis").get<bool>();
+        c.restoration = j.at("restore_paralysis").get<bool>() ? RestorationChoice::Paralysis
+                                                             : RestorationChoice::Blindness;
+    if (j.contains("restore_condition")) {
+        if (j.contains("restore_paralysis"))
+            throw std::invalid_argument("Specify one restoration choice");
+        const auto& choice = j.at("restore_condition");
+        if (choice == "poison") c.restoration = RestorationChoice::Poison;
+        else if (choice == "paralysis") c.restoration = RestorationChoice::Paralysis;
+        else if (choice == "blindness") c.restoration = RestorationChoice::Blindness;
+        else throw std::invalid_argument("Unknown restoration condition");
+    }
     return r;
 }
 } // namespace blobber::automation

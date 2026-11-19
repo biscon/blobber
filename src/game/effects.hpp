@@ -29,6 +29,7 @@ enum class EffectKind : std::uint8_t {
     ProtectionFromEvilAndGood,
     SacredWeapon,
     HuntersMark,
+    Poisoned,
     Count
 };
 enum class StatusClock : std::uint8_t { Seconds, Turns, CasterTurn, Standing, Escape };
@@ -105,7 +106,8 @@ enum class EffectNotice : std::uint8_t {
     RepeatSave,
     ConcentrationSave,
     RecipientRemoved,
-    Ended
+    Ended,
+    TurnElapsed
 };
 enum class EffectEnd : std::uint8_t {
     None,
@@ -248,6 +250,8 @@ class EffectController {
     std::uint64_t sleepRemaining(EffectTarget) const noexcept;
     void wake(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
     bool stand(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
+    void venomousBite(ActorId, rules::CharacterId, int difficulty, std::uint64_t now, CombatEvents&) noexcept;
+    void endVictimTurn(rules::CharacterId, std::uint64_t now, CombatEvents&) noexcept;
     void casterTurn(rules::CharacterId, std::uint64_t, CombatEvents&) noexcept;
     void clockMode(bool turns) noexcept;
     void bindEvents(CombatEvents& events, std::uint64_t now) noexcept {
@@ -303,6 +307,7 @@ class EffectController {
         std::array<std::uint64_t, NpcWorld::maxInstances> guidingUntil{}, mockeryUntil{};
         std::uint64_t nextSerial = 1, gameplayMs = 0;
         std::array<std::array<ConditionState, 4>, NpcWorld::maxInstances + rules::partySize> conditions{};
+        std::array<std::uint64_t, rules::partySize> poisonRemaining{};
         std::array<std::uint64_t, 4> casterTurns{};
         GroundSnapshot ground;
         std::array<Restraint, NpcWorld::maxInstances + rules::partySize> restrained{};
@@ -321,6 +326,10 @@ class EffectController {
     std::uint64_t nextSerial_ = 1, gameplayMs_ = 0;
     static constexpr std::size_t creatureCount = NpcWorld::maxInstances + rules::partySize;
     std::array<std::array<ConditionState, 4>, creatureCount> conditions_{};
+    // In initiative this stores a duration. In real time it stores an absolute deadline.
+    std::array<std::uint64_t, rules::partySize> poisonClock_{};
+    std::uint64_t poisonRemaining(rules::CharacterId) const noexcept;
+    void endPoison(rules::CharacterId, EffectEnd, std::uint64_t, CombatEvents&) noexcept;
     std::array<std::uint64_t, 4> casterTurns_{};
     GroundSnapshot ground_{};
     std::array<Restraint, creatureCount> restrained_{};

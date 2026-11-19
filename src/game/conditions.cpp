@@ -36,6 +36,9 @@ ActorConditionVisualSnapshot EffectController::visualConditions() const noexcept
         if (restrained_[i].area.serial)
             mark(target, EffectKind::Restrained);
     }
+    for (std::uint16_t i = 0; i < rules::partySize; ++i)
+        if (has(rules::CharacterId{i}, EffectKind::Poisoned))
+            mark(rules::CharacterId{i}, EffectKind::Poisoned);
     return out;
 }
 const char* effectName(EffectKind kind) noexcept {
@@ -43,7 +46,7 @@ const char* effectName(EffectKind kind) noexcept {
         "Bless",     "Bane",       "Shield of Faith", "Mage Armor", "Hold Person", "Guidance", "Resistance",
         "Sanctuary", "Sleep",      "Blind",           "Slow",       "Knockdown",   "Aid",      "Mirror Image",
         "Web",       "Restrained", "Spiritual Weapon", "Protection from Evil and Good", "Sacred Weapon",
-        "Hunter's Mark"};
+        "Hunter's Mark", "Poisoned"};
     return unsigned(kind) < std::size(names) ? names[unsigned(kind)] : "Effect";
 }
 std::size_t EffectController::conditionIndex(EffectTarget t) const noexcept {
@@ -83,7 +86,7 @@ rules::RollMode EffectController::attackMode(EffectTarget attacker, EffectTarget
     }
     advantage |= has(target, EffectKind::Restrained) || helpless(target) || has(target, EffectKind::Blind) ||
                  (close && has(target, EffectKind::Knockdown));
-    disadvantage |= has(attacker, EffectKind::Restrained) || has(attacker, EffectKind::Blind) ||
+    disadvantage |= has(attacker, EffectKind::Poisoned) || has(attacker, EffectKind::Restrained) || has(attacker, EffectKind::Blind) ||
                     has(attacker, EffectKind::Knockdown) || (!close && has(target, EffectKind::Knockdown));
     if (attacker.npc && actors_.actor(attacker.enemy))
         disadvantage |= mockeryUntil_[attacker.enemy.slot] &&
@@ -195,9 +198,48 @@ bool EffectController::stand(EffectTarget t, std::uint64_t now, CombatEvents& ev
                     events);
     return true;
 }
+std::uint64_t EffectController::poisonRemaining(rules::CharacterId id) const noexcept {
+    const auto clock = poisonClock_[id.index];
+    return turns_ ? clock : (clock > gameplayMs_ ? clock - gameplayMs_ : 0);
+}
+void EffectController::venomousBite(ActorId source, rules::CharacterId victim, int dc,
+                                    std::uint64_t now, CombatEvents& events) noexcept {
+    if (!living(source) || !living(victim) || poisonRemaining(victim))
+        return;
+    EffectInstance bite;
+    bite.kind = EffectKind::Poisoned;
+    bite.caster = source;
+    const auto result = save(victim, rules::Ability::Constitution, dc);
+    emit(bite, EffectNotice::InitialSave, EffectEnd::None, victim, result, dc, now, events);
+    if (!result.succeeded) {
+        poisonClock_[victim.index] = (turns_ ? 0 : gameplayMs_) + 2 * combatRoundMs;
+        emit(bite, EffectNotice::Applied, EffectEnd::None, victim, {}, 0, now, events);
+    }
+}
+void EffectController::endPoison(rules::CharacterId victim, EffectEnd why, std::uint64_t now,
+                                 CombatEvents& events) noexcept {
+    poisonClock_[victim.index] = 0;
+    conditionNotice(victim, EffectKind::Poisoned, EffectNotice::Ended, why, {}, now, events);
+}
+void EffectController::endVictimTurn(rules::CharacterId victim, std::uint64_t now,
+                                     CombatEvents& events) noexcept {
+    auto& remaining = poisonClock_[victim.index];
+    if (!turns_ || !remaining)
+        return;
+    if (remaining <= combatRoundMs)
+        endPoison(victim, EffectEnd::Expired, now, events);
+    else {
+        remaining -= combatRoundMs;
+        conditionNotice(victim, EffectKind::Poisoned, EffectNotice::TurnElapsed, EffectEnd::None,
+                        {}, now, events);
+    }
+}
 void EffectController::clockMode(bool turns) noexcept {
     if (turns_ == turns)
         return;
+    for (auto& clock : poisonClock_)
+        if (clock)
+            clock = turns ? (clock > gameplayMs_ ? clock - gameplayMs_ : 0) : gameplayMs_ + clock;
     for (auto& row : conditions_)
         for (unsigned k : {1u, 2u, 3u}) {
             auto& c = row[k];
@@ -424,6 +466,10 @@ void EffectController::groundOccupants(Cell partyCell, std::uint64_t now, Combat
 }
 std::uint64_t EffectController::conditionDeadline(bool realTime) const noexcept {
     auto due = UINT64_MAX;
+    if (!turns_)
+        for (auto clock : poisonClock_)
+            if (clock)
+                due = std::min(due, clock);
     for (const auto& row : conditions_)
         for (unsigned k = 0; k < row.size(); ++k) {
             const auto& c = row[k];
@@ -444,6 +490,10 @@ std::uint64_t EffectController::conditionDeadline(bool realTime) const noexcept 
 }
 void EffectController::advanceConditions(std::uint64_t goal, std::uint64_t now, bool realTime,
                                          CombatEvents& events) noexcept {
+    if (!turns_)
+        for (std::uint16_t i = 0; i < poisonClock_.size(); ++i)
+            if (poisonClock_[i] && poisonClock_[i] <= goal)
+                endPoison({i}, EffectEnd::Expired, now, events);
     burnWeb(now, events);
     for (auto& a : ground_.areas)
         if (a.active && a.untilMs <= goal) {

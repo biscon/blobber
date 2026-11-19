@@ -71,6 +71,7 @@ struct CombatOutcome {
     std::int64_t smiteDamage = 0; // Accepted radiant component, resolved separately at impact.
     std::array<rules::DamageResolution, 2> damageComponents{};
     FortitudeResult fortitude; // Resolved impact only; never an accepted/saved roll.
+    int venomDc = 0;
     int roll = 0;
     // Accepted attack-roll context, published only with the resolved attack.
     bool packTactics = false;

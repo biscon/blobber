@@ -5,6 +5,16 @@
 
 namespace blobber {
 namespace {
+EffectKind restorationEffect(RestorationChoice choice) noexcept {
+    switch (choice) {
+    case RestorationChoice::Blindness: return EffectKind::Blind;
+    case RestorationChoice::Paralysis: return EffectKind::HoldPerson;
+    case RestorationChoice::Poison: return EffectKind::Poisoned;
+    }
+    return EffectKind::Count;
+}
+} // namespace
+namespace {
 using rules::SpellKind;
 rules::AttackKind spellAttackKind(SpellKind kind) noexcept {
     return kind == SpellKind::InflictWounds || kind == SpellKind::ShockingGrasp ||
@@ -128,7 +138,7 @@ CommandReason CombatController::spellRecipient(const PartyCommand& c, Player pos
         if (!ally || ally->life == rules::Life::Dead)
             return CommandReason::DeadAlly;
         if (kind == SpellKind::LesserRestoration &&
-            !effects_.has(c.allies[i], c.restoreParalysis ? EffectKind::HoldPerson : EffectKind::Blind))
+            !effects_.has(c.allies[i], restorationEffect(c.restoration)))
             return CommandReason::InvalidTargets;
         if (kind == SpellKind::Guidance && !effects_.conscious(c.allies[i]))
             return CommandReason::CannotAct;
@@ -652,7 +662,7 @@ CombatOutcome CombatController::submitMagic(const PartyCommand& c, Player pose, 
             shatter(c, pose, now, events);
         } else if (kind == SpellKind::LesserRestoration) {
             effects_.restoreCondition(
-                c.allies[0], c.restoreParalysis ? EffectKind::HoldPerson : EffectKind::Blind, now, events);
+                c.allies[0], restorationEffect(c.restoration), now, events);
             if (events.supportJournal) {
                 SupportVisual cue;
                 cue.spell = kind;

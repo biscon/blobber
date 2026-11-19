@@ -55,6 +55,7 @@ enum class CommandReason : std::uint8_t {
 };
 const char* actionName(PartyAction action) noexcept;
 const char* commandMessage(CommandReason reason) noexcept;
+enum class RestorationChoice : std::uint8_t { Blindness, Paralysis, Poison };
 struct PartyCommand {
     rules::CharacterId character;
     PartyAction action = PartyAction::Melee;
@@ -71,7 +72,7 @@ struct PartyCommand {
     std::size_t targetCount = 0;
     std::optional<Cell> aimedCell;
     std::optional<SpellAim> aimedSubcell;
-    bool restoreParalysis = false;
+    RestorationChoice restoration = RestorationChoice::Blindness;
     int healingAmount = 0;
 };
 // Body visibility and geometry-exposed targeting. Combat validates range, rank, life and turn.

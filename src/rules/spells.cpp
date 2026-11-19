@@ -348,8 +348,7 @@ constexpr SpellRules spells[]{
      1},
     {"lesser_restoration",
      "Lesser Restoration",
-     "End one selected blindness or paralysis on a living ally. Disease, deafness and poison conditions are "
-     "not supported.",
+     "End one selected condition on a living ally: blindness, paralysis or poison.",
      Casting::Wisdom,
      2,
      {1, 4, 0},

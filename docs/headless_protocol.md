@@ -238,7 +238,9 @@ Optional fields are:
 - `target`: actor index for weapon attacks; `ally`: character index for Aid/item use.
 - `spell`: stable ID. `enemies` or `allies`: up to three recipient indices (exclusive).
   `darts`: matching counts for Magic Missile or Scorching Ray. `cell:[x,y]` for ground
-  targeting. `restore_paralysis:true` selects Lesser Restoration's paralysis mode.
+  targeting. For Lesser Restoration, set `restore_condition` to `blindness` (default),
+  `paralysis` or `poison`. The legacy `restore_paralysis` boolean is also accepted.
+  Supplying both fields rejects the command.
 - `feature`: second_wind, arcane_recovery, dismiss_concentration, action_surge,
   preserve_life, cunning_action, spiritual_weapon, escape_web, end_turn.
   Features with recipients/cells use the same spell/recipient fields as normal play.

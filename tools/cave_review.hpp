@@ -5,8 +5,14 @@
 
 namespace blobber {
 class WorldRenderer;
+class GameSession;
+class Presenter;
 }
 namespace blobber::cave_review {
+void walkTo(GameSession&, Cell, std::optional<Cell> avoid = {}, std::vector<Cell>* trace = nullptr,
+            bool stopAtContact = false);
+void checkSpider(GameSession&, const generation::CaveFloor&, const std::vector<NpcTimings>&,
+                 const std::filesystem::path&, WorldRenderer* = nullptr, Presenter* = nullptr);
 void biomeChange(WorldRenderer&, const generation::CaveFloor&, const std::filesystem::path&,
                  std::uint32_t seed);
 void checkPreparedDressing(const world_assets::CpuAssets&, const generation::CaveFloor&);

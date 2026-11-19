@@ -45,7 +45,7 @@ void HudPainter::card(const HudCard& c, int i, bool aidTarget, bool inspected, c
         }
         const unsigned harmful = has(EffectKind::HoldPerson) || has(EffectKind::Restrained) ? 3
                                  : has(EffectKind::Sleep)                                   ? 7
-                                 : has(EffectKind::Blind) || has(EffectKind::Bane)          ? 3
+                                 : has(EffectKind::Poisoned) || has(EffectKind::Blind) || has(EffectKind::Bane)          ? 3
                                                                                             : 8;
         if (harmful < 8)
             art->supportEffect(harmful, harmful == 7 ? 4 + unsigned(hud->presentationMs / 160) % 4 : 5,

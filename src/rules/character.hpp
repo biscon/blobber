@@ -62,7 +62,7 @@ constexpr std::uint8_t armorBit(ArmorType type) noexcept {
 }
 enum class ItemKind : std::uint8_t { Weapon, Armor, Shield, Ammunition, Gear, Consumable, Currency, Supply };
 enum class Ammunition : std::uint8_t { None, Arrow, Bolt };
-enum class Consumable : std::uint8_t { None, Healing, Mana };
+enum class Consumable : std::uint8_t { None, Healing, Mana, Antitoxin };
 // Wearing location is independent of item category. Rings share one location type.
 enum class WearSlot : std::uint8_t { None, Head, Hands, Feet, Belt, Cloak, Ring, Amulet, Wrists };
 inline constexpr std::size_t bagCells = 48;

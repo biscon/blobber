@@ -38,7 +38,7 @@ void spells() {
             hold.count = 1;
             hold.difficulty = 100;
             check(bool(s.applyEffect(hold)), "paralysis fixture");
-            command.restoreParalysis = true;
+            command.restoration = blobber::RestorationChoice::Paralysis;
             command.allies[0] = {0};
             command.targetCount = 1;
         }

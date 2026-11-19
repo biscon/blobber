@@ -26,6 +26,33 @@ class CoveredCandidates final : public Visibility {
     }
     bool lootVisible(LootId) const noexcept override { return false; }
 };
+void restorationWire() {
+    const auto c = catalog();
+    const auto d = definitions();
+    const auto& blueprints = blobber::test::campaignBlueprints();
+    auto run = std::make_unique<CampaignRun>(blueprints, c, *c.preset(), d.types, d.timings, 5);
+    Session session(blueprints, c, d, std::move(run), Mode::Diagnostic);
+    auto& game = session.game();
+    auto floor = std::make_unique<FloorState>();
+    game.exportFloor(*floor);
+    floor->effects.poisonRemaining[0] = 9500;
+    game.importFloor(*floor);
+    Observation observation;
+    session.observe(observation);
+    const auto statuses = encodeObservation(observation)["party"][0]["statuses"];
+    check(statuses.size() == 1 && statuses[0]["name"] == "Poisoned" &&
+              statuses[0]["remaining_ms"] == "9500" && statuses[0]["harmful"],
+          "Headless observation exposes the recipient and exact poison clock");
+    Json request{{"kind", "combat"}, {"action", "spell"}, {"character", 1}, {"allies", {0}},
+                 {"restore_condition", "poison"}};
+    check(decodeAction(request, game).combat.restoration == RestorationChoice::Poison,
+          "Named poison cure decodes");
+    request["restore_paralysis"] = true;
+    rejects([&] { decodeAction(request, game); }, "Ambiguous restoration choices reject");
+    request.erase("restore_condition");
+    check(decodeAction(request, game).combat.restoration == RestorationChoice::Paralysis,
+          "Legacy paralysis choice still decodes");
+}
 void paladinWire() {
     using namespace rules;
     const auto cat = blobber::test::paladinCatalog(); const auto defs = definitions();
@@ -814,6 +841,7 @@ int main(int argc, char** argv) {
             replay(p, argv[2], {{"protocol", 1}, {"timing", "test"}, {"content", "owned-fixture"}});
             return 0;
         }
+        restorationWire();
         paladinWire();
         rangerWire();
         barbarianWire();

@@ -2,11 +2,13 @@
 namespace blobber::automation {
 namespace {
 Json casterSource(EffectSource source) {
+    if (!source.npc && source.character.index == UINT16_MAX)
+        return nullptr;
     return source.npc ? Json{{"kind", "npc"}, {"actor", source.enemy.slot}}
                       : Json{{"kind", "party"}, {"character", source.character.index}};
 }
 Json legacyCaster(EffectSource source) {
-    return source.npc ? Json(nullptr) : Json(source.character.index);
+    return source.npc || source.character.index == UINT16_MAX ? Json(nullptr) : Json(source.character.index);
 }
 
 std::string u(std::uint64_t v) {
@@ -25,6 +27,8 @@ Json status(const StatusSummary& s) {
                      {"remaining_ms", u(e.remainingMs)},
                      {"harmful", e.harmful},
                      {"stacks", e.stacks}});
+        if (e.effect == EffectKind::Poisoned && e.clock == StatusClock::Turns)
+            a.back()["remaining_turns"] = (e.remainingMs + combatRoundMs - 1) / combatRoundMs;
     }
     return a;
 }

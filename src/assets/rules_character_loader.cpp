@@ -290,7 +290,9 @@ CharacterContent loadCharacterContent(const nlohmann::json& root) {
                 if (!j.contains("effect"))
                     fail(p + ".effect", "missing field");
                 item.consumable = static_cast<Consumable>(
-                    1 + choice(j.at("effect"), p + ".effect", std::array<const char*, 2>{"healing", "mana"}));
+                    1 + choice(j.at("effect"), p + ".effect", std::array<const char*, 3>{"healing", "mana", "antitoxin"}));
+                if (version < 21 && item.consumable == Consumable::Antitoxin)
+                    fail(p + ".effect", "antitoxin requires schema 21");
                 j.erase("effect");
             }
         } else if (item.kind == ItemKind::Consumable)

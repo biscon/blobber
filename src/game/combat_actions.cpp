@@ -311,6 +311,7 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     out.event = CombatEvent::Attack;
     out.kind = ranged ? rules::AttackKind::Ranged : rules::AttackKind::Melee;
     out.damageType = attack->damageType;
+    out.venomDc = attack->venomDc;
     const auto& timing = presentation_[a->npc.type.index];
     out.impactMs = ranged ? timing.bowImpact : timing.impact;
     out.packTactics = packSupported(id, origin_.cell);

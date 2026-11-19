@@ -187,7 +187,7 @@ void CommandController::openAdvancement(rules::CharacterId id) noexcept {
 void CommandController::restorationChoice() noexcept {
     auto& m = state_.magic;
     if (m.armed && m.kind == rules::SpellKind::LesserRestoration) {
-        m.pending.restoreParalysis = !m.pending.restoreParalysis;
+        m.pending.restoration = RestorationChoice((unsigned(m.pending.restoration) + 1) % 3);
         refreshMagic();
         updateAvailability();
     }

@@ -231,7 +231,9 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     }
     if (m.kind == rules::SpellKind::LesserRestoration && m.armed) {
         box(hudLayout::restorationChoice, gold);
-        label(c.restoreParalysis ? "Cure paralysis / Tab to change" : "Cure blindness / Tab to change",
+        label(c.restoration == RestorationChoice::Poison ? "Cure poison / Tab to change"
+              : c.restoration == RestorationChoice::Paralysis ? "Cure paralysis / Tab to change"
+                                                              : "Cure blindness / Tab to change",
               hudLayout::restorationChoice, gold);
     }
     const char* caster = "";

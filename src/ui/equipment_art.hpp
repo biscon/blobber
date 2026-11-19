@@ -2,7 +2,7 @@
 #include <array>
 namespace blobber {
 inline constexpr unsigned equipmentIconFirst = 160;
-inline constexpr std::array<const char*, 31> equipmentIconIds{{
+inline constexpr std::array<const char*, 32> equipmentIconIds{{
     "padded",
     "studded_leather",
     "hide",
@@ -34,5 +34,6 @@ inline constexpr std::array<const char*, 31> equipmentIconIds{{
     "shortbow_plus1",
     "dagger_plus1",
     "quarterstaff_plus1",
+    "antitoxin",
 }};
 } // namespace blobber

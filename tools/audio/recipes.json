@@ -1139,6 +1139,38 @@
       "duration": 0.35,
       "seed": 20474,
       "review": false
+    },
+    "venomous.spider.step": {
+      "instrument": 2,
+      "frequency": 1150,
+      "tone": 0.04,
+      "duration": 0.12,
+      "seed": 14003,
+      "review": true
+    },
+    "venomous.spider.attack": {
+      "instrument": 2,
+      "frequency": 2350,
+      "tone": 0.08,
+      "duration": 0.24,
+      "seed": 14004,
+      "review": true
+    },
+    "venomous.spider.hurt": {
+      "instrument": 1,
+      "frequency": 710,
+      "tone": 0.05,
+      "duration": 0.16,
+      "seed": 14005,
+      "review": true
+    },
+    "venomous.spider.death": {
+      "instrument": 2,
+      "frequency": 600,
+      "tone": 0.06,
+      "duration": 0.48,
+      "seed": 14006,
+      "review": true
     }
   }
 }

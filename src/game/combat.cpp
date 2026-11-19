@@ -373,6 +373,7 @@ void CombatController::selectTurn() noexcept {
                         skipped.spentCause =
                             state_.cooldownMs[e.index] ? SpentCause::Cooldown : SpentCause::NoAction;
                         currentEvents_->append(skipped);
+                        effects_.endVictimTurn(id, noticeTime_, *currentEvents_);
                         effects_.groundCheck(id, origin_.cell, noticeTime_, *currentEvents_);
                     }
                     ++position_;
@@ -383,6 +384,8 @@ void CombatController::selectTurn() noexcept {
                 ++state_.turn;
                 return;
             }
+            if (life != rules::Life::Dead && currentEvents_)
+                effects_.endVictimTurn({e.index}, noticeTime_, *currentEvents_);
         } else {
             for (; enemyCursor_ < state_.enemyCount; ++enemyCursor_) {
                 const auto id = state_.enemies[enemyCursor_];
@@ -416,6 +419,8 @@ void CombatController::advance(std::uint64_t now) noexcept {
     }
     if (finish(now))
         return;
+    if (state_.activeCharacter && currentEvents_)
+        effects_.endVictimTurn(*state_.activeCharacter, now, *currentEvents_);
     if (state_.activeEnemy)
         ++enemyCursor_;
     else
@@ -476,6 +481,8 @@ bool CombatController::finish(std::uint64_t now) noexcept {
         busy = std::max(busy, t);
     if (now < busy)
         return false;
+    if (state_.activeCharacter && currentEvents_)
+        effects_.endVictimTurn(*state_.activeCharacter, now, *currentEvents_);
     state_.phase = conscious ? CombatPhase::Victory : CombatPhase::Defeat;
     state_.awaitingAction = false;
     state_.resolvingAction = false;

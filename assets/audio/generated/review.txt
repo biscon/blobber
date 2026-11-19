@@ -23,3 +23,7 @@ gate.open
 chest.open
 potion
 cave.drips
+venomous.spider.step
+venomous.spider.attack
+venomous.spider.hurt
+venomous.spider.death

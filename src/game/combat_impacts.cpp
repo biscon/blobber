@@ -443,6 +443,8 @@ void CombatController::applyDamage(CombatOutcome& out, std::uint64_t when, Comba
         effects_.damaged(out.enemy, out.damage, when, events);
     else
         effects_.reconcile(when, events);
+    if (out.venomDc && out.hit && !out.targetGone && !out.died && !out.mirror.effect.serial)
+        effects_.venomousBite(out.enemy, out.recipient, out.venomDc, when, events);
     if (out.hit && !out.targetGone && !out.died && out.spell == rules::SpellKind::GuidingBolt)
         effects_.guide(out.enemy, when, events);
     if (out.hit && !out.targetGone && !out.died && out.spell == rules::SpellKind::RayOfFrost)

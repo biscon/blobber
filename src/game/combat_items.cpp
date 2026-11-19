@@ -41,13 +41,15 @@ CommandReason CombatController::validateItem(const PartyCommand& c, Player pose)
         return CommandReason::DeadAlly;
     if (item->consumable == rules::Consumable::Healing)
         return ally->hitPoints < ally->stats.maxHitPoints ? CommandReason::Ready : CommandReason::FullHealth;
+    if (item->consumable == rules::Consumable::Antitoxin)
+        return effects_.has(*c.ally, EffectKind::Poisoned) ? CommandReason::Ready : CommandReason::InvalidTargets;
     if (item->consumable == rules::Consumable::Mana)
         return ally->maxMana > 0 && ally->mana < ally->maxMana ? CommandReason::Ready
                                                                : CommandReason::FullMana;
     return CommandReason::InvalidItem;
 }
 CombatOutcome CombatController::submitItem(const PartyCommand& c, Player pose, std::uint64_t now,
-                                           CombatEvents&) noexcept {
+                                           CombatEvents& events) noexcept {
     CombatOutcome out;
     out.reason = validateItem(c, pose);
     if (out.reason != CommandReason::Ready)
@@ -71,6 +73,9 @@ CombatOutcome CombatController::submitItem(const PartyCommand& c, Player pose, s
         party_.heal(*c.ally, rng_.roll({2, 4, 2}).value.total);
         out.event = CombatEvent::Healing;
         out.damage = ally->hitPoints - hp;
+    } else if (kind == rules::Consumable::Antitoxin) {
+        effects_.restoreCondition(*c.ally, EffectKind::Poisoned, now, events);
+        out.event = CombatEvent::Recovery;
     } else {
         const int mana = ally->mana;
         party_.restoreMana(*c.ally, 2);

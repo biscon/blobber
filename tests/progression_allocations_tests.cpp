@@ -274,7 +274,7 @@ int main() {
                 okay &= bool(s.applyEffect(r));
                 c.targetCount = 1;
                 c.allies[0] = {0};
-                c.restoreParalysis = true;
+                c.restoration = blobber::RestorationChoice::Paralysis;
             }
             okay &= s.submit(c).reason == CommandReason::Resolved;
             okay &= s.submit(c).reason != CommandReason::Resolved;

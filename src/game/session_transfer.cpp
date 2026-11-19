@@ -79,6 +79,8 @@ void GameSession::exportFloor(FloorState& s) const noexcept {
     s.effects.nextSerial = effects_.nextSerial_;
     s.effects.gameplayMs = effects_.gameplayMs_;
     s.effects.conditions = effects_.conditions_;
+    for (std::uint16_t i = 0; i < rules::partySize; ++i)
+        s.effects.poisonRemaining[i] = effects_.poisonRemaining({i});
     s.effects.casterTurns = effects_.casterTurns_;
     s.effects.ground = effects_.ground_;
     s.effects.restrained = effects_.restrained_;
@@ -163,6 +165,12 @@ void GameSession::importFloor(const FloorState& s) {
             if (!e.targets[i].npc)
                 reject();
     }
+    for (std::uint16_t i = 0; i < rules::partySize; ++i) {
+        const auto remaining = s.effects.poisonRemaining[i];
+        if (remaining > 2 * combatRoundMs || remaining > UINT64_MAX - s.effects.gameplayMs ||
+            (remaining && party_.character({i})->life == rules::Life::Dead))
+            reject();
+    }
     const auto validCell = [&](Cell c) {
         return c.x >= 0 && c.y >= 0 && c.x < map_.width() && c.y < map_.height();
     };
@@ -244,7 +252,7 @@ void GameSession::importFloor(const FloorState& s) {
             reject();
         if (!e.active)
             continue;
-        if (unsigned(e.kind) >= unsigned(EffectKind::Count) || !e.id.serial ||
+        if (unsigned(e.kind) >= unsigned(EffectKind::Poisoned) || !e.id.serial ||
             e.id.serial >= s.effects.nextSerial || e.count == 0 || e.count > e.targets.size() ||
             (e.caster.npc ? e.caster.enemy.slot >= s.actors.count || e.kind != EffectKind::Bless
                           : !party_.character(e.caster.character)) ||
@@ -316,6 +324,8 @@ void GameSession::importFloor(const FloorState& s) {
     effects_.nextSerial_ = s.effects.nextSerial;
     effects_.gameplayMs_ = s.effects.gameplayMs;
     effects_.conditions_ = s.effects.conditions;
+    for (unsigned i = 0; i < rules::partySize; ++i)
+        effects_.poisonClock_[i] = s.effects.poisonRemaining[i] ? s.effects.gameplayMs + s.effects.poisonRemaining[i] : 0;
     effects_.casterTurns_ = s.effects.casterTurns;
     effects_.ground_ = s.effects.ground;
     effects_.restrained_ = s.effects.restrained;

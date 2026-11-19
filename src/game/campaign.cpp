@@ -328,6 +328,8 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
         e.active = false;
     }
     incoming.casterTurns = local.casterTurns;
+    incoming.poisonRemaining = local.poisonRemaining;
+    local.poisonRemaining = {};
     for (unsigned i = 0; i < 4; ++i) {
         incoming.conditions[i] = local.conditions[i];
         for (auto& c : incoming.conditions[i])

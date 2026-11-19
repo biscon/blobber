@@ -127,6 +127,7 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         const auto& species = actors_.catalog().monster(a.monster)->id;
         state_.enemyPortraits[i] = species == "skeleton"        ? EnemyPortrait::Skeleton
                                    : species == "bugbear"       ? EnemyPortrait::Bugbear
+                                   : species == "venomous.spider" ? EnemyPortrait::Spider
                                    : species == "giant.rat"     ? EnemyPortrait::GiantRat
                                    : species == "zombie"        ? EnemyPortrait::Zombie
                                    : species == "goblin_shaman" ? EnemyPortrait::Shaman
@@ -315,6 +316,10 @@ void CommandController::record(const CombatOutcome& out) noexcept {
             break;
         }
         const auto* item = party_.catalog().item(out.item);
+        if (item && item->consumable == rules::Consumable::Antitoxin) {
+            std::snprintf(line, sizeof(line), "%s gives antitoxin to %s.", name, target);
+            break;
+        }
         std::snprintf(line, sizeof(line), "%s%s%s -> %s: +%lld %s.", name, item ? " uses " : "",
                       item ? item->name.c_str() : "", target, static_cast<long long>(out.damage),
                       out.spell == rules::SpellKind::FalseLife ? "temporary HP"
@@ -369,6 +374,19 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         else
             std::snprintf(line, sizeof(line), "%s%s: %s.", caster, effect,
                           e.notice == EffectNotice::Applied ? "applied" : "ended / recipient removed");
+        if (e.kind == EffectKind::Poisoned && !e.target.npc) {
+            const auto* member = party_.character(e.target.character);
+            const char* victim = member ? member->build.name.c_str() : "Ally";
+            if (e.notice == EffectNotice::InitialSave)
+                std::snprintf(line, sizeof(line), "%s: venom CON save %lld vs DC %lld - %s.", victim,
+                              static_cast<long long>(e.total), static_cast<long long>(e.difficulty),
+                              e.succeeded ? "saved" : "failed");
+            else
+                std::snprintf(line, sizeof(line), "%s: %s.", victim,
+                              e.notice == EffectNotice::Applied ? "Poisoned for 2 turns"
+                              : e.notice == EffectNotice::TurnElapsed ? "Poisoned for 1 more turn"
+                              : e.reason == EffectEnd::Recovered ? "poison cured" : "poison ended");
+        }
         if (e.notice == EffectNotice::Applied && e.target.npc && e.caster.npc) {
             appendLog(line);
             std::snprintf(line, sizeof(line), "Enemy #%u receives %s from #%u.",

@@ -199,7 +199,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                     effect.count = 1;
                     effect.difficulty = 100;
                     check(bool(game.applyEffect(effect)), "Cleanse review applies actual paralysis");
-                    command.restoreParalysis = true;
+                    command.restoration = blobber::RestorationChoice::Paralysis;
                 }
             } else if (example.spell == rules::SpellKind::Shatter)
                 command.aimedCell = Cell{6, 8 - example.range};
