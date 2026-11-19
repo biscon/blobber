@@ -82,6 +82,9 @@ class WorldRenderer {
 
   private:
     using SharedTexture = std::shared_ptr<GpuLease<TextureHandle>>;
+    struct VisibleWater {
+        bool atlas = false, current = false;
+    };
     struct View {
         world_assets::AssetLease assets;
         std::vector<SharedTexture> textureLeases;
@@ -105,8 +108,14 @@ class WorldRenderer {
         bool ready = false, quality = false, ao = false;
         world_render::DungeonLighting lighting = world_render::DungeonLighting::Current;
         world_render::OutdoorLighting outdoorLighting{};
-        bool visibleWater = false;
+        VisibleWater visibleWater;
+        unsigned currentTime = 0, drawnCurrentTime = 0;
+        unsigned currentMaterial = UINT16_MAX;
         unsigned waterFrame = 0, drawnWaterFrame = 0;
+        void setWaterTime(std::uint64_t now) noexcept {
+            waterFrame = unsigned((now / 125) % 8);
+            currentTime = unsigned(now % world_assets::WaterCurrent::periodMs) / 16 * 16;
+        }
         std::uint64_t revision = 0;
     };
     GpuResources& resources_;
@@ -130,7 +139,7 @@ class WorldRenderer {
     std::uint64_t aoGeometry_ = UINT64_MAX, aoDoors_ = UINT64_MAX, aoDoorTime_ = UINT64_MAX;
     bool aoHadFrame_ = false;
 
-    bool drawStaticGeometry(const View&, const world_render::WorldFrame*);
+    VisibleWater drawStaticGeometry(const View&, const world_render::WorldFrame*);
     void drawDoorGeometry(const View&, const world_render::WorldFrame&, unsigned phase);
     enum class BillboardPass { Scenery, LeafArt, Creatures };
     void drawBillboards(const View&, const world_render::WorldFrame&, const float*, const float*, bool,
@@ -138,7 +147,7 @@ class WorldRenderer {
     void drawEffects(const View&, const world_render::EffectFrame&, const float*, const float*, bool ground,
                      const world_render::WorldFrame&);
     int model_ = -1, idMode_ = -1, idColor_ = -1, uvMode_ = -1, doorUv_ = -1, meshCutout_ = -1,
-        waterFrame_ = -1;
+        waterFrame_ = -1, currentPhase_ = -1;
     GpuLease<TargetHandle> high_, creaturesLow_, creaturesHigh_;
     std::unique_ptr<View> active_, staged_;
     world_render::DrawList draws_;

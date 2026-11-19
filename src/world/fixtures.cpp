@@ -34,7 +34,8 @@ const char* fixtureName(const FixtureDefinition& f) noexcept {
 }
 FloorGeometry::FloorGeometry(const Map& map, const FloorFixtures& defs)
     : map_(map), definition_(defs), world_(nextFloor()) {
-    if (defs.depth > 3 || defs.count > fixtureCapacity || defs.landingCount > defs.landings.size() ||
+    // Standalone cave walkthroughs also use depth for presentation. Campaign admission is separate.
+    if (defs.depth > 6 || defs.count > fixtureCapacity || defs.landingCount > defs.landings.size() ||
         ((defs.landingCount || defs.npcExcluded.any()) &&
          map.width() * map.height() > int(discoveryCapacity)) ||
         (defs.discovery && map.width() * map.height() > int(discoveryCapacity)))

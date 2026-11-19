@@ -94,12 +94,11 @@ Failure validateStone(const FloorLayout& f) noexcept {
         return {Error::Connection};
     return {};
 }
-Failure validate(const FloorLayout& f) noexcept {
-    if (f.width < 3 || f.height < 3 || f.width > 40 || f.height > 40 || f.roomCount > maxRooms ||
+Failure validateGeometry(const FloorLayout& f) noexcept {
+    if (f.width < 3 || f.height < 3 || unsigned(f.width) > maxCells / unsigned(f.height) || f.roomCount > maxRooms ||
         f.connectionCount > maxConnections || f.pathCount > maxCells || f.cacheCount > 3)
         return {Error::Capacity};
-    if (!f.roomCount || !f.connectionCount || f.loopConnection >= f.connectionCount ||
-        f.biome != BiomeId::Underkeep || f.algorithm != AlgorithmId::StoneRooms)
+    if (!f.roomCount || !f.connectionCount)
         return {Error::Bounds};
     for (unsigned i = 0; i < f.cacheCount; ++i) {
         if (!floorCell(f, f.caches[i].cell) || unsigned(f.caches[i].facing) > 3)
@@ -270,6 +269,16 @@ Failure validate(const FloorLayout& f) noexcept {
         }
     if (search(f, s, f.spawn.cell) != floors)
         return {Error::Disconnected};
+    return {};
+}
+Failure validate(const FloorLayout& f) noexcept {
+    if (f.biome != BiomeId::Underkeep || f.algorithm != AlgorithmId::StoneRooms ||
+        f.loopConnection >= f.connectionCount)
+        return {Error::Bounds};
+    if (const auto failure = validateGeometry(f))
+        return failure;
+    Scratch s;
+    const auto floors = unsigned(std::count(f.floor.begin(), f.floor.end(), std::uint8_t(1)));
     const auto& e = f.connections[f.loopConnection];
     const auto a = e.socketA + forward(e.facingA) * -1, b = e.socketB + forward(e.facingB) * -1;
     search(f, s, a);

@@ -22,7 +22,7 @@ void main(){uv=vertexTexCoord;normal=normalize(mat3(matModel)*vertexNormal);vec4
 constexpr const char* fragment = R"(#version 330
 in vec2 uv;in vec3 normal;in float depth;in vec3 worldPosition;in float shade;out vec4 finalColor;
 uniform int depthOnly;uniform int aoEnabled;uniform sampler2D environmentAo;uniform vec2 viewportSize;
-uniform vec3 outdoorAmbient;uniform vec2 dungeonLighting;uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec3 daylightFog;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;
+uniform vec3 outdoorAmbient;uniform vec2 dungeonLighting;uniform float daylight;uniform sampler2D texture0;uniform vec3 forward;uniform int idPass;uniform vec4 idColor;uniform int uvMode;uniform float worldScale;uniform vec3 horizon;uniform vec3 daylightFog;uniform vec2 doorUv;uniform int meshCutout;uniform int waterFrame;uniform float currentPhase;
 void main(){vec2 mapped=uv;
 if(uvMode==1) mapped=abs(normal.y)>0.5?worldPosition.xz:vec2(abs(normal.x)>0.5?worldPosition.z:worldPosition.x,1.0-worldPosition.y);
 if(uvMode==2) mapped=vec2(0.02+uv.x*0.035,0.25+uv.y*0.4);
@@ -32,11 +32,12 @@ if(meshCutout!=0){ivec2 size=textureSize(texture0,0);ivec2 p=clamp(ivec2(floor(m
 if(texelFetch(texture0,p,0).a*255.0+0.01<128.0)discard;}
 if(depthOnly!=0){finalColor=vec4(1);return;}
 if(idPass!=0){finalColor=idColor;return;}
+if(uvMode==5)mapped=worldPosition.xz-vec2(currentPhase,0.0);
 if(waterFrame>=0)mapped+=vec2(float(waterFrame%4)*0.25,float(waterFrame/4)*0.5);
 vec4 c=texture(texture0,mapped);
 if(meshCutout!=0)c.rgb/=max(c.a,0.0001);
 float face=normal.y>0.5?0.85:(normal.y< -0.5?0.58:0.78+0.22*abs(dot(normal,forward)));
-if(uvMode==4) face=1.0;
+if(uvMode>=4) face=1.0;
 float litDepth=depth+dungeonLighting.y*max(depth-dungeonLighting.x,0.0);float light=mix(face/(1.0+0.115*litDepth+0.015*litDepth*litDepth),mix(0.8,1.0,face)/(1.0+0.018*depth+0.0015*depth*depth),daylight);float fog=clamp((depth-mix(9.4,daylightFog.x,daylight))/mix(3.5,daylightFog.y,daylight),0.0,1.0)*mix(1.0,daylightFog.z,daylight);
 float ao=aoEnabled!=0?texture(environmentAo,gl_FragCoord.xy/viewportSize).r:1.0;
 if(spellLightCount==0){finalColor=vec4((c.rgb*mix(vec3(1),outdoorAmbient,daylight)*light*ao*(1.0-fog)+mix(vec3(15,18,20)/255.0,horizon*outdoorAmbient,daylight)*fog)*shade,1);return;}
@@ -162,9 +163,10 @@ WorldRenderer::WorldRenderer(GpuResources& r, std::shared_ptr<const world_assets
     doorUv_ = GetShaderLocation(shader, "doorUv");
     meshCutout_ = GetShaderLocation(shader, "meshCutout");
     waterFrame_ = GetShaderLocation(shader, "waterFrame");
+    currentPhase_ = GetShaderLocation(shader, "currentPhase");
     idMode_ = GetShaderLocation(shader, "idPass");
     idColor_ = GetShaderLocation(shader, "idColor");
-    if (mvp_ < 0 || view_ < 0 || forward_ < 0)
+    if (mvp_ < 0 || view_ < 0 || forward_ < 0 || currentPhase_ < 0)
         throw std::runtime_error("World shader interface unavailable");
     creaturesLow_ = {r, r.createTarget(500, 282, true)};
     creatureComposite_ = {r, r.createShader(compositeVertex, compositeFragment)};
@@ -203,8 +205,11 @@ void WorldRenderer::stagePrepared(GeometryView geometry, const MovementState& st
             throw std::runtime_error("Scene references an unavailable world material");
     const auto built = Clock::now();
     acquireTextures(*candidate, required);
-    for (unsigned i = 0; i < candidate->pack.materialCount; ++i)
+    for (unsigned i = 0; i < candidate->pack.materialCount; ++i) {
         candidate->materials[i] = candidate->textures.at(candidate->pack.materials[i]);
+        if (candidate->pack.materials[i] == publication_.current.texture)
+            candidate->currentMaterial = i;
+    }
     preparationPoint("Preparing dungeon");
     candidate->mesh = {resources_, resources_.createMesh(candidate->cpu)};
     candidate->output = {resources_, resources_.createTarget(viewWidth, viewHeight)};
@@ -296,6 +301,7 @@ void WorldRenderer::stage(const world_render::FrameInput& in) {
                 world_render::viewScratchBudget)
                 throw std::runtime_error("Integrated world scratch budget exceeded");
         }
+        staged_->setWaterTime(in.now);
         updateLights(*staged_, in);
         render(*staged_, in.movement, &staged_->visibility->frame(), {},
                staged_->effects ? &staged_->effects->frame() : nullptr, in.outdoorLighting);
@@ -326,7 +332,7 @@ WorldImage WorldRenderer::renderStaged(const world_render::FrameInput& in) {
 WorldImage WorldRenderer::renderInput(View& v, const world_render::FrameInput& in) {
     using Clock = std::chrono::steady_clock;
     const auto start = measure_ ? Clock::now() : Clock::time_point{};
-    v.waterFrame = unsigned((in.now / 125) % 8);
+    v.setWaterTime(in.now);
     v.visibility->update(in, false);
     const auto prepared = measure_ ? Clock::now() : Clock::time_point{};
     if ((in.attacks || in.area || in.spells || in.conditions || in.geometry.base().definition().hasFire()) &&
@@ -387,13 +393,15 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     if (!ids && v.ready && v.contentRevision == (frame ? frame->revision : 0) &&
         v.effectRevision == (effects ? effects->revision : 0) && v.quality == supersampling_ &&
         v.ao == ambientOcclusion_ && v.lighting == lighting && v.outdoorLighting == outdoorLighting &&
-        (!v.visibleWater || v.drawnWaterFrame == v.waterFrame) && world_render::sameCamera(camera, v.last)) {
+        (!v.visibleWater.atlas || v.drawnWaterFrame == v.waterFrame) &&
+        (!v.visibleWater.current || v.drawnCurrentTime == v.currentTime) &&
+        world_render::sameCamera(camera, v.last)) {
         stats.cached = true;
         return {v.output.get(), v.revision};
     }
     world_render::cull(v.cpu, camera, draws_);
     stats.chunks = draws_.tested;
-    bool visibleWater = false;
+    VisibleWater visibleWater;
     const auto targetHandle = ids ? ids : supersampling_ ? high_.get() : v.output.get();
     const auto& target = resources_.target(targetHandle);
     const auto creatureHandle = !ids && supersampling_ ? creaturesHigh_.get() : creaturesLow_.get();
@@ -516,6 +524,8 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     rlEnableDepthTest();
     rlEnableDepthMask();
     rlEnableBackfaceCulling();
+    const float currentPhase = float(v.currentTime) / world_assets::WaterCurrent::periodMs;
+    rlSetUniform(currentPhase_, &currentPhase, SHADER_UNIFORM_FLOAT, 1);
     visibleWater = drawStaticGeometry(v, frame);
     if (frame) {
         const auto vp = MatrixMultiply(rlGetMatrixModelview(), projection);
@@ -640,6 +650,7 @@ WorldImage WorldRenderer::render(View& v, const MovementState& state, const worl
     v.outdoorLighting = outdoorLighting;
     v.visibleWater = visibleWater;
     v.drawnWaterFrame = v.waterFrame;
+    v.drawnCurrentTime = v.currentTime;
     v.ready = true;
     v.revision = ++revision_;
     return {v.output.get(), v.revision};
@@ -991,9 +1002,15 @@ void WorldRenderer::acquireTextures(View& v, const world_assets::AssetRequiremen
                 lease = std::make_shared<GpuLease<TextureHandle>>();
                 *lease = {resources_, resources_.createTexture(im)};
                 const auto texture = resources_.texture(lease->get());
-                SetTextureWrap(texture, t.clamp ? TEXTURE_WRAP_CLAMP : TEXTURE_WRAP_MIRROR_REPEAT);
-                rlTextureParameters(texture.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
-                rlTextureParameters(texture.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR);
+                if (i == publication_.current.texture) {
+                    SetTextureWrap(texture, TEXTURE_WRAP_REPEAT);
+                    SetTextureFilter(texture, TEXTURE_FILTER_TRILINEAR);
+                } else {
+                    SetTextureWrap(texture, t.clamp ? TEXTURE_WRAP_CLAMP : TEXTURE_WRAP_MIRROR_REPEAT);
+                    rlTextureParameters(texture.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
+                    rlTextureParameters(texture.id, RL_TEXTURE_MIN_FILTER,
+                                        RL_TEXTURE_FILTER_NEAREST_MIP_LINEAR);
+                }
                 if (std::any_of(publication_.effects.begin(), publication_.effects.end(),
                                 [&](const auto& clip) { return clip.body == i || clip.emission == i; })) {
                     using Parameter = void (*)(unsigned, unsigned, float);

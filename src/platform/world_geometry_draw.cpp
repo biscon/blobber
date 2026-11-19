@@ -5,20 +5,23 @@
 #pragma GCC diagnostic pop
 #include "rlgl.h"
 namespace blobber {
-bool WorldRenderer::drawStaticGeometry(const View& v, const world_render::WorldFrame* frame) {
-    bool visibleWater = false;
+WorldRenderer::VisibleWater WorldRenderer::drawStaticGeometry(const View& v,
+                                                              const world_render::WorldFrame* frame) {
+    VisibleWater visibleWater;
     for (unsigned i = 0; i < draws_.count; ++i) {
         const auto& range = v.cpu.ranges[draws_.ranges[i]];
         if (range.variant != noContainer &&
             (frame ? frame->containerOpened[range.id - PickingBuffer::containerBase] : false) !=
                 bool(range.variant))
             continue;
-        visibleWater |= range.water;
+        const bool current = range.material == v.currentMaterial;
+        visibleWater.current |= current;
+        visibleWater.atlas |= range.water;
         const int waterFrame = range.water ? int(v.waterFrame) : -1;
         rlSetUniform(waterFrame_, &waterFrame, SHADER_UNIFORM_INT, 1);
         const int rangeCutout = range.cutout ? 1 : 0;
         rlSetUniform(meshCutout_, &rangeCutout, SHADER_UNIFORM_INT, 1);
-        const int rangeUv = range.painted ? 4 : 0;
+        const int rangeUv = current ? 5 : range.painted ? 4 : 0;
         rlSetUniform(uvMode_, &rangeUv, SHADER_UNIFORM_INT, 1);
         const float color[]{float(range.id & 255) / 255, float(range.id >> 8) / 255, 0, 1};
         rlSetUniform(idColor_, color, SHADER_UNIFORM_VEC4, 1);

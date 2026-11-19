@@ -98,7 +98,14 @@ struct Pack {
     // Start distance, transition span, maximum opacity; daylight only.
     std::array<float, 3> daylightFog{10.f, 4.5f, 1.f};
 };
+// Optional preparation-owned current tile for a standalone review publication.
+struct WaterCurrent {
+    static constexpr unsigned tileSize = 256, periodMs = 32000;
+    std::uint16_t texture = UINT16_MAX;
+    std::vector<unsigned char> pixels; // Opaque RGBA mip chain.
+};
 struct Publication {
+    WaterCurrent current;
     EffectClips effects{};
     std::filesystem::path payload;
     std::uint64_t fingerprint = 0, definitions = 0, textureBytes = 0, alphaBytes = 0;

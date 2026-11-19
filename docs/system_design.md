@@ -1,5 +1,17 @@
 # System design
 
+[Damp Caves expansion roadmap](damp_caves_plan.md) proposes seven slices for
+procedural dungeon floors 4–6 beneath the Underkeep. It covers cave generation
+and art, spiders and curable poison, blind cave newts, a broodmother with two
+interruptible clutches, encounter progression and six-floor campaign persistence.
+[DC01 cave geometry and walkthrough](dc01_cave_layout_design.md) was **accepted and closed**
+by the player on 2026-11-19. Each revised seed-5 floor has 16 chambers,
+three independent circuits and two optional destinations. The Galleries pool uses
+a seamless 256-texel-per-cell painting with a slow eastward current. The
+[water revision](dc01_cave_layout_design.md#pool-density-and-current-revision) records the mapping and rate.
+The [gallery](screenshots/damp-caves-dc01/README.md) includes both banks and a north-facing motion sample.
+Campaign descent ends on floor 3. DC02–DC07 are Planned.
+
 [Linux distribution roadmap](linux_distribution_plan.md): **LD01 accepted and closed
 by the user, 2026-11-11**; implemented and mechanically verified.
 [LD01 design/handoff](linux_distribution_ld01.md) documents the shared curated

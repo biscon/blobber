@@ -654,6 +654,12 @@ std::vector<unsigned char> Publication::read(unsigned index, bool alpha) const {
     if (index >= textures.size())
         throw std::out_of_range("World texture index");
     const auto& t = textures[index];
+    if (index == current.texture) {
+        if (alpha)
+            return {};
+        require(current.pixels.size() == t.bytes);
+        return current.pixels;
+    }
     const auto bytes = alpha ? t.alphaBytes : t.bytes;
     require(bytes <= 128 * MiB);
     std::vector<unsigned char> data(static_cast<std::size_t>(bytes));
@@ -717,6 +723,13 @@ CpuAssets::CpuAssets(Publication p) : publication(std::move(p)) {
             publication.anchors.size() == publication.textures.size() &&
             publication.alphaBytes <= installedBudget && publication.textureBytes <= installedBudget);
     require(publication.packs.size() <= packCapacity);
+    const auto& current = publication.current;
+    if (current.texture != UINT16_MAX) {
+        require(current.texture < publication.textures.size());
+        const auto& t = publication.textures[current.texture];
+        require(!t.clamp && t.material && t.width == WaterCurrent::tileSize && t.height == t.width &&
+                current.pixels.size() == mipBytes(t.width, t.height));
+    }
     validMeshes(publication.meshes, publication.textures, publication.packs);
     std::set<std::string> ids;
     for (const auto& p : publication.packs) {
@@ -818,8 +831,9 @@ std::size_t CpuAssets::bytes() const noexcept {
     std::size_t meshBytes = publication.meshes.capacity() * sizeof(PropMesh);
     for (const auto& m : publication.meshes)
         meshBytes += m.name.capacity() + m.vertices.capacity() * sizeof(std::array<float, 8>);
-    std::size_t n = sizeof(*this) + meshBytes + publication.packs.capacity() * sizeof(Pack) +
-                    masks.capacity() * sizeof(masks[0]) + bounds.capacity() * sizeof(AlphaBounds) +
+    std::size_t n = sizeof(*this) + publication.current.pixels.capacity() + meshBytes +
+                    publication.packs.capacity() * sizeof(Pack) + masks.capacity() * sizeof(masks[0]) +
+                    bounds.capacity() * sizeof(AlphaBounds) +
                     publication.textures.capacity() * sizeof(Texture) +
                     publication.anchors.capacity() * sizeof(Anchor) +
                     publication.appearances.capacity() * sizeof(Appearance);

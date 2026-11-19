@@ -18,7 +18,19 @@ std::optional<FloorSpec> floorSpec(unsigned depth) noexcept {
     return FloorSpec{depth, floorDimension, floorDimension, BiomeId::Underkeep, depth, depth > 1, depth == 3};
 }
 const char* profileName(LayoutProfile p) noexcept {
-    return p == LayoutProfile::CompactWings ? "compact_wings" : "chamber_network";
+    switch (p) {
+    case LayoutProfile::CompactWings:
+        return "compact_wings";
+    case LayoutProfile::ChamberNetwork:
+        return "chamber_network";
+    case LayoutProfile::Seep:
+        return "The Seep";
+    case LayoutProfile::DrownedGalleries:
+        return "The Drowned Galleries";
+    case LayoutProfile::BroodVault:
+        return "The Brood Vault";
+    }
+    return "invalid";
 }
 bool inside(const FloorLayout& f, Cell c) noexcept {
     return c.x >= 0 && c.y >= 0 && c.x < f.width && c.y < f.height;

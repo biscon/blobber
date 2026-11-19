@@ -22,14 +22,8 @@ FloorLayout candidate(GenerationRequest request, unsigned attempt, bool fallback
     f.height = spec->height;
     f.biome = spec->biome;
     f.algorithm = underkeepBiome().algorithm;
-    switch (f.algorithm) {
-    case AlgorithmId::StoneRooms:
-        if (!buildStoneLayout(f, request, attempt, fallback, catalog)) {
-            f.roomCount = 0;
-            return f;
-        }
-        break;
-    }
+    if (!buildStoneLayout(f, request, attempt, fallback, catalog))
+        f.roomCount = 0;
     return f;
 }
 } // namespace

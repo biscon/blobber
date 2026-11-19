@@ -221,6 +221,9 @@ void drawUI(const MovementState& state, bool debug, const Map& map, const HudSna
                    : h && h->arena                ? "Arena"
                    : depth == 2                   ? "Depth II"
                    : depth == 3                   ? "Depth III"
+                   : depth == 4                   ? "Depth IV"
+                   : depth == 5                   ? "Depth V"
+                   : depth == 6                   ? "Depth VI"
                                                   : "Depth I",
                    449, gold, UiTextStyle::Small);
     }

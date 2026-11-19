@@ -17,9 +17,9 @@ struct GenerationRequest {
     std::uint32_t seed = 0;
     unsigned depth = 1, generator = generatorVersion, templates = templateVersion;
 };
-enum class BiomeId : std::uint8_t { Underkeep };
-enum class AlgorithmId : std::uint8_t { StoneRooms };
-enum class LayoutProfile : std::uint8_t { CompactWings, ChamberNetwork };
+enum class BiomeId : std::uint8_t { Underkeep, DampCaves };
+enum class AlgorithmId : std::uint8_t { StoneRooms, CaveChambers };
+enum class LayoutProfile : std::uint8_t { CompactWings, ChamberNetwork, Seep, DrownedGalleries, BroodVault };
 struct BiomeDefinition {
     BiomeId id;
     AlgorithmId algorithm;
@@ -198,6 +198,7 @@ unsigned sectorJunction(const FloorLayout&) noexcept;
 const Connection* connectionBetween(const FloorLayout&, unsigned, unsigned) noexcept;
 Heading incomingFacing(const Connection&, unsigned room) noexcept;
 Cell threshold(const Connection&) noexcept;
+Failure validateGeometry(const FloorLayout&) noexcept;
 Failure validateStone(const FloorLayout&) noexcept;
 std::uint64_t seedFor(GenerationRequest, Domain, unsigned stableId = 0, unsigned attempt = 0) noexcept;
 std::uint64_t fingerprint(const FloorLayout&) noexcept;
