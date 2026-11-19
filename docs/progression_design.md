@@ -258,7 +258,7 @@ skills/tools, feats and new classes remain deferred.
 ### Rules and ownership
 
 Extend the four current classes through level four. XP thresholds become
-300/900/2700, with a 2700 cap and existing exact fractional awards. Keep one level
+300/900/2700, with exact fractional awards. The original 2700 storage cap was lifted for [DC06 cave pacing](dc06_population_rewards_design.md). Keep one level
 per atomic commit, earned reminders/audio, safety and stale-request validation.
 Level-four proficiency remains +2. No level five, skills/tools, feats, new classes,
 encounter/reward rebalancing or respec is included.

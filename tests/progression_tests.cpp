@@ -167,8 +167,13 @@ void rewards() {
     check(p.character({0})->experience == 12 && p.character({1})->experience == 13 &&
               p.character({1})->experienceFraction == 6,
           "dead excluded, unconscious included, exact thirds");
-    p.awardExperience(UINT32_MAX);
-    check(p.character({2})->experience == 2700 && p.character({2})->experienceFraction == 0,
+    p.awardExperience(21000);
+    Party restored(cat, p.checkpoint());
+    check(restored.character({2})->experience == 7013 && restored.character({2})->experienceFraction == 6,
+          "banked XP beyond level five survives party restore");
+    for (unsigned i = 0; i < 4; ++i)
+        p.awardExperience(UINT32_MAX);
+    check(p.character({2})->experience == experienceCap && p.character({2})->experienceFraction == 0,
           "large XP safely saturates");
     const auto map = hybridRoom();
     const auto npcs = spellPlacements(map, 1);

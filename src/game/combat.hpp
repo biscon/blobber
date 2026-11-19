@@ -57,10 +57,13 @@ enum class CombatEvent : std::uint8_t {
     BiteAbandoned,
     ClutchWarning,
     ClutchHatch,
-    VaultClear
+    VaultClear,
+    EncounterClear
 };
 enum class SpentCause : std::uint8_t { NoAction, Cooldown, Surprise, EndTurn };
 struct CombatOutcome {
+    std::uint16_t encounterExperience = 0;
+    std::uint8_t encounterAward = 0;
     SpentCause spentCause = SpentCause::NoAction;
     bool resumedRound = false;
     CombatEvent event = CombatEvent::None;

@@ -263,6 +263,14 @@ void CommandController::record(const CombatOutcome& out) noexcept {
     case CombatEvent::ClutchHatch:
         std::snprintf(line, sizeof(line), "%s releases a hatchling!", species);
         break;
+    case CombatEvent::EncounterClear: {
+        const auto* award = session_.encounterAward(out.encounterAward);
+        if (!award)
+            return;
+        std::snprintf(line, sizeof(line), "%s cleared. Party earns %u bonus XP.", award->name.data(),
+                      unsigned(out.encounterExperience));
+        break;
+    }
     case CombatEvent::VaultClear:
         std::snprintf(line, sizeof(line), "Brood Vault cleared. Party gains 200 XP.");
         break;
@@ -658,9 +666,12 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
     moving |= session_.opening();
     if (session_.objective().known) {
         if (session_.objective().completed && !objectiveReported_) {
-            state_.log.append(session_.fixtures().definition().depth == 3
-                                  ? "Guardians defeated. Reward chest unsealed."
-                                  : "Guardians defeated. Gate opened; supplies await beyond.");
+            const auto depth = session_.fixtures().definition().depth;
+            if (depth == 4 || depth == 5)
+                state_.log.append("Gate open. The guardians left a camp kit.");
+            else if (depth < 6)
+                state_.log.append(depth == 3 ? "Guardians defeated. Reward chest unsealed."
+                                             : "Guardians defeated. Gate opened; supplies await beyond.");
             objectiveReported_ = true;
         }
         if (session_.objective().capacityFailure && !objectiveFailureReported_) {

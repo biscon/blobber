@@ -163,6 +163,46 @@ void objective() {
     }
     check(rejected, "reward reservations fail at preparation rather than at final death");
 }
+void surveyAward() {
+    const auto cat = catalog(false, 50, 7);
+    const auto defs = definitions();
+    const auto generated = generate({5, 1}, blobber::test::campaignBlueprints());
+    const auto& f = *generated.floor;
+    auto p = preparePopulation(f, cat, defs.types);
+    p.objective.awards[0] = {{"Survey patrol"}, 0, 2, 225};
+    p.objective.awardCount = 1;
+    GameSession game(f.map, cat, p.placements, 5, f.layout.spawn, false, defs.timings, p.recovery,
+                     f.layout.fixtures, p.objective);
+    auto kill = [&](GameSession& session, unsigned slot) {
+        session.actors().damage(session.actors().id(slot), 1000, session.timeMs());
+        session.update(.1, false);
+    };
+    kill(game, 0);
+    check(game.party().character({0})->experience == 12, "Partial patrol pays ordinary kill XP");
+    auto saved = std::make_unique<FloorState>();
+    game.exportFloor(*saved);
+    GameSession restored(f.map, std::make_unique<Party>(cat, game.party().checkpoint()), p.placements, 5,
+                         f.layout.spawn, false, defs.timings, p.recovery, f.layout.fixtures, p.objective);
+    restored.importFloor(*saved);
+    kill(restored, 1);
+    check(restored.party().character({0})->experience == 81 &&
+              restored.party().character({0})->experienceFraction == 3,
+          "Restored last kill pays ordinary and named bonus once");
+    restored.exportFloor(*saved);
+    restored.importFloor(*saved);
+    restored.update(0, false);
+    check(restored.party().character({0})->experience == 81, "Completed patrol replay issued XP");
+    p.objective.awards[1] = p.objective.awards[0];
+    ++p.objective.awardCount;
+    bool rejected = false;
+    try {
+        GameSession invalid(f.map, cat, p.placements, 5, f.layout.spawn, false, defs.timings, p.recovery,
+                            f.layout.fixtures, p.objective);
+    } catch (const std::invalid_argument&) {
+        rejected = true;
+    }
+    check(rejected, "Overlapping patrol awards admitted");
+}
 void landings() {
     const auto cat = catalog(false, 50, 7, true);
     const auto defs = definitions();
@@ -252,6 +292,7 @@ void landings() {
 int main() {
     try {
         objective();
+        surveyAward();
         landings();
         std::cout << "Guardian progression and landing contracts passed\n";
     } catch (const std::exception& e) {

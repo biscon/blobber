@@ -14,9 +14,14 @@ def main():
     parser.add_argument('--depth', type=int, choices=(4, 5, 6), default=4)
     parser.add_argument('--seed', type=int, default=5)
     parser.add_argument('--check', action='store_true', help='Walk the routes headlessly and exit')
-    parser.add_argument('--encounter', action='store_true', help='Play the encounter for this cave floor')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--populated', action='store_true', help='Review the full DC06 population and rewards')
+    parser.add_argument('--full-clear-entry', action='store_true', help='Start populated review with XP from all prior optionals')
+    modes.add_argument('--encounter', action='store_true', help='Play the encounter for this cave floor')
     parser.add_argument('--fallback', action='store_true', help='Walk the checked fallback for this depth')
     args = parser.parse_args()
+    if args.full_clear_entry and not args.populated:
+        parser.error('--full-clear-entry requires --populated')
     if not 0 <= args.seed <= 0xffffffff:
         parser.error('seed must fit an unsigned 32-bit integer')
     root = Path(__file__).resolve().parent
@@ -48,6 +53,10 @@ def main():
                    str(run / mode), str(root / 'assets'), str(prepared)]
         if args.encounter:
             command.append('--encounter')
+        if args.populated:
+            command.append('--populated')
+        if args.full_clear_entry:
+            command.append('--full-clear-entry')
         if args.fallback:
             command.append('--fallback')
         if not args.check:

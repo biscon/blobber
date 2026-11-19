@@ -118,6 +118,12 @@ int main() {
         CommandController rangerUi(ranger);
         blobber::test::advanceRanger(hunting.party(), 3);
         levelReady(hunting, 0);
+        FloorObjectiveDefinition surveyObjective;
+        surveyObjective.awards[0] = {{"Survey patrol"},0,3,225};
+        surveyObjective.awardCount = 1;
+        auto survey = std::make_unique<GameSession>(map,catalog,places,5,spellSpawn,false,
+            std::vector<NpcTimings>{},RecoveryLevel{},FloorFixtures{},surveyObjective);
+        CommandController surveyUi(*survey);
         bool okay = true;
         const auto bardCatalog = blobber::test::bardCatalog();
         std::uint32_t bardSeed = 1;
@@ -136,6 +142,14 @@ int main() {
         blobber::test::advanceBarbarian(berserker->party(), 3);
         levelReady(*berserker, 0);
         tracking = true;
+        for (unsigned i = 0; i < 3; ++i)
+            survey->actors().damage(survey->actors().id(i),10000,0);
+        const auto& clears = survey->update(0,false);
+        surveyUi.record(clears);
+        bool awardLogged = false;
+        for (const auto& e : clears)
+            awardLogged |= e.event == CombatEvent::EncounterClear && e.encounterExperience == 225;
+        okay &= awardLogged;
         okay &=
             berserker->submit(featureCommand(*berserker, 0, Feature::Rage)).reason == CommandReason::Resolved;
         levelReady(*berserker, 0);

@@ -59,7 +59,12 @@ enum class ActorRecipe : std::uint8_t {
     Bugbear,
     GoblinCaptain,
     BugbearCaptain,
-    BugbearCommander
+    BugbearCommander,
+    Spider,
+    Newt,
+    Mother,
+    Sac,
+    Young
 };
 enum class EncounterRecipe : std::uint8_t {
     GoblinPair,
@@ -70,7 +75,21 @@ enum class EncounterRecipe : std::uint8_t {
     MixedPatrol,
     GoblinGuardians,
     BugbearGuardians,
-    FinalGuardians
+    FinalGuardians,
+    SpiderSolo,
+    SpiderPair,
+    SpiderTrio,
+    SpiderGuard,
+    CaptainPatrol,
+    NewtSolo,
+    Banks,
+    NewtPatrol,
+    GalleryGuard,
+    SpiderNewtPack,
+    GoblinSentries,
+    VaultApproach,
+    WebLookout,
+    BroodVault
 };
 enum class EncounterRole : std::uint8_t { Direct, Optional, Guardian };
 struct Encounter {

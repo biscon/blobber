@@ -2,6 +2,7 @@
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "cave_review.hpp"
+#include "generation/cave_population.hpp"
 #include "platform/audio.hpp"
 #include "platform/game_view.hpp"
 #include "platform/window.hpp"
@@ -25,18 +26,20 @@ unsigned number(std::string_view value) {
     require(parse.ec == std::errc{} && parse.ptr == end, "Expected unsigned integer");
     return n;
 }
-void face(GameSession& game, Heading wanted) {
+void face(GameSession& game, Heading wanted, bool stopAtContact = false) {
     for (unsigned i = 0; i < 3 && game.movement().player.heading != wanted; ++i) {
         game.move(Action::TurnRight);
         game.update(.2, false);
+        if (stopAtContact && !realTime(game.combat().snapshot().phase))
+            return;
     }
     require(game.movement().player.heading == wanted, "Failed to turn");
 }
 // Route planning is review-only. Replay each edge through ordinary game commands,
 // including discovering and opening closed doors from their reachable side.
 } // namespace
-void cave_review::walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid,
-                         std::vector<Cell>* trace, bool stopAtContact) {
+void cave_review::walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid, std::vector<Cell>* trace,
+                         bool stopAtContact, const CellMask* forbidden) {
     const auto& map = game.geometry().base();
     auto index = [&](Cell c) { return c.y * map.width() + c.x; };
     const auto start = game.movement().player.cell;
@@ -50,10 +53,12 @@ void cave_review::walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid
         Cell c{n % map.width(), n / map.width()};
         for (unsigned h = 0; h < 4; ++h) {
             const Cell next = c + forward(Heading(h));
-            if (!map.canStep(c, next) || (avoid && next == *avoid) || previous[index(next)] != -1)
+            if (!map.canStep(c, next) || (avoid && next == *avoid) || previous[index(next)] != -1 ||
+                (forbidden && (*forbidden)[index(next)]))
                 continue;
             const auto slot = game.fixtures().at(next);
-            if (slot >= 0 && game.fixtures().definition().entries[unsigned(slot)].kind != FixtureKind::Door)
+            if (slot >= 0 && game.fixtures().definition().entries[unsigned(slot)].kind != FixtureKind::Door &&
+                !game.fixtures().open(unsigned(slot)))
                 continue;
             previous[index(next)] = n;
             queue[tail++] = index(next);
@@ -67,9 +72,11 @@ void cave_review::walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid
         const auto from = game.movement().player.cell;
         for (unsigned h = 0; h < 4; ++h)
             if (from + forward(Heading(h)) == *it) {
-                face(game, Heading(h));
+                face(game, Heading(h), stopAtContact);
                 break;
             }
+        if (stopAtContact && !realTime(game.combat().snapshot().phase))
+            return;
         const auto slot = game.fixtures().at(*it);
         if (slot >= 0 && !game.fixtures().open(unsigned(slot))) {
             game.move(Action::Forward);
@@ -81,7 +88,7 @@ void cave_review::walkTo(GameSession& game, Cell goal, std::optional<Cell> avoid
         }
         game.move(Action::Forward);
         game.update(.2, false);
-        if (trace)
+        if (trace && game.movement().player.cell == *it)
             trace->push_back(*it);
         if (stopAtContact && (!realTime(game.combat().snapshot().phase) || game.actors().occupied(*it)))
             return;
@@ -141,17 +148,29 @@ Player reviewRoute(GameSession& game, const CaveFloor& f) {
 } // namespace
 int main(int argc, char** argv) try {
     require(argc >= 4, "Usage: blobber_review_caves validate|plan|check|walk|capture DEPTH SEED [NEW_OUTPUT "
-                       "ASSETS PREPARED] [--fallback]");
-    const bool forced = std::string_view(argv[argc - 1]) == "--fallback";
-    if (forced)
-        --argc;
-    const bool encounter = std::string_view(argv[argc - 1]) == "--encounter";
-    if (encounter)
-        --argc;
+                       "ASSETS PREPARED] [--encounter|--populated] [--full-clear-entry] [--fallback]");
+    bool forced = false, encounter = false, populated = false, fullEntry = false;
+    while (argc > 4 && std::string_view(argv[argc - 1]).substr(0, 2) == "--") {
+        const std::string_view option = argv[--argc];
+        if (option == "--fallback")
+            forced = true;
+        else if (option == "--encounter")
+            encounter = true;
+        else if (option == "--populated")
+            populated = true;
+        else if (option == "--full-clear-entry")
+            fullEntry = true;
+        else
+            throw std::invalid_argument("Unknown cave review option");
+    }
+    require(!(populated && encounter) && (!fullEntry || populated), "Invalid cave review mode combination");
     std::string mode = argv[1];
     const unsigned depth = number(argv[2]), seed = number(argv[3]);
     const bool vault = encounter && depth == 6;
-    auto result = generateCave(seed, depth, forced, vault);
+    auto result = generateCave(seed, depth, forced,
+                               populated ? CaveContent::Populated
+                               : vault   ? CaveContent::VaultEncounter
+                                         : CaveContent::Walkthrough);
     if (!result.floor)
         throw std::runtime_error(std::string("Cave generation failed: ") +
                                  errorName(result.diagnostics.failure.code));
@@ -188,14 +207,23 @@ int main(int argc, char** argv) try {
     const auto rules = loadRules(root / "rules/catalog.json");
     const auto defs = loadNpcDefinitions(root / "npcs/level.json");
     // Keep the combat stream independent of the cave layout stream.
-    const auto combatSeed = encounter ? std::uint32_t(seedFor({seed, depth}, Domain::Runtime)) : seed;
+    const auto combatSeed =
+        encounter || populated ? std::uint32_t(seedFor({seed, depth}, Domain::Runtime)) : seed;
     RecoveryLevel recovery;
     std::vector<NpcInstance> occupants;
     const bool galleries = encounter && depth == 5;
     require(rules.preset() != nullptr, "Cave review requires a starting party");
     const auto& starting = *rules.preset();
     std::optional<ArenaScenario> vaultParty;
-    if (vault) {
+    FloorObjectiveDefinition objective;
+    std::optional<Party::Saved> preparedParty;
+    if (populated) {
+        const auto population = prepareCavePopulation(f, seed, rules, defs.types);
+        occupants = population.placements.instances();
+        recovery = population.recovery;
+        objective = population.objective;
+        preparedParty = cave_review::populationParty(rules, depth, fullEntry);
+    } else if (vault) {
         vaultParty = cave_review::prepareVault(f.sites, defs.types, rules, occupants);
     } else if (galleries) {
         cave_review::placeGalleries(f.sites, defs.types, occupants);
@@ -228,6 +256,46 @@ int main(int argc, char** argv) try {
             cave_review::checkVault(game, f, defs.timings, route, output, renderer, presenter);
         }
     };
+    if (check && populated) {
+        for (bool full : {false, true}) {
+            GameSession game(f.map,
+                             std::make_unique<Party>(rules, cave_review::populationParty(rules, depth, full)),
+                             actors, combatSeed, f.layout.spawn, true, defs.timings, recovery,
+                             f.layout.fixtures, objective);
+            cave_review::checkPopulation(game, f, recovery, full);
+        }
+        {
+            GameSession shortcut(f.map, std::make_unique<Party>(rules, *preparedParty), actors, combatSeed,
+                                 f.layout.spawn, true, defs.timings, recovery, f.layout.fixtures, objective);
+            cave_review::checkShortcut(shortcut, f);
+        }
+        if (depth == 5) {
+            for (bool north : {true, false}) {
+                GameSession game(f.map, std::make_unique<Party>(rules, *preparedParty), actors, combatSeed,
+                                 f.layout.spawn, true, defs.timings, recovery, f.layout.fixtures, objective);
+                cave_review::checkGalleries(game, f, defs.timings, north, false, output, nullptr, nullptr);
+                GameSession bite(f.map,std::make_unique<Party>(rules,*preparedParty),actors,combatSeed,
+                                 f.layout.spawn,true,defs.timings,recovery,f.layout.fixtures,objective);
+                cave_review::checkGalleries(bite,f,defs.timings,north,false,output,nullptr,nullptr,true);
+            }
+        }
+        if (depth == 6) {
+            // Isolate the guardian with the actual populated party, geometry and gate.
+            std::vector<NpcInstance> vaultOnly;
+            placeBroodVault(f.sites, defs.types, rules, vaultOnly);
+            NpcWorld boss(f.map, f.layout.spawn.cell, defs.types, std::move(vaultOnly));
+            auto vaultObjective = objective;
+            vaultObjective.awardCount = 0;
+            const auto atVault = cave_review::guardianParty(rules,*preparedParty,depth);
+            for (auto tactic : {cave_review::VaultRoute::Suppress, cave_review::VaultRoute::Burst}) {
+                GameSession game(f.map, std::make_unique<Party>(rules, atVault), boss, combatSeed,
+                                 f.layout.spawn, true, defs.timings, recovery, f.layout.fixtures,
+                                 vaultObjective);
+                cave_review::checkVault(game, f, defs.timings, tactic, output, nullptr, nullptr);
+            }
+        }
+        return 0;
+    }
     if (check && vault) {
         walkVault();
         return 0;
@@ -263,7 +331,27 @@ int main(int argc, char** argv) try {
         const auto baseline = resources.counts();
         {
             WorldRenderer renderer(resources, std::move(pub));
-            if (hidden && vault) {
+            if (hidden && populated) {
+                // One native inspection view per floor, from a walkable northern approach.
+                const auto& room = f.layout.rooms[4];
+                const Cell stance{room.anchor.x, room.origin.y};
+                require(!f.map.movementBlocked(stance) && !actors.occupied(stance),
+                        "Blocked guardian viewpoint");
+                const auto atGuardian = cave_review::guardianParty(rules,*preparedParty,depth);
+                GameSession game(f.map, std::make_unique<Party>(rules, atGuardian), actors, combatSeed,
+                                 {stance, Heading::South}, true, defs.timings, recovery, f.layout.fixtures,
+                                 objective);
+                NpcAnimator animator(game.actors(), defs.timings, &game.combat());
+                GameView view(renderer, &f.layout);
+                CommandController commands(game, defs.timings);
+                animator.setTime(game.timeMs(), &game.effects());
+                view.update(game, animator.snapshot(), {});
+                commands.refresh(view.picking()->targets(), false, false, true);
+                view.present(presenter, game, f.map, false, true, &commands.snapshot());
+                presenter.capture(output / "guardian.png");
+                const auto glError = reinterpret_cast<unsigned (*)()>(rlGetProcAddress("glGetError"));
+                require(glError && glError() == 0, "OpenGL error in populated guardian view");
+            } else if (hidden && vault) {
                 walkVault(&renderer, &presenter);
                 for (const auto* frame : {"vault-nest.png", "stirring-sac.png", "mother-and-young.png"})
                     require(std::filesystem::is_regular_file(output / frame),
@@ -452,7 +540,10 @@ int main(int argc, char** argv) try {
                 GameplayLaunch launch;
                 launch.spawn = f.layout.spawn;
                 launch.seed = combatSeed;
-                launch.enableAi = encounter;
+                launch.enableAi = encounter || populated;
+                launch.objective = &objective;
+                if (preparedParty)
+                    launch.preparedParty = &*preparedParty;
                 if (vaultParty)
                     launch.arenaScenario = &*vaultParty;
                 launch.rooms = &f.layout;

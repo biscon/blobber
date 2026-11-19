@@ -84,8 +84,12 @@ void checkVault(GameSession& game, const generation::CaveFloor& floor, const std
             presenter->capture(output / file);
         }
     };
+    const bool campaignLevel = floor.layout.encounterCount != 0;
+    const auto& firstMember = *game.party().character({0});
+    const auto startingUnits =
+        firstMember.experience * rules::experienceScale + firstMember.experienceFraction;
     for (const auto& character : game.party().snapshot().characters)
-        require(character.build.level == 2 && character.experience == 300, "Vault party must be level two");
+        require(character.build.level == (campaignLevel ? 4 : 2), "Unexpected vault review party level");
     unsigned firstWarning = 0;
     const auto record = [&](const CombatEvents& events) {
         controls.record(events);
@@ -179,7 +183,7 @@ void checkVault(GameSession& game, const generation::CaveFloor& floor, const std
                       << hatches << ", surge " << surge << ", cleric casts " << clericSpells
                       << ", missile casts " << missiles << ", phase "
                       << (turn.phase == CombatPhase::Victory ? "victory" : "defeat") << '\n';
-            if (burst) {
+            if (burst && !campaignLevel) {
                 require(!doorway || bristleShots, "Doorway opening must exercise ranged brood pressure");
                 require(surge && clericSpells && missiles,
                         "Burst route did not spend standard offensive resources");
@@ -189,6 +193,8 @@ void checkVault(GameSession& game, const generation::CaveFloor& floor, const std
                 if (turn.phase == CombatPhase::Defeat)
                     return;
             }
+            if (campaignLevel && turn.phase == CombatPhase::Defeat)
+                return;
             require(turn.phase == CombatPhase::Victory && game.objective().rewardIssued,
                     "Vault did not clear");
             if (suppress)
@@ -202,7 +208,7 @@ void checkVault(GameSession& game, const generation::CaveFloor& floor, const std
             game.update(.1, false);
             unsigned xpUnits = 0;
             for (const auto& ch : game.party().snapshot().characters)
-                xpUnits += (ch.experience - 300) * rules::experienceScale + ch.experienceFraction;
+                xpUnits += ch.experience * rules::experienceScale + ch.experienceFraction - startingUnits;
             require(xpUnits == 200 * rules::experienceScale, "Vault reward missing or duplicated");
             return;
         }

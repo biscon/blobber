@@ -74,7 +74,8 @@ Party::Party(const rules::Catalog& catalog, const Saved& s)
         const auto* body = equipped({i}, EquipmentSlot::Body);
         if (!rules::validHealth(c, c.stats.maxHitPoints) || c.mana < 0 || c.mana > c.maxMana ||
             c.temporaryUntilMs > UINT64_MAX / 2 || c.availableHitDice < 0 ||
-            c.availableHitDice > c.build.level || c.experience > rules::experienceCap ||
+            c.availableHitDice > c.build.level ||
+            (c.experience == rules::experienceCap && c.experienceFraction) ||
             c.experienceFraction >= rules::experienceScale ||
             (c.build.level > 1 && c.experience < rules::nextLevelExperience(c.build.level - 1)) ||
             (c.secondWind && !rules::hasFeature(cls->features, rules::ClassFeature::SecondWind)) ||

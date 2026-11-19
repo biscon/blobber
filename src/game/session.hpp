@@ -91,6 +91,9 @@ class GameSession {
     unsigned guardianDoor() const noexcept {
         return objective_.count ? objectiveDefinition_.approachDoor : UINT16_MAX;
     }
+    const EncounterAward* encounterAward(unsigned index) const noexcept {
+        return index < objectiveDefinition_.awardCount ? &objectiveDefinition_.awards[index] : nullptr;
+    }
     bool guardian(ActorId id) const noexcept;
     bool atSanctuary() const noexcept;
     LandingSafety arrivalSafety(Cell) const noexcept;

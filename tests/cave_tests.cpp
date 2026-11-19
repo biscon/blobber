@@ -1,5 +1,5 @@
 #include "game/perception.hpp"
-#include "generation/caves.hpp"
+#include "generation/cave_population.hpp"
 #include "support/check.hpp"
 #include <algorithm>
 #include <iostream>
@@ -35,6 +35,24 @@ void run() {
     check(!generateCave(5, 3).floor && !generateCave(5, 7).floor, "Invalid depth admitted");
     check(!floorSpec(4) && floorSpec(3)->finalFloor, "Cave preview leaked into campaign");
     for (unsigned d = 4; d <= 6; ++d) {
+        for (bool forced : {false, true}) {
+            auto populated = generateCave(5, d, forced, CaveContent::Populated);
+            check(populated.floor && populated.diagnostics.fallback == forced,
+                  "Populated route or fallback unavailable");
+            auto& cave = *populated.floor;
+            check(!validateCave(cave) && !validateCavePopulation(cave), "Invalid published population");
+            const auto gate = cave.layout.guardianGate;
+            FloorGeometry guarded(cave.map, cave.layout.fixtures);
+            check(guarded.view().movementBlocked(cave.sites[CaveSite::Goal]) &&
+                      guarded.definition().entries[gate].kind == FixtureKind::GuardianGate,
+                  "Exit lacks a closed guardian gate");
+            auto& last = cave.layout.encounters[cave.layout.encounterCount - 1];
+            ++last.count;
+            check(bool(validateCavePopulation(cave)), "Truncated guardian roster admitted");
+            --last.count;
+            cave.layout.population[0].cell = cave.layout.spawn.cell;
+            check(bool(validateCavePopulation(cave)), "Hostile admitted on the return landing");
+        }
         auto a = sample(5, d), b = sample(5, d), other = sample(6, d);
         check(fingerprint(a.layout) == fingerprint(b.layout) && a.sites.cells == b.sites.cells &&
                   a.map.definition().fingerprint() == b.map.definition().fingerprint(),

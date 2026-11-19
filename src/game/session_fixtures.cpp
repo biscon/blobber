@@ -87,7 +87,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
         return campaign_->previewTravel(campaign_->request(r));
     if (f->kind == FixtureKind::GuardianGate)
         return {objective_.completed, false,
-                objective_.completed ? "Guardians defeated. Gate open; rewards beyond."
+                objective_.completed ? "Guardians defeated. Gate open."
                                      : "Defeat the guardians to open this gate."};
     if (f->kind != FixtureKind::Door && f->kind != FixtureKind::Key)
         return {false, false,

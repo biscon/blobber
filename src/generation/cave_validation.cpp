@@ -48,8 +48,10 @@ Failure validateCave(const CaveFloor& cave) {
     if (auto failure = validateGeometry(f))
         return failure;
     const auto& defs = f.fixtures;
-    if (defs.depth != f.depth || !defs.discovery || defs.count != 4 || defs.landingCount != 2 ||
-        !(defs.landings[0] == f.spawn.cell) || !(defs.landings[1] == sites[Site::Goal]))
+    if (defs.depth != f.depth || !defs.discovery ||
+        (f.encounterCount ? defs.count <= 4 || defs.count > fixtureCapacity : defs.count != 4) ||
+        defs.landingCount != 2 || !(defs.landings[0] == f.spawn.cell) ||
+        !(defs.landings[1] == sites[Site::Goal]))
         return {Error::Landing};
     BoundsMask fixed;
     for (unsigned i = 0; i < defs.count; ++i) {
@@ -63,6 +65,11 @@ Failure validateCave(const CaveFloor& cave) {
             if (d.kind != kind || !(stairLanding(d) == defs.landings[i == 0 ? 0 : 1]))
                 return {Error::Landing};
             fixed.set(index(m, d.cell));
+        } else if (i >= 4) {
+            const bool gate = i == f.guardianGate;
+            if (d.kind != (gate ? FixtureKind::GuardianGate : FixtureKind::Door) || d.key ||
+                (gate && !(d.cell == sites[Site::Goal])))
+                return {Error::Fixture};
         } else {
             const auto& link = f.connections[i == 1 ? 0 : 3];
             if (d.kind != FixtureKind::Door || d.key || !(d.cell == link.socketA) || d.facing != link.facingA)

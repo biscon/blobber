@@ -71,6 +71,17 @@ rules::ItemId weaponReward(const rules::Catalog& catalog, GenerationRequest requ
     return pool[depth == 3 ? 1 : 0];
 }
 } // namespace
+NpcInstance bindPopulationActor(const PopulationPlacement& p, const rules::Catalog& catalog,
+                                const std::vector<std::string>& types) {
+    const auto name = speciesName(p.recipe);
+    const auto monster = catalog.findMonster(name);
+    const auto appearance = std::find(types.begin(), types.end(), monsterAppearance(name));
+    if (!catalog.monster(monster) || appearance == types.end())
+        throw std::invalid_argument("Generated monster or appearance unavailable");
+    NpcInstance npc{{std::uint16_t(appearance - types.begin())}, p.cell, p.subcell, p.facing};
+    npc.monster = monster;
+    return npc;
+}
 PopulationDefinition resolvePopulation(const FloorLayout& layout, GenerationRequest request,
                                        const rules::Catalog& catalog, const std::vector<std::string>& types,
                                        RewardProfile profile) {
@@ -83,13 +94,7 @@ PopulationDefinition resolvePopulation(const FloorLayout& layout, GenerationRequ
     objective.lootSeed = std::uint32_t(seedFor(request, Domain::Reward));
     for (unsigned i = 0; i < layout.populationCount; ++i) {
         const auto& p = layout.population[i];
-        const auto name = speciesName(p.recipe);
-        const auto monster = catalog.findMonster(name);
-        const auto appearance = std::find(types.begin(), types.end(), monsterAppearance(name));
-        if (!catalog.monster(monster) || appearance == types.end())
-            throw std::invalid_argument("Generated monster or appearance unavailable");
-        NpcInstance npc{{std::uint16_t(appearance - types.begin())}, p.cell, p.subcell, p.facing};
-        npc.monster = monster;
+        auto npc = bindPopulationActor(p, catalog, types);
         out.actors[out.count++] = npc;
         if (p.guardian)
             objective.members[objective.count++] = std::uint16_t(i);

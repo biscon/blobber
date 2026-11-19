@@ -8,6 +8,24 @@ void GameSession::prepareObjective() {
     if (d.count > d.members.size() || d.rewardCount > d.rewards.size() ||
         recovery_.groundCount + d.rewardCount > recovery_.ground.size())
         throw std::invalid_argument("Floor objective capacity exceeded");
+    if (d.awardCount > d.awards.size())
+        throw std::invalid_argument("Encounter award capacity exceeded");
+    std::bitset<NpcWorld::maxInstances> assigned;
+    for (unsigned i = 0; i < d.awardCount; ++i) {
+        const auto& a = d.awards[i];
+        if (!a.count || a.first + a.count > actors_.snapshot().count || !a.experience || !a.name.front() ||
+            a.name.back())
+            throw std::invalid_argument("Invalid encounter award");
+        for (unsigned n = a.first; n < a.first + a.count; ++n) {
+            const auto& actor = actors_.snapshot().actors[n];
+            if (assigned[n] || !actor.hostile() || actor.npc.vault != VaultPart::None)
+                throw std::invalid_argument("Invalid encounter award member");
+            assigned.set(n);
+        }
+    }
+    if (d.gatedVault && (!combat_.vaultMother().world || d.gate >= floor_.definition().count ||
+                         floor_.definition().entries[d.gate].kind != FixtureKind::GuardianGate))
+        throw std::invalid_argument("Invalid vault gate");
     if (combat_.vaultMother().world) {
         if (d.count || d.rewardCount)
             throw std::invalid_argument("Conflicting vault objective");
@@ -83,6 +101,10 @@ void GameSession::reconcileObjective() noexcept {
         if (combat_.vaultCleared() &&
             std::any_of(party_.snapshot().characters.begin(), party_.snapshot().characters.end(),
                         [](const auto& c) { return c.life == rules::Life::Conscious; })) {
+            if (objectiveDefinition_.gatedVault && !completeFixture(objectiveDefinition_.gate)) {
+                objective_.capacityFailure = true;
+                return;
+            }
             party_.awardExperience(200);
             objective_.known = objective_.completed = objective_.rewardIssued = true;
             ++objective_.revision;

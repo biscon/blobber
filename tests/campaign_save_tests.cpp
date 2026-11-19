@@ -753,10 +753,12 @@ void progressionAndFloors() {
     levelFour.choices.abilityImprovement.increases[0] = 1;
     levelFour.choices.abilityImprovement.increases[2] = 1;
     check(bool(run->game().advance(levelFour)), "level-four split ASI warrior fixture");
+    run->party().awardExperience(16101); // 6,725.25 each after the level-four threshold.
     const auto levelFourStats = run->party().character({0})->stats;
     const auto creationScores = run->party().character({0})->build.baseAbilities;
     run = copy(c, d, *run);
-    check(run->party().character({0})->build.level == 4 &&
+    check(run->party().character({0})->build.level == 4 && run->party().character({0})->experience == 6725 &&
+              run->party().character({0})->experienceFraction == 3 &&
               run->party().character({0})->build.levelFourAsi.increases[0] == 1 &&
               run->party().character({0})->build.levelFourAsi.increases[2] == 1 &&
               run->party().character({0})->stats.abilities == levelFourStats.abilities &&

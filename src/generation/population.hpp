@@ -13,6 +13,8 @@ struct PopulationDefinition {
     RecoveryLevel recovery;
     FloorObjectiveDefinition objective;
 };
+NpcInstance bindPopulationActor(const PopulationPlacement&, const rules::Catalog&,
+                                const std::vector<std::string>&);
 PopulationDefinition resolvePopulation(const FloorLayout&, GenerationRequest, const rules::Catalog&,
                                        const std::vector<std::string>& types, RewardProfile profile = {});
 struct PreparedPopulation {

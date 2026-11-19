@@ -103,9 +103,9 @@ void Party::awardExperience(std::uint32_t reward) noexcept {
     for (auto& c : state_.characters) {
         if (c.life == rules::Life::Dead)
             continue;
-        const auto units = std::min<std::uint64_t>(rules::experienceCap * rules::experienceScale,
-                                                   std::uint64_t(c.experience) * rules::experienceScale +
-                                                       c.experienceFraction + share);
+        const auto units = std::min<std::uint64_t>(
+            std::uint64_t(rules::experienceCap) * rules::experienceScale,
+            std::uint64_t(c.experience) * rules::experienceScale + c.experienceFraction + share);
         c.experience = std::uint32_t(units / rules::experienceScale);
         c.experienceFraction = std::uint8_t(units % rules::experienceScale);
     }

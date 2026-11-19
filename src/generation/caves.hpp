@@ -46,8 +46,9 @@ struct CaveResult {
     std::optional<CaveFloor> floor;
     GenerationDiagnostics diagnostics;
 };
+enum class CaveContent { Walkthrough, VaultEncounter, Populated };
 CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback = false,
-                        bool hangingClutches = false);
+                        CaveContent content = CaveContent::Walkthrough);
 void placeBroodVault(const CaveSites&, const std::vector<std::string>& types, const rules::Catalog&,
                      std::vector<NpcInstance>& placements);
 Failure validateCave(const CaveFloor&);

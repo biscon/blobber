@@ -461,7 +461,9 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
                         "bite_abandoned",
                         "clutch_warning",
                         "clutch_hatch",
-                        "vault_clear"};
+                        "vault_clear",
+                        "encounter_clear"};
+    static_assert(std::size(names) == unsigned(CombatEvent::EncounterClear) + 1);
     Json j = {
         {"event", names[unsigned(e.event)]},
         {"time_ms", u(e.occurredMs)},
@@ -486,6 +488,10 @@ Json encodeEvent(const CombatOutcome& e, const rules::Catalog& cat, bool diagnos
         j["caster_source"] = casterSource(e.enemy);
     else if (e.spell != rules::SpellKind::Count && e.character.index < rules::partySize)
         j["caster_source"] = casterSource(e.character);
+    if (e.event == CombatEvent::EncounterClear) {
+        j["encounter_award"] = e.encounterAward;
+        j["party_bonus_xp"] = e.encounterExperience;
+    }
     if (e.event == CombatEvent::Attack) {
         if (e.enemyAttack && e.spell == rules::SpellKind::Count)
             j["pack_tactics"] = e.packTactics;

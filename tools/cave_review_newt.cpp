@@ -45,7 +45,7 @@ void equipMeleeProofParty(rules::PresetParty& party) {
 
 void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
                     const std::vector<NpcTimings>& timings, bool north, bool meleeOnly, const std::filesystem::path& output,
-                    WorldRenderer* renderer, Presenter* presenter) {
+                    WorldRenderer* renderer, Presenter* presenter, bool soloOnly) {
     CommandController controls(game, timings);
     NpcAnimator animator(game.actors(), timings, &game.combat());
     std::optional<GameView> view;
@@ -83,6 +83,7 @@ void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
         require(error && error() == 0, "OpenGL error during Galleries review");
     };
     const auto fork = floor.sites[Site::Fork];
+    const bool answerWarning = soloOnly ? north : floor.layout.encounterCount == 0;
     bool warning = false, defended = false, impact = false, firstAttack = false, together = false;
     bool pairVisible = false;
     const auto& catalog = game.party().catalog();
@@ -120,11 +121,21 @@ void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
                 together |= turn.enemyCount >= 2;
             bool warningNow = false, impactNow = false;
             for (const auto& event : events) {
+                if (!mixed && !impact && event.event == CombatEvent::BiteWarning)
+                    defended = false;
                 warningNow |= !mixed && !warning && event.event == CombatEvent::BiteWarning;
                 if (!mixed && !impact && event.event == CombatEvent::Attack && event.enemyAttack) {
-                    require(defended && event.attackRollMode == rules::RollMode::Disadvantage,
+                    const auto* victim = game.party().character(event.recipient);
+                    if (soloOnly && victim && event.hit)
+                        std::cout << victim->build.name << " AC " << victim->stats.armorClass << ", "
+                                  << victim->stats.maxHitPoints << " max HP, "
+                                  << (answerWarning ? "Defend" : "End Turn") << ", roll " << event.roll
+                                  << ", hit " << event.hit << ", damage " << event.damage << ", remaining HP "
+                                  << victim->hitPoints << '\n';
+                    require(!answerWarning ||
+                                (defended && event.attackRollMode == rules::RollMode::Disadvantage),
                             "Teaching bite failed to honor Defend");
-                    impactNow = true;
+                    impactNow = !soloOnly || event.hit;
                 }
             }
             warning |= warningNow;
@@ -133,7 +144,7 @@ void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
                 refresh();
                 photo("impact.png");
             }
-            if (turn.phase == CombatPhase::Victory)
+            if (turn.phase == CombatPhase::Victory || (soloOnly && impact))
                 return;
             require(turn.phase != CombatPhase::Defeat, "Galleries party defeated");
             if (!turn.awaitingAction || !turn.activeCharacter)
@@ -144,7 +155,8 @@ void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
             c.turn = turn.turn;
             c.character = *turn.activeCharacter;
             if (!mixed && !impact) {
-                if (game.combat().warnedTarget(game.actors().id(0)).index == c.character.index) {
+                if (answerWarning && !defended &&
+                    game.combat().warnedTarget(game.actors().id(0)).index == c.character.index) {
                     if (north && view) {
                         const auto pose = animator.snapshot().frames[0];
                         require(pose.clip == NpcAnimation::Attack && pose.active <= 1, "Missing planted bite warning");
@@ -231,7 +243,12 @@ void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
     game.setAnimated(true);
     walkTo(game, floor.sites[Site::SoloNewt], {}, nullptr, true);
     fight(false);
-    require(warning && defended && impact && game.combat().continueExploring(), "Solo lesson incomplete");
+    if (soloOnly) {
+        require(warning && impact && (!answerWarning || defended), "Missing equipped-party bite comparison");
+        return;
+    }
+    require(warning && (defended || !answerWarning) && impact && game.combat().continueExploring(),
+            "Solo lesson incomplete");
     walkTo(game, fork);
     for (unsigned tick = 0; tick < 60; ++tick)
         game.update(.1, false);

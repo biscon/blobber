@@ -14,14 +14,29 @@ const Recipe& encounterRecipe(EncounterRecipe id) noexcept {
         {"mixed_patrol", {A::Goblin, A::Goblin, A::Archer}, 3},
         {"goblin_guardians", {A::GoblinCaptain, A::Goblin, A::Archer, A::Archer, A::Shaman}, 5},
         {"bugbear_guardians", {A::BugbearCaptain, A::Goblin, A::Goblin, A::Archer, A::Shaman}, 5},
-        {"final_guardians", {A::BugbearCommander, A::Goblin, A::Goblin, A::Goblin, A::Archer, A::Shaman}, 6}};
-    return recipes[unsigned(id) <= unsigned(EncounterRecipe::FinalGuardians) ? unsigned(id) : 0];
+        {"final_guardians", {A::BugbearCommander, A::Goblin, A::Goblin, A::Goblin, A::Archer, A::Shaman}, 6},
+        {"arch_spider", {A::Spider}, 1},
+        {"web_pair", {A::Spider, A::Spider}, 2},
+        {"spider_nest", {A::Spider, A::Spider, A::Spider}, 3},
+        {"web_guard", {A::Spider, A::Spider, A::Spider, A::Spider}, 4},
+        {"captain_patrol", {A::GoblinCaptain, A::Goblin, A::Archer}, 3},
+        {"solo_newt", {A::Newt}, 1},
+        {"divided_banks", {A::Spider, A::Newt}, 2},
+        {"newt_patrol", {A::Newt, A::Newt, A::Spider}, 3},
+        {"gallery_guard", {A::Newt, A::Newt, A::Spider, A::Spider}, 4},
+        {"spider_newt_pack", {A::Spider, A::Spider, A::Spider, A::Newt}, 4},
+        {"goblin_sentries", {A::GoblinCaptain, A::Archer, A::Archer, A::Shaman}, 4},
+        {"vault_approach", {A::Spider, A::Spider, A::Spider, A::Newt, A::Newt}, 5},
+        {"web_lookout", {A::Newt, A::Spider, A::Spider}, 3},
+        {"brood_vault", {A::Mother, A::Sac, A::Sac, A::Young, A::Young}, 5}};
+    return recipes[unsigned(id) <= unsigned(EncounterRecipe::BroodVault) ? unsigned(id) : 0];
 }
 const char* speciesName(ActorRecipe id) noexcept {
-    constexpr const char* names[]{"goblin",          "goblin.archer",    "skeleton", "zombie",
-                                  "giant.rat",       "goblin_shaman",    "bugbear",  "goblin.captain",
-                                  "bugbear.captain", "bugbear.commander"};
-    return unsigned(id) <= unsigned(ActorRecipe::BugbearCommander) ? names[unsigned(id)] : "";
+    constexpr const char* names[]{
+        "goblin",          "goblin.archer",   "skeleton",       "zombie",          "giant.rat",
+        "goblin_shaman",   "bugbear",         "goblin.captain", "bugbear.captain", "bugbear.commander",
+        "venomous.spider", "blind.cave.newt", "broodmother",    "vault.clutch",    "vault.young"};
+    return unsigned(id) <= unsigned(ActorRecipe::Young) ? names[unsigned(id)] : "";
 }
 const DepthBand& encounterBand(unsigned depth) noexcept {
     using R = EncounterRecipe;

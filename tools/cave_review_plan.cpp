@@ -1,4 +1,5 @@
 #include "cave_review.hpp"
+#include <algorithm>
 #include <ostream>
 namespace blobber::cave_review {
 using namespace generation;
@@ -49,6 +50,7 @@ void writePlan(std::ostream& out, const CaveFloor& cave, std::uint32_t seed, boo
         const auto& d = f.fixtures.entries[i];
         glyph(d.cell,
               d.kind == FixtureKind::Door       ? "D"
+              : d.kind == FixtureKind::GuardianGate ? "G"
               : d.kind == FixtureKind::Upstairs ? "U"
               : d.kind == FixtureKind::Endpoint ? "V"
                                                 : ">",
@@ -56,6 +58,37 @@ void writePlan(std::ostream& out, const CaveFloor& cave, std::uint32_t seed, boo
     }
     glyph(f.spawn.cell, "@", "#386452");
     const int key = left + f.width * tile + 22;
+    if (f.encounterCount) {
+        label(key, 105, "Encounters", 22, "#f3eee1");
+        for (unsigned i = 0; i < f.encounterCount; ++i) {
+            const auto& e = f.encounters[i];
+            const auto& actor = f.population[e.first];
+            auto name = std::string(encounterRecipe(e.recipe).name);
+            std::replace(name.begin(),name.end(),'_',' ');
+            const auto number = std::to_string(i + 1);
+            const bool optional = e.role == EncounterRole::Optional;
+            const bool boss = e.role == EncounterRole::Guardian;
+            const char* ink = boss ? "#873a37" : optional ? "#735b2c" : "#365a70";
+            for (unsigned n = e.first; n < e.first+e.count; ++n) {
+                const auto& p = f.population[n];
+                rect(left+p.cell.x*tile+3+8*p.subcell.x,top+p.cell.y*tile+3+8*p.subcell.y,6,6,ink);
+            }
+            glyph(actor.cell,number,ink);
+            label(key, 143+int(i)*30, number+"   "+name+"   ("+std::to_string(actor.cell.x)+", "+
+                  std::to_string(actor.cell.y)+")"+(boss ? "   guardian" : optional ? "   optional" : ""),
+                  17,"#eee9dc");
+        }
+        int line = 442;
+        for (const char* note : {"@   Start facing west", "D   Open the door with F",
+                                 "G   Guardian gate", "U   Return stair", "&gt; / V   Down stair / vault objective",
+                                 "The two gold encounters are optional."}) {
+            label(key,line,note,16,"#ccd6ce");
+            line += 26;
+        }
+        out << "</svg>\n";
+        if (!out) throw std::runtime_error("Cannot write populated cave plan");
+        return;
+    }
     label(key, 105, "PLACEMENT RESERVATIONS", 17, "#f3eee1");
     int line = 137;
     for (unsigned i = 0; i < caveSiteCount; ++i) {

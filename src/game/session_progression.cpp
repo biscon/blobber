@@ -19,12 +19,32 @@ void GameSession::reconcileRewards() noexcept {
         return;
     rewardRevision_ = world.revision;
     const auto earnedBefore = earnedLevelMask(party_);
+    std::bitset<NpcWorld::maxInstances> newlyCredited;
     for (std::size_t i = 0; i < world.count; ++i) {
         if (!world.actors[i].hostile() || world.actors[i].npc.vault != VaultPart::None ||
             !world.actors[i].hasDeath || creditedDeaths_[i])
             continue;
         creditedDeaths_[i] = true;
+        newlyCredited.set(i);
         party_.awardExperience(actors_.catalog().monster(world.actors[i].monster)->experience);
+    }
+    for (unsigned i = 0; i < objectiveDefinition_.awardCount && newlyCredited.any(); ++i) {
+        const auto& award = objectiveDefinition_.awards[i];
+        bool complete = true, changed = false;
+        for (unsigned slot = award.first; slot < award.first + award.count; ++slot) {
+            complete &= creditedDeaths_[slot];
+            changed |= newlyCredited[slot];
+        }
+        if (complete && changed) {
+            party_.awardExperience(award.experience);
+            CombatOutcome event;
+            event.event = CombatEvent::EncounterClear;
+            event.occurredMs = timeMs_;
+            event.phase = combat_.snapshot().phase;
+            event.encounterExperience = award.experience;
+            event.encounterAward = std::uint8_t(i);
+            events_.append(event);
+        }
     }
     if (earnedLevelMask(party_) & ~earnedBefore)
         audio_.emit({"advancement", {}, 0, 0, false, false, true});

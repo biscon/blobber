@@ -1,5 +1,6 @@
 #include "generation/caves.hpp"
 #include "generation/cave_pool.hpp"
+#include "generation/cave_population.hpp"
 #include <algorithm>
 #include <stdexcept>
 
@@ -508,7 +509,7 @@ struct Builder {
             link(1, 5, first + Cell{0, -4}, Heading::North, {first.x, end.y}, end, Heading::West);
         }
     }
-    void build(unsigned depth) {
+    void build(unsigned depth, bool populated) {
         auto& f = layout;
         f.depth = depth;
         f.biome = BiomeId::DampCaves;
@@ -532,7 +533,8 @@ struct Builder {
         chamber(first, {2, 3}, Role::Junction, 5);
         chamber(middle, {4, 2}, Role::Junction, depth == 5 ? 8 : 6, {-3, 0});
         chamber(approach, {2, 2}, Role::Approach, 6);
-        chamber(goal, {objectiveRadius, objectiveRadius}, Role::Objective, depth == 6 ? 8 : 6, {0, 1});
+        chamber(goal, {objectiveRadius, objectiveRadius}, Role::Objective, depth == 6 ? 8 : 6,
+                {0, populated ? 0 : 1});
         chamber(pocket, {3, 2}, depth == 5 ? Role::Optional : Role::Junction, 5);
         link(0, 1, entry + Cell{-4, 0}, Heading::West, {first.x, entry.y}, first + Cell{0, 4},
              Heading::South);
@@ -546,6 +548,13 @@ struct Builder {
         f.guardianGate = UINT8_MAX; // The review door opens normally, without a guardian objective.
         sites[Site::Optional] = pocket;
         sites[Site::Goal] = goal + Cell{0, objectiveRadius - 1};
+        if (populated) {
+            // The landing is the only stance from which the exit can be used.
+            const Cell landing = sites[Site::Goal];
+            for (int y : {0, 1})
+                for (int x : {-1, 1})
+                    rock(landing + Cell{x, y});
+        }
         auto& fixtures = f.fixtures;
         fixtures.depth = depth;
         fixtures.discovery = true;
@@ -635,7 +644,9 @@ struct Builder {
     }
 };
 } // namespace
-CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback, bool hangingClutches) {
+CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback, CaveContent content) {
+    const bool populated = content == CaveContent::Populated;
+    const bool hangingClutches = depth == 6 && content != CaveContent::Walkthrough;
     CaveResult result;
     auto& d = result.diagnostics;
     if (depth < 4 || depth > 6) {
@@ -653,7 +664,7 @@ CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback, 
         Failure failure;
         try {
             Builder b{{}, {}, {}, seedFor({seed, depth}, Domain::Topology, 0, attempt), d.fallback};
-            b.build(depth);
+            b.build(depth, populated);
             std::vector<std::string> rows(b.layout.height, std::string(b.layout.width, '#'));
             for (int y = 0; y < b.layout.height; ++y)
                 for (int x = 0; x < b.layout.width; ++x)
@@ -674,6 +685,8 @@ CaveResult generateCave(std::uint32_t seed, unsigned depth, bool forceFallback, 
             CaveFloor floor{std::move(b.layout), b.sites, Map(rows, std::move(b.world)),
                             hangingClutches && depth == 6};
             failure = validateCave(floor);
+            if (!failure && populated)
+                failure = planCavePopulation(floor);
             if (!failure) {
                 if (d.fallback)
                     d.fallbackId = depth;
