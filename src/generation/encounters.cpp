@@ -28,15 +28,16 @@ const Recipe& encounterRecipe(EncounterRecipe id) noexcept {
         {"goblin_sentries", {A::GoblinCaptain, A::Archer, A::Archer, A::Shaman}, 4},
         {"vault_approach", {A::Spider, A::Spider, A::Spider, A::Newt, A::Newt}, 5},
         {"web_lookout", {A::Newt, A::Spider, A::Spider}, 3},
-        {"brood_vault", {A::Mother, A::Sac, A::Sac, A::Young, A::Young}, 5}};
-    return recipes[unsigned(id) <= unsigned(EncounterRecipe::BroodVault) ? unsigned(id) : 0];
+        {"brood_vault", {A::Mother, A::Sac, A::Sac, A::Young, A::Young}, 5},
+        {"gallery_nest", {A::Spider, A::Spider, A::Spider, A::WebSpinner, A::WebSpinner}, 5}};
+    return recipes[unsigned(id) <= unsigned(EncounterRecipe::GalleryNest) ? unsigned(id) : 0];
 }
 const char* speciesName(ActorRecipe id) noexcept {
     constexpr const char* names[]{
         "goblin",          "goblin.archer",   "skeleton",       "zombie",          "giant.rat",
         "goblin_shaman",   "bugbear",         "goblin.captain", "bugbear.captain", "bugbear.commander",
-        "venomous.spider", "blind.cave.newt", "broodmother",    "vault.clutch",    "vault.young"};
-    return unsigned(id) <= unsigned(ActorRecipe::Young) ? names[unsigned(id)] : "";
+        "venomous.spider", "blind.cave.newt", "broodmother",    "vault.clutch",    "vault.young", "adult.web.spinner"};
+    return unsigned(id) <= unsigned(ActorRecipe::WebSpinner) ? names[unsigned(id)] : "";
 }
 const DepthBand& encounterBand(unsigned depth) noexcept {
     using R = EncounterRecipe;

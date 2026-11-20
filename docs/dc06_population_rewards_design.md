@@ -4,6 +4,37 @@
 
 ## Encounters and rewards
 
+### Galleries balance trial
+
+**Ready for player review, 2026-11-20.** The player's level-three and level-four parties cleared all three floors comfortably with one long rest. The 1,350 XP popups came from encounter-completion awards introduced to meet the original pacing target. All three floors now pay ordinary kill XP. The Vault still pays 200 party XP once for defeating the mother and her surviving brood, with zero individual XP for sacs and renewable young.
+
+Only the fourth ordinary Galleries encounter changes composition. The three venomous spiders are joined by two Adult Web-Spinners, each worth 200 XP with AC 14, 26 HP, a venomous bite and a ranged silk attack. At a distance an adult with a free strand favors silk. Each adult can bind one conscious companion. The victim can spend an action on **Escape Web** (DC 12 Strength), or an ally can drop the spinner. The generator owns the fixed roster and back placement. Combat tracks at most four strands by victim and source actor, exposes restraint through the existing conditions display, and releases strands at encounter end. Adults reuse the spider artwork and have a distinct name. The trial uses the existing potion, camp and boss rules.
+
+| Four surviving companions, ordinary route | Seep entry | Galleries entry | After Galleries scouts | Vault entry | After the brood |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| XP each | 675 | 850 | 925 | 1,150 | 1,437.5 |
+| Level available | 2 | 2 | 3 | 3 | 3 |
+
+Clearing every optional group from the 793.75-XP full-clear entry gives 1,768.75 XP per survivor at victory. Level four requires 2,700. With four survivors the revised caves support level three, including on the full clear.
+
+**Matched route trial.** Run `cmake-build-debug/blobber_review_caves attrition 5 5 assets` from the checkout root. The default fighter, cleric, rogue and wizard start at The Seep, collect the ordinary supplies, fight all five ordinary Seep encounters and carry the party down to the Galleries. They use Hit Dice, drink from inventory between fights and consume a camp kit if still badly hurt or low on mana. Both runs used one kit between the divided banks and scouts. The party advanced after the scouts and reached the nest with 86/99 HP, 22/28 combined mana, three camp kits, six healing potions and zero mana potions. For the control, the runner removes just the two adults before contact, without awarding XP or advancing time.
+
+| Seed-five nest result | Three small spiders | Three small spiders + two adults |
+| --- | ---: | ---: |
+| Victory round | 2 | 5 |
+| Enemy attacks / damage dealt | 3 / 0 | 14 / 50 |
+| Silk bindings / party downs | 0 / 0 | 2 / 1 |
+| Combined mana after the fight | 18 | 6 |
+| Party HP after the fight | 86 | 41 |
+
+One deterministic run with a spell-heavy policy measures the cost for this party. It does not estimate a win rate. The script prioritizes visible targets in roster order, uses between-fight recovery and never chooses Escape Web. A player who targets adults early, saves spells or takes a different route may reach the nest in a very different state. This comparison ends after the nest.
+
+**Player review.** Launch `./cmake-build-debug/blobber --development --seed 5 --campaign-save output/galleries-trial.json`, choose **Start new game → your party → Choose floor → 4. The Seep**, then descend normally. Use supplies and rest when you choose. On floor five, pass the lone newt, the divided banks and the goblin scouts. The nest is next, around (31,16). Watch who gets bound, whether killing an adult frees that companion, and whether you spend a kit before the next fight. A direct Galleries start gives a rested party. The new monster changes the catalog fingerprint, so start a fresh expedition for this version.
+
+**Verification.** The seed-five populated checks for depths 4–6 cover ordinary and optional earnings, guardian gates, shortest routes and Vault completion. The paired attrition command exercises the new roster, real silk hits, carried supplies and recovery. All five focused Debug suites passed with `ctest --test-dir cmake-build-debug -j1 --output-on-failure -R '^(spider|cave_layout|damp_campaign|campaign_save_smoke|campaign_save_cli)$'`. The Debug game built. Interactive review is pending.
+
+### Original DC06 review figures
+
 The ordinary route visits the named encounters in order, skipping both optional rooms. Numbers below show group size, ordinary kill XP and the once-only survey encounter bonus in party XP. Individual spiders and newts retain their accepted 50 XP. Goblin groups use the shipped melee, archer, captain and shaman. Shooting a sac or replacing a young pays zero.
 
 | Floor | Ordinary groups in order (size, kill + bonus) | Guardian | Optional pocket and lookout |
@@ -55,9 +86,9 @@ From the checkout root, launch each floor separately. Each launch starts at its 
 | --- | --- |
 | `./review-caves --depth 4 --seed 5 --populated` | Open the entrance door and collect the camp antitoxin before the webbed arch. The single spider is at (14,14). Continue east to the goblins around (22,14) and the nest at (30,15). Turn north toward the captain at (37,4). The webbed shortcut north of the arch and the southeastern lookout each hold an optional fight and supply. The four guardian spiders form two flanks behind the approach door. |
 | `./review-caves --depth 5 --seed 5 --populated` | Collect the entrance supplies. Meet the solo newt at (5,15). Try **Defend** on the character named in its warning. From (11,15) face east and choose the roped north bank or the south bank. Replay the other bank with the same opening. Continue through the scouts, spider nest and flooded crossing. In the last room two newts cover the flanks while a spider starts forward. |
-| `./review-caves --depth 6 --seed 5 --populated` | Start at level four. East leads to the outer spiders. North from the first chamber leads to the optional survey cache. The ordinary route crosses the galleries to the goblin sentries, then a five-beast guard at (46,5). After that fight, use the quiet approach to prepare for the mother. From (47,12) facing south, try shooting the sacs with Merrin and Lethiel. On a fresh launch focus the mother and watch the surviving young and the gate. |
+| `./review-caves --depth 6 --seed 5 --populated` | Start at level three. East leads to the outer spiders. North from the first chamber leads to the optional survey cache. The ordinary route crosses the galleries to the goblin sentries, then a five-beast guard at (46,5). After that fight, use the quiet approach to prepare for the mother. From (47,12) facing south, try shooting the sacs with Merrin and Lethiel. On a fresh launch focus the mother and watch the surviving young and the gate. |
 
-Add `--full-clear-entry` to bring in all four survivors' XP from every earlier optional encounter. The ordinary entry presets are 675 / 1,825 / 3,725 XP at levels 2 / 3 / 4. Full-clear entry is 793.75 / 2,075 / 4,050 XP at the same levels. Add `--fallback` for fixed geometry or `--check` for the headless review. The full-clear-entry flag models previous XP. The equipment and supplies are controlled examples. Alden wears a cloak of protection and Merrin wears boots of balance. They use the preset weapons. Floors five and six start with one additional kit from the previous guardian. Review preparation uses the ordinary advancement rules, recommended spells with Inflict Wounds and Magic Missile preferred when available, and +2 Constitution at level four. In-floor advancement remains a player choice. Cleared exits admit the party to the objective landing. Return by walking back to the up stair.
+Add `--full-clear-entry` to bring in all four survivors' XP from every earlier optional encounter. The ordinary entry presets are 675 / 850 / 1,150 XP at levels 2 / 2 / 3. Full-clear entry is 793.75 / 1,031.25 / 1,406.25 XP at levels 2 / 3 / 3. Add `--fallback` for fixed geometry or `--check` for the headless review. The full-clear-entry flag models previous XP. The equipment and supplies are controlled examples. Alden wears a cloak of protection and Merrin wears boots of balance. They use the preset weapons. Floors five and six start with one additional kit from the previous guardian. Review preparation uses the ordinary advancement rules, recommended spells with Inflict Wounds and Magic Missile preferred when available, and +2 Constitution at level four. In-floor advancement remains a player choice. Cleared exits admit the party to the objective landing. Return by walking back to the up stair.
 
 ### Measured pacing and encounters
 

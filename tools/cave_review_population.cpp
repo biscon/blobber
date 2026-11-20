@@ -1,5 +1,6 @@
 #include "cave_review.hpp"
 #include "game/commands.hpp"
+#include "game/campaign.hpp"
 #include "game/perception.hpp"
 #include "game/session.hpp"
 #include "generation/cave_population.hpp"
@@ -75,24 +76,44 @@ void finishGroup(GameSession& game, const Encounter& e) {
 }
 // One equipped-party opening after the route fixture supplies the incoming XP.
 // Drive attacks through normal session commands and require actual target sight.
-void fightGuardians(GameSession& game, const Encounter& group) {
+void fightGroup(GameSession& game, const Encounter& group, bool followSurvivors = false) {
     auto& actors = game.actors();
     const auto& catalog = game.party().catalog();
-    unsigned damage = 0, downs = 0, spells = 0;
+    unsigned damage = 0, downs = 0, spells = 0, attacks = 0, tethers = 0;
     for (unsigned tick = 0; tick < 6000; ++tick) {
         const auto& events = game.update(.1, false);
-        for (const auto& event : events)
+        for (const auto& event : events) {
+            if (event.event == CombatEvent::Effect && event.effect.kind == EffectKind::Restrained &&
+                event.effect.caster.npc && event.effect.notice == EffectNotice::Applied)
+                ++tethers;
             if (event.event == CombatEvent::Attack && event.enemyAttack) {
+                ++attacks;
                 damage += unsigned(event.damage);
                 downs += event.downed;
             }
+        }
         const auto& turn = game.combat().snapshot();
+        const auto live = std::find_if(actors.snapshot().actors.begin() + group.first,
+                                       actors.snapshot().actors.begin() + group.first + group.count,
+                                       [](const ActorState& a) { return a.life == ActorLife::Alive; });
+        const bool cleared = live == actors.snapshot().actors.begin() + group.first + group.count;
+        if (followSurvivors && !cleared && turn.phase == CombatPhase::Victory) {
+            game.combat().continueExploring();
+            continue;
+        }
+        if (followSurvivors && !cleared && realTime(turn.phase) && !game.actionBusy() && tick % 10 == 0) {
+            walkTo(game, live->npc.cell, {}, nullptr, true);
+            continue;
+        }
+        if (followSurvivors && cleared && turn.phase == CombatPhase::Exploration)
+            return;
         if (turn.phase == CombatPhase::Victory || turn.phase == CombatPhase::Defeat) {
-            std::cout << "Guardian opening: round " << turn.round << ", " << damage << " damage taken, "
-                      << downs << " downs, " << spells << " spell casts, "
+            std::cout << "Combat: round " << turn.round << ", " << damage << " damage taken, "
+                      << downs << " downs, " << attacks << " enemy attacks, " << tethers << " silk bindings, "
+                      << spells << " spell casts, "
                       << (turn.phase == CombatPhase::Victory ? "victory" : "defeat") << '\n';
             require(turn.phase == CombatPhase::Victory && game.combat().continueExploring(),
-                    "Guardian opening defeated");
+                    "Party defeated during encounter");
             return;
         }
         if (!turn.awaitingAction || !turn.activeCharacter)
@@ -139,7 +160,14 @@ void fightGuardians(GameSession& game, const Encounter& group) {
             require(game.submit(cmd).reason == CommandReason::Resolved, "Unable to finish guardian turn");
         }
     }
-    throw std::runtime_error("Guardian opening timed out");
+    std::cerr << "Unresolved " << encounterRecipe(group.recipe).name << " phase "
+              << unsigned(game.combat().snapshot().phase) << " at " << game.movement().player.cell.x << ','
+              << game.movement().player.cell.y << ", pending decision " << game.pendingRollDecision().serial << '\n';
+    for (unsigned i = group.first; i < group.first + group.count; ++i) {
+        const auto& actor = actors.snapshot().actors[i];
+        std::cerr << "  enemy " << i << " hp " << actor.hitPoints << " at " << actor.npc.cell.x << ',' << actor.npc.cell.y << '\n';
+    }
+    throw std::runtime_error("Encounter did not resolve");
 }
 unsigned units(const Party& party) {
     const auto& c = *party.character({0});
@@ -151,11 +179,10 @@ Party::Saved populationParty(const rules::Catalog& catalog, unsigned depth, bool
     // Representative legal Underkeep rewards for a four-survivor party.
     equip(party, {0}, "cloak_of_protection", EquipmentSlot::Cloak);
     equip(party, {2}, "boots_of_balance", EquipmentSlot::Feet);
-    const auto incoming = (fullEntry ? 3175u : 2700u) + (depth >= 5 ? (fullEntry ? 5125u : 4600u) : 0u) +
-                          (depth == 6 ? (fullEntry ? 7900u : 7600u) : 0u);
+    const auto incoming = (fullEntry ? 3175u : 2700u) + (depth >= 5 ? (fullEntry ? 950u : 700u) : 0u) +
+                          (depth == 6 ? (fullEntry ? 1500u : 1200u) : 0u);
     party.awardExperience(incoming);
-    const auto target = depth - 2;
-    while (unsigned(party.character({0})->build.level) < target)
+    while (party.advancementEligibility(party.advancementRequest({0})) == AdvancementError::None)
         advance(party);
     if (depth > 4)
         require(bool(party.acquire({{0}, catalog.findItem("camp_kit"), 1, party.inventory().revision()})),
@@ -164,7 +191,7 @@ Party::Saved populationParty(const rules::Catalog& catalog, unsigned depth, bool
 }
 Party::Saved guardianParty(const rules::Catalog& catalog, const Party::Saved& incoming, unsigned depth) {
     Party party(catalog, incoming);
-    constexpr unsigned ordinaryBeforeGuardian[]{2400, 5600, 10400};
+    constexpr unsigned ordinaryBeforeGuardian[]{500, 1000, 950};
     party.awardExperience(ordinaryBeforeGuardian[depth - 4]);
     if (party.advancementEligibility(party.advancementRequest({0})) == AdvancementError::None)
         advance(party);
@@ -173,7 +200,7 @@ Party::Saved guardianParty(const rules::Catalog& catalog, const Party::Saved& in
 void checkPopulation(GameSession& game, const CaveFloor& floor, const RecoveryLevel& recovery, bool full) {
     const auto& f = floor.layout;
     const auto& world = game.actors().snapshot();
-    const unsigned expectedCounts[]{19, 22, 30}, ordinary[]{4600, 7600, 10600}, extras[]{525, 300, 300};
+    const unsigned expectedCounts[]{19, 24, 30}, ordinary[]{700, 1200, 1150}, extras[]{250, 300, 300};
     const auto depth = f.depth - 4;
     const auto start = units(game.party());
     const auto gate = f.fixtures.entries[f.guardianGate].cell;
@@ -220,7 +247,7 @@ void checkPopulation(GameSession& game, const CaveFloor& floor, const RecoveryLe
                 require(!game.combat().member(game.actors().id(j)) || world.actors[j].hasDeath,
                         "Independent encounter joined the route");
         if (!full && depth < 2 && e.role == EncounterRole::Guardian)
-            fightGuardians(game, e);
+            fightGroup(game, e);
         else
             finishGroup(game, e);
         cleared[i] = true;
@@ -255,10 +282,141 @@ void checkPopulation(GameSession& game, const CaveFloor& floor, const RecoveryLe
         CommandController ui(game);
         ui.openInventory(rules::CharacterId{0}, CharacterPage::Character);
         const auto& sheet = ui.snapshot().inventory.sheet;
-        require(sheet.experience == 6775 && !sheet.nextLevelExperience &&
+        require(sheet.experience == 1768 && sheet.nextLevelExperience == 2700 &&
                     !ui.snapshot().cards[0].levelEligible,
-                "Character sheet lost banked XP or offered level five");
+                "Character sheet disagrees with kill-only progression");
     }
+}
+namespace {
+void reportParty(const GameSession& game) {
+    const auto& party = game.party();
+    unsigned healing = 0, mana = 0;
+    for (std::uint16_t i = 0; i < rules::partySize; ++i) {
+        const auto& c = *party.character({i});
+        std::cout << ' ' << c.build.name << '=' << c.hitPoints << '/' << c.stats.maxHitPoints << "hp,"
+                  << c.mana << '/' << c.maxMana << "mp";
+        for (std::uint16_t k = 0; k < bagCells; ++k) {
+            const auto* stack = party.inventory().stack(party.inventory().at({{i}, k}));
+            if (!stack)
+                continue;
+            const auto& id = party.catalog().item(stack->item)->id;
+            if (id == "healing_potion")
+                healing += stack->quantity;
+            if (id == "mana_potion")
+                mana += stack->quantity;
+        }
+    }
+    std::cout << " kits=" << party.campSupplies().kits << " healing=" << healing << " mana=" << mana
+              << " xp=" << units(party) / 12.0 << '\n';
+}
+bool drink(GameSession& game, rules::CharacterId target, const char* id) {
+    const auto& inv = game.party().inventory();
+    for (std::uint16_t i = 0; i < rules::partySize; ++i)
+        for (std::uint16_t k = 0; k < bagCells; ++k) {
+            const auto h = inv.at({{i}, k});
+            const auto* stack = inv.stack(h);
+            if (!stack || game.party().catalog().item(stack->item)->id != id)
+                continue;
+            PartyCommand command;
+            command.action = PartyAction::Item;
+            command.world = game.actors().snapshot().world;
+            command.turn = game.combat().snapshot().turn;
+            command.character = {i};
+            command.ally = target;
+            command.item = h;
+            command.inventoryRevision = inv.revision();
+            if (game.submit(command).reason == CommandReason::Resolved) {
+                game.update(6, false);
+                return true;
+            }
+        }
+    return false;
+}
+void recoverOnRoute(GameSession& game) {
+    game.update(6, false);
+    RestRequest shortRest{RestKind::Short, {}, game.actors().snapshot().world, game.restToken(), {}};
+    for (std::uint16_t i = 0; i < rules::partySize; ++i) {
+        const auto& c = *game.party().character({i});
+        if (c.hitPoints * 2 <= c.stats.maxHitPoints && c.availableHitDice)
+            shortRest.dice[i] = 1;
+    }
+    if (std::any_of(shortRest.dice.begin(), shortRest.dice.end(), [](auto d) { return d != 0; }) &&
+        game.rest(shortRest))
+        std::cout << "Spent Hit Dice at a short rest\n";
+    bool needKit = false;
+    for (std::uint16_t i = 0; i < rules::partySize; ++i) {
+        const auto& c = *game.party().character({i});
+        if (c.hitPoints * 2 <= c.stats.maxHitPoints)
+            drink(game, {i}, "healing_potion");
+        if (c.maxMana && c.mana < 2)
+            drink(game, {i}, "mana_potion");
+        needKit |= c.hitPoints * 3 < c.stats.maxHitPoints || (c.maxMana && c.mana < 2);
+    }
+    if (needKit && game.rest({RestKind::Long, {}, game.actors().snapshot().world, game.restToken(), {}}))
+        std::cout << "Spent a camp kit on a long rest\n";
+}
+} // namespace
+void checkNestApproach(CampaignRun& run, bool originalNest) {
+    for (unsigned depth : {4u, 5u}) {
+        auto& game = run.game();
+        const auto& location = run.location(run.activeLocation());
+        const auto& layout = location.generated->layout;
+        game.setAnimated(false);
+        std::cout << "Entering floor " << depth;
+        reportParty(game);
+        auto collect = [&](unsigned index, Cell site) {
+            walkTo(game, site);
+            const auto slot = std::uint16_t(NpcWorld::maxInstances * lootPerActor + index);
+            const auto& loot = game.loot().snapshot();
+            bool taken = false;
+            for (std::uint16_t i = 0; i < rules::partySize && !taken; ++i)
+                taken = bool(game.pickup({{loot.world, slot, loot.stacks[slot].generation},
+                                          {i},
+                                          game.party().inventory().revision()}));
+            require(taken, "Route failed to pick up supplies");
+        };
+        for (unsigned i = 0; i < location.recovery.groundCount; ++i)
+            if (location.recovery.ground[i].cell == layout.supply)
+                collect(i, layout.supply);
+        for (unsigned i = 0; i < layout.encounterCount; ++i) {
+            const auto& e = layout.encounters[i];
+            if (e.role == EncounterRole::Optional)
+                continue;
+            CellMask forbidden{};
+            for (unsigned j = 0; j < layout.encounterCount; ++j)
+                if (j > i || layout.encounters[j].role == EncounterRole::Optional)
+                    for (int k = 0; k < layout.width * layout.height; ++k)
+                        forbidden[k] |= layout.membership[k] == layout.encounters[j].room;
+            if (originalNest && e.recipe == EncounterRecipe::GalleryNest) {
+                // Remove the two adults before contact. No deaths, XP, time or RNG are consumed.
+                for (unsigned n = e.first; n < e.first + e.count; ++n)
+                    if (layout.population[n].recipe == ActorRecipe::WebSpinner)
+                        require(bool(game.actors().remove(game.actors().id(n))),
+                                "Cannot prepare control nest");
+            }
+            std::cout << "Before " << encounterRecipe(e.recipe).name;
+            reportParty(game);
+            walkTo(game, layout.population[e.first].cell, {}, nullptr, true, &forbidden);
+            fightGroup(game, e, true);
+            std::cout << "After " << encounterRecipe(e.recipe).name;
+            reportParty(game);
+            if (e.recipe == EncounterRecipe::GalleryNest)
+                return;
+            recoverOnRoute(game);
+            if (game.advancementEligibility(game.advancementRequest({0})) == AdvancementError::None)
+                advance(game.party(), &game);
+        }
+        require(game.objective().completed, "Seep guardian still alive");
+        collect(location.recovery.groundCount, layout.guardianReward);
+        walkTo(game, location.exit.cell);
+        const auto facing = Heading((unsigned(location.exit.heading) + 2) % 4);
+        for (unsigned turn = 0; turn < 3 && game.movement().player.heading != facing; ++turn)
+            game.move(Action::TurnRight);
+        game.discover();
+        auto ticket = run.prepareTravel(run.request(game.nearbyFixture()));
+        require(run.commitTravel(ticket) && run.dungeonDepth() == 5, "Continuous descent failed");
+    }
+    throw std::runtime_error("Route never reached the Galleries nest");
 }
 void checkShortcut(GameSession& game, const CaveFloor& floor) {
     const auto& f = floor.layout;

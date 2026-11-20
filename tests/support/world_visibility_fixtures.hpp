@@ -20,9 +20,11 @@ struct VisibilityFixture {
         std::vector<world_assets::Appearance> actors;
         for (unsigned type = 0; type < types; ++type) {
             world_assets::Appearance a;
-            constexpr const char* names[]{
-                "goblin",    "goblin.archer", "skeleton", "zombie", "giant.rat",  "goblin_shaman", "bugbear",
-                "innkeeper", "mayor",         "boric",    "balin",  "blacksmith", "shadowtart"};
+            constexpr const char* names[]{"goblin",       "goblin.archer",   "skeleton",        "zombie",
+                                          "giant.rat",    "goblin_shaman",   "bugbear",         "innkeeper",
+                                          "mayor",        "boric",           "balin",           "blacksmith",
+                                          "shadowtart",   "venomous.spider", "blind.cave.newt", "broodmother",
+                                          "vault.clutch", "vault.young"};
             a.id = names[type % std::size(names)];
             a.width = .5f;
             a.height = .7f;

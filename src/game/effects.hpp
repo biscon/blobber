@@ -272,6 +272,9 @@ class EffectController {
                             CombatEvents&) noexcept;
     void ignite(Cell) noexcept;
     void ignite(const SubcellFootprint&) noexcept;
+    bool holdingSilk(ActorId) const noexcept;
+    void bindSilk(ActorId, rules::CharacterId, std::uint64_t, CombatEvents&) noexcept;
+    void releaseSilk() noexcept { silk_.fill({}); }
     bool escapeWeb(EffectTarget, std::uint64_t, CombatEvents&) noexcept;
     bool mobile(EffectTarget t) const noexcept { return canAct(t) && !has(t, EffectKind::Restrained); }
     MirrorReservation mirror(EffectTarget attacker, rules::CharacterId target, int attackRoll,
@@ -338,6 +341,7 @@ class EffectController {
     std::array<std::uint64_t, 4> casterTurns_{};
     GroundSnapshot ground_{};
     std::array<Restraint, creatureCount> restrained_{};
+    std::array<ActorId, rules::partySize> silk_{}; // One live tether per victim, within this encounter.
     void reconcileAid() noexcept;
     void reconcileWeb(std::uint64_t, CombatEvents&) noexcept;
     void burnWeb(std::uint64_t, CombatEvents&) noexcept;
@@ -347,7 +351,7 @@ class EffectController {
     bool turns_ = false;
     CombatEvents* events_ = nullptr; // Borrowed only from the session's permanent event owner.
     std::size_t conditionIndex(EffectTarget) const noexcept;
-    void conditionNotice(EffectTarget, EffectKind, EffectNotice, EffectEnd, rules::CharacterId, std::uint64_t,
+    void conditionNotice(EffectTarget, EffectKind, EffectNotice, EffectEnd, EffectSource, std::uint64_t,
                          CombatEvents&) const noexcept;
     std::uint64_t conditionDeadline(bool realTime) const noexcept;
     void advanceConditions(std::uint64_t goal, std::uint64_t session, bool realTime, CombatEvents&) noexcept;

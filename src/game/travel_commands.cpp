@@ -28,9 +28,9 @@ void CommandController::openTravel() noexcept {
     h.open = true;
     h.hub = hub;
     if (hub) {
-        for (unsigned depth = 1; depth <= 3; ++depth)
-            if (run.location(depth).visited || depth == 1)
-                h.rows[h.count++] = {depth, run.location(depth).visited
+        for (unsigned depth = 1; depth <= dungeonFloorCount; ++depth)
+            if (run.location(floorLocation(depth)).visited || depth == 1)
+                h.rows[h.count++] = {depth, run.location(floorLocation(depth)).visited
                                                 ? run.waypointRequest(depth)
                                                 : run.request(session_.nearbyFixture())};
     } else {

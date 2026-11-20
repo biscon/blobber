@@ -306,7 +306,10 @@ bool placeEncounterFormation(FloorLayout& f, unsigned room, EncounterRecipe reci
     const bool authored = reservations && reservations->authored[room];
     const auto origin = f.rooms[room].origin, size = f.rooms[room].size;
     for (unsigned n = 0; n < r.count; ++n) {
-        const bool ranged = r.members[n] == ActorRecipe::Archer || r.members[n] == ActorRecipe::Shaman;
+        const auto isSupport = [](ActorRecipe actor) {
+            return actor == ActorRecipe::Archer || actor == ActorRecipe::Shaman || actor == ActorRecipe::WebSpinner;
+        };
+        const bool ranged = isSupport(r.members[n]);
         bool placed = false;
         std::tuple<int, int, int, int> best{};
         for (int y = 0; y < (authored ? size.y : 2); ++y)
@@ -322,7 +325,7 @@ bool placeEncounterFormation(FloorLayout& f, unsigned room, EncounterRecipe reci
                 for (unsigned j = 0; j < n; ++j)
                     if (cells[j] == c) {
                         ++occupancy;
-                        support |= r.members[j] == ActorRecipe::Archer || r.members[j] == ActorRecipe::Shaman;
+                        support |= isSupport(r.members[j]);
                     }
                 if (occupancy >= 2 || (ranged && occupancy) || support)
                     continue;

@@ -44,6 +44,7 @@ template <class A> void visit(A&, Inventory::Saved&, const Inventory::Saved&);
 template <class A> void visit(A&, Party::Saved&, const Party::Saved&);
 template <class A> void visit(A&, GroundPlacement&, const GroundPlacement&);
 template <class A> void visit(A&, RecoveryLevel&, const RecoveryLevel&);
+template <class A> void visit(A&, EncounterAward&, const EncounterAward&);
 template <class A> void visit(A&, FloorObjectiveDefinition&, const FloorObjectiveDefinition&);
 template <class A> void visit(A&, FixtureDefinition&, const FixtureDefinition&);
 template <class A> void visit(A&, FloorFixtures&, const FloorFixtures&);
@@ -129,6 +130,7 @@ template <class A> void visit(A& a, ActorPosition& v, const ActorPosition& base)
 }
 template <class A> void visit(A& a, ActorId& v, const ActorId& base) {
     a("slot", v.slot, base.slot);
+    a("generation", v.generation, base.generation);
 }
 template <class A> void visit(A& a, NpcInstance& v, const NpcInstance& base) {
     a("type", v.type, base.type);
@@ -141,9 +143,11 @@ template <class A> void visit(A& a, NpcInstance& v, const NpcInstance& base) {
     a("monster", v.monster, base.monster);
     a("role", v.role, base.role);
     a("residentId", v.residentId, base.residentId);
+    a("vault", v.vault, base.vault);
 }
 template <class A> void visit(A& a, ActorState& v, const ActorState& base) {
     a("npc", v.npc, base.npc);
+    a("generation", v.generation, base.generation);
     a("monster", v.monster, base.monster);
     a("hitPoints", v.hitPoints, base.hitPoints);
     a("maxHitPoints", v.maxHitPoints, base.maxHitPoints);
@@ -480,6 +484,12 @@ template <class A> void visit(A& a, RecoveryLevel& v, const RecoveryLevel& base)
     a.counted("sanctuaries", v.sanctuaries, v.sanctuaryCount, base.sanctuaries);
     a.counted("ground", v.ground, v.groundCount, base.ground);
 }
+template <class A> void visit(A& a, EncounterAward& v, const EncounterAward& base) {
+    a("name", v.name, base.name);
+    a("first", v.first, base.first);
+    a("count", v.count, base.count);
+    a("xp", v.experience, base.experience);
+}
 template <class A> void visit(A& a, FloorObjectiveDefinition& v, const FloorObjectiveDefinition& base) {
     a("rewardCount", v.rewardCount, base.rewardCount);
     a("count", v.count, base.count);
@@ -488,6 +498,9 @@ template <class A> void visit(A& a, FloorObjectiveDefinition& v, const FloorObje
     a("gate", v.gate, base.gate);
     a.counted("rewards", v.rewards, v.rewardCount, base.rewards);
     a("lootSeed", v.lootSeed, base.lootSeed);
+    a("gatedVault", v.gatedVault, base.gatedVault);
+    a("awardCount", v.awardCount, base.awardCount);
+    a.counted("awards", v.awards, v.awardCount, base.awards);
 }
 template <class A> void visit(A& a, FixtureDefinition& v, const FixtureDefinition& base) {
     a("cell", v.cell, base.cell);

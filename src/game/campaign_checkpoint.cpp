@@ -209,10 +209,12 @@ CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const r
         preparationPoint("Restoring campaign locations");
         auto& from = s.locations[i];
         auto& to = locations_[i];
+        const auto depth = locationDepth(i);
+        const bool cave = depth >= 4;
         if (from.generated != dungeonLocation(i) || from.rows.empty() || from.rows.size() > 40 ||
-            from.rows.front().empty() || from.rows.front().size() > 40 || from.placements.size() > 32 ||
-            from.types.empty() || from.types.size() != timings.size() ||
-            (dungeonLocation(i) && from.visited && !s.locations[i - 1].visited) ||
+            from.rows.front().empty() || from.rows.front().size() > (cave ? 53u : 40u) ||
+            from.placements.size() > 32 || from.types.empty() || from.types.size() != timings.size() ||
+            (depth > 1 && from.visited && !s.locations[floorLocation(depth - 1)].visited) ||
             (i && bool(from.state) != from.visited))
             throw std::invalid_argument("Invalid campaign location definition");
         if (from.world.surfaces.empty() || from.world.fingerprint() != from.worldFingerprint)
@@ -230,14 +232,28 @@ CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const r
                     throw std::invalid_argument("Invalid saved tile value");
             if (from.seed != std::uint32_t(generation::seedFor(from.generation, generation::Domain::Runtime)))
                 throw std::invalid_argument("Saved runtime seed differs from provenance");
-            if (from.layout.dressingFingerprint != map.definition().fingerprint() ||
-                from.layout.cacheCount != 3u || map.definition().assetPack != "underkeep")
+            if (!cave && (from.layout.dressingFingerprint != map.definition().fingerprint() ||
+                          from.layout.cacheCount != 3u || map.definition().assetPack != "underkeep"))
                 throw std::invalid_argument("Saved Underkeep dressing differs");
-            if (from.generation.depth != i || from.generation.generator != generation::generatorVersion ||
-                from.generation.templates != generation::templateVersion || from.layout.depth != i ||
+            const auto& layout = from.layout;
+            if (cave && (layout.roomCount > layout.rooms.size() ||
+                         layout.connectionCount > layout.connections.size() ||
+                         layout.pathCount > layout.paths.size() || layout.routeCount > layout.route.size() ||
+                         layout.fixtures.count > layout.fixtures.entries.size() ||
+                         layout.fixtures.landingCount > layout.fixtures.landings.size() ||
+                         layout.populationCount > layout.population.size() ||
+                         layout.encounterCount > layout.encounters.size() || layout.cacheCount ||
+                         layout.blueprintCount))
+                throw std::invalid_argument("Saved cave layout exceeds its bounds");
+            if (cave && (!s.baseline || map.definition().assetPack != "damp-caves" ||
+                         from.worldFingerprint != s.baseline->locations[i].worldFingerprint ||
+                         from.fingerprint != s.baseline->locations[i].fingerprint))
+                throw std::invalid_argument("Saved cave differs from its populated baseline");
+            if (from.generation.depth != depth || from.generation.generator != generation::generatorVersion ||
+                from.generation.templates != generation::templateVersion || from.layout.depth != depth ||
                 from.layout.width != map.width() || from.layout.height != map.height() ||
-                generation::validate(from.layout) ||
-                generation::validateBlueprintWorld(from.layout, blueprints, map) ||
+                (!cave && (generation::validate(from.layout) ||
+                           generation::validateBlueprintWorld(from.layout, blueprints, map))) ||
                 generation::fingerprint(from.layout) != from.fingerprint)
                 throw std::invalid_argument("Invalid saved generated floor");
             for (int y = 0; y < map.height(); ++y)
@@ -299,10 +315,11 @@ CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const r
             }
         }
     }
-    for (unsigned depth = 1; depth <= 3; ++depth) {
-        const auto& l = locations_[depth];
+    for (unsigned depth = 1; depth <= dungeonFloorCount; ++depth) {
+        const auto& l = locations_[floorLocation(depth)];
         if (depth > 1 && l.visited &&
-            (!locations_[depth - 1].saved || !locations_[depth - 1].saved->objective.completed))
+            (!locations_[floorLocation(depth - 1)].saved ||
+             !locations_[floorLocation(depth - 1)].saved->objective.completed))
             throw std::invalid_argument("Visited depth bypasses its guardian prerequisite");
         for (unsigned f = 0; f < l.fixtures.count; ++f) {
             const auto& fixture = l.fixtures.entries[f];

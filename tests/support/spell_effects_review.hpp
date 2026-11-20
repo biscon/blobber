@@ -12,7 +12,7 @@
 namespace blobber::test {
 inline void spellEffectsReview(const std::filesystem::path& assets, const std::filesystem::path& output,
                                const char* selected = nullptr, bool se02 = false, unsigned frameStep = 60,
-                               bool se03 = false) {
+                               bool se03 = false, const std::filesystem::path& prepared = {}) {
     if (std::filesystem::exists(output) && !std::filesystem::is_empty(output))
         throw std::runtime_error("SE01 review output must be new or empty");
     std::filesystem::create_directories(output);
@@ -21,8 +21,9 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
     Window window(1920, 1080, true);
     check(IsWindowState(FLAG_WINDOW_HIDDEN), "SE01 review remains hidden");
     GpuResources resources;
-    Presenter presenter(resources, assets);
-    WorldRenderer renderer(resources, world_assets::load(assets / "prepared/world"));
+    Presenter presenter(resources, assets, nullptr, prepared);
+    const auto worldDirectory = (prepared.empty() ? assets / "prepared" : prepared) / "world";
+    WorldRenderer renderer(resources, world_assets::load(worldDirectory));
     struct Case {
         const char* name;
         rules::SpellKind spell;
@@ -69,6 +70,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                          {"weapon", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
                          {"weapon-idle", rules::SpellKind::SpiritualWeapon, 1, 3, true, false},
                          {"weapon-move", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
+                         {"weapon-travel", rules::SpellKind::SpiritualWeapon, 1, 1, false, false},
                          {"npc-bless", rules::SpellKind::Bless, 1, 3, true, false}};
     const auto* cases = se03 ? support : se02 ? offensive : foundation;
     const unsigned caseCount = se03   ? unsigned(std::size(support))
@@ -98,6 +100,9 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         if (std::string_view(example.name) == "fire-bolt")
             for (unsigned y = 2; y <= 9; ++y)
                 rows[y][5] = rows[y][7] = '#';
+        const bool weaponTravel = std::string_view(example.name) == "weapon-travel";
+        if (weaponTravel)
+            rows[6][6] = '#';
         const Map map(rows, definition);
         const Player pose{{6, 8}, Heading::North};
         const auto name = weaponIncoming                                            ? "goblin"
@@ -253,6 +258,18 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
             for (const auto& patch : game.effects().ground().areas)
                 burning |= patch.active && patch.burnMs;
             check(burning, "Fire Bolt ignites an actual Web patch");
+        }
+        if (weaponTravel) {
+            commands.record(game.update(1, false));
+            game.actors().damage(game.actors().id(0), 1000, game.timeMs());
+            for (unsigned i = 0; i < 10 && game.combat().snapshot().phase != CombatPhase::Victory; ++i)
+                commands.record(game.update(.5, false));
+            check(game.combat().continueExploring(), "Travel review continues after the last enemy");
+            commands.record(game.update(25, false));
+            present();
+            presenter.capture(output / "weapon-before-step.png");
+            game.setAnimated(false);
+            game.move(Action::Forward);
         }
         if (std::string_view(example.name) == "weapon-move") {
             commands.record(game.update(6, false));

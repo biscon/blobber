@@ -2,7 +2,6 @@
 #include "generation/blueprint_rooms.hpp"
 #include "generation/encounter_planning.hpp"
 #include <algorithm>
-#include <cstdio>
 #include <stdexcept>
 
 namespace blobber::generation {
@@ -13,34 +12,32 @@ constexpr unsigned networkRoom = noRegion;
 struct Group {
     R recipe;
     unsigned room;
-    const char* name;
-    unsigned bonus;
     EncounterRole role = EncounterRole::Direct;
 };
 constexpr auto optional = EncounterRole::Optional, guardian = EncounterRole::Guardian;
-constexpr Group seep[]{{R::SpiderSolo, 2, "Teaching arch", 0},
-                       {R::MixedPatrol, networkRoom, "Cistern scavengers", 225},
-                       {R::SpiderTrio, networkRoom, "Survey nest", 450},
-                       {R::CaptainPatrol, networkRoom, "Survey patrol", 1225},
-                       {R::SpiderPair, 5, "Webbed shortcut", 275, optional},
-                       {R::MixedPatrol, 15, "Goblin lookout", 0, optional},
-                       {R::SpiderGuard, 4, "Webbed guard", 2000, guardian}};
-constexpr Group galleries[]{{R::NewtSolo, 1, "Solo newt", 0},
-                            {R::Banks, 2, "Divided banks", 950},
-                            {R::MixedPatrol, networkRoom, "Gallery scouts", 1350},
-                            {R::SpiderTrio, networkRoom, "Gallery nest", 1350},
-                            {R::NewtPatrol, networkRoom, "Flooded crossing", 1350},
-                            {R::NewtPatrol, 5, "Flooded pocket", 0, optional},
-                            {R::MixedPatrol, 15, "Rope lookout", 0, optional},
-                            {R::GalleryGuard, 4, "Drowned guard", 1800, guardian}};
-constexpr Group vault[]{{R::SpiderTrio, 2, "Outer webs", 1250},
-                        {R::MixedPatrol, networkRoom, "Survey scavengers", 1650},
-                        {R::SpiderNewtPack, networkRoom, "Brood galleries", 1800},
-                        {R::GoblinSentries, networkRoom, "Goblin sentries", 2200},
-                        {R::VaultApproach, 3, "Vault approach", 2550},
-                        {R::SpiderTrio, 5, "Survey cache", 0, optional},
-                        {R::WebLookout, 15, "Web lookout", 0, optional},
-                        {R::BroodVault, 4, "Brood Vault", 0, guardian}};
+constexpr Group seep[]{{R::SpiderSolo, 2},
+                       {R::MixedPatrol, networkRoom},
+                       {R::SpiderTrio, networkRoom},
+                       {R::CaptainPatrol, networkRoom},
+                       {R::SpiderPair, 5, optional},
+                       {R::MixedPatrol, 15, optional},
+                       {R::SpiderGuard, 4, guardian}};
+constexpr Group galleries[]{{R::NewtSolo, 1},
+                            {R::Banks, 2},
+                            {R::MixedPatrol, networkRoom},
+                            {R::GalleryNest, networkRoom},
+                            {R::NewtPatrol, networkRoom},
+                            {R::NewtPatrol, 5, optional},
+                            {R::MixedPatrol, 15, optional},
+                            {R::GalleryGuard, 4, guardian}};
+constexpr Group vault[]{{R::SpiderTrio, 2},
+                        {R::MixedPatrol, networkRoom},
+                        {R::SpiderNewtPack, networkRoom},
+                        {R::GoblinSentries, networkRoom},
+                        {R::VaultApproach, 3},
+                        {R::SpiderTrio, 5, optional},
+                        {R::WebLookout, 15, optional},
+                        {R::BroodVault, 4, guardian}};
 struct Groups {
     const Group* data;
     unsigned count;
@@ -159,6 +156,9 @@ Failure planCavePopulation(CaveFloor& floor) {
         rooms[i] = r == networkRoom ? fightRooms.at(nextNetwork++) : r;
     }
     auto& defs = f.fixtures;
+    f.supply = f.depth == 4 ? floor.sites[S::Camp] : f.rooms[0].anchor;
+    if (f.depth < 6)
+        f.guardianReward = f.rooms[4].anchor;
     f.guardianGate = std::uint8_t(defs.count);
     defs.entries.at(defs.count++) = {floor.sites[S::Goal], Heading::South, FixtureKind::GuardianGate};
     // Close the individual galleries at their exterior sockets. The two approaches
@@ -271,7 +271,6 @@ PreparedPopulation prepareCavePopulation(const CaveFloor& floor, std::uint32_t s
     std::vector<NpcInstance> actors;
     actors.reserve(f.populationCount);
     for (unsigned i = 0; i < band.count; ++i) {
-        const auto& group = band.data[i];
         const auto& e = f.encounters[i];
         if (e.recipe == R::BroodVault) {
             placeBroodVault(floor.sites, types, catalog, actors);
@@ -283,13 +282,6 @@ PreparedPopulation prepareCavePopulation(const CaveFloor& floor, std::uint32_t s
                     objective.members[objective.count++] = std::uint16_t(n);
             }
         }
-        if (group.bonus) {
-            auto& a = objective.awards.at(objective.awardCount++);
-            std::snprintf(a.name.data(), a.name.size(), "%s", group.name);
-            a.first = e.first;
-            a.count = e.count;
-            a.experience = std::uint16_t(group.bonus);
-        }
     }
     auto supply = [&](Cell cell, const char* name, unsigned amount) {
         auto item = catalog.findItem(name);
@@ -297,7 +289,7 @@ PreparedPopulation prepareCavePopulation(const CaveFloor& floor, std::uint32_t s
             throw std::invalid_argument("Invalid cave supply");
         recovery.ground.at(recovery.groundCount++) = {cell, item, std::uint16_t(amount)};
     };
-    const auto camp = f.depth == 4 ? floor.sites[S::Camp] : f.rooms[0].anchor;
+    const auto camp = f.supply;
     if (f.depth == 4)
         supply(camp, "antitoxin", 1);
     supply(camp, "healing_potion", 1);
@@ -306,7 +298,7 @@ PreparedPopulation prepareCavePopulation(const CaveFloor& floor, std::uint32_t s
     supply(floor.sites[S::Optional], "antitoxin", 1);
     supply(floor.sites[S::Lookout], "healing_potion", 1);
     if (f.depth != 6)
-        objective.rewards[objective.rewardCount++] = {f.rooms[4].anchor, catalog.findItem("camp_kit"), 1};
+        objective.rewards[objective.rewardCount++] = {f.guardianReward, catalog.findItem("camp_kit"), 1};
     return {NpcWorld(floor.map, f.spawn.cell, types, std::move(actors)), recovery, objective};
 }
 } // namespace blobber::generation

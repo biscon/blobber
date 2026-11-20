@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 14, templateVersion = 10;
+constexpr unsigned generatorVersion = 15, templateVersion = 10;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 using CellMask = std::array<bool, maxCells>;
 constexpr int floorDimension = 36;
@@ -31,7 +31,7 @@ struct FloorSpec {
     int width, height;
     BiomeId biome;
     unsigned populationBand;
-    bool keyedSector, finalFloor;
+    bool keyedSector, guardianCampKit;
 };
 const BiomeDefinition& underkeepBiome() noexcept;
 std::optional<FloorSpec> floorSpec(unsigned depth) noexcept;
@@ -64,7 +64,8 @@ enum class ActorRecipe : std::uint8_t {
     Newt,
     Mother,
     Sac,
-    Young
+    Young,
+    WebSpinner
 };
 enum class EncounterRecipe : std::uint8_t {
     GoblinPair,
@@ -89,7 +90,8 @@ enum class EncounterRecipe : std::uint8_t {
     GoblinSentries,
     VaultApproach,
     WebLookout,
-    BroodVault
+    BroodVault,
+    GalleryNest
 };
 enum class EncounterRole : std::uint8_t { Direct, Optional, Guardian };
 struct Encounter {

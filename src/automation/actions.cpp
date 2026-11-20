@@ -8,8 +8,8 @@ Json describeTravel(const CampaignRun& run) {
                   {"cost", 1},
                   {"kits", run.game().party().campSupplies().kits}}},
                 {"waypoints", Json::array()}};
-    for (unsigned depth = 1; depth <= 3; ++depth)
-        if (run.location(depth).visited) {
+    for (unsigned depth = 1; depth <= dungeonFloorCount; ++depth)
+        if (run.location(floorLocation(depth)).visited) {
             const auto check = run.previewTravel(run.waypointRequest(depth));
             out["waypoints"].push_back(
                 {{"depth", depth}, {"ready", check.accepted}, {"reason", check.reason}, {"cost", 0}});

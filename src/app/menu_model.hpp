@@ -6,7 +6,7 @@
 namespace blobber {
 // Display-safe library feedback; detailed storage errors go to diagnostics.
 const char* libraryFeedback(const LibraryResult&) noexcept;
-enum class MenuScreen { Main, Library, Detail, Picker, Loading, Arena, Scenarios };
+enum class MenuScreen { Main, Library, Detail, Picker, FloorPicker, Loading, Arena, Scenarios };
 struct PartyChoice {
     SavedCharacterId saved{};
     int preset = -1;

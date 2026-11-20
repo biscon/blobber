@@ -171,7 +171,7 @@ struct TravelHud {
         unsigned depth = 0;
         TravelRequest request;
     };
-    std::array<Row, 3> rows{};
+    std::array<Row, dungeonFloorCount> rows{};
     unsigned count = 0, cursor = 0, kits = 0;
     FixtureResult preview;
 };

@@ -53,6 +53,7 @@ enum class CommandReason : std::uint8_t {
     InvalidItem,
     StaleInventory,
     AboveReach,
+    NoAllyBelowHalfHp,
 };
 const char* actionName(PartyAction action) noexcept;
 const char* commandMessage(CommandReason reason) noexcept;

@@ -15,10 +15,8 @@ void HudPainter::travel(const HudSnapshot& h) const {
         for (unsigned i = 0; i < t.count; ++i) {
             const auto r = travelLayout::row(i);
             box(r, i == t.cursor ? bright : edge);
-            std::snprintf(line, sizeof(line), "%s floor %u%s",
-                          t.rows[i].request.kind == TravelKind::Stairs ? "Enter" : "Return to",
-                          t.rows[i].depth, t.rows[i].request.kind == TravelKind::Stairs ? "" : " entry");
-            label(line, r, i == t.cursor ? bright : hudInk::text);
+            label(campaignLocationName(floorLocation(t.rows[i].depth)), r,
+                  i == t.cursor ? bright : hudInk::text);
         }
         text("You will arrive at the floor entrance.", 136, 202, muted, UiTextStyle::Small);
     } else {

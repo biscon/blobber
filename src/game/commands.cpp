@@ -43,6 +43,8 @@ const char* commandMessage(CommandReason reason) noexcept {
         return "Invalid target selection or dart assignment.";
     case CommandReason::FullHealth:
         return "Target is already at full health.";
+    case CommandReason::NoAllyBelowHalfHp:
+        return "No living party member is below the half-HP cap.";
     case CommandReason::FullMana:
         return "Mana is already full.";
     case CommandReason::Unsafe:
@@ -131,7 +133,7 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
                                    : species == "bugbear"         ? EnemyPortrait::Bugbear
                                    : species == "blind.cave.newt" ? EnemyPortrait::Newt
                                    : species == "broodmother"     ? EnemyPortrait::Broodmother
-                                   : (species == "venomous.spider" || species == "vault.young")
+                                   : (monsterAppearance(species) == "venomous.spider" || species == "vault.young")
                                        ? EnemyPortrait::Spider
                                    : species == "giant.rat"     ? EnemyPortrait::GiantRat
                                    : species == "zombie"        ? EnemyPortrait::Zombie
@@ -201,7 +203,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         if (out.enemyAttack) {
             const auto* attacker = actors_.actor(out.enemy);
             const char* attack =
-                attacker && attacker->npc.young() && out.kind == rules::AttackKind::Ranged ? " bristles" : "";
+                out.bindsSilk ? " silk" : attacker && attacker->npc.young() && out.kind == rules::AttackKind::Ranged ? " bristles" : "";
             std::snprintf(line, sizeof(line), "%s #%u%s -> %s: %s (d20 %d%s), %lld damage%s.%s", species,
                           unsigned(out.enemy.slot) + 1, attack, target,
                           out.critical ? "critical"
@@ -670,7 +672,7 @@ void CommandController::refresh(const TargetSnapshot& targets, bool moving, bool
             if (depth == 4 || depth == 5)
                 state_.log.append("Gate open. The guardians left a camp kit.");
             else if (depth < 6)
-                state_.log.append(depth == 3 ? "Guardians defeated. Reward chest unsealed."
+                state_.log.append(depth == 3 ? "Reward chest unsealed. The way to The Seep is open."
                                              : "Guardians defeated. Gate opened; supplies await beyond.");
             objectiveReported_ = true;
         }

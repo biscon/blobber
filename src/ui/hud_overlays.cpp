@@ -333,7 +333,7 @@ void drawHudOverlay(const HudSnapshot* h, const PickingBuffer* picking, const Ui
                : combat.phase == CombatPhase::Victory ? (arenaVictory ? "ARENA CLEARED" : "VICTORY")
                                                       : "DEFEAT",
                r.x + 14, r.y + 12, gold, UiTextStyle::Display);
-        p.text(h->campaignVictory                     ? "The final guardians are defeated."
+        p.text(h->campaignVictory                     ? "The broodmother and her young are defeated."
                : arenaVictory                         ? "All selected monsters are defeated."
                : combat.phase == CombatPhase::Victory ? "Surviving allies are stable."
                                                       : "Nobody is conscious.",

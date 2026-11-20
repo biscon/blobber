@@ -26,7 +26,7 @@ void drawMapOverlay(const MovementState& state, const Map& map, const UiFonts* f
     char title[32];
     const auto depth =
         floor && (floor->definition().depth || (hud && hud->campaign)) ? floor->definition().depth : 1u;
-    if (hud && hud->campaign && depth == 0)
+    if (hud && hud->campaign && (depth == 0 || depth >= 4))
         std::snprintf(title, sizeof(title), "%s", hud->locationName);
     else
         std::snprintf(title, sizeof(title), "FLOOR %u", depth);

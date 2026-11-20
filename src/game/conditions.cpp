@@ -33,7 +33,7 @@ ActorConditionVisualSnapshot EffectController::visualConditions() const noexcept
         for (unsigned k = 0; k < 4; ++k)
             if (conditions_[i][k].active)
                 mark(target, EffectKind(unsigned(EffectKind::Sleep) + k));
-        if (restrained_[i].area.serial)
+        if (restrained_[i].area.serial || (i < silk_.size() && silk_[i].world))
             mark(target, EffectKind::Restrained);
     }
     for (std::uint16_t i = 0; i < rules::partySize; ++i)
@@ -144,7 +144,7 @@ bool EffectController::wardAllows(EffectTarget attacker, EffectTarget target, st
     return saved.succeeded;
 }
 void EffectController::conditionNotice(EffectTarget target, EffectKind kind, EffectNotice notice,
-                                       EffectEnd reason, rules::CharacterId caster, std::uint64_t now,
+                                       EffectEnd reason, EffectSource caster, std::uint64_t now,
                                        CombatEvents& events) const noexcept {
     EffectInstance e;
     e.kind = kind;

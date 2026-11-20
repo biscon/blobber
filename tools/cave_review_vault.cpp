@@ -89,7 +89,7 @@ void checkVault(GameSession& game, const generation::CaveFloor& floor, const std
     const auto startingUnits =
         firstMember.experience * rules::experienceScale + firstMember.experienceFraction;
     for (const auto& character : game.party().snapshot().characters)
-        require(character.build.level == (campaignLevel ? 4 : 2), "Unexpected vault review party level");
+        require(character.build.level == (campaignLevel ? 3 : 2), "Unexpected vault review party level");
     unsigned firstWarning = 0;
     const auto record = [&](const CombatEvents& events) {
         controls.record(events);

@@ -325,3 +325,27 @@ No new GPU capture or interactive review was performed; in-game feel remains for
 user review. No art/resource payload, save layout or capacity change. Run
 `20261106T001415Z-d22cbc20bc034da0ad2cd32690af476f` was cleaned with no diagnostics
 retained. The accepted spell-effects roadmap remains closed.
+
+## Spiritual Weapon between encounters
+
+After victory the spell can still be active while a turn or a blocked following
+step leaves the hammer behind the party. During exploration the world renderer
+draws the ordinary hammer at its cell when visible. When the anchor is
+outside the view, behind terrain, or too close to draw safely, it shows the same art
+as a small hover beside the party. Each active caster gets one body. Combat,
+targeting, saved cells and spell deadlines continue to use the tactical position.
+
+**Ready for review, 2026-11-20.** Cast Spiritual Weapon on the last enemy in front
+of a wall, defeat it, then walk forward into its cell while the spell is active.
+Brunna's hammer should hover on the right. Turn around to see it at its world
+position again. The side hover is a travel cue. Use the weapon's tactical cell
+for command range.
+
+The Debug `spell_effects` and `level_spells` suites passed. The hidden
+`blobber_world_integration_gpu_tests --se03-check` regression compared rendered
+pixels with and without the hammer 25 seconds after victory, before and after a
+blocked following step, subsequent turns and movement. The
+`--se03-review weapon-travel` capture used production artwork in an Underkeep
+fixture. The two frames showed the hammer ahead before stepping and beside the
+party afterward. The player's cave save was not replayed. One
+[after-step frame](screenshots/spell-effects/se03/weapon-travel.png) is retained.

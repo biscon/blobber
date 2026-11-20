@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 27/29 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 29/32 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -132,8 +132,8 @@ same starting-draft codec as arena `party`):
 {
   "kind": "generated_floor",
   "schema_version": 1,
-  "generator_version": 8,
-  "template_version": 6,
+  "generator_version": 15,
+  "template_version": 10,
   "seed": 5,
   "depth": 1,
   "party": ["replace with four existing starting-draft objects"]
@@ -150,8 +150,8 @@ Depth 1 has an unlocked guardian approach; depths 2–3 require their Bronze/Sil
 A separate guardian gate opens and publishes reserved supplies only after all
 designated deaths. Ordinary victories do not complete the floor. Protected stairs
 rooms have ordinary reusable unlocked doors. Campaign stairs use protected landings; floor
-completion is nonterminal and depth 3 does not yet produce campaign victory.
-Generator/template versions are 8/6; older generated scenarios/traces are rejected.
+completion in the standalone scenario is nonterminal. In a campaign, the third guardian opens the descent to The Seep. The Brood Vault on depth 6 owns campaign victory.
+Generator/template versions are 15/10; older generated scenarios/traces are rejected.
 The generated scenario schema and JSON-lines protocol remain version 1.
 `reset` reuses the same inputs; optional `seed` explicitly regenerates the floor.
 Failed generation/version/party validation preserves an existing session and tokens.
@@ -213,7 +213,7 @@ The expanded paperdoll appends 52 head, 53 hands (gloves/gauntlets), 54 feet,
 55 belt, 56 cloak, 57 ring 1, 58 ring 2, 59 amulet and 60 wrists (bracers).
 Both ring positions accept the same ring wear-location type. New positions have
 no shipped item definitions yet; incompatible gear rejects through the ordinary
-transaction path. Current campaign saves use schema/simulation 18/22.
+transaction path.
 Use move to equip/unequip or rearrange, split with quantity, transfer with a recipient
 and optional cell (omitted means automatic destination). There is no Take All macro;
 repeat checked pickups. Rest preparation arrays are complete desired selections;
@@ -374,10 +374,9 @@ no focus, desktop or OS input automation is used. See [MCP usage](mcp_usage.md).
 
 ## PC04 persistent campaign scenarios
 
-`kind: "campaign"` uses scenario schema 1, `generator_version: 8`,
-`template_version: 6`, a uint32 `seed` and the existing four-entry `party` array.
-There is no `depth` input: launch starts in the fixed sanctuary hub and eagerly
-prepares all three depths. Arena and single generated-floor diagnostic scenarios
+`kind: "campaign"` uses scenario schema 1, `generator_version: 15`,
+`template_version: 10`, a uint32 `seed` and the existing four-entry `party` array.
+Launch prepares all six depths and starts in Sanctuary. Optional `starting_depth` (1–6) uses the development menu entry party and earlier-floor rewards. Arena and single generated-floor diagnostic scenarios
 remain supported. Normal graphical New Game uses this same campaign owner.
 
 Use `interact` on a known stair fixture from its designated adjacent landing, facing
@@ -392,14 +391,14 @@ Concentration attached to NPCs/mixed targets/Web must be dismissed first. The
 summon during safe exploration. Nothing is silently removed to permit travel.
 
 Campaign observations add `campaign.status` (`active`, `victory`, `defeat`),
-`location` (0 for hub, 1–3 for depths), `location_name`, decimal-string `revision`
+`location` (0 for Sanctuary, 1–3 for Underkeep, 4–6 for town interiors, 7–9 for the caves), `location_name`, decimal-string `revision`
 and `gameplay_ms`, and `visited_entries`. PC05 adds free entry waypoint travel
 from the reachable hub entrance. Only diagnostic inspection/traces add location fingerprints and
 canonical state digests covering inactive actors, effects, RNG and reward ledgers.
 Player output does not reveal unvisited floors. `campaign_transition` and
 `campaign_result` events use the existing events envelope. Terminal campaigns
 reject actions; ordinary encounter results still use Continue. Reset is an
-explicit tooling fresh run, not save/resume. No campaign save format is introduced.
+explicit tooling fresh run. Use the campaign save and resume operations below to continue an expedition.
 
 A minimal scenario replaces `kind: "generated_floor"` with `kind: "campaign"`
 and removes `depth` from an existing current-version generated-floor scenario.
@@ -412,14 +411,13 @@ trace-byte, cancellation and output limits remain unchanged.
 ## PC05 recall and entry waypoints
 
 Campaign actions add `{"kind":"recall"}` and
-`{"kind":"waypoint","depth":1}` (depth 1–3). Use normal session/revision tokens.
+`{"kind":"waypoint","depth":1}` (depth 1–6). Use normal session/revision tokens.
 Preview checks source eligibility without spending resources; explicit act confirms.
 Recall costs exactly one existing camp kit, reaches the sanctuary, and does not
 heal or advance time. Full health is legal. Rest separately at the sanctuary.
 Waypoint return is free, requires a known unlocked entry and the reachable/faced
 hub entrance, and always arrives at the original entry. It is unavailable from
-dungeon floors. Stairs remain free with zero kits. Only committed stairs arrival
-unlocks an entry; previews/failed requests never do. No departure bookmark or save.
+dungeon floors. Stairs remain free with zero kits. A committed stairs arrival unlocks the entry. A development start also unlocks entries through its selected depth. A waypoint returns to the entrance.
 
 `campaign.travel` and the `actions` response's `travel` expose `recall` with
 `ready`, `reason`, `cost` (1), `kits`, and `waypoints` containing only unlocked
@@ -463,7 +461,7 @@ Use the usual `version: 1`, string `id` and `op` envelope. For example, after st
 Use actual returned tokens, not the illustrative values above. Save spends no
 gameplay time; successful save updates the host revision. Rejection preserves the
 run and prior slot; directory-flush uncertainty reports publication separately.
-Load validates all four actual layouts/states, party and logical references before
+Load validates the ten location definitions, visited floor states, party and logical references before
 replacing simulation/visibility owners. It advances no clock and grants no starting
 supplies. A resumed session has no starting scenario for `reset`; explicitly `start`
 a new campaign instead. Save compatibility uses schema/simulation/content identities,
@@ -509,7 +507,7 @@ Protocol remains v1. Resolved NPC weapon `attack` events additionally expose
 (`normal`, `advantage`, `disadvantage`, after ordinary cancellation). Spell and
 party events retain their prior shape. Acceptance, release and cancellation never
 publish this saved roll context; non-diagnostic acceptance/release stay hidden.
-Campaign schema/simulation are now 3/5. Older simulation/content rejects without
+This revision used campaign schema/simulation 3/5. Older simulation/content rejects without
 migration or rewriting the rejected file. Arena format remains 1.
 
 ## B04 Undead Fortitude event metadata
@@ -522,7 +520,7 @@ when both bypasses apply. Attempted saves also include `roll`, `total` and
 acceptance/release/cancellation events omit the field, including diagnostics.
 Fortitude uses full post-mitigation `damage`, not HP removed; successful survival
 retains one HP and `died=false`. Multi-hit/source granularity remains unchanged.
-Campaign schema/simulation are now 3/6; old simulation/content rejects without
+This revision used campaign schema/simulation 3/6; old simulation/content rejects without
 migration or rewriting files. Arena format and strict replay identity checks stay
 unchanged.
 
@@ -546,8 +544,7 @@ saves reject unchanged, and local sources/resources do not travel with the party
 
 ### PC07.2 population and diagnostic route metadata
 
-Current campaign schema/simulation are **6/10**, generator/templates **8/6**; older
-incompatible saves reject unchanged. Protocol v1 and arena schema 2 remain.
+PC07.2 shipped with campaign schema/simulation **6/10** and generator/templates **8/6**. Protocol v1 and arena schema 2 remain.
 Diagnostic active campaigns expose `generation` with the same full floor report as
 generated-floor scenarios: ordered room `route`, bounded `encounters` with recipe,
 role, room and member range, population species and direct/optional supply positions.

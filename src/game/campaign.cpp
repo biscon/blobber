@@ -4,6 +4,7 @@
 #include "game/inn_interior.hpp"
 #include "game/sanctuary_hub.hpp"
 #include "game/smithy_interior.hpp"
+#include "generation/cave_population.hpp"
 #include "world/sanctuary_city.hpp"
 #include <algorithm>
 #include <stdexcept>
@@ -45,14 +46,30 @@ prepareCampaignLocations(const blueprints::BlueprintCatalog& blueprints, const r
     hub.placements = NpcWorld(hub.map(), hub.entry.cell, types, sanctuaryResidents(types));
     hub.seed = seed;
     hub.visited = true;
-    for (unsigned depth = 1; depth <= 3; ++depth) {
+    for (unsigned depth = 1; depth <= dungeonFloorCount; ++depth) {
         preparationPoint("Generating dungeon floors");
-        auto result = generation::generate({seed, depth}, blueprints);
-        if (!result)
-            throw std::runtime_error("Campaign generation failed");
-        auto& floor = locations[depth];
-        floor.generated = std::move(result.floor);
-        auto population = generation::preparePopulation(*floor.generated, catalog, types, profile);
+        auto& floor = locations[floorLocation(depth)];
+        auto population = [&]() -> generation::PreparedPopulation {
+            if (depth <= 3) {
+                auto result = generation::generate({seed, depth}, blueprints);
+                if (!result)
+                    throw std::runtime_error("Underkeep generation failed");
+                floor.generated = std::move(result.floor);
+                return generation::preparePopulation(*floor.generated, catalog, types, profile);
+            }
+            auto result = generation::generateCave(seed, depth, false, generation::CaveContent::Populated);
+            if (!result.floor)
+                throw std::runtime_error("Populated cave generation failed");
+            auto& cave = *result.floor;
+            auto bound = generation::prepareCavePopulation(cave, seed, catalog, types);
+            generation::GenerationRequest request{seed, depth};
+            cave.layout.dressingFingerprint = cave.map.definition().fingerprint();
+            const auto signature = generation::fingerprint(cave.layout);
+            floor.generated.emplace(generation::GeneratedFloor{
+                request, std::move(cave.layout), std::move(cave.map), result.diagnostics, signature,
+                std::uint32_t(generation::seedFor(request, generation::Domain::Runtime))});
+            return bound;
+        }();
         floor.placements = std::move(population.placements);
         floor.recovery = population.recovery;
         floor.objective = population.objective;
@@ -61,9 +78,9 @@ prepareCampaignLocations(const blueprints::BlueprintCatalog& blueprints, const r
         floor.exit.cell = floor.fixtures.landings[1];
         // Objective-side arrival faces back into the stairs room.
         for (unsigned i = 0; i < floor.fixtures.count; ++i)
-            if ((stairFixture(floor.fixtures.entries[i].kind)
-                     ? stairLanding(floor.fixtures.entries[i])
-                     : floor.fixtures.entries[i].cell) == floor.exit.cell)
+            if ((stairFixture(floor.fixtures.entries[i].kind) ||
+                 floor.fixtures.entries[i].kind == FixtureKind::Endpoint) &&
+                stairLanding(floor.fixtures.entries[i]) == floor.exit.cell)
                 floor.exit.heading = Heading((unsigned(floor.fixtures.entries[i].facing) + 2) % 4);
         floor.seed = floor.generated->runtimeSeed;
     }
@@ -108,7 +125,7 @@ prepareCampaignDefinitions(const blueprints::BlueprintCatalog& blueprints, const
 }
 CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog& catalog,
                          const rules::PresetParty& starting, const std::vector<std::string>& types,
-                         const std::vector<NpcTimings>& timings, std::uint32_t seed)
+                         const std::vector<NpcTimings>& timings, std::uint32_t seed, unsigned startingDepth)
     : runId_(campaignRunId()), party_(catalog, starting), timings_(timings) {
     const auto profile = generation::rewardProfile(catalog, starting);
     locations_ = prepareCampaignLocations(blueprints, catalog, types, seed, profile);
@@ -118,6 +135,8 @@ CampaignRun::CampaignRun(const blueprints::BlueprintCatalog& blueprints, const r
     active_ = prepare(0, spawn);
     active_->campaign_ = this;
     active_->discover();
+    if (startingDepth)
+        startAtDepth(startingDepth);
 }
 void CampaignRun::configureDoorways() {
     const auto city = sanctuaryCity();
@@ -160,12 +179,14 @@ TravelRequest CampaignRun::doorwayRequest() const noexcept {
 std::unique_ptr<GameSession> CampaignRun::prepare(unsigned index, Player arrival, bool validate) {
     preparationPoint("Preparing campaign session");
     const auto& l = locations_[index];
-    auto game = std::make_unique<GameSession>(l.map(), party_, *l.placements, l.seed, arrival, timings_,
-                                              l.recovery, l.fixtures, l.objective);
+    auto game =
+        std::make_unique<GameSession>(l.map(), party_, *l.placements, l.seed, l.saved ? l.entry : arrival,
+                                      timings_, l.recovery, l.fixtures, l.objective);
     if (l.saved) {
         if (validate)
             game->validateCheckpoint(*l.saved);
         game->importFloor(*l.saved);
+        game->restorePose(arrival, game->movement().animated);
     }
     return game;
 }
@@ -179,13 +200,12 @@ CampaignStatus CampaignRun::status() const noexcept {
         conscious |= member.life == rules::Life::Conscious;
     if (!conscious || game().combat().snapshot().phase == CombatPhase::Defeat)
         return CampaignStatus::Defeat;
+    if (dungeonDepth() == dungeonFloorCount && game().objective().completed)
+        return CampaignStatus::Victory;
     return CampaignStatus::Active;
 }
 const char* CampaignRun::name() const noexcept {
-    constexpr const char* names[]{"Sanctuary",     "Dungeon floor 1",  "Dungeon floor 2", "Dungeon floor 3",
-                                  "Sanctuary inn", "Sanctuary smithy", "Arcane Emporium"};
-    static_assert(std::size(names) == campaignLocationCount);
-    return names[location_];
+    return campaignLocationName(location_);
 }
 TravelRequest CampaignRun::request(FixtureRequest fixture) const noexcept {
     TravelRequest r;
@@ -242,7 +262,8 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
     if (r.kind != TravelKind::Stairs && r.kind != TravelKind::Waypoint)
         return {false, false, "Choose a destination first."};
     if (r.kind == TravelKind::Waypoint &&
-        (location_ != 0 || r.depth < 1 || r.depth > 3 || !locations_[r.depth].visited))
+        (location_ != 0 || floorLocation(r.depth) == campaignLocationCount ||
+         !locations_[floorLocation(r.depth)].visited))
         return {false, false, "Use the dungeon entrance to return to a floor you have visited."};
     if (interiorLocation(activeLocationId()))
         return {false, false, "Leave through the interior door."};
@@ -258,21 +279,16 @@ FixtureResult CampaignRun::previewTravel(const TravelRequest& r) const noexcept 
     if (r.kind == TravelKind::Waypoint)
         return {f->kind == FixtureKind::Downstairs, false, "Return to the unlocked floor entry for free."};
     if (f->kind == FixtureKind::Downstairs) {
-        if (location_ == 3)
+        if (dungeonDepth() == dungeonFloorCount)
             return {false, false, "No deeper floor."};
         if (location_ && !g.objective().completed)
             return {false, false, "Defeat the guardians before descending."};
-        return {true, false,
-                location_ == 0   ? "Enter floor 1."
-                : location_ == 1 ? "Descend to floor 2."
-                                 : "Descend to floor 3."};
+        return {true, false, dungeonFloors[dungeonDepth()].stairLabel};
     }
-    if (!location_)
+    if (!dungeonDepth())
         return {false, false, "No upstairs here."};
     return {true, false,
-            location_ == 1   ? "Return to Sanctuary."
-            : location_ == 2 ? "Ascend to floor 1."
-                             : "Ascend to floor 2."};
+            dungeonDepth() == 1 ? "Return to Sanctuary." : dungeonFloors[dungeonDepth() - 2].stairLabel};
 }
 CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
     preparationPoint("Preparing destination");
@@ -289,8 +305,10 @@ CampaignRun::PreparedTravel CampaignRun::prepareTravel(const TravelRequest& r) {
         ticket.to = unsigned(link.destination);
         ticket.arrival = link.arrival;
     } else {
-        ticket.to =
-            stair ? (down ? location_ + 1 : location_ - 1) : (r.kind == TravelKind::Recall ? 0 : r.depth);
+        ticket.to = stair ? (down                  ? floorLocation(dungeonDepth() + 1)
+                             : dungeonDepth() == 1 ? 0
+                                                   : floorLocation(dungeonDepth() - 1))
+                          : (r.kind == TravelKind::Recall ? 0 : floorLocation(r.depth));
         ticket.landing = stair && !down ? 1 : 0;
         ticket.arrival = ticket.landing ? locations_[ticket.to].exit : locations_[ticket.to].entry;
     }

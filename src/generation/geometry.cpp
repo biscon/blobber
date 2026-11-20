@@ -15,7 +15,7 @@ const BiomeDefinition& underkeepBiome() noexcept {
 std::optional<FloorSpec> floorSpec(unsigned depth) noexcept {
     if (depth < 1 || depth > 3)
         return std::nullopt;
-    return FloorSpec{depth, floorDimension, floorDimension, BiomeId::Underkeep, depth, depth > 1, depth == 3};
+    return FloorSpec{depth, floorDimension, floorDimension, BiomeId::Underkeep, depth, depth > 1, depth < 3};
 }
 const char* profileName(LayoutProfile p) noexcept {
     switch (p) {

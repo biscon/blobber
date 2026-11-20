@@ -35,7 +35,7 @@ struct MenuMusicSession {
 static bool launchSession(const Options& options, const rules::Catalog& rules,
                           const rules::PresetParty* starting, Presenter& presenter,
                           const ArenaScenario* arena, CampaignStore* saves = nullptr,
-                          std::unique_ptr<CampaignRun> restored = {}) {
+                          std::unique_ptr<CampaignRun> restored = {}, unsigned startingDepth = 0) {
     auto loading = std::make_unique<LoadingScreen>(presenter.loadingWorker(), &presenter);
     const auto seed =
         arena ? arena->seed
@@ -52,7 +52,7 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         roomCatalog =
             prepareCpu([&] { return blueprints::load(options.assets / "blueprints/underkeep.json"); });
     std::unique_ptr<CampaignRun> campaign = std::move(restored);
-    const bool showWelcome = !arena && !campaign;
+    const bool showWelcome = !arena && !campaign && !startingDepth;
     std::optional<Map> arenaFloor;
     if (arena)
         arenaFloor.emplace(arenaMap());
@@ -60,7 +60,7 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
         campaign = prepareCpu([&] {
             preparationPoint("Building campaign");
             return std::make_unique<CampaignRun>(saves ? saves->blueprints() : *roomCatalog, rules, *starting,
-                                                 definitions.types, definitions.timings, seed);
+                                                 definitions.types, definitions.timings, seed, startingDepth);
         });
     const Map& map = arena ? *arenaFloor : campaign->map();
     const Player spawn = arena ? arenaSpawn() : campaign->game().movement().player;
@@ -93,9 +93,9 @@ static bool launchSession(const Options& options, const rules::Catalog& rules,
                        &launch) != PlayOutcome::Quit;
 }
 bool launchMenuParty(const Options& o, const rules::Catalog& c, const rules::PresetParty& p,
-                     Presenter& presenter, CampaignStore* saves) {
+                     Presenter& presenter, CampaignStore* saves, unsigned startingDepth) {
     MenuMusicSession music(presenter);
-    return launchSession(o, c, &p, presenter, nullptr, saves);
+    return launchSession(o, c, &p, presenter, nullptr, saves, {}, startingDepth);
 }
 bool launchArena(const Options& o, const rules::Catalog& c, const ArenaScenario& arena,
                  Presenter& presenter) {

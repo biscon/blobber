@@ -85,9 +85,8 @@ void placeFixtures(FloorLayout& f) noexcept {
     const auto upFacing = Heading(f.rooms[entry].rotation), downFacing = Heading(f.rooms[objective].rotation);
     defs.entries[defs.count++] = {f.rooms[entry].anchor + forward(upFacing), upFacing, FixtureKind::Upstairs,
                                   0};
-    defs.entries[defs.count++] = {
-        f.rooms[objective].anchor + (spec->finalFloor ? Cell{} : forward(downFacing)), downFacing,
-        spec->finalFloor ? FixtureKind::Endpoint : FixtureKind::Downstairs, 0};
+    defs.entries[defs.count++] = {f.rooms[objective].anchor + forward(downFacing), downFacing,
+                                  FixtureKind::Downstairs, 0};
     for (unsigned i = 0; i < f.connectionCount; ++i) {
         const auto& e = f.connections[i];
         if (e.a == entry || e.b == entry)
@@ -158,7 +157,7 @@ Failure validateFixtures(const FloorLayout& f, const CellMask* collision) noexce
         (key >= 0) != (f.depth > 1) || defs.entries[f.approachDoor].kind != FixtureKind::Door ||
         defs.entries[f.guardianGate].kind != FixtureKind::GuardianGate ||
         !(stairLanding(defs.entries[up]) == f.spawn.cell) ||
-        defs.entries[goal].kind != (f.depth == 3 ? FixtureKind::Endpoint : FixtureKind::Downstairs))
+        defs.entries[goal].kind != FixtureKind::Downstairs)
         return {Error::Fixture};
     bool approachPort = false, gatePort = false, goalAnchor = false;
     for (unsigned i = 0; i < f.roomCount; ++i)

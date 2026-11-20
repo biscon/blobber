@@ -18,6 +18,9 @@ const char* GameSession::saveSafety() const noexcept {
         return "Couldn't save. Restart the game to load your previous save.";
     if (movement_.pending_ || doorPending_ || actionBusy())
         return opening() ? "Wait until the door finishes moving." : "Wait until movement finishes.";
+    for (const auto& clutch : combat_.clutches_)
+        if (combat_.stirring(clutch.sac))
+            return "Wait for the clutch warning to resolve.";
     if (!combat_.settledRecovery(movement().player, timeMs_) || effects_.area(movement().player.cell))
         return "Wait until it is safe to save.";
     return nullptr;
@@ -135,10 +138,11 @@ void GameSession::exportFloor(FloorState& s) const noexcept {
 void GameSession::importFloor(const FloorState& s) {
     validateContainers(s);
     const auto reject = [] { throw std::invalid_argument("Invalid floor snapshot"); };
+    const bool vault = bool(combat_.vaultMother().world);
     if (s.actors.count != actors_.state_.count || s.actors.typeCount != actors_.state_.typeCount ||
         s.ai.state.count != s.actors.count || s.combat.state.phase != CombatPhase::Exploration ||
         s.combat.state.biteTargets || s.effects.turns || s.effects.gameplayMs != s.combat.state.gameplayMs ||
-        s.objective.count != objective_.count || !s.effects.nextSerial || !s.effects.nextArea ||
+        (!vault && s.objective.count != objective_.count) || !s.effects.nextSerial || !s.effects.nextArea ||
         s.remainderMs < 0 || s.remainderMs >= 1 || !std::isfinite(s.remainderMs))
         reject();
     for (std::size_t i = 0; i < NpcWorld::maxInstances; ++i) {
@@ -183,7 +187,11 @@ void GameSession::importFloor(const FloorState& s) {
     for (std::size_t i = 0; i < s.actors.count; ++i) {
         const auto& a = s.actors.actors[i];
         const auto& initial = actors_.state_.actors[i];
-        if (a.monster.index != actors_.state_.actors[i].monster.index || a.npc.role != initial.npc.role ||
+        if (a.npc.vault != initial.npc.vault || (!a.npc.young() && a.generation) ||
+            (a.npc.young() && (!a.generation ? (a.life != ActorLife::Removed || a.hasDeath)
+                                             : (a.life == ActorLife::Removed && !a.hasDeath))) ||
+            (a.npc.sac() && (!(a.npc.cell == initial.npc.cell) || !(a.npc.subcell == initial.npc.subcell))) ||
+            a.monster.index != actors_.state_.actors[i].monster.index || a.npc.role != initial.npc.role ||
             a.npc.residentId != initial.npc.residentId || a.npc.type.index != initial.npc.type.index ||
             a.maxHitPoints != actors_.state_.actors[i].maxHitPoints ||
             unsigned(a.life) > unsigned(ActorLife::Removed) || !validCell(a.npc.cell) ||
@@ -192,7 +200,7 @@ void GameSession::importFloor(const FloorState& s) {
             a.npc.subcell.y < 0 || a.npc.subcell.y > 1 || a.hitPoints < 0 || a.hitPoints > a.maxHitPoints ||
             (a.life == ActorLife::Alive && ((a.hostile() && !a.hitPoints) || a.hasDeath)))
             reject();
-        if (!a.hostile() &&
+        if (!a.targetable() &&
             (a.life != ActorLife::Alive || a.hitPoints || a.maxHitPoints || a.npc.monster ||
              !(a.npc.cell == initial.npc.cell) || !(a.npc.subcell == initial.npc.subcell) ||
              a.npc.facing != initial.npc.facing || a.npc.phaseMs != initial.npc.phaseMs ||
@@ -203,7 +211,7 @@ void GameSession::importFloor(const FloorState& s) {
              s.combat.enemyBusy[i] || s.ai.prepared[i] ||
              s.ai.state.actors[i].awareness != Awareness::Routine))
             reject();
-        if (a.life == ActorLife::Alive) {
+        if (a.life == ActorLife::Alive && !a.npc.sac()) {
             if (map_.base().npcBlocked(a.npc.cell) ||
                 floor_.definition_.npcExcluded[std::size_t(a.npc.cell.y * map_.width() + a.npc.cell.x)])
                 reject();
@@ -221,8 +229,8 @@ void GameSession::importFloor(const FloorState& s) {
             mask |= bit;
         }
         const auto& ai = s.ai.state.actors[i];
-        if (!a.hostile() && (!(ai.home == initial.npc.cell) || ai.homeFacing != initial.npc.facing ||
-                             ai.config.routine != NpcRoutine::Guard || ai.config.waypointCount))
+        if (!a.targetable() && (!(ai.home == initial.npc.cell) || ai.homeFacing != initial.npc.facing ||
+                                ai.config.routine != NpcRoutine::Guard || ai.config.waypointCount))
             reject();
         if (unsigned(ai.awareness) > unsigned(Awareness::Returning) ||
             unsigned(ai.config.routine) > unsigned(NpcRoutine::Wander) || ai.config.waypointCount > 8 ||
@@ -286,12 +294,42 @@ void GameSession::importFloor(const FloorState& s) {
                 reject();
         }
     }
-    for (std::size_t i = 0; i < s.actors.count; ++i)
-        if ((s.creditedDeaths[i] || s.loot.deaths[i]) && !s.actors.actors[i].hasDeath)
+    for (std::size_t i = 0; i < s.actors.count; ++i) {
+        const auto& a = s.actors.actors[i];
+        const bool credited = a.hostile() && a.npc.vault == VaultPart::None && a.hasDeath;
+        if (s.creditedDeaths[i] != credited || s.loot.deaths[i] != credited)
             reject();
-    for (unsigned i = 0; i < s.objective.count; ++i)
-        if (s.objective.members[i].slot != objective_.members[i].slot)
+    }
+    if (vault) {
+        const auto mother = combat_.vaultMother().slot;
+        const auto& m = s.actors.actors[mother];
+        if (!s.objective.count || s.objective.members[0].slot != mother ||
+            s.objective.members[0].generation || (m.life != ActorLife::Alive && !m.hasDeath))
             reject();
+        unsigned count = 1;
+        bool cleared = m.hasDeath;
+        for (const auto& clutch : combat_.clutches_) {
+            const auto& sac = s.actors.actors[clutch.sac.slot];
+            const auto& young = s.actors.actors[clutch.young];
+            if ((m.hasDeath && sac.life == ActorLife::Alive) ||
+                (!m.hasDeath && sac.life == ActorLife::Removed && !sac.hasDeath))
+                reject();
+            if (young.life != ActorLife::Removed) {
+                if (s.objective.members[count].slot != clutch.young ||
+                    s.objective.members[count].generation != young.generation)
+                    reject();
+                ++count;
+            }
+            cleared &= !young.generation || young.hasDeath;
+        }
+        if (count != s.objective.count || cleared != s.objective.completed)
+            reject();
+    } else {
+        for (unsigned i = 0; i < s.objective.count; ++i)
+            if (s.objective.members[i].slot != objective_.members[i].slot ||
+                s.objective.members[i].generation)
+                reject();
+    }
     if ((!s.objective.count && s.objective.completed) || s.objective.completed != s.objective.rewardIssued)
         reject();
     if (s.objective.completed) {
@@ -328,6 +366,7 @@ void GameSession::importFloor(const FloorState& s) {
         effects_.poisonClock_[i] = s.effects.poisonRemaining[i] ? s.effects.gameplayMs + s.effects.poisonRemaining[i] : 0;
     effects_.casterTurns_ = s.effects.casterTurns;
     effects_.ground_ = s.effects.ground;
+    effects_.releaseSilk();
     effects_.restrained_ = s.effects.restrained;
     effects_.nextArea_ = s.effects.nextArea;
     effects_.groundDueMs_ = s.effects.groundDueMs;

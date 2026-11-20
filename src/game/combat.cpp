@@ -453,6 +453,7 @@ void CombatController::leave() noexcept {
             clutch.opportunity = false;
         }
     clearBiteWarnings();
+    effects_.releaseSilk();
     state_.phase = CombatPhase::Exploration;
     state_.enemyCount = 0;
     members_.fill(false);

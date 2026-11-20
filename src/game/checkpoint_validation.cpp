@@ -39,7 +39,8 @@ void GameSession::validateCheckpoint(const FloorState& s) const {
         return p.x >= 0 && p.y >= 0 && p.x < map_.width() && p.y < map_.height();
     };
     const auto actor = [&](ActorId id) {
-        return id.slot < s.actors.count && s.actors.actors[id.slot].hostile();
+        return id.slot < s.actors.count && s.actors.actors[id.slot].targetable() &&
+               s.actors.actors[id.slot].generation == id.generation;
     };
     const auto& c = s.combat.state;
     if (s.timeMs > maxCheckpointClock || s.effects.gameplayMs > maxCheckpointClock ||

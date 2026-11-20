@@ -15,13 +15,19 @@ Scenario decodeScenario(const rules::Catalog& catalog, const Json& j) {
         return decodeArena(catalog, arena.dump());
     }
     if (j.at("kind") == "campaign") {
-        fields(j, {"kind", "schema_version", "generator_version", "template_version", "seed", "party"});
+        fields(j, {"kind", "schema_version", "generator_version", "template_version", "seed", "party",
+                   "starting_depth"});
         auto floor = j;
         floor["kind"] = "generated_floor";
         floor["depth"] = 1;
+        floor.erase("starting_depth");
         const auto decoded = decodeScenario(catalog, floor);
         const auto& generated = std::get<GeneratedScenario>(decoded);
-        return CampaignScenario{generated.party, generated.generation.seed};
+        const unsigned depth =
+            j.contains("starting_depth") ? bounded(j.at("starting_depth"), dungeonFloorCount) : 0;
+        if (j.contains("starting_depth") && !depth)
+            throw std::invalid_argument("Starting depth must be between 1 and 6");
+        return CampaignScenario{generated.party, generated.generation.seed, depth};
     }
     if (j.at("kind") != "generated_floor")
         throw std::invalid_argument("Unknown scenario kind");

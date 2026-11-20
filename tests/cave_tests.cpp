@@ -33,7 +33,7 @@ std::bitset<maxRooms * maxRooms> passages(const FloorLayout& layout) {
 }
 void run() {
     check(!generateCave(5, 3).floor && !generateCave(5, 7).floor, "Invalid depth admitted");
-    check(!floorSpec(4) && floorSpec(3)->finalFloor, "Cave preview leaked into campaign");
+    check(!floorSpec(4) && !floorSpec(3)->guardianCampKit, "Cave preview leaked into campaign");
     for (unsigned d = 4; d <= 6; ++d) {
         for (bool forced : {false, true}) {
             auto populated = generateCave(5, d, forced, CaveContent::Populated);

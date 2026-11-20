@@ -78,9 +78,21 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
     bugbearCaptain.hitPoints = fixedGuardianHp ? 34 : hp;
     commander.id = "bugbear.commander";
     commander.hitPoints = fixedGuardianHp ? 42 : hp;
+    auto spider = monster, newt = monster, mother = monster, young = monster;
+    spider.id = "venomous.spider";
+    newt.id = "blind.cave.newt";
+    mother.id = "broodmother";
+    young.id = "vault.young";
+    auto spinner = spider;
+    spinner.id = "adult.web.spinner";
+    spinner.experience = normalXp ? 200 : spider.experience;
+    auto antidote = items[13];
+    antidote.id = "antitoxin";
+    antidote.consumable = rules::Consumable::Antitoxin;
+    items.push_back(antidote);
     return {{attack, bow},
             {monster, archer, guardian, skeleton, zombie, rat, shaman, bugbear, captain, bugbearCaptain,
-             commander},
+             commander, spider, newt, mother, young, spinner},
             races,
             classes,
             items,
@@ -90,8 +102,10 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
 }
 inline NpcDefinitions definitions() {
     NpcDefinitions d;
-    d.types = {"goblin",    "goblin.archer", "skeleton", "zombie", "giant.rat",  "goblin_shaman", "bugbear",
-               "innkeeper", "mayor",         "boric",    "balin",  "blacksmith", "shadowtart"};
+    d.types = {"goblin",        "goblin.archer", "skeleton",   "zombie",          "giant.rat",
+               "goblin_shaman", "bugbear",       "innkeeper",  "mayor",           "boric",
+               "balin",         "blacksmith",    "shadowtart", "venomous.spider", "blind.cave.newt",
+               "broodmother",   "vault.clutch",  "vault.young"};
     d.timings.resize(d.types.size());
     d.attachments.resize(d.types.size());
     d.timings[0][0] = {{{100, 0, 0, 0}}, 1};
@@ -100,7 +114,7 @@ inline NpcDefinitions definitions() {
         d.timings[0][std::size_t(clip)] = {{{50, 50, 0, 0}}, 2};
     for (unsigned i = 1; i < d.timings.size(); ++i)
         d.timings[i] = d.timings[0];
-    for (unsigned i = 7; i < d.timings.size(); ++i) {
+    for (unsigned i = 7; i < 13; ++i) {
         d.timings[i] = {};
         d.timings[i][0] = {{{100, 100, 0, 0}}, 2};
         d.timings[i][std::size_t(NpcAnimation::Talk)] = {{{80, 80, 80, 80}}, 4};

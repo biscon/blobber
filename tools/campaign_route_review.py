@@ -425,7 +425,7 @@ class Route:
                 self.stairs(3)
         if self.state["campaign"]["status"] != "active":
             raise StopTrial("policy_failure", "campaign_ended_after_guardian")
-        raise StopTrial("victory", "current_content_cleared_campaign_still_active")
+        raise StopTrial("victory", "underkeep_cleared_campaign_still_active")
 
     def close(self):
         if not self.client.closed and not self.client.failed:
@@ -486,7 +486,7 @@ def main():
                 name = f"{package['id']}-{seed}-{'reserve' if reserve else 'direct'}"
                 directory = args.output/name
                 directory.mkdir()
-                scenario = dict(kind="campaign", schema_version=1, generator_version=14, template_version=10,
+                scenario = dict(kind="campaign", schema_version=1, generator_version=15, template_version=10,
                                 seed=seed, party=package["scenario"]["party"])
                 (directory/"scenario.json").write_text(json.dumps(scenario, indent=2)+"\n")
                 route = Route(args.runner, args.assets, directory, scenario, reserve, deadline)

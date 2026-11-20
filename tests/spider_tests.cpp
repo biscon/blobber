@@ -104,6 +104,34 @@ void biteImpact() {
     }
 }
 
+void spinnerSilk() {
+    const auto map = combatMap();
+    const auto catalog = venomCatalog();
+    const NpcWorld placement(map, stance.cell, {"test.spider"},
+                             {{{0}, {3, 2}, {0, 0}}, {{0}, {2, 2}, {1, 1}}});
+    Party party(catalog);
+    ActorWorld actors(map, catalog, placement);
+    DiceRng rng(5);
+    EffectController effects(party, actors, rng);
+    CombatEvents events;
+    const auto first = actors.id(0), second = actors.id(1);
+    const CharacterId ally{1};
+    effects.bindSilk(first, victim, 0, events);
+    effects.bindSilk(first, ally, 0, events);
+    effects.bindSilk(second, victim, 0, events);
+    check(effects.holdingSilk(first) && !effects.holdingSilk(second) &&
+              effects.has(victim, EffectKind::Restrained) && !effects.has(ally, EffectKind::Restrained),
+          "A strand needs a free spinner and an unbound victim");
+    effects.bindSilk(second, ally, 0, events);
+    actors.damage(first, 1000, 0);
+    effects.reconcile(0, events);
+    check(!effects.has(victim, EffectKind::Restrained) && effects.has(ally, EffectKind::Restrained),
+          "Killing one spinner releases only its own victim");
+    for (unsigned i = 0; i < 32 && effects.holdingSilk(second); ++i)
+        check(effects.escapeWeb(ally, i, events), "Bound companion can attempt Escape Web");
+    check(!effects.has(ally, EffectKind::Restrained) && !effects.holdingSilk(second),
+          "Successful escape releases the spinner's strand");
+}
 void clocksAndSources() {
     const auto map = combatMap();
     const auto c = venomCatalog();
@@ -305,6 +333,7 @@ void restoration() {
 } // namespace
 int main() try {
     biteImpact();
+    spinnerSilk();
     clocksAndSources();
     initiativeOpportunities();
     spellRolls();

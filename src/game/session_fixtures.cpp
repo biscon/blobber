@@ -149,7 +149,7 @@ FixtureResult GameSession::interact(const FixtureRequest& r, bool preview) noexc
                               : "Silver seal key used. Door opened."};
     if (firstOpening && objectiveDefinition_.count && r.id.slot == objectiveDefinition_.approachDoor)
         return {true, !preview,
-                floor_.definition().depth == 3 ? "Final guardians beyond! Combat prevents movement."
+                floor_.definition().depth == 3 ? "The commander is beyond! Combat prevents movement."
                                                : "Guardians beyond! Combat prevents movement."};
     return {true, !preview,
             f->kind == FixtureKind::Door ? (closing ? (preview ? "Close door." : "Door closed.")

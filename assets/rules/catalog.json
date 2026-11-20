@@ -134,6 +134,29 @@
         "modifier": 2,
         "type": "piercing"
       }
+    },
+    {
+      "id": "adult.web.spinner.bite",
+      "kind": "melee",
+      "attack_bonus": 5,
+      "damage": {
+        "count": 1,
+        "sides": 8,
+        "modifier": 3,
+        "type": "piercing"
+      },
+      "venom_dc": 11
+    },
+    {
+      "id": "adult.web.spinner.silk",
+      "kind": "ranged",
+      "attack_bonus": 5,
+      "damage": {
+        "count": 1,
+        "sides": 4,
+        "modifier": 0,
+        "type": "bludgeoning"
+      }
     }
   ],
   "monsters": [
@@ -828,6 +851,34 @@
       "metal_armor": false,
       "sleep_immune": false,
       "experience": 0,
+      "humanoid": false,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none",
+      "creature_type": "beast"
+    },
+    {
+      "id": "adult.web.spinner",
+      "abilities": {
+        "strength": 14,
+        "dexterity": 16,
+        "constitution": 12,
+        "intelligence": 2,
+        "wisdom": 10,
+        "charisma": 4
+      },
+      "armor_class": 14,
+      "hit_points": 26,
+      "speed_ft": 30,
+      "attacks": [
+        "adult.web.spinner.bite",
+        "adult.web.spinner.silk"
+      ],
+      "traits": [],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 200,
       "humanoid": false,
       "damage_immunities": [],
       "damage_vulnerabilities": [],

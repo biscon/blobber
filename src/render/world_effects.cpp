@@ -1,4 +1,5 @@
 #include "render/world_effects.hpp"
+#include "game/perception.hpp"
 #include <cmath>
 #include <stdexcept>
 namespace blobber::world_render {
@@ -98,20 +99,36 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         visibleFire |= visibleFires[i] || visibleGlow[i];
     }
     const auto tick = visibleFire ? in.now / 50 + 1 : 0;
+    std::array<std::optional<Vec>, rules::partySize> weaponPositions{};
+    unsigned carried = 0;
     bool visibleWeapon = false, attackingWeapon = false;
     for (unsigned caster = 0; caster < area.ground.weapons.size(); ++caster) {
         const auto& weapon = area.ground.weapons[caster];
         if (!weapon.active)
             continue;
-        const auto position = spiritualWeaponPosition(in, weapon.cell);
-        if (!position)
-            continue;
-        const auto p = *position;
-        const auto d = depth(world.camera, p);
-        const float side = (p.x - world.camera.position.x) * world.camera.right.x +
-                           (p.z - world.camera.position.z) * world.camera.right.z;
-        const bool visible = d >= nearPlane && d <= world.camera.farClip &&
-                             std::abs(side) <= d * (viewWidth * .5f / focal()) + .325f;
+        auto& position = weaponPositions[caster];
+        position = spiritualWeaponPosition(in, weapon.cell);
+        const auto& cam = world.camera;
+        bool visible = false;
+        if (position) {
+            const float d = depth(cam, *position);
+            const float side = (position->x - cam.position.x) * cam.right.x +
+                               (position->z - cam.position.z) * cam.right.z;
+            visible = d >= nearPlane && d <= cam.farClip &&
+                      std::abs(side) <= d * (viewWidth * .5f / focal()) + .325f;
+        }
+        if (in.exploring && !in.cameraOverride &&
+            (!visible || !lineOfSight(in.geometry, in.movement.player.cell, weapon.cell))) {
+            // A compact travel pose fits inside the party cell, including when facing a wall.
+            constexpr float lanes[]{-.30f, .30f, -.15f, .15f};
+            const float side = lanes[caster];
+            const float bob = .008f * std::sin(float((in.now / 40) % 60) * (2 * pi / 60));
+            position = Vec{cam.position.x + .55f * cam.forward.x + side * cam.right.x,
+                           cam.position.y - .09f + bob,
+                           cam.position.z + .55f * cam.forward.z + side * cam.right.z};
+            carried |= 1u << caster;
+            visible = true;
+        }
         visibleWeapon |= visible;
         attackingWeapon |= visible && weaponAttack(in, caster);
     }
@@ -119,12 +136,14 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
         visibleWeapon ? (in.now / (attackingWeapon ? 20 : 40) + 1) * 2 + attackingWeapon : 0;
     if (fireCount && flame_ == UINT16_MAX)
         throw std::invalid_argument("Hearth flame artwork missing");
-    if (fireTick_ == tick && weaponTick_ == weaponTick && !changed && visibility_ == world.revision &&
+    if (fireTick_ == tick && weaponTick_ == weaponTick && carriedWeapons_ == carried &&
+        !changed && visibility_ == world.revision &&
         area.footprint == area_.footprint && area.cells == area_.cells && area.kind == area_.kind &&
         area.eligible == area_.eligible && area.ground.revision == area_.ground.revision)
         return false;
     fireTick_ = tick;
     weaponTick_ = weaponTick;
+    carriedWeapons_ = carried;
     area_ = area;
     visibility_ = world.revision;
     frame_.count = 0;
@@ -217,14 +236,15 @@ bool EffectsPipeline::update(const FrameInput& in, const WorldFrame& world) {
                 frame_.packets[before].texture = std::uint16_t(flame_);
         }
     }
-    for (unsigned caster = 0; caster < area.ground.weapons.size(); ++caster) {
-        const auto& weapon = area.ground.weapons[caster];
-        if (!weapon.active)
-            continue;
-        const auto position = spiritualWeaponPosition(in, weapon.cell);
+    for (unsigned caster = 0; caster < weaponPositions.size(); ++caster) {
+        const auto& position = weaponPositions[caster];
         if (!position)
             continue;
         auto p = *position;
+        if (carried & (1u << caster)) {
+            billboard(p, .14f, .14f, 7);
+            continue;
+        }
         float angle = 0;
         if (const auto* shot = weaponAttack(in, caster)) {
             const float t = in.now < shot->impactMs

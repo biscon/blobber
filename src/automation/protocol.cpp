@@ -45,8 +45,8 @@ Json Protocol::observation(bool diagnostic) {
                          {"revision", std::to_string(campaign->revision())},
                          {"gameplay_ms", std::to_string(campaign->gameplayMs())},
                          {"visited_entries", Json::array()}};
-        for (unsigned i = 1; i <= 3; ++i)
-            if (campaign->location(i).visited)
+        for (unsigned i = 1; i <= dungeonFloorCount; ++i)
+            if (campaign->location(floorLocation(i)).visited)
                 j["campaign"]["visited_entries"].push_back(i);
         j["campaign"]["travel"] = describeTravel(*campaign);
         const auto* saveReason = campaign->saveSafety();
@@ -295,7 +295,7 @@ Json Protocol::perform(const Json& r, Output& output) {
                     if (!oldVisited[campaign->activeLocation()] &&
                         dungeonLocation(campaign->activeLocation()))
                         event["events"].push_back(
-                            {{"event", "entry_unlocked"}, {"depth", campaign->activeLocation()}});
+                            {{"event", "entry_unlocked"}, {"depth", campaign->dungeonDepth()}});
                 }
                 output.emit(event, event);
             }

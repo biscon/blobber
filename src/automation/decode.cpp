@@ -152,7 +152,7 @@ ActionRequest decodeAction(const Json& j, const GameSession& g) {
             throw std::invalid_argument("Travel requires a campaign");
         r.operation = Operation::Travel;
         r.travel = op == "recall" ? g.campaign()->recallRequest()
-                                  : g.campaign()->waypointRequest(bounded(j.at("depth"), 3));
+                                  : g.campaign()->waypointRequest(bounded(j.at("depth"), dungeonFloorCount));
         return r;
     }
     if (op == "interact") {

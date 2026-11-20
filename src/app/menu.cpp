@@ -47,12 +47,14 @@ int runMenus(const Options& options) try {
                         {fingerprintFile(options.assets / "rules/catalog.json"),
                          saveDefinitions.definitionFingerprint, &blueprints},
                         saveDisk);
+    v.development = options.development;
     const auto refreshContinue = [&] {
         const auto slot = prepareCpu([&] {
             preparationPoint("Reading saved campaign");
             return saves.inspect();
         });
         v.canContinue = slot.active;
+        v.incompatibleSave = slot.error.find("Start a new campaign") != std::string::npos;
         if (!slot.error.empty())
             std::fprintf(stderr, "Continue unavailable: %s\n", slot.error.c_str());
     };
@@ -269,7 +271,9 @@ int runMenus(const Options& options) try {
         else if (action == 3)
             return 0;
         else if (action == 4) {
-            if (m.screen == MenuScreen::Picker && m.arenaPicker) {
+            if (m.screen == MenuScreen::FloorPicker)
+                m.screen = MenuScreen::Picker;
+            else if (m.screen == MenuScreen::Picker && m.arenaPicker) {
                 m.arenaPicker = false;
                 m.choices = v.dungeonChoices;
                 m.screen = MenuScreen::Arena;
@@ -333,7 +337,10 @@ int runMenus(const Options& options) try {
             const auto& r = library.snapshot().records[action - 1000];
             m.selected = r.id;
             m.assign({r.id, -1});
-        } else if (action == 30 && m.ready(library.snapshot())) {
+        } else if (action == 30 && options.development && !m.arenaPicker && m.ready(library.snapshot())) {
+            m.screen = MenuScreen::FloorPicker;
+        } else if ((action == 30 || (m.screen == MenuScreen::FloorPicker && action >= 71 && action <= 76)) &&
+                   m.ready(library.snapshot())) {
             try {
                 bool saved = false;
                 for (const auto& c : m.choices)
@@ -368,7 +375,8 @@ int runMenus(const Options& options) try {
                 }
                 m.screen = MenuScreen::Loading;
                 presenter.presentMenu(drawMenu, &v);
-                if (!launchMenuParty(options, catalog, starting, presenter, &saves))
+                if (!launchMenuParty(options, catalog, starting, presenter, &saves,
+                                     action == 30 ? 0 : unsigned(action - 70)))
                     return 0;
                 m.screen = MenuScreen::Main;
                 refreshContinue();

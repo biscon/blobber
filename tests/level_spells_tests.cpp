@@ -416,10 +416,14 @@ void features() {
     check(s.submit(featureCommand(s, 0, Feature::ActionSurge)).reason == CommandReason::Resolved,
           "Action Surge after normal action");
     s.update(1.1, false);
-    s.party().damage({1}, s.party().character({1})->hitPoints - 1);
+    const auto& cleric = *s.party().character({1});
+    s.party().damage({1}, cleric.hitPoints - cleric.stats.maxHitPoints / 2);
+    check(s.submit(featureCommand(s, 1, Feature::PreserveLife)).reason == CommandReason::NoAllyBelowHalfHp &&
+              cleric.channelDivinity,
+          "At the healing cap Preserve Life explains the threshold and keeps the charge");
+    s.party().damage({1}, 1);
     const auto pool = s.party().preserveLifePreview({1});
-    check(pool[1] > 0 && pool[1] <= s.party().character({1})->stats.maxHitPoints / 2 - 1,
-          "Preserve Life preview obeys half-max cap");
+    check(pool[1] == 1, "One HP below the cap, Preserve Life previews exactly one HP");
     check(s.submit(featureCommand(s, 1, Feature::PreserveLife)).reason == CommandReason::Resolved,
           "Preserve Life executes");
     check(!s.party().character({1})->channelDivinity, "channel charge spent");

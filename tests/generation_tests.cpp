@@ -289,7 +289,7 @@ void deterministicAndVariety() {
             streams.insert(seedFor({5, depth}, Domain(domain)));
     check(streams.size() == 18 && seedFor({5}, Domain::Interior, 1) != seedFor({5}, Domain::Interior, 2),
           "domains/depths/regions isolate random streams");
-    check(!floorSpec(0) && !floorSpec(4) && floorSpec(2)->keyedSector && floorSpec(3)->finalFloor &&
+    check(!floorSpec(0) && !floorSpec(4) && floorSpec(2)->keyedSector && !floorSpec(3)->guardianCampKit &&
               std::string(underkeepBiome().assetPack) == "underkeep",
           "floor/biome specification preserves campaign bands");
 }

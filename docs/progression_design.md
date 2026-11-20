@@ -86,6 +86,10 @@ still owns replacements. Life grants Lesser Restoration/Spiritual Weapon at leve
 Fighter: level 2 Action Surge (one extra normal action, short/long-rest charge);
 level 3 Champion weapon criticals on 19–20. Cleric: level 2 Preserve Life, action,
 one short/long-rest charge, pool 5×level, recipients capped at half effective max HP.
+The spellbook and character sheet state that at least one living party member must be
+below that cap, rounded down. The disabled ability explains the same threshold.
+The Debug `ctest -R '^level_spells$'` check passed for rejection at the cap with
+the charge retained and one point of healing one HP below it.
 Automatically distribute lowest HP percentage first, stable character-ID ties;
 preview allocation and reject no benefit. Rogue: level 2 free existing Defend once
 per own turn. After the last normal action resolves, automatically apply an unused

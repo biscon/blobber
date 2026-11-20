@@ -211,12 +211,14 @@ void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
             }
             c.action = PartyAction::Melee;
             unsigned count = 0;
-            ActorId first;
+            ActorId first, bankTarget;
             for (std::size_t i = 0; i < targets.count; ++i) {
                 c.target = targets.ids[i];
                 if (controls.validate(c) == CommandReason::Ready) {
                     if (!count)
                         first = *c.target;
+                    if (c.target->slot == (north ? 1 : 2))
+                        bankTarget = *c.target;
                     ++count;
                 }
             }
@@ -225,12 +227,16 @@ void checkGalleries(GameSession& game, const generation::CaveFloor& floor,
                 continue;
             }
             if (mixed && !firstAttack) {
+                // At the kill-only campaign entry level, the other flanker can also
+                // arrive before the first melee turn. Exercise the player's bank choice.
+                if (floor.layout.encounterCount && bankTarget.world)
+                    first = bankTarget;
                 const auto pose = game.movement().player;
                 std::cout << (north ? "North" : "South") << " bank from (" << pose.cell.x << ","
                           << pose.cell.y << ") heading " << unsigned(pose.heading) << ", first melee target "
                           << game.actors().appearanceId(game.actors().actor(first)->npc.type)
                           << ", legal targets " << count << '\n';
-                require(first.slot == (north ? 1 : 2) && count == 1, "Wrong first melee target on bank");
+                require(first.slot == (north ? 1 : 2) && (floor.layout.encounterCount || count == 1), "Wrong first melee target on bank");
                 photo(north ? "north-first.png" : "south-first.png");
                 firstAttack = true;
             }

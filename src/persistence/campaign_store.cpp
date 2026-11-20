@@ -159,11 +159,8 @@ CampaignSlot CampaignStore::inspect() {
             return out;
         }
         out.active = true;
-        out.depth = dungeonLocation(summary.location) ? summary.location : 0;
-        constexpr const char* names[]{"Sanctuary",       "Dungeon floor 1", "Dungeon floor 2",
-                                      "Dungeon floor 3", "Sanctuary inn",   "Sanctuary smithy",
-                                      "Arcane Emporium"};
-        out.location = names[summary.location];
+        out.depth = locationDepth(summary.location);
+        out.location = campaignLocationName(summary.location);
         out.partySummary = summary.party;
     } catch (const std::exception& e) {
         out.error = campaignError(e.what());

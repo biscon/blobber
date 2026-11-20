@@ -18,6 +18,7 @@ case. Movement follows the ordinary post-victory transition to exploration.
 | [Burning Web, native resolution](burning-web-native.png) | Actual burning strands and restrained local light at capture offset 960ms; other Web cells remain unburned |
 | [Mirror Image, native resolution](mirror-native.png) | Settled three-image portrait state at 960ms; names, readouts and status icons remain readable |
 | [Color Spray, native resolution](prism-native.png) | Footprint-clipped fan at 240ms with creature silhouettes and targeting markers |
+| [Spiritual Weapon after a step, native resolution](weapon-travel.png) | Follow-up awaiting player review. Brunna advances into the defeated enemy's cell in front of a wall and her active hammer hovers to the right. |
 
 Portrait/condition GIFs combine labeled crops from seventeen frames sampled every
 80ms through 1280ms, then hold the final frame another 600ms. The updated persistent

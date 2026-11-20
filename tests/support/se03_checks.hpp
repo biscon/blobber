@@ -355,6 +355,20 @@ inline void se03Playback() {
     pipeline.update(input, world);
     input.now += 400;
     check(!pipeline.update(input, world), "Offscreen weapon preserves idle caching");
+    input.exploring = true;
+    check(pipeline.update(input, world) && pipeline.frame().count == 1,
+          "Exploration shows the active offscreen hammer without a move or a new command");
+    const auto carried = pipeline.frame().packets[0];
+    for (const auto p : carried.points) {
+        const auto screen = project(world.camera, p);
+        check(screen.x >= 0 && screen.x < viewWidth && screen.y >= 0 && screen.y < viewHeight,
+              "Travel hammer fits inside the dungeon view");
+    }
+    input.exploring = false;
+    check(pipeline.update(input, world) && !pipeline.frame().count,
+          "Encounter restores the actual tactical position even at the same clock sample");
+    input.exploring = true;
+    pipeline.update(input, world);
     area.ground.weapons[0].active = false;
     ++area.ground.revision;
     pipeline.update(input, world);

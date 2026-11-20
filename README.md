@@ -28,7 +28,7 @@ Prebuilt **Windows x64** and **Linux x86-64** builds are available from
 4. On Windows, launch **blobber.exe**. On Linux, run **./blobber** from the extracted
    folder.
 
-Keep the `assets` and `notices` folders beside the executable. Choose **New Campaign**
+Keep the `assets` and `notices` folders beside the executable. Choose **Start new game**
 to begin, or **Continue** to resume an expedition. No compiler or administrator
 installation is needed to play a downloaded build.
 
@@ -72,6 +72,8 @@ cmake --preset release
 cmake --build --preset release --target blobber
 ./cmake-build-release/blobber
 ```
+
+To review the six-floor source build, launch with `--development`. Choose four characters and a starting floor from the game menus. [Damp Caves player walkthrough](docs/dc07_campaign_descent_design.md#player-review)
 
 ### Windows
 

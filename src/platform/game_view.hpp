@@ -35,7 +35,8 @@ class GameView {
                                              &game.supportVisuals(),
                                              camera,
                                              cameraMoving,
-                                             world_render::outdoorLighting(gameTimeOverride.value_or(game.gameTime()))};
+                                             world_render::outdoorLighting(gameTimeOverride.value_or(game.gameTime())),
+                                             game.combat().snapshot().phase == CombatPhase::Exploration};
         const auto previous = image_.revision;
         if (!ready_) {
             map_.prepare(game.geometry().base(), rooms_);

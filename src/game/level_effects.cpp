@@ -237,7 +237,27 @@ bool EffectController::createWebFootprint(const SubcellFootprint& fp, rules::Cha
     groundOccupants(partyCell_, now, events);
     return true;
 }
+bool EffectController::holdingSilk(ActorId source) const noexcept {
+    return source.world && std::any_of(silk_.begin(), silk_.end(), [&](ActorId id) {
+        return sameActor(id, source);
+    });
+}
+void EffectController::bindSilk(ActorId source, rules::CharacterId victim, std::uint64_t now,
+                                CombatEvents& events) noexcept {
+    if (!conscious(source) || !conscious(victim) || holdingSilk(source) || has(victim, EffectKind::Restrained))
+        return;
+    silk_[victim.index] = source;
+    conditionNotice(victim, EffectKind::Restrained, EffectNotice::Applied, EffectEnd::None, source, now, events);
+}
 void EffectController::reconcileWeb(std::uint64_t now, CombatEvents& events) noexcept {
+    for (std::uint16_t i = 0; i < silk_.size(); ++i) {
+        const rules::CharacterId victim{i};
+        auto& source = silk_[i];
+        if (source.world && (!conscious(source) || !conscious(victim))) {
+            conditionNotice(victim, EffectKind::Restrained, EffectNotice::Ended, EffectEnd::Recovered, source, now, events);
+            source = {};
+        }
+    }
     for (std::size_t i = 0; i < restrained_.size(); ++i) {
         auto& r = restrained_[i];
         if (!r.area.serial)
@@ -263,6 +283,9 @@ bool EffectController::escapeWeb(EffectTarget t, std::uint64_t now, CombatEvents
     if (!canAct(t) || !has(t, EffectKind::Restrained))
         return false;
     auto& r = restrained_[conditionIndex(t)];
+    const auto silk = !t.npc ? silk_[t.character.index] : ActorId{};
+    const int dc = silk.world ? 12 : r.difficulty;
+    const EffectSource source = silk.world ? EffectSource{silk} : EffectSource{r.caster};
     const int modifier =
         t.npc ? rules::abilityModifier(actors_.catalog().monster(actors_.actor(t.enemy)->monster)->abilities,
                                        rules::Ability::Strength)
@@ -277,18 +300,20 @@ bool EffectController::escapeWeb(EffectTarget t, std::uint64_t now, CombatEvents
     out.spell = rules::SpellKind::Web;
     out.character = r.caster;
     out.recipient = t.character;
-    out.enemy = t.enemy;
+    out.enemy = silk.world ? silk : t.enemy;
     out.enemyAttack = !t.npc;
     out.roll = roll;
     out.saveTotal = total;
-    out.saveDifficulty = r.difficulty;
-    out.hit = total >= r.difficulty;
+    out.saveDifficulty = dc;
+    out.hit = total >= dc;
     out.occurredMs = now;
     events.append(out);
     if (out.hit) {
-        conditionNotice(t, EffectKind::Restrained, EffectNotice::Ended, EffectEnd::Recovered, r.caster, now,
-                        events);
-        r = {};
+        conditionNotice(t, EffectKind::Restrained, EffectNotice::Ended, EffectEnd::Recovered, source, now, events);
+        if (silk.world)
+            silk_[t.character.index] = {};
+        else
+            r = {};
     }
     return true;
 }

@@ -122,7 +122,7 @@ class CampaignRun {
     };
     CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&,
                 const rules::PresetParty&, const std::vector<std::string>& types,
-                const std::vector<NpcTimings>& timings, std::uint32_t seed);
+                const std::vector<NpcTimings>& timings, std::uint32_t seed, unsigned startingDepth = 0);
     CampaignRun(const blueprints::BlueprintCatalog& blueprints, const rules::Catalog&, CampaignCheckpoint&&,
                 const std::vector<NpcTimings>&);
     std::unique_ptr<CampaignCheckpoint> checkpoint() const;
@@ -148,7 +148,7 @@ class CampaignRun {
     const char* name() const noexcept;
     TravelRequest request(FixtureRequest) const noexcept;
     CampaignLocationId activeLocationId() const noexcept { return CampaignLocationId(location_); }
-    unsigned dungeonDepth() const noexcept { return dungeonLocation(location_) ? location_ : 0; }
+    unsigned dungeonDepth() const noexcept { return locationDepth(location_); }
     TravelRequest doorwayRequest() const noexcept;
     const DoorwayLink* doorway(DoorwayId) const noexcept;
     TravelRequest recallRequest() const noexcept;
@@ -174,6 +174,7 @@ class CampaignRun {
     std::unique_ptr<GameSession> active_;
     std::shared_ptr<const CampaignDefinitions> baseline_, definitions_;
     void configureDoorways();
+    void startAtDepth(unsigned);
     std::unique_ptr<GameSession> prepare(unsigned, Player, bool validate = false);
     std::array<std::uint64_t, 120> partyStamp() const noexcept;
 };

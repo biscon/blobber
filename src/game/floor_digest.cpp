@@ -39,7 +39,10 @@ struct Canonical {
         add(v.x);
         add(v.y);
     }
-    void add(const ActorId& v) { add(v.slot); }
+    void add(const ActorId& v) {
+        add(v.slot);
+        add(v.generation);
+    }
     void add(const EffectId& v) { add(v.serial); }
     void add(const AreaId& v) { add(v.serial); }
     void add(const NpcAiConfig& v) {
@@ -59,9 +62,11 @@ struct Canonical {
         add(v.monster);
         add(v.role);
         add(v.residentId);
+        add(v.vault);
     }
     void add(const ActorState& v) {
         add(v.npc);
+        add(v.generation);
         add(v.monster.index);
         add(v.hitPoints);
         add(v.maxHitPoints);

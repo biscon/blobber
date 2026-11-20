@@ -1,4 +1,5 @@
 #include "ui/menu_screen.hpp"
+#include "game/travel.hpp"
 #include "ui/menu_layout.hpp"
 #include <cstring>
 namespace blobber {
@@ -24,6 +25,8 @@ static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& ar
         v.button(p, {210, 219, 220, 30}, "Character Creator", 2);
         v.button(p, {210, 257, 105, 30}, "Settings", 70);
         v.button(p, {325, 257, 105, 30}, "Quit", 3);
+        if (v.incompatibleSave)
+            p.centered("This save requires a new campaign.", {70, 298, 500, 22}, hudInk::gold);
         constexpr const char* hint = "Arrows / Tab: navigate     Enter: select";
         constexpr auto hintRect = menuLayout::mainHint;
         const float x = hintRect.x + (hintRect.width - fonts.width(hint, UiTextStyle::Label)) * .5f;
@@ -33,6 +36,16 @@ static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& ar
         p.text(hint, x, y, {242, 232, 207, 255});
     } else if (m.screen == MenuScreen::Arena || m.screen == MenuScreen::Scenarios) {
         drawArena(v, p, art);
+    } else if (m.screen == MenuScreen::FloorPicker) {
+        p.text("Choose a starting floor", 156, 24, hudInk::gold, UiTextStyle::Display);
+        for (unsigned i = 0; i < dungeonFloorCount; ++i) {
+            const auto& floor = dungeonFloors[i];
+            char label[128];
+            std::snprintf(label, sizeof(label), "%u. %s   |   Level %u   |   %g XP each", i + 1, floor.name,
+                          floor.entryLevel, floor.entryPartyXp / 4.0);
+            v.button(p, {105, 60 + int(i) * 40, 430, 32}, label, 71 + int(i));
+        }
+        v.button(p, {20, 325, 100, 22}, "Back", 4);
     } else if (m.screen == MenuScreen::Loading) {
         p.text("Preparing your adventure...", 210, 170, hudInk::gold, UiTextStyle::Control);
     } else if (m.screen == MenuScreen::Detail) {
@@ -125,7 +138,9 @@ static void drawMenuContent(void* context, const UiFonts& fonts, const UiArt& ar
             }
             v.button(p, {180, 325, 120, 22}, "Use default party", 9);
             v.button(p, {470, 325, 150, 22},
-                     m.ready(v.library.snapshot()) ? (m.arenaPicker ? "Use party" : "Enter dungeon")
+                     m.ready(v.library.snapshot()) ? (m.arenaPicker   ? "Use party"
+                                                      : v.development ? "Choose floor"
+                                                                      : "Enter dungeon")
                                                    : "Choose four characters",
                      30, m.ready(v.library.snapshot()));
         }

@@ -80,6 +80,7 @@ struct CombatOutcome {
     std::array<rules::DamageResolution, 2> damageComponents{};
     FortitudeResult fortitude; // Resolved impact only; never an accepted/saved roll.
     int venomDc = 0;
+    bool bindsSilk = false;
     int roll = 0;
     // Accepted attack-roll context, published only with the resolved attack.
     bool packTactics = false, guardedBite = false;

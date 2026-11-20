@@ -1,11 +1,14 @@
 #pragma once
 #include "assets/image.hpp"
+#include "app/result_flow.hpp"
+#include "platform/game_view.hpp"
 #include "platform/spell_lighting_shader.hpp"
 #include "platform/window.hpp"
 #include "platform/world_renderer.hpp"
 #include "rlgl.h"
 #include "support/allocations.hpp"
 #include "support/check.hpp"
+#include "support/progression_fixtures.hpp"
 #include "support/spell_fixtures.hpp"
 #include "support/world_visibility_fixtures.hpp"
 namespace blobber::test {
@@ -79,6 +82,60 @@ void main(){finalColor=vec4(lightClear(0,receiver)?1.0:0.0,0,0,1);})");
             compare({x, .45f, 3.5f});
     }
     check(visible > 0 && blocked > 0, "GPU blocker cases include clear and blocked light paths");
+}
+inline void weaponAfterVictory(GpuResources& resources, WorldRenderer& renderer,
+                              const std::vector<NpcTimings>& timings) {
+    const Map map({"#########", "#.......#", "#.......#", "#.......#", "#.......#", "#.......#",
+                   "#.....#.#", "#.......#", "#.......#", "#.......#", "#########"});
+    const auto catalog = creationCatalog(true);
+    const NpcWorld places(map, spellSpawn.cell, {"goblin"}, {{{0}, {6, 7}, {0, 1}, Heading::South}});
+    GameSession game(map, catalog, places, 5, spellSpawn, false, timings);
+    levelParty(game, 3, rules::SpellKind::SpiritualWeapon);
+    game.setAnimated(false);
+    spellReady(game, 1);
+    auto cast = spellCommand(game, rules::SpellKind::SpiritualWeapon);
+    cast.targetCount = 1;
+    cast.enemies[0] = game.actors().id(0);
+    check(game.submit(cast).reason == CommandReason::Resolved, "Summon during the encounter");
+    game.update(1, false);
+    game.actors().damage(cast.enemies[0], 1000, game.timeMs());
+    for (int i = 0; i < 10 && game.combat().snapshot().phase != CombatPhase::Victory; ++i)
+        game.update(.5, false);
+    check(continueLocalVictory(game, false), "Victory continues to exploration with a living summon");
+    for (int i = 0; i < 50; ++i)
+        game.update(.5, false);
+
+    NpcAnimator animator(game.actors(), timings, &game.combat());
+    CommandController hud(game, timings);
+    GameView view(renderer);
+    auto checkHammer = [&] {
+        auto area = hud.floorPreview();
+        check(area.ground.weapons[1].active, "Original summon is still active");
+        animator.setTime(game.timeMs(), &game.effects());
+        view.update(game, animator.snapshot(), area);
+        view.activate();
+        const auto withHammer = spellPixels(resources, renderer.image().target);
+        area.ground.weapons[1].active = false;
+        ++area.ground.revision;
+        view.update(game, animator.snapshot(), area);
+        check(withHammer != spellPixels(resources, renderer.image().target),
+              "Active hammer contributes visible pixels between encounters");
+    };
+    checkHammer();
+    game.move(Action::Forward);
+    check(game.movement().player.cell == Cell{6, 7} &&
+              game.effects().ground().weapons[1].cell == spellSpawn.cell,
+          "Stepping into the defeated rank at a wall leaves the tactical hammer behind the camera");
+    checkHammer();
+    game.move(Action::TurnRight);
+    checkHammer();
+    game.move(Action::TurnRight);
+    checkHammer();
+    game.move(Action::Forward);
+    checkHammer();
+    game.move(Action::TurnLeft);
+    game.move(Action::TurnLeft);
+    checkHammer();
 }
 inline void spellEffectsGpuChecks() {
     Window window(640, 360, true);
@@ -290,6 +347,7 @@ ground.ground.areas[0].footprint=wholeCellFootprint({6,4});ground.ground.areas[0
                   "SE01 shader/texture/blend state valid");
             renderer.clear();
         }
+        weaponAfterVictory(resources, renderer, fixture.timings);
     }
     check(resources.counts().bytes == baseline.bytes && resources.counts().textures == baseline.textures,
           "All SE01 GPU resources release before window closes");

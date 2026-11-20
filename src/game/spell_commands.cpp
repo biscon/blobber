@@ -146,8 +146,8 @@ void CommandController::refreshMagic() noexcept {
                   0);
         if (cls->progression == rules::ProgressionClass::Cleric && c->build.lifeDomain)
             entry({}, rules::Feature::PreserveLife, "Preserve Life",
-                  "Heal a pool of 5 x level, lowest HP percentage first; capped at half maximum HP. One "
-                  "action. Refreshes on rest.",
+                  "Requires a living party member below half max HP (rounded down). Shares 5 HP per cleric "
+                  "level, lowest HP percentage first, up to that cap. Recharges on a short or long rest.",
                   0);
         if (cls->progression == rules::ProgressionClass::Rogue)
             entry({}, rules::Feature::CunningAction, "Cunning Action / Defend",

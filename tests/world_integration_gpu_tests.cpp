@@ -16,6 +16,7 @@
 #include "support/combat_entry_review.hpp"
 #include "support/combat_positioning_review.hpp"
 #include "support/creature_occlusion_review.hpp"
+#include "support/damp_campaign_review.hpp"
 #include "support/door_chest_review.hpp"
 #include "support/dungeon_art_review.hpp"
 #include "support/enemy_melee_review.hpp"
@@ -96,8 +97,9 @@ int main(int argc, char** argv) {
             test::enemyMeleeReview(argv[1], argv[2]);
             return 0;
         }
-        if ((argc == 4 || argc == 5) && std::string_view(argv[3]) == "--se03-review") {
-            test::spellEffectsReview(argv[1], argv[2], argc == 5 ? argv[4] : nullptr, false, 80, true);
+        if (argc >= 4 && argc <= 6 && std::string_view(argv[3]) == "--se03-review") {
+            test::spellEffectsReview(argv[1], argv[2], argc >= 5 ? argv[4] : nullptr, false, 80, true,
+                                     argc == 6 ? argv[5] : "");
             return 0;
         }
         if (argc == 5 && std::string_view(argv[3]) == "--feedback-review") {
@@ -189,6 +191,10 @@ int main(int argc, char** argv) {
         }
         if (argc == 4 && std::string_view(argv[3]) == "--layout-review") {
             test::layoutReview(argv[1], argv[2]);
+            return 0;
+        }
+        if (argc == 5 && std::string_view(argv[3]) == "--damp-campaign-review") {
+            test::dampCampaignReview(argv[1], argv[4], argv[2]);
             return 0;
         }
         if (argc == 4 && std::string_view(argv[3]) == "--campaign-save-review") {

@@ -50,5 +50,6 @@ class EffectsPipeline {
     SpellArea area_{};
     std::uint64_t visibility_ = UINT64_MAX, fireTick_ = UINT64_MAX, weaponTick_ = UINT64_MAX;
     unsigned flame_ = UINT16_MAX;
+    unsigned carriedWeapons_ = 0;
 };
 } // namespace blobber::world_render

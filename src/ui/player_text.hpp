@@ -18,6 +18,8 @@ inline const char* monsterName(std::string_view id) noexcept {
         return "Goblin Guardian";
     if (id == "goblin_shaman")
         return "Goblin Shaman";
+    if (id == "adult.web.spinner")
+        return "Adult Web-Spinner";
     if (id == "broodmother")
         return "Broodmother";
     if (id == "vault.young")

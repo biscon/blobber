@@ -38,8 +38,8 @@ unsigned walk(const FloorLayout& f, Cell start, Cell goal, bool key, bool guardi
 } // namespace
 LayoutMetrics layoutMetrics(const FloorLayout& f) noexcept {
     LayoutMetrics m;
-    if (f.width < 3 || f.height < 3 || f.width > 40 || f.height > 40 || f.roomCount > maxRooms ||
-        f.connectionCount > maxConnections || f.fixtures.count > fixtureCapacity ||
+    if (f.width < 3 || f.height < 3 || unsigned(f.width) > maxCells / unsigned(f.height) ||
+        f.roomCount > maxRooms || f.connectionCount > maxConnections || f.fixtures.count > fixtureCapacity ||
         f.fixtures.landingCount != 2)
         return m;
     std::array<unsigned, maxRooms> areas{};

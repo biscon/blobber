@@ -23,7 +23,7 @@ struct MenuView {
     MenuInteraction interaction;
     ButtonPress pointerButtons;
     int count = 0, focus = 0, detailOffset = 0, detailRows = 0;
-    bool usable = false, canContinue = false;
+    bool usable = false, canContinue = false, development = false, incompatibleSave = false;
     bool controlOverflow = false;
     double titleSeconds = 0; // Decorative clock supplied by the menu loop or deterministic capture.
     MenuScreen detailCaller = MenuScreen::Library;

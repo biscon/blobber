@@ -4,6 +4,6 @@ namespace blobber::travelLayout {
 constexpr UiRect panel{118, 60, 404, 222};
 constexpr UiRect cancel{136, 249, 84, 20}, confirm{278, 249, 224, 20};
 constexpr UiRect row(unsigned i) {
-    return {136, 116 + int(i) * 27, 366, 23};
+    return {136 + int(i / 3) * 188, 116 + int(i % 3) * 27, 178, 23};
 }
 } // namespace blobber::travelLayout

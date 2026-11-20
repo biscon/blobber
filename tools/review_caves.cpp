@@ -1,4 +1,6 @@
 #include "app/gameplay.hpp"
+#include "assets/blueprint_loader.hpp"
+#include "game/campaign.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "cave_review.hpp"
@@ -148,7 +150,8 @@ Player reviewRoute(GameSession& game, const CaveFloor& f) {
 } // namespace
 int main(int argc, char** argv) try {
     require(argc >= 4, "Usage: blobber_review_caves validate|plan|check|walk|capture DEPTH SEED [NEW_OUTPUT "
-                       "ASSETS PREPARED] [--encounter|--populated] [--full-clear-entry] [--fallback]");
+                       "ASSETS PREPARED] [--encounter|--populated] [--full-clear-entry] [--fallback]\n"
+                       "       blobber_review_caves attrition 5 SEED ASSETS");
     bool forced = false, encounter = false, populated = false, fullEntry = false;
     while (argc > 4 && std::string_view(argv[argc - 1]).substr(0, 2) == "--") {
         const std::string_view option = argv[--argc];
@@ -166,6 +169,20 @@ int main(int argc, char** argv) try {
     require(!(populated && encounter) && (!fullEntry || populated), "Invalid cave review mode combination");
     std::string mode = argv[1];
     const unsigned depth = number(argv[2]), seed = number(argv[3]);
+    if (mode == "attrition") {
+        require(argc == 5 && depth == 5 && !forced && !populated && !encounter,
+                "Usage: blobber_review_caves attrition 5 SEED ASSETS");
+        const std::filesystem::path root = argv[4];
+        const auto catalog = loadRules(root / "rules/catalog.json");
+        const auto defs = loadNpcDefinitions(root / "npcs/level.json");
+        const auto rooms = blueprints::load(root / "blueprints/underkeep.json");
+        for (bool originalNest : {true, false}) {
+            std::cout << (originalNest ? "Three-spider comparison" : "Five-spider trial") << '\n';
+            CampaignRun campaign(rooms, catalog, *catalog.preset(), defs.types, defs.timings, seed, 4);
+            cave_review::checkNestApproach(campaign, originalNest);
+        }
+        return 0;
+    }
     const bool vault = encounter && depth == 6;
     auto result = generateCave(seed, depth, forced,
                                populated ? CaveContent::Populated

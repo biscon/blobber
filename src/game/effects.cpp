@@ -71,7 +71,7 @@ bool EffectController::has(EffectTarget target, EffectKind kind) const noexcept 
         return i < conditions_.size() && conditions_[i][unsigned(kind) - unsigned(EffectKind::Sleep)].active;
     }
     if (kind == EffectKind::Restrained)
-        return restrained_[conditionIndex(target)].area.serial != 0;
+        return restrained_[conditionIndex(target)].area.serial || (!target.npc && silk_[target.character.index].world);
     for (const auto& e : instances_)
         if (e.active && e.kind == kind)
             for (std::size_t i = 0; i < e.count; ++i)

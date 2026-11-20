@@ -50,17 +50,19 @@ template <class T> constexpr unsigned enumMaximum() {
     else if constexpr (std::is_same_v<T, FixtureKind>)
         return unsigned(FixtureKind::GuardianGate);
     else if constexpr (std::is_same_v<T, generation::BiomeId> || std::is_same_v<T, generation::AlgorithmId>)
-        return 0;
-    else if constexpr (std::is_same_v<T, generation::LayoutProfile>)
         return 1;
+    else if constexpr (std::is_same_v<T, VaultPart>)
+        return unsigned(VaultPart::EastYoung);
+    else if constexpr (std::is_same_v<T, generation::LayoutProfile>)
+        return unsigned(generation::LayoutProfile::BroodVault);
     else if constexpr (std::is_same_v<T, blueprints::Purpose>)
         return 3;
     else if constexpr (std::is_same_v<T, generation::Role>)
         return unsigned(generation::Role::Optional);
     else if constexpr (std::is_same_v<T, generation::ActorRecipe>)
-        return unsigned(generation::ActorRecipe::BugbearCommander);
+        return unsigned(generation::ActorRecipe::WebSpinner);
     else if constexpr (std::is_same_v<T, generation::EncounterRecipe>)
-        return unsigned(generation::EncounterRecipe::FinalGuardians);
+        return unsigned(generation::EncounterRecipe::GalleryNest);
     else if constexpr (std::is_same_v<T, generation::EncounterRole>)
         return unsigned(generation::EncounterRole::Guardian);
     else if constexpr (std::is_same_v<T, generation::Error>)
@@ -293,7 +295,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!content.blueprints || !j.is_object() || j.size() != 12 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 28 || j.at("simulation") != 31 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 29 || j.at("simulation") != 32 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) ||
@@ -301,7 +303,7 @@ void envelope(const Json& j, const CampaignContent& content) {
         !j.contains("campaign") || !j.at("campaign").is_object() || !j.at("seed").is_number_unsigned() ||
         j.at("seed").get<std::uint64_t>() > UINT32_MAX || !j.at("baseline").is_array() ||
         j.at("baseline").size() != campaignLocationCount)
-        invalid("Incompatible campaign schema, simulation or content");
+        invalid("Incompatible campaign schema, simulation or content. Start a new campaign.");
     const auto& profile = j.at("reward_profile");
     if (!profile.is_array() || profile.size() != 4 || !profile[0].is_number_unsigned() ||
         profile[0].get<std::uint64_t>() > rules::allWeaponTraining || !profile[1].is_boolean() ||
@@ -343,6 +345,17 @@ std::string definitionSignature(const CampaignLocationState& location) {
         reward(location.recovery.ground[i]);
     for (unsigned i = 0; i < location.objective.rewardCount; ++i)
         reward(location.objective.rewards[i]);
+    for (const auto& npc : location.placements) {
+        const auto role = static_cast<unsigned char>(npc.vault);
+        fingerprintBytes(h, &role, 1);
+    }
+    for (unsigned i = 0; i < location.objective.awardCount; ++i) {
+        const auto& a = location.objective.awards[i];
+        fingerprintBytes(h, a.name.data(), a.name.size());
+        const unsigned char bytes[]{a.first, a.count, static_cast<unsigned char>(a.experience),
+                                    static_cast<unsigned char>(a.experience >> 8)};
+        fingerprintBytes(h, bytes, sizeof(bytes));
+    }
     return std::to_string(h);
 }
 Json signatures(const CampaignDefinitions& definitions) {
@@ -382,9 +395,9 @@ std::string encode(const rules::Catalog& catalog, const NpcDefinitions& definiti
         summary["party"].push_back(member.build.name);
     if (!content.blueprints)
         invalid("Missing blueprint catalog");
-    Json j = {{"schema", 28},
+    Json j = {{"schema", 29},
               {"blueprints", std::to_string(blueprints::fingerprint(*content.blueprints))},
-              {"simulation", 31},
+              {"simulation", 32},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

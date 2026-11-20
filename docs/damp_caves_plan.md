@@ -1,6 +1,6 @@
 # Damp Caves expansion — design and delivery roadmap
 
-Created 2026-11-18. **DC01–DC06 are Accepted and closed. DC07 is Planned.**
+Created 2026-11-18. **DC01–DC06 are Accepted and closed. DC07 is Ready for review.**
 
 Extend the playable descent from three floors to six. Below the Underkeep, water
 has broken through an old cistern into limestone galleries occupied by venomous
@@ -12,10 +12,10 @@ then decide which threat deserves the party's next action.
 
 | Field | Current value |
 | --- | --- |
-| Starting point | Three persistent Underkeep floors. The third guardian ends the campaign. |
+| Playable checkpoint | Six persistent dungeon floors. The Underkeep commander opens the descent to The Seep. Victory requires the broodmother and her surviving young. |
 | Last closed slice | [DC06 — Population, rewards and floor pacing](dc06_population_rewards_design.md#player-acceptance), accepted and closed by the player on 2026-11-19. |
-| Current review | None. The player will test the finished six-floor campaign. For repeat runs, DC07 will provide an in-game debug choice of party and starting floor. |
-| Next eligible slice | [DC07 — Campaign descent, persistence and victory](#dc07--campaign-descent-persistence-and-victory) (Planned). |
+| Current review | [DC07 — Ready for review](dc07_campaign_descent_design.md). Start with a chosen party on floor four and carry it through the Vault. The [Galleries nest balance trial](dc06_population_rewards_design.md#galleries-balance-trial) is ready for player review. [Player walkthrough](dc07_campaign_descent_design.md#player-review) · [Native views](screenshots/damp-caves-dc07/README.md) |
+| Next eligible slice | None. The roadmap awaits the player’s DC07 review. |
 
 ## Floor brief and progression targets
 
@@ -33,16 +33,10 @@ from authored materials, pools, drip sounds and silhouettes. Traversal stays on
 the grid. Ceiling stalactites dress overhead space. Broad floor stalagmites occupy
 clearly legible blocking cells. Decorative webs are distinguishable from the Web spell.
 
-Use the four-survivor party for the pacing calculation. The current Underkeep
-budget gives each member **793.75 XP on a full clear** or **675 XP on the intended
-ordinary route**. Level 3 requires 900. That leaves **425 or 900 party XP**,
-respectively. Aim to cross 900 per member in the first two Seep encounters after
-a full clear, and by the Seep guardian on the ordinary route without cave
-optionals. Count XP actually available along each route. Keep the lone teaching
-spider approachable. The DC03 demo uses a level-one party. For campaign balance, use the incoming party’s earned XP as it approaches level three and keep ordinary spiders at their approved level-one strength. If ordinary enemy rewards make the early target implausible,
-show the earliest defensible encounter in DC06 planning for review. Retain manual
-advancement and the existing 2,700 XP level-four threshold. Report where a full
-clear finishes relative to it. The DC06 target is now just below 6,500 XP on the ordinary route, with advancement through level four.
+The 2026-11-20 balance trial uses kill XP across all three floors and the one-time
+200 party XP for defeating the brood. The old DC06 milestone target is retired.
+With four survivors on the ordinary route, each enters the Seep at 675 XP, the
+Galleries at 850, and the Vault at 1,150. [Current trial and player recipe](dc06_population_rewards_design.md#galleries-balance-trial).
 [Current encounter budgets](encounter_density_balance_design.md) · [Advancement](progression_design.md)
 
 ## Delivery slices
@@ -55,7 +49,7 @@ clear finishes relative to it. The DC06 target is now just below 6,500 XP on the
 | DC04 | Blind cave newt and a mixed approach encounter | DC03 working spider | [Accepted and closed](dc04_blind_cave_newt_design.md) |
 | DC05 | Broodmother and two interruptible egg clutches | DC04 encounter handoff and DC02 vault | [Accepted and closed](dc05_broodmother_design.md#player-acceptance) |
 | DC06 | Populated, playable standalone floors 4–6 with finite XP and rewards | DC01–DC05 content and mechanics | [Accepted and closed](dc06_population_rewards_design.md#player-acceptance) |
-| DC07 | Six-floor campaign with travel, Continue, final victory and an in-game choice of party and starting floor for debug runs | DC06 play-ready floors | Planned |
+| DC07 | Six-floor campaign with travel, Continue, final victory and an in-game choice of party and starting floor for debug runs | DC06 play-ready floors | [Ready for review](dc07_campaign_descent_design.md) |
 
 ### DC01 — Cave layout and walkable blockouts
 
@@ -203,6 +197,8 @@ playtime require separate play evidence.
 
 ### DC07 — Campaign descent, persistence and victory
 
+**Ready for review, 2026-11-19.** [Detailed design and exit checks](dc07_campaign_descent_design.md#verification) · [Player walkthrough](dc07_campaign_descent_design.md#player-review) · [Review gallery](screenshots/damp-caves-dc07/README.md).
+
 Wire the reviewed floors into normal New Campaign and Continue in the graphical
 and headless paths. Change the Underkeep commander's completion to unlock the
 descent. Floors 4 and 5 unlock their respective down stairs. Floor 6 owns the sole
@@ -213,15 +209,14 @@ Player review takes place in the finished campaign through the game menus.
 In development mode, reuse the New Campaign party picker so the player can
 choose preset or saved characters, then select a starting dungeon floor (1–6).
 Show the starting level and XP before launch. Use the ordinary-route entry
-budgets. Start at level 2 with 675 XP per member on floor 4, level 3 with
-1,825 on floor 5, and level 4 with 3,725 on floor 6. Prepare the chosen party
+budgets. Start at level 2 with 675 XP per member on floor 4, level 2 with
+850 on floor 5, and level 3 with 1,150 on floor 6. Prepare the chosen party
 through its class progression and place it at the selected entrance, with the
 earlier stairs open for backtracking and the current floor's rewards available.
 From there the party uses normal campaign travel, inventory, XP, save, Continue
 and victory. Apply the usual new-run save replacement rules.
 
-Today location IDs 4–6 mean Inn, Smithy and Emporium, while multiple callers
-index location arrays by dungeon depth. Establish one checked depth/location
+At the DC06 handoff, location IDs 4–6 meant Inn, Smithy and Emporium, while multiple callers indexed location arrays by dungeon depth. Establish one checked depth/location
 mapping and audit generation, launch, snapshots, travel/recall, labels and
 codec admission against it. Preserve town doorway identities. Scope content
 and simulation identity changes in each affected slice. In DC07 planning, state
@@ -241,8 +236,8 @@ scene residency against existing budgets. Verify that a debug start on floor 4
 uses the selected roster, survives save and Continue, and carries earned XP
 and remaining supplies into floor 5. Check a direct floor-6 start through the
 ordinary victory condition. The player recipe should begin at the in-game party
-and floor selectors. Starting in the Seep lets the player judge when levels
-three and four arrive and how close the same party finishes to 6,500 XP per
+and floor selectors. Starting in the Seep lets the player judge when level
+three becomes available and how much kill XP the same party earns per
 survivor in the Vault. [DC06 player feedback](dc06_population_rewards_design.md#player-acceptance).
 [Campaign travel](procedural_campaign_travel_design.md) · [Recall](procedural_campaign_recall_design.md) · [Save and Continue](procedural_campaign_save_design.md)
 

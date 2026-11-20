@@ -728,7 +728,7 @@ void rangerPersistence() {
     const CampaignContent content{"fixture", 0, &blueprints};
     auto current = run->checkpoint();
     auto legacy = blobber::automation::Json::parse(encodeCampaign(c, d, content, *current));
-    check(legacy["schema"] == 28 && legacy["simulation"] == 31, "DC04 campaigns carry the new versions");
+    check(legacy["schema"] == 29 && legacy["simulation"] == 32, "DC07 campaigns carry the new versions");
     legacy["simulation"] = 30;
     rejects([&] { decodeCampaign(c, d, content, legacy.dump()); }, "Pre-DC04 simulation is read-only");
     legacy["schema"] = 27;

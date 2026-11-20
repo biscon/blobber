@@ -1,6 +1,6 @@
 # System design
 
-[Damp Caves expansion roadmap](damp_caves_plan.md) proposes seven slices for
+[Damp Caves expansion roadmap](damp_caves_plan.md) tracks seven slices for
 procedural dungeon floors 4–6 beneath the Underkeep. It covers cave generation
 and art, spiders and curable poison, blind cave newts, a broodmother with two
 interruptible clutches, encounter progression and six-floor campaign persistence.
@@ -16,14 +16,16 @@ The standalone walks use moss-grown limestone from the threshold onward, solid
 wall and roof formations, perimeter survey stores, three silk silhouettes and
 a lit lookout bowl. Prepared terrain continues through exposed column corners.
 [Native review views](screenshots/damp-caves-dc02/README.md) cover the revised
-camp, rockwork, water and vault. Campaign descent ends on floor 3.
+camp, rockwork, water and vault. DC07 connects this entrance to the Underkeep.
 The [DC03 teaching spider and poison](dc03_venomous_spider_design.md) was **accepted and closed by the player on 2026-11-19** after an in-game poison and antitoxin test. The isolated Seep encounter connects the camp's single antitoxin to a targetable spider at the arch. Combat resolves its venom save at bite impact. The effect controller owns the victim's two-turn clock, attack disadvantage and cure, including portable checkpoint state. [Player recipe](dc03_venomous_spider_design.md#player-review) · [Native encounter views](screenshots/damp-caves-dc03/README.md).
 
 The blind cave newt hears nearby completed footsteps through clear space. Its heavy bite names a defender and waits for that character to have a playable response before committing. The depth-five review encounter uses the divided room to give a melee party first access to the spider on the north bank or the newt on the south bank. **The player accepted and closed DC04 on 2026-11-19 after reviewing the heavier bite.** The revised newt uses gray-green skin and two breathing poses. The approved balance revision gives the warned attack 3d6+3 piercing damage. A named defender who chooses Defend imposes disadvantage and halves damage on a hit. The standalone encounter opens with the regular fighter, cleric, rogue and wizard. [DC04 design and player recipe](dc04_blind_cave_newt_design.md) · [Native encounter views](screenshots/damp-caves-dc04/README.md).
 
 **The player accepted and closed DC05 on 2026-11-19.** The standalone Brood Vault uses the standard level-two party. Two destructible ceiling sacs warn before hatching and replace slain young while the mother lives. The guardian objective awards 200 party XP once the mother and surviving young are dead. Seeded focus-fire checks cover the aisle and doorway openings. [Vault design, player recipe and balance results](dc05_broodmother_design.md) · [Native encounter views](screenshots/damp-caves-dc05/README.md).
 
-**The player accepted and closed DC06 on 2026-11-19.** Three standalone floors bind generated groups to the ordinary combat and loot systems. Finite encounter bonuses carry four survivors from 675 to 6,375 XP each on the ordinary route. Party members can bank further XP at level four. DC07 is planned. The player will test the finished campaign, with an in-game debug choice of party and starting floor for repeat runs. [Campaign integration and player review](damp_caves_plan.md#dc07--campaign-descent-persistence-and-victory). [Player acceptance](dc06_population_rewards_design.md#player-acceptance) · [Encounter design and measured results](dc06_population_rewards_design.md) · [Player walkthrough](dc06_population_rewards_design.md#player-review) · [Review gallery](screenshots/damp-caves-dc06/README.md).
+**The player accepted DC06 on 2026-11-19.** Three standalone floors bind generated groups to the ordinary combat and loot systems. The [Galleries balance trial](dc06_population_rewards_design.md#galleries-balance-trial) removes survey XP and places adult web-spinners in the Galleries nest. [Original player review](dc06_population_rewards_design.md#player-review) · [Review gallery](screenshots/damp-caves-dc06/README.md).
+
+**DC07 is Ready for review, 2026-11-19.** The six-floor campaign shares one travelling party across the Underkeep, the caves and the four town locations. Development mode offers the regular party picker and six starting floors. The broodmother and her surviving young determine final victory. [Design and exit checks](dc07_campaign_descent_design.md) · [Player walkthrough](dc07_campaign_descent_design.md#player-review) · [Native views](screenshots/damp-caves-dc07/README.md).
 
 [Linux distribution roadmap](linux_distribution_plan.md): **LD01 accepted and closed
 by the user, 2026-11-11**; implemented and mechanically verified.
@@ -593,6 +595,8 @@ description now points to them (see SE03 design). A
 [party-step correction](se03_design.md#spiritual-weapon-follows-party-steps--2026-11-06)
 keeps active weapons travelling with the party, with shared collision-aware
 destination prediction and smooth presentation; command cooldowns are unchanged.
+The [exploration hover](se03_design.md#spiritual-weapon-between-encounters) keeps a
+summoned hammer visible when travel takes its tactical cell out of sight.
 
 Spell effects SE02 **accepted and implemented (2026-11-05)**:
 [SE02 design](se02_design.md) extends offensive spell identities and replaces party
@@ -976,8 +980,7 @@ retaining source art, pixel canvases and ground anchors. This is presentation
 metadata/layout only, using the existing prepared-image pipeline. Health bars use the
 projected body-axis anchor horizontally rather than the visible silhouette’s
 bounds, so weapons and asymmetric poses do not pull them away from the head.
-The three-floor campaign is the opening low-level vertical slice of an eventual
-roughly 20+ floor game; planning resumes after accepted P-B.
+The three Underkeep floors and the three Damp Caves floors form the opening of the planned 20-plus-floor game.
 
 Current campaign work: [PC07.1 arena preparation and calibration](pc071_arena_calibration_design.md)
 implements the accepted first half of PC07. Its measurements precede population
@@ -1179,7 +1182,7 @@ cells, reject occupied or moving-through thresholds, preserve acquired keys and 
 a 300ms motion barrier. Guardian gates remain automatic. Discovery, navigation and
 picking invalidate on both opening and closing; settled state survives save/travel.
 
-Maps own contiguous cell bytes. CampaignRun retains five stable locations and the
+Maps own contiguous cell bytes. CampaignRun retains ten stable locations and the
 travelling Party; the application owns shared prepared rendering. One active
 session borrows its location/Party, with value snapshots for inactive locations.
 Travel stages replacement simulation/view owners at an explicit preparation
@@ -1198,9 +1201,9 @@ then hides body/shadow. Legacy missing death art retains the frozen 100 ms flash
 WorldRenderer retains immutable catalog metadata and at most active and staged
 views. View-owned leases share current texture/alpha/model payloads and release
 source-only assets on commit, destination-only assets on cancel. Each view owns bounded static scene geometry, visibility scratch,
-effects and GPU mesh/target leases. Resident world safety ceilings are 512 MiB mip textures
-and 64 MiB alpha masks; scene limits are 64 MiB CPU/40 MiB GPU, view scratch 8 MiB,
-and tracked world ceilings are 352 MiB CPU / 608 MiB GPU. Preparation rejects capacity or
+effects and GPU mesh/target leases. Resident world safety ceilings are 928 MiB mip textures
+and 96 MiB alpha masks; scene limits are 64 MiB CPU/40 MiB GPU, view scratch 8 MiB,
+and tracked world ceilings are 352 MiB CPU / 1,024 MiB GPU. Preparation rejects capacity or
 allocation failures without replacing the playable view. These are preparation
 boundaries, not frame-time growth policies.
 
@@ -1339,7 +1342,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 22/24 and generator/templates 14/10. Blueprint content
+Campaign schema/simulation are 29/32 and generator/templates 15/10. Blueprint content
 fingerprints join save/replay compatibility. Older saves reject
 without being modified; no migration. World publication is format 13, appearance 5,
 visibility world-visibility-v18, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is

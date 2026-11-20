@@ -343,7 +343,7 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
             const auto healing = party_.preserveLifePreview(c.character);
             return std::any_of(healing.begin(), healing.end(), [](int hp) { return hp > 0; })
                        ? CommandReason::Ready
-                       : CommandReason::FullHealth;
+                       : CommandReason::NoAllyBelowHalfHp;
         }
         if (c.feature == rules::Feature::SecondWind) {
             if (!party_.hasFeature(c.character, rules::ClassFeature::SecondWind))

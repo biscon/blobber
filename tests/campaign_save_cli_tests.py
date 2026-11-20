@@ -17,22 +17,55 @@ def setup(root):
     path=root/'rules/catalog.json'
     cat=json.loads(path.read_text())
     enemy=cat['monsters'][0]
-    for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear'):
+    for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear','venomous.spider','blind.cave.newt','broodmother','vault.young'):
         cat['monsters'].append(dict(enemy,id=name))
-    for name in ('goblin.captain', 'bugbear.captain', 'bugbear.commander'):
+    for name in ('goblin.captain', 'bugbear.captain', 'bugbear.commander', 'adult.web.spinner'):
         cat['monsters'].append(dict(enemy, id=name))
-    for name in ('healing_potion','mana_potion','arrow'):
+    for name in ('healing_potion','mana_potion','antitoxin','arrow'):
         cat['items'].append(dict(cat['items'][1],id=name,**(dict(kind='ammunition',stack_limit=100,ammunition='arrow') if name=='arrow' else {})))
+    for monster in cat['monsters']:
+        monster['experience'] = (200 if monster['id'] in ('bugbear', 'bugbear.commander', 'bugbear.captain', 'adult.web.spinner')
+                                 else 25 if monster['id'] == 'giant.rat' else 50)
     path.write_text(json.dumps(cat))
     npc=json.loads((root/'npcs/enemy.json').read_text())
-    for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear'):
+    for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear','venomous.spider','blind.cave.newt','broodmother','vault.young'):
         (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc,id=name)))
+    (root/'npcs/vault.clutch.json').write_text(json.dumps(dict(npc,id='vault.clutch')))
     residents = ('mayor', 'boric', 'balin', 'innkeeper', 'blacksmith', 'shadowtart')
     for name in residents:
         (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name, role='resident')))
-    definitions = ['enemy.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear')], *[n+'.json' for n in residents]]
+    definitions = ['enemy.json', 'vault.clutch.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear','venomous.spider','blind.cave.newt','broodmother','vault.young')], *[n+'.json' for n in residents]]
     (root/'npcs/level.json').write_text(json.dumps(dict(definitions=definitions,instances=[])))
-    return dict(kind='campaign',schema_version=1,generator_version=14,template_version=10,seed=5,party=arena['party'])
+    return dict(kind='campaign',schema_version=1,generator_version=15,template_version=10,seed=5,party=arena['party'])
+
+
+def approach_city_stairs(request, state):
+    stair = next(f for f in state['fixtures'] if f['kind'] == 3)
+    landing = [stair['position'][0], stair['position'][1] + 1]
+
+    def move(direction):
+        nonlocal state
+        moved = request('act', action=dict(kind='move', direction=direction))['data']
+        assert moved['accepted'], moved
+        state = request('advance', ticks=100, until_decision=False)['data']['observation']
+
+    def face(heading):
+        for _ in range(4):
+            if state['heading'] == heading:
+                return
+            move('turn_right')
+        raise AssertionError('Failed to face city stair landing')
+
+    for axis in (1, 0):
+        for _ in range(24):
+            if state['position'][axis] == landing[axis]:
+                break
+            positive = state['position'][axis] < landing[axis]
+            face((2 if positive else 0) if axis == 1 else (1 if positive else 3))
+            move('forward')
+        assert state['position'][axis] == landing[axis]
+    face(0)
+    return stair['fixture']
 
 
 def main(runner):
@@ -45,30 +78,8 @@ def main(runner):
             assert client.request('preview_save')['data']['eligible']
             result=client.request('save',slot_revision=status['slot_revision'])
             assert result['ok'] and result['data']['durable'],result
-            # Follow the observed entrance rather than the old tiny-hub coordinates.
-            hub=client.request('observe')['data']
-            stair=next(f for f in hub['fixtures'] if f['kind']==3)
-            landing=[stair['position'][0],stair['position'][1]+1]  # Authored hub stairs face north.
-            def move(direction):
-                moved=client.request('act',action=dict(kind='move',direction=direction))
-                assert moved['data']['accepted'],moved
-                client.request('advance',ticks=100,until_decision=False)
-                return client.request('observe')['data']
-            def face(heading):
-                nonlocal hub
-                for _ in range(4):
-                    if hub['heading']==heading:return
-                    hub=move('turn_right')
-                raise AssertionError('Failed to face dungeon landing')
-            for axis in (1,0):
-                for _ in range(24):
-                    if hub['position'][axis]==landing[axis]:break
-                    positive=hub['position'][axis]<landing[axis]
-                    face((2 if positive else 0) if axis==1 else (1 if positive else 3))
-                    hub=move('forward')
-                assert hub['position'][axis]==landing[axis]
-            face(0)
-            result=client.request('act',action=dict(kind='interact',fixture=stair['fixture']))
+            stair = approach_city_stairs(client.request, state['data'])
+            result=client.request('act',action=dict(kind='interact',fixture=stair))
             assert result['data']['accepted'],result
             assert client.request('act',action=dict(kind='recall'))['data']['accepted']
             status=client.request('save_status')['data']
@@ -98,6 +109,35 @@ def main(runner):
         with Client(runner,root,campaign_save=slot) as client:
             loaded=client.request('load');assert loaded['ok'],loaded
             assert loaded['data']['campaign']['visited_entries']==[1]
+        cave_slot = root / 'seep.json'
+        selected = dict(scenario, starting_depth=4, party=list(reversed(scenario['party'])))
+        with Client(runner, root, campaign_save=cave_slot) as client:
+            started = client.request('start', scenario=selected)
+            assert started['ok'], started
+            state = started['data']
+            assert state['campaign']['depth'] == 4 and state['campaign']['location'] == 7
+            assert state['party'][0]['id'] == selected['party'][0]['id']
+            assert all(p['xp'] == 675 and p['level'] == 2 for p in state['party'])
+            result = client.request('save', slot_revision='missing')
+            assert result['ok'] and result['data']['durable'], result
+        with Client(runner, root, campaign_save=cave_slot) as client:
+            restored = client.request('load')
+            assert restored['ok'], restored
+            state = restored['data']
+            assert state['campaign']['visited_entries'] == [1, 2, 3, 4]
+            assert state['campaign']['location_name'] == 'The Seep'
+            assert [p['id'] for p in state['party']] == [p['id'] for p in selected['party']]
+            assert all(p['xp'] == 675 and p['level'] == 2 for p in state['party'])
+        old = json.loads(cave_slot.read_bytes())
+        old.update(schema=28, simulation=31, generator=14)
+        old['baseline'] = old['baseline'][:7]
+        previous = json.dumps(old).encode()
+        cave_slot.write_bytes(previous)
+        with Client(runner, root, campaign_save=cave_slot) as client:
+            status = client.request('save_status')['data']
+            assert not status['active'] and not status['terminal']
+            assert not client.request('load')['ok']
+        assert cave_slot.read_bytes() == previous
         storage=Storage(root/'mcp',1024*MIB)
         sessions=Sessions(runner,root,storage)
         try:

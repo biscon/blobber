@@ -7,6 +7,6 @@ class CampaignStore;
 int runMenus(const Options&);
 bool launchArena(const Options&, const rules::Catalog&, const ArenaScenario&, Presenter&);
 bool launchMenuParty(const Options&, const rules::Catalog&, const rules::PresetParty&, Presenter&,
-                     CampaignStore* = nullptr);
+                     CampaignStore* = nullptr, unsigned startingDepth = 0);
 bool launchSavedCampaign(const Options&, const rules::Catalog&, Presenter&, CampaignStore&);
 } // namespace blobber

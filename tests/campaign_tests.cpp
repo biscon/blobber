@@ -1,7 +1,7 @@
 #include "app/result_flow.hpp"
 #include "game/campaign.hpp"
 #include "game/commands.hpp"
-#include "support/campaign_fixtures.hpp"
+#include "support/damp_campaign_route.hpp"
 #include "support/generation_blueprints.hpp"
 #include "ui/interaction.hpp"
 #include "ui/travel_layout.hpp"
@@ -16,7 +16,7 @@ void cityCampaign() {
     const auto cat = catalog();
     const auto defs = definitions();
     CampaignRun run(blobber::test::campaignBlueprints(), cat, *cat.preset(), defs.types, defs.timings, 5);
-    check(run.game().movement().player == Player{{11, 8}, Heading::North} &&
+    check(run.game().movement().player == sanctuaryCity().spawn &&
               run.map().definition().assetPack == "sanctuary-city",
           "New Game uses square arrival");
     check(!run.game().atSanctuary() && !run.game().fixtures().discovered({12, 20}),
@@ -1079,6 +1079,10 @@ int main(int argc, char** argv) {
         }
         const std::filesystem::path retain =
             argc == 3 && std::string_view(argv[1]) == "--retain" ? argv[2] : "";
+        if (argc == 2 && std::string_view(argv[1]) == "--caves") {
+            dampCampaignRoute();
+            return 0;
+        }
         cityCampaign();
         std::cout << "campaign\n";
         campaign();

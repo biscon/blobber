@@ -281,12 +281,19 @@ CombatOutcome CombatController::enemyAttack(ActorId id, bool ranged, std::uint64
     const auto* attack = actors_.catalog().attack(ranged ? ranged_[id.slot] : melee_[id.slot]);
     if (!attack || (ranged && !effects_.sees(id)))
         return out;
+    out.bindsSilk = ranged && attack->id == "adult.web.spinner.silk";
     ai_.discardPreparation(id);
     std::array<rules::CharacterId, 4> targets{};
     std::size_t count = 0;
     for (const auto target : party_.snapshot().formation)
-        if (party_.character(target)->life == rules::Life::Conscious && (ranged || partyExposed(target)))
+        if (party_.character(target)->life == rules::Life::Conscious && (ranged || partyExposed(target)) &&
+            (!out.bindsSilk || !effects_.has(target, EffectKind::Restrained)))
             targets[count++] = target;
+    if (out.bindsSilk && (!count || effects_.holdingSilk(id))) {
+        enemyReady_[id.slot] = actionReadyMs();
+        out.event = CombatEvent::Spent;
+        return out;
+    }
     if (!count)
         return out;
     const bool heavyBite = !ranged && rules::hasTrait(actors_.catalog().monster(a->monster)->traits,
@@ -522,10 +529,16 @@ CombatOutcome CombatController::enemyTurn(ActorId id, std::uint64_t now, bool& w
         rules::hasTrait(actors_.catalog().monster(a->monster)->traits, rules::Trait::NimbleEscape) &&
         a->hitPoints * 2 <= a->maxHitPoints;
     const bool melee = actors_.catalog().attack(melee_[id.slot]);
-    const bool ranged = actors_.catalog().attack(ranged_[id.slot]);
+    const auto* ranged = actors_.catalog().attack(ranged_[id.slot]);
     const bool shot = frontal(id) && ranged && effects_.sees(id) && inBowRange(a->npc.cell, origin_.cell) &&
                       lineOfSight(map_, a->npc.cell, origin_.cell);
     const bool retreat = ranged && (!melee || wounded) && (adjacent || !shot);
+    if (!enemyMovement_.actionSpent && shot && !adjacent && ranged->id == "adult.web.spinner.silk" &&
+        !effects_.holdingSilk(id)) {
+        for (const auto target : party_.snapshot().formation)
+            if (effects_.conscious(target) && !effects_.has(target, EffectKind::Restrained))
+                return enemyAttack(id, true, now);
+    }
     if (!enemyMovement_.actionSpent && !retreat && melee && frontal(id)) {
         const auto slot = meleeSlot(id, actors_.occupiedSlots(a->npc.cell));
         if (slot && *slot == a->npc.subcell)

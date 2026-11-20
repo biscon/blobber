@@ -11,6 +11,7 @@ struct GeneratedScenario {
 struct CampaignScenario {
     StartingParty party;
     std::uint32_t seed = 5;
+    unsigned startingDepth = 0;
 };
 using Scenario = std::variant<ArenaScenario, GeneratedScenario, CampaignScenario>;
 inline void replaceSeed(Scenario& s, std::uint32_t seed) {

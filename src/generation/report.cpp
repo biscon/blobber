@@ -42,30 +42,34 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
             if (!f.map.solid({x, y}) && f.map.movementBlocked({x, y}))
                 j["blocked_cells"].push_back({x, y});
     const auto& l = f.layout;
-    j["blueprint_catalog"] = std::to_string(l.blueprintFingerprint);
-    j["blueprints"] = nlohmann::json::array();
-    std::array<unsigned, 4> purposes{};
-    purposes.fill(maxRooms);
-    constexpr const char* names[]{"kitchen", "mead-hall", "barracks", "armory"};
-    for (unsigned i = 0; i < l.blueprintCount; ++i) {
-        const auto& b = l.blueprints[i];
-        purposes[unsigned(b.purpose)] = b.room;
-        j["blueprints"].push_back({{"id", b.id.data()},
-                                   {"purpose", names[unsigned(b.purpose)]},
-                                   {"room", b.room},
-                                   {"rotation", b.rotation},
-                                   {"sockets", b.sockets},
-                                   {"ceiling_ticks", b.ceiling}});
+    const bool underkeep = l.biome == BiomeId::Underkeep;
+    if (underkeep) {
+        j["blueprint_catalog"] = std::to_string(l.blueprintFingerprint);
+        j["blueprints"] = nlohmann::json::array();
+        std::array<unsigned, 4> purposes{};
+        purposes.fill(maxRooms);
+        constexpr const char* names[]{"kitchen", "mead-hall", "barracks", "armory"};
+        for (unsigned i = 0; i < l.blueprintCount; ++i) {
+            const auto& b = l.blueprints[i];
+            purposes[unsigned(b.purpose)] = b.room;
+            j["blueprints"].push_back({{"id", b.id.data()},
+                                       {"purpose", names[unsigned(b.purpose)]},
+                                       {"room", b.room},
+                                       {"rotation", b.rotation},
+                                       {"sockets", b.sockets},
+                                       {"ceiling_ticks", b.ceiling}});
+        }
+        const auto* pair = connectionBetween(l, purposes[0], purposes[1]);
+        unsigned degree = 0;
+        for (unsigned i = 0; i < l.connectionCount; ++i)
+            degree += l.connections[i].a == purposes[3] || l.connections[i].b == purposes[3];
+        j["blueprint_relationships"] = {
+            {"kitchen_hall_cells", pair ? pair->count : 0},
+            {"barracks_armory_distance", roomDistance(l, purposes[2], purposes[3])},
+            {"armory_degree", degree}};
     }
-    const auto* pair = connectionBetween(l, purposes[0], purposes[1]);
-    unsigned degree = 0;
-    for (unsigned i = 0; i < l.connectionCount; ++i)
-        degree += l.connections[i].a == purposes[3] || l.connections[i].b == purposes[3];
-    j["blueprint_relationships"] = {{"kitchen_hall_cells", pair ? pair->count : 0},
-                                    {"barracks_armory_distance", roomDistance(l, purposes[2], purposes[3])},
-                                    {"armory_degree", degree}};
-    j["biome"] = "underkeep";
-    j["algorithm"] = "stone_rooms";
+    j["biome"] = underkeep ? "underkeep" : "damp-caves";
+    j["algorithm"] = underkeep ? "stone_rooms" : "cave_chambers";
     j["profile"] = profileName(l.profile);
     j["family"] = l.family;
     j["rotation"] = l.rotation;
@@ -76,17 +80,19 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                     {"distinct_room_areas", m.distinctRoomAreas},
                     {"distinct_connection_lengths", m.distinctConnectionLengths},
                     {"progression_steps", m.progressionSteps}};
-    const auto pacing = encounterMetrics(l, f.map);
-    j["encounter_pacing"] = {
-        {"first_steps", pacing.firstEncounterSteps},
-        {"longest_empty_steps", pacing.longestEmptySteps},
-        {"route_steps", pacing.routeSteps},
-        {"alternate_first_steps", pacing.alternateFirstSteps},
-        {"alternate_longest_empty_steps", pacing.alternateLongestEmptySteps},
-        {"alternate_steps", pacing.alternateSteps},
-        {"first_target", 12},
-        {"gap_target", 15},
-        {"definition", "forward steps to first entry into each populated room; not human search time"}};
+    if (underkeep) {
+        const auto pacing = encounterMetrics(l, f.map);
+        j["encounter_pacing"] = {
+            {"first_steps", pacing.firstEncounterSteps},
+            {"longest_empty_steps", pacing.longestEmptySteps},
+            {"route_steps", pacing.routeSteps},
+            {"alternate_first_steps", pacing.alternateFirstSteps},
+            {"alternate_longest_empty_steps", pacing.alternateLongestEmptySteps},
+            {"alternate_steps", pacing.alternateSteps},
+            {"first_target", 12},
+            {"gap_target", 15},
+            {"definition", "forward steps to first entry into each populated room; not human search time"}};
+    }
     j["width"] = l.width;
     j["height"] = l.height;
     j["map"] = ascii(l);
@@ -108,7 +114,7 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                               {"anchor", {r.anchor.x, r.anchor.y}},
                               {"role", roleName(r.role)},
                               {"shape", r.shape},
-                              {"ceiling_ticks", ceilings[i]},
+                              {"ceiling_ticks", underkeep ? ceilings[i] : f.map.surface(r.anchor).ceiling},
                               {"rotation", r.rotation},
                               {"clearance", r.clearance},
                               {"facing", unsigned(r.facing)}});
@@ -166,8 +172,9 @@ nlohmann::json report(const GeneratedFloor& f, bool detail) {
                 j["npc_excluded"].push_back({x, y});
     j["objective"] = {{"gate", l.guardianGate},
                       {"approach_door", l.approachDoor},
-                      {"approach", {l.guardianApproach.x, l.guardianApproach.y}},
-                      {"reward", {l.guardianReward.x, l.guardianReward.y}}};
+                      {"approach", {l.guardianApproach.x, l.guardianApproach.y}}};
+    if (underkeep || l.depth < 6)
+        j["objective"]["reward"] = {l.guardianReward.x, l.guardianReward.y};
     j["connections"] = nlohmann::json::array();
     for (unsigned i = 0; i < l.connectionCount; ++i) {
         const auto& e = l.connections[i];

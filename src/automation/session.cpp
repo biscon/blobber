@@ -22,9 +22,9 @@ Session::Session(const blueprints::BlueprintCatalog& blueprints, const rules::Ca
                  VisibilityFactory factory, void* context)
     : scenario_(scenario), factory_(factory), factoryContext_(context), mode_(mode) {
     if (const auto* campaign = std::get_if<CampaignScenario>(&scenario_)) {
-        campaign_ =
-            std::make_unique<CampaignRun>(blueprints, catalog, startingParty(catalog, campaign->party),
-                                          definitions.types, definitions.timings, campaign->seed);
+        campaign_ = std::make_unique<CampaignRun>(
+            blueprints, catalog, startingParty(catalog, campaign->party), definitions.types,
+            definitions.timings, campaign->seed, campaign->startingDepth);
     } else {
         generated_ = prepare(scenario_, mode, blueprints);
         if (!generated_)

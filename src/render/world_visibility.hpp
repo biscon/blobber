@@ -43,6 +43,7 @@ struct FrameInput {
     std::optional<Camera> cameraOverride = {};
     bool cameraMoving = false;
     OutdoorLighting outdoorLighting{};
+    bool exploring = false;
 };
 struct Billboard {
     Vec feet;
