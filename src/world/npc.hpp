@@ -17,6 +17,8 @@ inline std::string_view monsterAppearance(std::string_view id) noexcept {
         return "bugbear";
     if (id == "adult.web.spinner")
         return "venomous.spider";
+    if (id == "bull.cave.newt")
+        return "blind.cave.newt";
     return id;
 }
 struct NpcTypeId {

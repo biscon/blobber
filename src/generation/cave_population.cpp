@@ -1,4 +1,5 @@
 #include "generation/cave_population.hpp"
+#include "game/perception.hpp"
 #include "generation/blueprint_rooms.hpp"
 #include "generation/encounter_planning.hpp"
 #include <algorithm>
@@ -24,7 +25,7 @@ constexpr Group seep[]{{R::SpiderSolo, 2},
                        {R::SpiderGuard, 4, guardian}};
 constexpr Group galleries[]{{R::NewtSolo, 1},
                             {R::Banks, 2},
-                            {R::MixedPatrol, networkRoom},
+                            {R::GalleryScouts, networkRoom},
                             {R::GalleryNest, networkRoom},
                             {R::NewtPatrol, networkRoom},
                             {R::NewtPatrol, 5, optional},
@@ -124,6 +125,17 @@ bool specialPlacement(const CaveFloor& floor, R recipe, unsigned n, Cell& cell, 
         cell = n ? s[S::SouthContact] + Cell{2, -1} : s[S::NorthContact] + Cell{2, 1};
         subcell = {0, int(n)};
         face = n ? Heading::West : Heading::East;
+    } else if (recipe == R::GalleryScouts) {
+        const auto mouth = floor.layout.connections[2].socketB;
+        constexpr Cell positions[]{{3, -1}, {3, 1}, {4, -1}, {4, 1}};
+        cell = mouth + positions[n];
+        subcell = {1, int(n % 2)};
+        face = Heading::West;
+    } else if (recipe == R::VaultApproach) {
+        constexpr Cell positions[]{{-3, -1}, {-3, 1}, {0, 0}, {-2, -1}, {-2, 1}};
+        cell = floor.layout.rooms[3].anchor + positions[n];
+        subcell = {0, int(n % 2)};
+        face = Heading::West;
     } else if (recipe == R::SpiderGuard || recipe == R::GalleryGuard) {
         // Two webbed flanks in the Seep; newts cover the Galleries' shoulders
         // while the forward spider can make contact before the heavy bites.
@@ -170,7 +182,10 @@ Failure planCavePopulation(CaveFloor& floor) {
             occupiedRoom |= e.a == rooms[j] || e.b == rooms[j];
         if (!occupiedRoom || i == 0 || i == 3 || (f.depth == 5 && i == 1))
             continue;
-        defs.entries.at(defs.count++) = {e.socketA, e.facingA, FixtureKind::Door};
+        if (f.depth == 6 && e.b == 3)
+            continue; // Both sides of the approach's rock spine are open.
+        const auto door = f.depth == 5 && i == 2 ? e.socketB + Cell{1, 0} : e.socketA;
+        defs.entries.at(defs.count++) = {door, e.facingA, FixtureKind::Door};
     }
     FloorGeometry geometry(floor.map, defs); // Check all dressed thresholds before publishing the candidate.
     BlueprintReservations reservations;
@@ -235,6 +250,22 @@ Failure validateCavePopulation(const CaveFloor& floor) {
             member + e.count > f.populationCount || e.room >= f.roomCount || occupiedRooms[e.room] ||
             (g.room != networkRoom && e.room != g.room))
             return {Error::Population};
+        if (e.recipe == R::GalleryScouts) {
+            const Cell mouth = f.connections[2].socketB;
+            const Cell door = mouth + Cell{1, 0}, cover = door + Cell{0, 1};
+            if (!floor.map.canStep(mouth, door) || !floor.map.canStep(door, cover))
+                return {Error::Placement, int(e.room)};
+            for (const auto stance : {mouth, mouth + Cell{-1, 0}, cover}) {
+                unsigned visible = 0;
+                for (unsigned n = 0; n < e.count; ++n) {
+                    const auto& p = f.population[e.first + n];
+                    visible += p.recipe == ActorRecipe::Archer && inBowRange(stance, p.cell) &&
+                               lineOfSight(floor.map, stance, p.cell);
+                }
+                if (visible != (stance == cover ? 1u : 2u))
+                    return {Error::Placement, int(e.room)};
+            }
+        }
         occupiedRooms.set(e.room);
         for (unsigned n = 0; n < e.count; ++n, ++member) {
             const auto& p = f.population[member];

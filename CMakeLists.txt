@@ -846,7 +846,7 @@ if(BLOBBER_BUILD_GRAPHICS)
     target_link_libraries(blobber_review_camera_framing PRIVATE blobber_application)
     blobber_warnings(blobber_review_camera_framing)
     add_executable(blobber_review_sanctuary_city EXCLUDE_FROM_ALL tools/review_sanctuary_city.cpp)
-    add_executable(blobber_review_caves EXCLUDE_FROM_ALL tools/review_caves.cpp tools/cave_review_plan.cpp tools/cave_review_residency.cpp tools/cave_review_population.cpp tools/cave_review_spider.cpp tools/cave_review_newt.cpp tools/cave_review_vault.cpp)
+    add_executable(blobber_review_caves EXCLUDE_FROM_ALL tools/review_caves.cpp tools/cave_review_plan.cpp tools/cave_review_residency.cpp tools/cave_review_population.cpp tools/cave_review_pressure.cpp tools/cave_review_spider.cpp tools/cave_review_newt.cpp tools/cave_review_vault.cpp)
     target_link_libraries(blobber_review_caves PRIVATE blobber_application)
     blobber_warnings(blobber_review_caves)
 

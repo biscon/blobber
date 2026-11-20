@@ -24,20 +24,21 @@ const Recipe& encounterRecipe(EncounterRecipe id) noexcept {
         {"divided_banks", {A::Spider, A::Newt}, 2},
         {"newt_patrol", {A::Newt, A::Newt, A::Spider}, 3},
         {"gallery_guard", {A::Newt, A::Newt, A::Spider, A::Spider}, 4},
-        {"spider_newt_pack", {A::Spider, A::Spider, A::Spider, A::Newt}, 4},
+        {"spider_newt_pack", {A::Spider, A::Spider, A::WebSpinner, A::BullNewt}, 4},
         {"goblin_sentries", {A::GoblinCaptain, A::Archer, A::Archer, A::Shaman}, 4},
         {"vault_approach", {A::Spider, A::Spider, A::Spider, A::Newt, A::Newt}, 5},
         {"web_lookout", {A::Newt, A::Spider, A::Spider}, 3},
         {"brood_vault", {A::Mother, A::Sac, A::Sac, A::Young, A::Young}, 5},
-        {"gallery_nest", {A::Spider, A::Spider, A::Spider, A::WebSpinner, A::WebSpinner}, 5}};
-    return recipes[unsigned(id) <= unsigned(EncounterRecipe::GalleryNest) ? unsigned(id) : 0];
+        {"gallery_nest", {A::Spider, A::Spider, A::Spider, A::WebSpinner, A::WebSpinner}, 5},
+        {"gallery_scouts", {A::Goblin, A::Goblin, A::Archer, A::Archer}, 4}};
+    return recipes[unsigned(id) <= unsigned(EncounterRecipe::GalleryScouts) ? unsigned(id) : 0];
 }
 const char* speciesName(ActorRecipe id) noexcept {
     constexpr const char* names[]{
         "goblin",          "goblin.archer",   "skeleton",       "zombie",          "giant.rat",
         "goblin_shaman",   "bugbear",         "goblin.captain", "bugbear.captain", "bugbear.commander",
-        "venomous.spider", "blind.cave.newt", "broodmother",    "vault.clutch",    "vault.young", "adult.web.spinner"};
-    return unsigned(id) <= unsigned(ActorRecipe::WebSpinner) ? names[unsigned(id)] : "";
+        "venomous.spider", "blind.cave.newt", "broodmother",    "vault.clutch",    "vault.young", "adult.web.spinner", "bull.cave.newt"};
+    return unsigned(id) <= unsigned(ActorRecipe::BullNewt) ? names[unsigned(id)] : "";
 }
 const DepthBand& encounterBand(unsigned depth) noexcept {
     using R = EncounterRecipe;

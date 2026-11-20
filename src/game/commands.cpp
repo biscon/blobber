@@ -131,7 +131,7 @@ CommandController::CommandController(GameSession& session, const std::vector<Npc
         const auto& species = actors_.catalog().monster(a.monster)->id;
         state_.enemyPortraits[i] = species == "skeleton"          ? EnemyPortrait::Skeleton
                                    : species == "bugbear"         ? EnemyPortrait::Bugbear
-                                   : species == "blind.cave.newt" ? EnemyPortrait::Newt
+                                   : monsterAppearance(species) == "blind.cave.newt" ? EnemyPortrait::Newt
                                    : species == "broodmother"     ? EnemyPortrait::Broodmother
                                    : (monsterAppearance(species) == "venomous.spider" || species == "vault.young")
                                        ? EnemyPortrait::Spider
@@ -274,7 +274,7 @@ void CommandController::record(const CombatOutcome& out) noexcept {
         break;
     }
     case CombatEvent::VaultClear:
-        std::snprintf(line, sizeof(line), "Brood Vault cleared. Party gains 200 XP.");
+        std::snprintf(line, sizeof(line), "Brood Vault cleared.");
         break;
     case CombatEvent::BiteWarning:
         std::snprintf(line, sizeof(line), "Newt braces to bite %s. Defend for disadvantage and half damage on a hit.", target);

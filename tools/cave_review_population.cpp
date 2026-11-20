@@ -76,7 +76,8 @@ void finishGroup(GameSession& game, const Encounter& e) {
 }
 // One equipped-party opening after the route fixture supplies the incoming XP.
 // Drive attacks through normal session commands and require actual target sight.
-void fightGroup(GameSession& game, const Encounter& group, bool followSurvivors = false) {
+void fightGroup(GameSession& game, const Encounter& group, bool followSurvivors = false,
+                bool expedition = false) {
     auto& actors = game.actors();
     const auto& catalog = game.party().catalog();
     unsigned damage = 0, downs = 0, spells = 0, attacks = 0, tethers = 0;
@@ -95,8 +96,17 @@ void fightGroup(GameSession& game, const Encounter& group, bool followSurvivors 
         const auto& turn = game.combat().snapshot();
         const auto live = std::find_if(actors.snapshot().actors.begin() + group.first,
                                        actors.snapshot().actors.begin() + group.first + group.count,
-                                       [](const ActorState& a) { return a.life == ActorLife::Alive; });
+                                       [](const ActorState& a) {
+                                           return a.hostile() && a.life == ActorLife::Alive;
+                                       });
         const bool cleared = live == actors.snapshot().actors.begin() + group.first + group.count;
+        if (!game.runActive() && !game.objective().completed) {
+            std::cout << "Party defeated in " << encounterRecipe(group.recipe).name << " in round "
+                      << turn.round << ", " << damage << " damage, " << downs << " downs\n";
+            throw std::runtime_error("Expedition ended in defeat");
+        }
+        if (game.objective().completed && group.recipe == EncounterRecipe::BroodVault)
+            return;
         if (followSurvivors && !cleared && turn.phase == CombatPhase::Victory) {
             game.combat().continueExploring();
             continue;
@@ -136,8 +146,12 @@ void fightGroup(GameSession& game, const Encounter& group, bool followSurvivors 
             return ready;
         };
         bool acted = false;
+        const auto cls = game.party().progressionClass(cmd.character);
         const auto pose = game.movement().player;
-        for (unsigned n = group.first; n < group.first + group.count && !acted; ++n) {
+        for (unsigned i = 0; i < group.count && !acted; ++i) {
+            // Suppress live clutches, then target hatchlings before the mother.
+            const unsigned offset = group.recipe == EncounterRecipe::BroodVault ? (i + 1) % group.count : i;
+            const unsigned n = group.first + offset;
             const auto& actor = actors.snapshot().actors[n];
             if (actor.life != ActorLife::Alive ||
                 !inPartyView(game.geometry(), pose.cell, pose.heading, actor.npc.cell, actor.npc.subcell))
@@ -145,10 +159,14 @@ void fightGroup(GameSession& game, const Encounter& group, bool followSurvivors 
             cmd.target = actors.id(n);
             if (game.combat().warnedTarget(*cmd.target).index == cmd.character.index)
                 acted = act(PartyAction::Defend);
-            if (!acted && cmd.character.index == 3)
+            if (!acted && cls == rules::ProgressionClass::Wizard)
                 acted = act(PartyAction::Spell, "magic_missile") || act(PartyAction::Spell, "fire_bolt");
-            if (!acted && cmd.character.index == 1)
-                acted = act(PartyAction::Spell, "inflict_wounds");
+            if (!acted && cls == rules::ProgressionClass::Cleric)
+                acted = act(PartyAction::Spell, "inflict_wounds") ||
+                        (expedition && (act(PartyAction::Spell, "guiding_bolt") ||
+                                        act(PartyAction::Spell, "sacred_flame")));
+            if (!acted && cls == rules::ProgressionClass::Paladin)
+                acted = act(PartyAction::Smite);
             if (!acted)
                 acted = act(PartyAction::Melee) || act(PartyAction::Ranged);
         }
@@ -180,7 +198,7 @@ Party::Saved populationParty(const rules::Catalog& catalog, unsigned depth, bool
     equip(party, {0}, "cloak_of_protection", EquipmentSlot::Cloak);
     equip(party, {2}, "boots_of_balance", EquipmentSlot::Feet);
     const auto incoming = (fullEntry ? 3175u : 2700u) + (depth >= 5 ? (fullEntry ? 950u : 700u) : 0u) +
-                          (depth == 6 ? (fullEntry ? 1500u : 1200u) : 0u);
+                          (depth == 6 ? (fullEntry ? 1550u : 1250u) : 0u);
     party.awardExperience(incoming);
     while (party.advancementEligibility(party.advancementRequest({0})) == AdvancementError::None)
         advance(party);
@@ -191,7 +209,7 @@ Party::Saved populationParty(const rules::Catalog& catalog, unsigned depth, bool
 }
 Party::Saved guardianParty(const rules::Catalog& catalog, const Party::Saved& incoming, unsigned depth) {
     Party party(catalog, incoming);
-    constexpr unsigned ordinaryBeforeGuardian[]{500, 1000, 950};
+    constexpr unsigned ordinaryBeforeGuardian[]{500, 1050, 1250};
     party.awardExperience(ordinaryBeforeGuardian[depth - 4]);
     if (party.advancementEligibility(party.advancementRequest({0})) == AdvancementError::None)
         advance(party);
@@ -200,7 +218,7 @@ Party::Saved guardianParty(const rules::Catalog& catalog, const Party::Saved& in
 void checkPopulation(GameSession& game, const CaveFloor& floor, const RecoveryLevel& recovery, bool full) {
     const auto& f = floor.layout;
     const auto& world = game.actors().snapshot();
-    const unsigned expectedCounts[]{19, 24, 30}, ordinary[]{700, 1200, 1150}, extras[]{250, 300, 300};
+    const unsigned expectedCounts[]{19, 25, 30}, ordinary[]{700, 1250, 1450}, extras[]{250, 300, 300};
     const auto depth = f.depth - 4;
     const auto start = units(game.party());
     const auto gate = f.fixtures.entries[f.guardianGate].cell;
@@ -282,7 +300,7 @@ void checkPopulation(GameSession& game, const CaveFloor& floor, const RecoveryLe
         CommandController ui(game);
         ui.openInventory(rules::CharacterId{0}, CharacterPage::Character);
         const auto& sheet = ui.snapshot().inventory.sheet;
-        require(sheet.experience == 1768 && sheet.nextLevelExperience == 2700 &&
+        require(sheet.experience == 1856 && sheet.nextLevelExperience == 2700 &&
                     !ui.snapshot().cards[0].levelEligible,
                 "Character sheet disagrees with kill-only progression");
     }
@@ -356,8 +374,9 @@ void recoverOnRoute(GameSession& game) {
         std::cout << "Spent a camp kit on a long rest\n";
 }
 } // namespace
-void checkNestApproach(CampaignRun& run, bool originalNest) {
-    for (unsigned depth : {4u, 5u}) {
+void checkCaveExpedition(CampaignRun& run, ExpeditionRoute route) {
+    const bool stopAtNest = route != ExpeditionRoute::ThroughVault;
+    for (unsigned depth = 4; depth <= 6; ++depth) {
         auto& game = run.game();
         const auto& location = run.location(run.activeLocation());
         const auto& layout = location.generated->layout;
@@ -387,7 +406,7 @@ void checkNestApproach(CampaignRun& run, bool originalNest) {
                 if (j > i || layout.encounters[j].role == EncounterRole::Optional)
                     for (int k = 0; k < layout.width * layout.height; ++k)
                         forbidden[k] |= layout.membership[k] == layout.encounters[j].room;
-            if (originalNest && e.recipe == EncounterRecipe::GalleryNest) {
+            if (route == ExpeditionRoute::NestControl && e.recipe == EncounterRecipe::GalleryNest) {
                 // Remove the two adults before contact. No deaths, XP, time or RNG are consumed.
                 for (unsigned n = e.first; n < e.first + e.count; ++n)
                     if (layout.population[n].recipe == ActorRecipe::WebSpinner)
@@ -397,16 +416,20 @@ void checkNestApproach(CampaignRun& run, bool originalNest) {
             std::cout << "Before " << encounterRecipe(e.recipe).name;
             reportParty(game);
             walkTo(game, layout.population[e.first].cell, {}, nullptr, true, &forbidden);
-            fightGroup(game, e, true);
+            fightGroup(game, e, true, !stopAtNest);
             std::cout << "After " << encounterRecipe(e.recipe).name;
             reportParty(game);
-            if (e.recipe == EncounterRecipe::GalleryNest)
+            if (stopAtNest && e.recipe == EncounterRecipe::GalleryNest)
                 return;
+            if (e.recipe == EncounterRecipe::BroodVault) {
+                require(run.status() == CampaignStatus::Victory, "Vault clear did not end expedition");
+                return;
+            }
             recoverOnRoute(game);
             if (game.advancementEligibility(game.advancementRequest({0})) == AdvancementError::None)
                 advance(game.party(), &game);
         }
-        require(game.objective().completed, "Seep guardian still alive");
+        require(game.objective().completed, "Cave guardian still alive");
         collect(location.recovery.groundCount, layout.guardianReward);
         walkTo(game, location.exit.cell);
         const auto facing = Heading((unsigned(location.exit.heading) + 2) % 4);
@@ -414,9 +437,9 @@ void checkNestApproach(CampaignRun& run, bool originalNest) {
             game.move(Action::TurnRight);
         game.discover();
         auto ticket = run.prepareTravel(run.request(game.nearbyFixture()));
-        require(run.commitTravel(ticket) && run.dungeonDepth() == 5, "Continuous descent failed");
+        require(run.commitTravel(ticket) && run.dungeonDepth() == depth + 1, "Continuous descent failed");
     }
-    throw std::runtime_error("Route never reached the Galleries nest");
+    throw std::runtime_error("Expedition ended before its destination");
 }
 void checkShortcut(GameSession& game, const CaveFloor& floor) {
     const auto& f = floor.layout;

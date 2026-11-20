@@ -105,7 +105,6 @@ void GameSession::reconcileObjective() noexcept {
                 objective_.capacityFailure = true;
                 return;
             }
-            party_.awardExperience(200);
             objective_.known = objective_.completed = objective_.rewardIssued = true;
             ++objective_.revision;
             CombatOutcome out;

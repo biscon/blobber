@@ -19,12 +19,12 @@ def setup(root):
     enemy=cat['monsters'][0]
     for name in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear','venomous.spider','blind.cave.newt','broodmother','vault.young'):
         cat['monsters'].append(dict(enemy,id=name))
-    for name in ('goblin.captain', 'bugbear.captain', 'bugbear.commander', 'adult.web.spinner'):
+    for name in ('goblin.captain', 'bugbear.captain', 'bugbear.commander', 'adult.web.spinner', 'bull.cave.newt'):
         cat['monsters'].append(dict(enemy, id=name))
     for name in ('healing_potion','mana_potion','antitoxin','arrow'):
         cat['items'].append(dict(cat['items'][1],id=name,**(dict(kind='ammunition',stack_limit=100,ammunition='arrow') if name=='arrow' else {})))
     for monster in cat['monsters']:
-        monster['experience'] = (200 if monster['id'] in ('bugbear', 'bugbear.commander', 'bugbear.captain', 'adult.web.spinner')
+        monster['experience'] = (200 if monster['id'] in ('broodmother', 'bugbear', 'bugbear.commander', 'bugbear.captain', 'adult.web.spinner', 'bull.cave.newt')
                                  else 25 if monster['id'] == 'giant.rat' else 50)
     path.write_text(json.dumps(cat))
     npc=json.loads((root/'npcs/enemy.json').read_text())
@@ -36,7 +36,7 @@ def setup(root):
         (root/f'npcs/{name}.json').write_text(json.dumps(dict(npc, id=name, role='resident')))
     definitions = ['enemy.json', 'vault.clutch.json', *[n+'.json' for n in ('goblin','goblin.archer','skeleton','zombie','giant.rat','goblin_shaman','bugbear','venomous.spider','blind.cave.newt','broodmother','vault.young')], *[n+'.json' for n in residents]]
     (root/'npcs/level.json').write_text(json.dumps(dict(definitions=definitions,instances=[])))
-    return dict(kind='campaign',schema_version=1,generator_version=15,template_version=10,seed=5,party=arena['party'])
+    return dict(kind='campaign',schema_version=1,generator_version=15,template_version=11,seed=5,party=arena['party'])
 
 
 def approach_city_stairs(request, state):

@@ -1,6 +1,7 @@
 #include "app/gameplay.hpp"
 #include "assets/blueprint_loader.hpp"
 #include "game/campaign.hpp"
+#include "rules/creation.hpp"
 #include "assets/npc_metadata.hpp"
 #include "assets/rules_loader.hpp"
 #include "cave_review.hpp"
@@ -151,7 +152,7 @@ Player reviewRoute(GameSession& game, const CaveFloor& f) {
 int main(int argc, char** argv) try {
     require(argc >= 4, "Usage: blobber_review_caves validate|plan|check|walk|capture DEPTH SEED [NEW_OUTPUT "
                        "ASSETS PREPARED] [--encounter|--populated] [--full-clear-entry] [--fallback]\n"
-                       "       blobber_review_caves attrition 5 SEED ASSETS");
+                       "       blobber_review_caves attrition 5 SEED ASSETS | expedition 6 SEED ASSETS");
     bool forced = false, encounter = false, populated = false, fullEntry = false;
     while (argc > 4 && std::string_view(argv[argc - 1]).substr(0, 2) == "--") {
         const std::string_view option = argv[--argc];
@@ -169,17 +170,32 @@ int main(int argc, char** argv) try {
     require(!(populated && encounter) && (!fullEntry || populated), "Invalid cave review mode combination");
     std::string mode = argv[1];
     const unsigned depth = number(argv[2]), seed = number(argv[3]);
-    if (mode == "attrition") {
-        require(argc == 5 && depth == 5 && !forced && !populated && !encounter,
-                "Usage: blobber_review_caves attrition 5 SEED ASSETS");
+    if (mode == "attrition" || mode == "expedition") {
+        require(argc == 5 && depth == (mode == "expedition" ? 6u : 5u) && !forced && !populated && !encounter,
+                "Usage: blobber_review_caves attrition 5 SEED ASSETS | expedition 6 SEED ASSETS");
         const std::filesystem::path root = argv[4];
         const auto catalog = loadRules(root / "rules/catalog.json");
         const auto defs = loadNpcDefinitions(root / "npcs/level.json");
         const auto rooms = blueprints::load(root / "blueprints/underkeep.json");
+        if (mode == "expedition") {
+            auto roster = *catalog.preset();
+            roster.characters[2] = roster.characters[3];
+            for (const auto slot : {0, 3}) {
+                const auto cls = slot ? "ranger" : "paladin";
+                auto draft = rules::recommendedDraft(catalog, catalog.findRace(slot ? "high_elf" : "human"),
+                                                     catalog.findClass(cls));
+                std::snprintf(draft.name.data(), draft.name.size(), "%s", slot ? "Rowan" : "Paludan");
+                roster.characters[slot] = rules::finishBuild(catalog, draft, cls);
+            }
+            CampaignRun campaign(rooms, catalog, roster, defs.types, defs.timings, seed, 4);
+            cave_review::checkCaveExpedition(campaign, cave_review::ExpeditionRoute::ThroughVault);
+            return 0;
+        }
         for (bool originalNest : {true, false}) {
             std::cout << (originalNest ? "Three-spider comparison" : "Five-spider trial") << '\n';
             CampaignRun campaign(rooms, catalog, *catalog.preset(), defs.types, defs.timings, seed, 4);
-            cave_review::checkNestApproach(campaign, originalNest);
+            cave_review::checkCaveExpedition(campaign, originalNest ? cave_review::ExpeditionRoute::NestControl
+                                                                  : cave_review::ExpeditionRoute::NestTrial);
         }
         return 0;
     }
@@ -274,6 +290,8 @@ int main(int argc, char** argv) try {
         }
     };
     if (check && populated) {
+        if (depth >= 5)
+            cave_review::checkPressure(f, rules, actors, defs.types, defs.timings, combatSeed);
         for (bool full : {false, true}) {
             GameSession game(f.map,
                              std::make_unique<Party>(rules, cave_review::populationParty(rules, depth, full)),

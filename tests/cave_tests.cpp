@@ -46,6 +46,23 @@ void run() {
             check(guarded.view().movementBlocked(cave.sites[CaveSite::Goal]) &&
                       guarded.definition().entries[gate].kind == FixtureKind::GuardianGate,
                   "Exit lacks a closed guardian gate");
+            if (d == 5) {
+                const auto mouth = cave.layout.connections[2].socketB;
+                const auto& scouts = cave.layout.encounters[2];
+                check(scouts.recipe == EncounterRecipe::GalleryScouts, "Scouts guard the first gallery");
+                const auto cover = mouth + Cell{1, 1};
+                check(cave.map.canStep(mouth, mouth + Cell{1, 0}) && cave.map.canStep(mouth + Cell{1, 0}, cover),
+                      "Scouts cover shoulder must be traversable");
+                for (const auto stance : {mouth, mouth + Cell{-1, 0}, cover}) {
+                    unsigned lines = 0;
+                    for (unsigned j = scouts.first; j < scouts.first + scouts.count; ++j) {
+                        const auto& p = cave.layout.population[j];
+                        lines += p.recipe == ActorRecipe::Archer && inBowRange(stance, p.cell) &&
+                                 lineOfSight(cave.map, stance, p.cell);
+                    }
+                    check(lines == (stance == cover ? 1u : 2u), "Galleries archers need distinct lines of fire");
+                }
+            }
             auto& last = cave.layout.encounters[cave.layout.encounterCount - 1];
             ++last.count;
             check(bool(validateCavePopulation(cave)), "Truncated guardian roster admitted");

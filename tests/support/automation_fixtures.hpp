@@ -86,13 +86,18 @@ inline rules::Catalog catalog(bool deadly = false, unsigned xp = 1200, int hp = 
     auto spinner = spider;
     spinner.id = "adult.web.spinner";
     spinner.experience = normalXp ? 200 : spider.experience;
+    auto bull = newt;
+    bull.id = "bull.cave.newt";
+    bull.experience = spinner.experience;
+    mother.experience = 200;
+    young.experience = 0;
     auto antidote = items[13];
     antidote.id = "antitoxin";
     antidote.consumable = rules::Consumable::Antitoxin;
     items.push_back(antidote);
     return {{attack, bow},
             {monster, archer, guardian, skeleton, zombie, rat, shaman, bugbear, captain, bugbearCaptain,
-             commander, spider, newt, mother, young, spinner},
+             commander, spider, newt, mother, young, spinner, bull},
             races,
             classes,
             items,

@@ -14,7 +14,7 @@ then decide which threat deserves the party's next action.
 | --- | --- |
 | Playable checkpoint | Six persistent dungeon floors. The Underkeep commander opens the descent to The Seep. Victory requires the broodmother and her surviving young. |
 | Last closed slice | [DC06 — Population, rewards and floor pacing](dc06_population_rewards_design.md#player-acceptance), accepted and closed by the player on 2026-11-19. |
-| Current review | [DC07 — Ready for review](dc07_campaign_descent_design.md). Start with a chosen party on floor four and carry it through the Vault. The [Galleries nest balance trial](dc06_population_rewards_design.md#galleries-balance-trial) is ready for player review. [Player walkthrough](dc07_campaign_descent_design.md#player-review) · [Native views](screenshots/damp-caves-dc07/README.md) |
+| Current review | [DC07 — Ready for review](dc07_campaign_descent_design.md). Start with a chosen party on floor four and carry it through the Vault. The [scouts, divided Vault approach and Bull Cave Newt](damp_caves_pressure_design.md#player-review) are ready for player review. [Player walkthrough](dc07_campaign_descent_design.md#player-review) · [Native views](screenshots/damp-caves-dc07/README.md) |
 | Next eligible slice | None. The roadmap awaits the player’s DC07 review. |
 
 ## Floor brief and progression targets
@@ -33,10 +33,8 @@ from authored materials, pools, drip sounds and silhouettes. Traversal stays on
 the grid. Ceiling stalactites dress overhead space. Broad floor stalagmites occupy
 clearly legible blocking cells. Decorative webs are distinguishable from the Web spell.
 
-The 2026-11-20 balance trial uses kill XP across all three floors and the one-time
-200 party XP for defeating the brood. The old DC06 milestone target is retired.
-With four survivors on the ordinary route, each enters the Seep at 675 XP, the
-Galleries at 850, and the Vault at 1,150. [Current trial and player recipe](dc06_population_rewards_design.md#galleries-balance-trial).
+All cave XP comes from monster kills. The broodmother pays 200 party XP on death. With four survivors on the ordinary route, each enters the Seep at 675 XP, the Galleries at 850 and the Vault at 1,162.5. Completing the ordinary route gives 1,525 XP each. [Current encounter trial and player recipe](damp_caves_pressure_design.md#player-review).
+
 [Current encounter budgets](encounter_density_balance_design.md) · [Advancement](progression_design.md)
 
 ## Delivery slices

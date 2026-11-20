@@ -1,6 +1,6 @@
 # DC06 encounter maps and guardian views
 
-**The player accepted and closed DC06 on 2026-11-19.** Each map shows the populated seed-five floor from above, with north up. Gold numbers mark optional fights. Each native game view looks south across the guardian room from a walkable position on its northern edge. The gate is closed and the guardian has its initial formation. The review party is equipped and rested at the level it can earn before that guardian. [Launch commands and player walkthrough](../../dc06_population_rewards_design.md#player-review)
+**The player accepted and closed DC06 on 2026-11-19.** Each map shows the populated seed-five floor from above, with north up. The Galleries and Vault maps now show the [DC07 pressure revision awaiting review](../../damp_caves_pressure_design.md#player-review). The guardian images preserve the original DC06 review. Gold numbers mark optional fights. Each native game view looks south across the guardian room from a walkable position on its northern edge. The gate is closed and the guardian has its initial formation. The review party is equipped and rested at the level it can earn before that guardian. [Launch commands and player walkthrough](../../dc06_population_rewards_design.md#player-review)
 
 | Floor | Encounter map | Guardian view |
 | --- | --- | --- |

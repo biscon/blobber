@@ -60,9 +60,9 @@ template <class T> constexpr unsigned enumMaximum() {
     else if constexpr (std::is_same_v<T, generation::Role>)
         return unsigned(generation::Role::Optional);
     else if constexpr (std::is_same_v<T, generation::ActorRecipe>)
-        return unsigned(generation::ActorRecipe::WebSpinner);
+        return unsigned(generation::ActorRecipe::BullNewt);
     else if constexpr (std::is_same_v<T, generation::EncounterRecipe>)
-        return unsigned(generation::EncounterRecipe::GalleryNest);
+        return unsigned(generation::EncounterRecipe::GalleryScouts);
     else if constexpr (std::is_same_v<T, generation::EncounterRole>)
         return unsigned(generation::EncounterRole::Guardian);
     else if constexpr (std::is_same_v<T, generation::Error>)
@@ -295,7 +295,7 @@ Json parse(const std::string& text) {
 void envelope(const Json& j, const CampaignContent& content) {
     if (!content.blueprints || !j.is_object() || j.size() != 12 || !j.at("schema").is_number_integer() ||
         !j.at("simulation").is_number_integer() || !j.at("generator").is_number_integer() ||
-        !j.at("templates").is_number_integer() || j.at("schema") != 29 || j.at("simulation") != 32 ||
+        !j.at("templates").is_number_integer() || j.at("schema") != 29 || j.at("simulation") != 33 ||
         j.at("generator") != generation::generatorVersion ||
         j.at("templates") != generation::templateVersion || j.at("catalog") != content.catalog ||
         j.at("npcs") != std::to_string(content.npcs) ||
@@ -397,7 +397,7 @@ std::string encode(const rules::Catalog& catalog, const NpcDefinitions& definiti
         invalid("Missing blueprint catalog");
     Json j = {{"schema", 29},
               {"blueprints", std::to_string(blueprints::fingerprint(*content.blueprints))},
-              {"simulation", 32},
+              {"simulation", 33},
               {"generator", generation::generatorVersion},
               {"templates", generation::templateVersion},
               {"catalog", content.catalog},

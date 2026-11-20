@@ -33,7 +33,7 @@ available only in graphics builds. World traces record backend `world`, visibili
 `world-visibility-v6`, publication fingerprint, format 3 and appearance revision 4,
 plus `door_scheduling="shared-door-motion-300ms-v2"` and `terrain_rules="terrain-rules-v2"`.
 Strict replay rejects incompatible identities, including legacy renderer recordings.
-Protocol remains v1 and campaign schema/simulation are 29/32 (older saves reject unchanged). Replay images own a
+Protocol remains v1 and campaign schema/simulation are 29/33 (older saves reject unchanged). Replay images own a
 hidden context; graphics-disabled capture returns `graphics_unavailable`.
 Captures render requested operation boundaries without advancing session time.
 
@@ -133,7 +133,7 @@ same starting-draft codec as arena `party`):
   "kind": "generated_floor",
   "schema_version": 1,
   "generator_version": 15,
-  "template_version": 10,
+  "template_version": 11,
   "seed": 5,
   "depth": 1,
   "party": ["replace with four existing starting-draft objects"]
@@ -151,7 +151,7 @@ A separate guardian gate opens and publishes reserved supplies only after all
 designated deaths. Ordinary victories do not complete the floor. Protected stairs
 rooms have ordinary reusable unlocked doors. Campaign stairs use protected landings; floor
 completion in the standalone scenario is nonterminal. In a campaign, the third guardian opens the descent to The Seep. The Brood Vault on depth 6 owns campaign victory.
-Generator/template versions are 15/10; older generated scenarios/traces are rejected.
+Generator/template versions are 15/11; older generated scenarios/traces are rejected.
 The generated scenario schema and JSON-lines protocol remain version 1.
 `reset` reuses the same inputs; optional `seed` explicitly regenerates the floor.
 Failed generation/version/party validation preserves an existing session and tokens.
@@ -375,7 +375,7 @@ no focus, desktop or OS input automation is used. See [MCP usage](mcp_usage.md).
 ## PC04 persistent campaign scenarios
 
 `kind: "campaign"` uses scenario schema 1, `generator_version: 15`,
-`template_version: 10`, a uint32 `seed` and the existing four-entry `party` array.
+`template_version: 11`, a uint32 `seed` and the existing four-entry `party` array.
 Launch prepares all six depths and starts in Sanctuary. Optional `starting_depth` (1–6) uses the development menu entry party and earlier-floor rewards. Arena and single generated-floor diagnostic scenarios
 remain supported. Normal graphical New Game uses this same campaign owner.
 

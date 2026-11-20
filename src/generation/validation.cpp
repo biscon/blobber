@@ -140,6 +140,7 @@ Failure validateGeometry(const FloorLayout& f) noexcept {
         roles[unsigned(Role::Objective)] != 1 || roles[unsigned(Role::Optional)] < 1 ||
         roles[unsigned(Role::Optional)] > 2)
         return {Error::Room};
+    bool dividedApproach = false;
     unsigned offset = 0;
     for (unsigned i = 0; i < f.connectionCount; ++i) {
         const auto& e = f.connections[i];
@@ -148,8 +149,13 @@ Failure validateGeometry(const FloorLayout& f) noexcept {
             return {Error::Connection, -1, int(i)};
         for (unsigned j = 0; j < i; ++j) {
             const auto& o = f.connections[j];
-            if ((e.a == o.a && e.b == o.b) || (e.a == o.b && e.b == o.a))
-                return {Error::Connection, -1, int(i)};
+            if ((e.a == o.a && e.b == o.b) || (e.a == o.b && e.b == o.a)) {
+                if (f.profile != LayoutProfile::BroodVault || dividedApproach || e.b != approach ||
+                    e.a != o.a || e.facingA != Heading::East || o.facingA != e.facingA ||
+                    !(e.socketA == o.socketA + Cell{0, 2}) || !(e.socketB == o.socketB + Cell{0, 2}))
+                    return {Error::Connection, -1, int(i)};
+                dividedApproach = true;
+            }
         }
         if (!(pathCell(f, e, 0) == e.socketA) || !(pathCell(f, e, e.count - 1) == e.socketB) ||
             regionAt(f, e.socketA + forward(e.facingA) * -1) != e.a ||
@@ -176,7 +182,7 @@ Failure validateGeometry(const FloorLayout& f) noexcept {
             (f.rooms[e.b].role == Role::Objective && e.a != approach))
             return {Error::Connection, -1, int(i)};
     }
-    if (offset != f.pathCount || degree[entrance] != 1 || degree[objective] != 1 || degree[approach] != 2)
+    if (offset != f.pathCount || degree[entrance] != 1 || degree[objective] != 1 || degree[approach] != (dividedApproach ? 3u : 2u))
         return {Error::Connection};
     for (unsigned r = 0; r < f.roomCount; ++r)
         if (f.rooms[r].role == Role::Optional && degree[r] != 1)

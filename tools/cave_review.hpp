@@ -15,7 +15,10 @@ void walkTo(GameSession&, Cell, std::optional<Cell> avoid = {}, std::vector<Cell
             bool stopAtContact = false, const generation::CellMask* forbidden = nullptr);
 Party::Saved guardianParty(const rules::Catalog&, const Party::Saved&, unsigned depth);
 Party::Saved populationParty(const rules::Catalog&, unsigned depth, bool fullEntry);
-void checkNestApproach(CampaignRun&, bool originalNest);
+enum class ExpeditionRoute { NestControl, NestTrial, ThroughVault };
+void checkCaveExpedition(CampaignRun&, ExpeditionRoute);
+void checkPressure(const generation::CaveFloor&, const rules::Catalog&, const NpcWorld&, const std::vector<std::string>& types,
+                   const std::vector<NpcTimings>&, std::uint32_t seed);
 void checkShortcut(GameSession&, const generation::CaveFloor&);
 void checkPopulation(GameSession&, const generation::CaveFloor&, const RecoveryLevel&, bool full);
 void placeGalleries(const generation::CaveSites&, const std::vector<std::string>&,

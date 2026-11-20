@@ -102,6 +102,17 @@
       }
     },
     {
+      "id": "bull.cave.newt.bite",
+      "kind": "melee",
+      "attack_bonus": 5,
+      "damage": {
+        "count": 3,
+        "sides": 6,
+        "modifier": 3,
+        "type": "piercing"
+      }
+    },
+    {
       "id": "broodmother.bite",
       "kind": "melee",
       "attack_bonus": 5,
@@ -801,6 +812,35 @@
       "creature_type": "beast"
     },
     {
+      "id": "bull.cave.newt",
+      "abilities": {
+        "strength": 16,
+        "dexterity": 9,
+        "constitution": 14,
+        "intelligence": 2,
+        "wisdom": 10,
+        "charisma": 4
+      },
+      "armor_class": 12,
+      "hit_points": 39,
+      "speed_ft": 15,
+      "attacks": [
+        "bull.cave.newt.bite"
+      ],
+      "traits": [
+        "blind_cave_newt"
+      ],
+      "loot": [],
+      "metal_armor": false,
+      "sleep_immune": false,
+      "experience": 200,
+      "humanoid": false,
+      "damage_immunities": [],
+      "damage_vulnerabilities": [],
+      "spellcasting": "none",
+      "creature_type": "beast"
+    },
+    {
       "id": "broodmother",
       "abilities": {
         "strength": 7,
@@ -820,7 +860,7 @@
       "loot": [],
       "metal_armor": false,
       "sleep_immune": false,
-      "experience": 0,
+      "experience": 200,
       "humanoid": false,
       "damage_immunities": [],
       "damage_vulnerabilities": [],

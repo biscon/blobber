@@ -404,7 +404,8 @@ void AudioRuntime::update(GameSession* game, bool paused, bool focused, float dt
                     if (a->npc.sac())
                         continue;
                     const char* species = (id == "broodmother" || id == "vault.young" || id == "adult.web.spinner") ? "venomous.spider"
-                                          : id == "giant.rat"                          ? "rat"
+                                          : id == "bull.cave.newt" ? "blind.cave.newt"
+                                          : id == "giant.rat" ? "rat"
                                           : id == "goblin_shaman"                      ? "shaman"
                                           : id.find("goblin") == 0                     ? "goblin"
                                                                                        : id.c_str();

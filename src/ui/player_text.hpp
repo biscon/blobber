@@ -24,6 +24,8 @@ inline const char* monsterName(std::string_view id) noexcept {
         return "Broodmother";
     if (id == "vault.young")
         return "Hatchling";
+    if (id == "bull.cave.newt")
+        return "Bull Cave Newt";
     if (id == "blind.cave.newt")
         return "Blind Cave Newt";
     if (id == "venomous.spider")

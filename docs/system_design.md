@@ -21,9 +21,11 @@ The [DC03 teaching spider and poison](dc03_venomous_spider_design.md) was **acce
 
 The blind cave newt hears nearby completed footsteps through clear space. Its heavy bite names a defender and waits for that character to have a playable response before committing. The depth-five review encounter uses the divided room to give a melee party first access to the spider on the north bank or the newt on the south bank. **The player accepted and closed DC04 on 2026-11-19 after reviewing the heavier bite.** The revised newt uses gray-green skin and two breathing poses. The approved balance revision gives the warned attack 3d6+3 piercing damage. A named defender who chooses Defend imposes disadvantage and halves damage on a hit. The standalone encounter opens with the regular fighter, cleric, rogue and wizard. [DC04 design and player recipe](dc04_blind_cave_newt_design.md) · [Native encounter views](screenshots/damp-caves-dc04/README.md).
 
-**The player accepted and closed DC05 on 2026-11-19.** The standalone Brood Vault uses the standard level-two party. Two destructible ceiling sacs warn before hatching and replace slain young while the mother lives. The guardian objective awards 200 party XP once the mother and surviving young are dead. Seeded focus-fire checks cover the aisle and doorway openings. [Vault design, player recipe and balance results](dc05_broodmother_design.md) · [Native encounter views](screenshots/damp-caves-dc05/README.md).
+**The player accepted and closed DC05 on 2026-11-19.** The standalone Brood Vault uses the standard level-two party. Two destructible ceiling sacs warn before hatching and replace slain young while the mother lives. The broodmother awards 200 party XP on death. Any surviving young keep the guardian objective active. Seeded focus-fire checks cover the aisle and doorway openings. [Vault design, player recipe and balance results](dc05_broodmother_design.md) · [Native encounter views](screenshots/damp-caves-dc05/README.md).
 
 **The player accepted DC06 on 2026-11-19.** Three standalone floors bind generated groups to the ordinary combat and loot systems. The [Galleries balance trial](dc06_population_rewards_design.md#galleries-balance-trial) removes survey XP and places adult web-spinners in the Galleries nest. [Original player review](dc06_population_rewards_design.md#player-review) · [Review gallery](screenshots/damp-caves-dc06/README.md).
+
+The Galleries scouts can shoot down the entry corridor from two angles. The Vault approach has two melee lanes, and a mixed group includes an adult web-spinner and Bull Cave Newt. [Encounter design, matched expedition and player review](damp_caves_pressure_design.md).
 
 **DC07 is Ready for review, 2026-11-19.** The six-floor campaign shares one travelling party across the Underkeep, the caves and the four town locations. Development mode offers the regular party picker and six starting floors. The broodmother and her surviving young determine final victory. [Design and exit checks](dc07_campaign_descent_design.md) · [Player walkthrough](dc07_campaign_descent_design.md#player-review) · [Native views](screenshots/damp-caves-dc07/README.md).
 
@@ -1341,7 +1343,7 @@ failed preparation leaves the current session, image/IDs, Party and save intact.
 Presenter accepts only world target/revision publications. Engine-owned frame work
 uses prepared fixed storage; export and diagnostic readbacks are explicit boundaries.
 
-Campaign schema/simulation are 29/32 and generator/templates 15/10. Blueprint content
+Campaign schema/simulation are 29/33 and generator/templates 15/11. Blueprint content
 fingerprints join save/replay compatibility. Older saves reject
 without being modified; no migration. World publication is format 13, appearance 5,
 visibility world-visibility-v18, world fingerprint revision 4 and terrain-rules-v2. Door scheduling identity is

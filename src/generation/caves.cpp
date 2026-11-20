@@ -452,7 +452,7 @@ struct Builder {
                 connect(base + a, base + b, b == a + 1 ? Heading::East : Heading::South);
             }
     }
-    void galleries(unsigned depth, int row, int east, int approachRow, int lookoutRow) {
+    void galleries(unsigned depth, int row, int east, int approachRow, int lookoutRow, bool populated) {
         // Stagger a belt of high and low chambers around the three-way junction.
         constexpr unsigned base = 6;
         for (unsigned y = 0; y < 3; ++y)
@@ -468,7 +468,8 @@ struct Builder {
                 if (x == 2)
                     radius.x = 2;
                 const int jitter = int(pick(3)) - 1;
-                const int stagger = n == 1 || n == 3 ? 0 : jitter;
+                const bool vaultMouth = populated && depth == 6 && x == 2 && cy == approachRow;
+                const int stagger = n == 1 || n == 3 || vaultMouth ? 0 : jitter;
                 const Cell center{
                     cx, std::clamp(cy + stagger, y == 2 ? 24 : radius.y + 1, layout.height - radius.y - 2)};
                 chamber(center, radius, Role::Junction, n == 1 ? 9 : n == 7 ? 5 : 6 + int(pick(3)));
@@ -496,9 +497,40 @@ struct Builder {
         link(3, 4, door, Heading::South, socket, socket, Heading::North);
         connect(base, 5, Heading::West);
         const unsigned outlet = base + (approachRow == 5 ? 2 : 5);
-        connect(outlet, 3, Heading::East);
+        const bool divided = populated && depth == 6;
+        if (divided) {
+            // Bring both chambers up to a single rock pillar. Its open shoulders
+            // connect two broad floors without a one-cell approach passage.
+            auto& west = layout.rooms[outlet];
+            auto& eastRoom = layout.rooms[3];
+            ++west.size.x;
+            --eastRoom.origin.x;
+            ++eastRoom.size.x;
+            for (int y = -1; y <= 1; ++y) {
+                for (int distance : {2, 3}) {
+                    for (auto [x, owner] : {std::pair{west.anchor.x + distance, outlet},
+                                            std::pair{east - distance, 3u}}) {
+                        const Cell c{x, approachRow + y};
+                        if (!floorCell(layout, c)) {
+                            tile(c, owner);
+                            world.surfaces[c.y * layout.width + c.x].ceiling = 6;
+                        }
+                    }
+                }
+            }
+        }
+        const auto lane = [&](int side) {
+            const Cell socket{east - 4, approachRow + side};
+            link(outlet, 3, socket, Heading::East, socket, socket, Heading::West);
+        };
+        if (divided)
+            lane(-1);
+        else
+            connect(outlet, 3, Heading::East);
         connect(base + (lookoutRow == 5 ? 2 : 8), 15, Heading::East);
 
+        if (divided)
+            lane(1);
         carveCircuits(base, outlet - base, depth);
         if (depth == 4)
             connect(2, 5, Heading::North);
@@ -540,7 +572,16 @@ struct Builder {
              Heading::South);
         link(1, 2, first + Cell{3, 0}, Heading::East, middle + Cell{-5, 0}, middle + Cell{-5, 0},
              Heading::West);
-        galleries(depth, row, east, approachRow, lookoutRow);
+        galleries(depth, row, east, approachRow, lookoutRow, populated);
+        if (populated && depth == 5) {
+            auto& scouts = f.rooms[9];
+            const auto mouth = f.connections[2].socketB;
+            const auto column = mouth + Cell{3, 0};
+            if (scouts.anchor == column)
+                scouts.anchor = mouth + Cell{2, 0};
+            rock(column);
+            world.buildings.push_back({"high-column", column, {}, Heading::North, 1, 1, true});
+        }
         f.spawn = {entry, Heading::West};
         f.rooms[0].facing = f.spawn.heading;
         f.guardianApproach = approach;

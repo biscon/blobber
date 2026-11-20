@@ -39,6 +39,7 @@ struct ActorState {
     float walkFromElevation = 0;
     std::uint32_t generation = 0;
     bool targetable() const noexcept { return npc.role == NpcRole::Hostile; }
+    bool earnsKillExperience() const noexcept { return hostile() && !npc.young(); }
     bool hostile() const noexcept { return targetable() && !npc.sac(); }
 };
 ActorState initialActorState(const rules::Catalog&, const NpcInstance&, rules::MonsterId appearanceBinding);

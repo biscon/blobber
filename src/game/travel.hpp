@@ -28,7 +28,7 @@ inline constexpr DungeonDestination dungeonFloors[]{
     {CampaignLocationId::FloorThree, "Dungeon floor 3", "Enter floor 3.", 2, 1650},
     {CampaignLocationId::Seep, "The Seep", "Enter The Seep.", 2, 2700},
     {CampaignLocationId::Galleries, "The Drowned Galleries", "Enter The Drowned Galleries.", 2, 3400},
-    {CampaignLocationId::Vault, "The Brood Vault", "Enter The Brood Vault.", 3, 4600}};
+    {CampaignLocationId::Vault, "The Brood Vault", "Enter The Brood Vault.", 3, 4650}};
 constexpr unsigned dungeonFloorCount = std::size(dungeonFloors);
 constexpr unsigned floorLocation(unsigned depth) noexcept {
     return depth && depth <= dungeonFloorCount ? unsigned(dungeonFloors[depth - 1].location)

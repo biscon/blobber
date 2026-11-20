@@ -523,3 +523,7 @@ Use existing six-cell range/LOS, six-second action economy, six NPC mana and
 two mana/Bless; no regeneration/refill except fresh arena rematch. Deterministic
 ally-first support and rotating party targets are adaptations. See
 [b05 design](b05_goblin_shaman_design.md) for ownership/persistence/art contracts.
+
+## Bull Cave Newt
+
+The [SRD 5.1 Giant Toad](references/SRD_CC_v5.1.pdf) provides the 39 HP and CR 1 (200 XP) reference. The bull uses the game's blind-newt hearing, warned bite and Defend response. AC 12, Strength 16 and the +5 attack bonus are the authored cave variant.

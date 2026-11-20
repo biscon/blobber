@@ -6,7 +6,7 @@
 
 ### Galleries balance trial
 
-**Ready for player review, 2026-11-20.** The player's level-three and level-four parties cleared all three floors comfortably with one long rest. The 1,350 XP popups came from encounter-completion awards introduced to meet the original pacing target. All three floors now pay ordinary kill XP. The Vault still pays 200 party XP once for defeating the mother and her surviving brood, with zero individual XP for sacs and renewable young.
+**Earlier trial, 2026-11-20.** The [next balance revision](damp_caves_pressure_design.md) supersedes the route totals and Vault reward timing below. The player's level-three and level-four parties cleared all three floors comfortably with one long rest. The 1,350 XP popups came from encounter-completion awards introduced to meet the original pacing target. All three floors now pay ordinary kill XP. The Vault still pays 200 party XP once for defeating the mother and her surviving brood, with zero individual XP for sacs and renewable young.
 
 Only the fourth ordinary Galleries encounter changes composition. The three venomous spiders are joined by two Adult Web-Spinners, each worth 200 XP with AC 14, 26 HP, a venomous bite and a ranged silk attack. At a distance an adult with a free strand favors silk. Each adult can bind one conscious companion. The victim can spend an action on **Escape Web** (DC 12 Strength), or an ally can drop the spinner. The generator owns the fixed roster and back placement. Combat tracks at most four strands by victim and source actor, exposes restraint through the existing conditions display, and releases strands at encounter end. Adults reuse the spider artwork and have a distinct name. The trial uses the existing potion, camp and boss rules.
 

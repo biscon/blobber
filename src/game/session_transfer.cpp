@@ -297,7 +297,7 @@ void GameSession::importFloor(const FloorState& s) {
     for (std::size_t i = 0; i < s.actors.count; ++i) {
         const auto& a = s.actors.actors[i];
         const bool credited = a.hostile() && a.npc.vault == VaultPart::None && a.hasDeath;
-        if (s.creditedDeaths[i] != credited || s.loot.deaths[i] != credited)
+        if (s.creditedDeaths[i] != (a.earnsKillExperience() && a.hasDeath) || s.loot.deaths[i] != credited)
             reject();
     }
     if (vault) {

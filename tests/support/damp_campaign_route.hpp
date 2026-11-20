@@ -126,7 +126,7 @@ inline void dampCampaignRoute() {
           "Cleared gate is a valid return landing; finite loot and XP");
     stepFloor(*run, FixtureKind::Downstairs);
     clearOrdinaryRoute(*run);
-    check(member().experience == 1150, "Same party earns Galleries XP");
+    check(member().experience == 1162, "Same party earns Galleries XP");
     stepFloor(*run, FixtureKind::Downstairs);
     stepFloor(*run, FixtureKind::Upstairs);
     stepFloor(*run, FixtureKind::Downstairs);
@@ -140,15 +140,15 @@ inline void dampCampaignRoute() {
     clearOrdinaryRoute(*run);
     auto& vault = run->game();
     const auto mother = vault.combat().vaultMother();
-    check(member().experience == 1387 && run->status() == CampaignStatus::Active, "Vault remains active");
+    check(member().experience == 1475 && run->status() == CampaignStatus::Active, "Vault remains active");
     for (unsigned n = 0; n < vault.actors().snapshot().count; ++n)
         if (vault.actors().snapshot().actors[n].npc.sac())
             vault.actors().damage(vault.actors().id(n), 10000, vault.timeMs());
     vault.actors().damage(mother, 10000, vault.timeMs());
     run->update(0, false);
     run->update(1, false);
-    check(member().experience == 1437 && member().experienceFraction == 6 && run->status() == CampaignStatus::Victory && run->saveSafety(),
-          "Last objective pays 200 party XP exactly once and ends the campaign");
+    check(member().experience == 1525 && member().experienceFraction == 0 && run->status() == CampaignStatus::Victory && run->saveSafety(),
+          "Mother pays 200 party XP exactly once and ends the campaign");
     check(store.terminal(*run).durable && store.inspect().terminal, "Saved run receives its terminal marker");
 
     auto commander = std::make_unique<CampaignRun>(blueprints, c, roster, d.types, d.timings, 5, 3);
@@ -162,7 +162,7 @@ inline void dampCampaignRoute() {
     check(final->party().campSupplies().kits == seepEntryKits + 2,
           "Direct Vault start carries exactly one kit from each preceding cave guardian");
     check(final->party().character({0})->build.level == 3 &&
-              final->party().character({0})->experience == 1150,
+              final->party().character({0})->experience == 1162,
           "Direct Vault start uses the ordinary entry budget");
     // Construct a settled previously hatched young. Its generation must survive disk
     // transport and the ordinary mother-first victory check.
@@ -192,9 +192,13 @@ inline void dampCampaignRoute() {
     end.actors().damage(end.combat().vaultMother(), 10000, 0);
     final->update(0, false);
     check(final->status() == CampaignStatus::Active, "Surviving young delays mother-first victory");
-    end.actors().damage(end.actors().id(child), 10000, 0);
+    check(final->party().character({0})->experience == 1212 &&
+              final->party().character({0})->experienceFraction == 6, "Mother death credits XP immediately");
+    auto between = decodeCampaign(c, d, content, encodeCampaign(c, d, content, *final->checkpoint()));
+    final = std::make_unique<CampaignRun>(blueprints, c, std::move(*between), d.timings);
+    final->game().actors().damage(final->game().actors().id(child), 10000, 0);
     final->update(0, false);
-    check(final->status() == CampaignStatus::Victory && final->party().character({0})->experience == 1200,
+    check(final->status() == CampaignStatus::Victory && final->party().character({0})->experience == 1212,
           "Direct Vault run uses the same final victory");
 }
 } // namespace blobber::campaign_test

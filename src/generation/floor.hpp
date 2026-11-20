@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <optional>
 namespace blobber::generation {
-constexpr unsigned generatorVersion = 15, templateVersion = 10;
+constexpr unsigned generatorVersion = 15, templateVersion = 11;
 constexpr unsigned maxCells = 1600, maxRooms = 16, maxConnections = 24, maxAttempts = 16;
 using CellMask = std::array<bool, maxCells>;
 constexpr int floorDimension = 36;
@@ -65,7 +65,8 @@ enum class ActorRecipe : std::uint8_t {
     Mother,
     Sac,
     Young,
-    WebSpinner
+    WebSpinner,
+    BullNewt
 };
 enum class EncounterRecipe : std::uint8_t {
     GoblinPair,
@@ -91,7 +92,8 @@ enum class EncounterRecipe : std::uint8_t {
     VaultApproach,
     WebLookout,
     BroodVault,
-    GalleryNest
+    GalleryNest,
+    GalleryScouts
 };
 enum class EncounterRole : std::uint8_t { Direct, Optional, Guardian };
 struct Encounter {

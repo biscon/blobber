@@ -21,7 +21,7 @@ void GameSession::reconcileRewards() noexcept {
     const auto earnedBefore = earnedLevelMask(party_);
     std::bitset<NpcWorld::maxInstances> newlyCredited;
     for (std::size_t i = 0; i < world.count; ++i) {
-        if (!world.actors[i].hostile() || world.actors[i].npc.vault != VaultPart::None ||
+        if (!world.actors[i].earnsKillExperience() ||
             !world.actors[i].hasDeath || creditedDeaths_[i])
             continue;
         creditedDeaths_[i] = true;

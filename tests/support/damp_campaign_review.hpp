@@ -37,7 +37,7 @@ inline void dampCampaignReview(const std::filesystem::path& assets, const std::f
     presenter.presentMenu(drawMenu, &menu);
     presenter.capture(output / "starting-floor.png");
     auto run = std::make_unique<CampaignRun>(rooms, rules, roster, defs.types, defs.timings, 5, 6);
-    check(run->party().character({0})->build.name == "Ida" && run->party().character({0})->experience == 1150,
+    check(run->party().character({0})->build.name == "Ida" && run->party().character({0})->experience == 1162,
           "Production selected library character launches at Vault entry XP");
     WorldRenderer renderer(resources, world_assets::load(prepared / "world"));
     auto current = std::make_unique<GameView>(renderer);
