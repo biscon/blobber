@@ -491,9 +491,16 @@ bool CombatController::finish(std::uint64_t now) noexcept {
             threat |= active;
         }
     }
+    const auto endSummons = [&] {
+        for (auto caster : party_.snapshot().formation)
+            if (const auto* weapon = effects_.spiritualWeapon(caster))
+                effects_.remove(weapon->id, now, *currentEvents_);
+    };
     if (conscious && living) {
-        if (!threat && realTime(state_.phase))
+        if (!threat && realTime(state_.phase)) {
+            endSummons();
             leave();
+        }
         return false;
     }
     if (!episode_ || !state_.enemyCount)
@@ -506,6 +513,7 @@ bool CombatController::finish(std::uint64_t now) noexcept {
     if (state_.activeCharacter && currentEvents_)
         effects_.endVictimTurn(*state_.activeCharacter, now, *currentEvents_);
     clearBiteWarnings();
+    endSummons();
     state_.phase = conscious ? CombatPhase::Victory : CombatPhase::Defeat;
     state_.awaitingAction = false;
     state_.resolvingAction = false;

@@ -8,7 +8,7 @@ These application-owned captures use production rules and artwork, legal party
 preparation/advancement and ordinary commands in a hidden 1920×1080 window. No OS
 input or focus control was used. Enemy AI is disabled except for the actual shaman
 Bless case. Seed 5 is used except seed 3 for the Web restraint/Fire Bolt ignition
-case. Movement follows the ordinary post-victory transition to exploration.
+case. The after-victory frame uses Continue and one step into the defeated rank.
 
 | Evidence | Distinct cases |
 | --- | --- |
@@ -18,7 +18,7 @@ case. Movement follows the ordinary post-victory transition to exploration.
 | [Burning Web, native resolution](burning-web-native.png) | Actual burning strands and restrained local light at capture offset 960ms; other Web cells remain unburned |
 | [Mirror Image, native resolution](mirror-native.png) | Settled three-image portrait state at 960ms; names, readouts and status icons remain readable |
 | [Color Spray, native resolution](prism-native.png) | Footprint-clipped fan at 240ms with creature silhouettes and targeting markers |
-| [Spiritual Weapon after a step, native resolution](weapon-travel.png) | Follow-up awaiting player review. Brunna advances into the defeated enemy's cell in front of a wall and her active hammer hovers to the right. |
+| [After victory and one step, native resolution](weapon-travel.png) | The combat log records the weapon ending. Brunna advances into the defeated enemy's cell and the viewport shows its dropped loot. |
 
 Portrait/condition GIFs combine labeled crops from seventeen frames sampled every
 80ms through 1280ms, then hold the final frame another 600ms. The updated persistent

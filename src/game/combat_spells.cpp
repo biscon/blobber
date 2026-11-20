@@ -262,7 +262,8 @@ CommandReason CombatController::validateMagic(const PartyCommand& c, Player pose
                                                  : std::nullopt;
             if (!destination)
                 return CommandReason::MissingTarget;
-            if (!effects_.weaponCanMove(c.character, *destination) || !spellCell(map_, pose, *destination))
+            if (!effects_.weaponCanMove(c.character, *destination) ||
+                (!c.targetCount && !spellCell(map_, pose, *destination)))
                 return CommandReason::OutOfRange;
             if (c.targetCount && (!target || !(target->npc.cell == *destination)))
                 return CommandReason::InvalidTarget;

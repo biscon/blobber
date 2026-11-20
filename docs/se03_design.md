@@ -328,6 +328,8 @@ retained. The accepted spell-effects roadmap remains closed.
 
 ## Spiritual Weapon between encounters
 
+Historical behavior, superseded by the November 20 encounter-lifetime revision below.
+
 After victory the spell can still be active while a turn or a blocked following
 step leaves the hammer behind the party. During exploration the world renderer
 draws the ordinary hammer at its cell when visible. When the anchor is
@@ -335,7 +337,7 @@ outside the view, behind terrain, or too close to draw safely, it shows the same
 as a small hover beside the party. Each active caster gets one body. Combat,
 targeting, saved cells and spell deadlines continue to use the tactical position.
 
-**Ready for review, 2026-11-20.** Cast Spiritual Weapon on the last enemy in front
+**Previous review recipe.** Cast Spiritual Weapon on the last enemy in front
 of a wall, defeat it, then walk forward into its cell while the spell is active.
 Brunna's hammer should hover on the right. Turn around to see it at its world
 position again. The side hover is a travel cue. Use the weapon's tactical cell
@@ -347,5 +349,18 @@ pixels with and without the hammer 25 seconds after victory, before and after a
 blocked following step, subsequent turns and movement. The
 `--se03-review weapon-travel` capture used production artwork in an Underkeep
 fixture. The two frames showed the hammer ahead before stepping and beside the
-party afterward. The player's cave save was not replayed. One
-[after-step frame](screenshots/spell-effects/se03/weapon-travel.png) is retained.
+party afterward. The player's cave save was not replayed. The current review below replaces that capture.
+
+## Encounter lifetime and return movement
+
+The November 20 playtest replaces the between-encounter follower behavior. Combat ends every active Spiritual Weapon when it declares victory or defeat, or ends an encounter after contact is lost. Real-time pursuit inside the same encounter retains the summon. Use the ordinary effect-ending path to retire the tactical position, command and rendered weapon together. The duration remains at most 60 seconds.
+
+Movement still requires at most two clear cardinal steps from the hammer per command in either direction. Show the chosen or hovered reachable floor cell using the existing ground preview, cycle only reachable destinations with the arrow keys, and keep selection or range feedback visible while the enemy picker is available. The same move validator serves UI and combat. A failed click must not confirm an older selection. These changes need no additional persistent state.
+
+An enemy at the edge of the view could pass body targeting yet fail the additional floor-center visibility check. Weapon strikes now use the visible enemy's position and the same two-step reach. Empty-floor moves retain floor sight and obstacle checks. Brunna's menu and character sheet identify her as an eligible Preserve Life recipient. The spellbook explains spent Channel Divinity and spent combat actions separately. The healing rule still caps each recipient at half maximum HP, rounded down.
+
+**Verification and player review.** The Debug level-spell fixture used an active Aid effect to give the level-three cleric 35 maximum HP. On her own turn, with one charge and the other three companions at full health, the ability enabled and healed her from 15 to 17. The weapon moved two cells away, then two cells toward the party on the next turn. An unreachable selection could not submit an earlier move. A second fixture returned the weapon from a farther enemy to a visible nearer one at the edge of the view.
+
+The Debug suites `level_spells`, `targeting` and `spell_effects` passed. The hidden OpenGL check `blobber_world_integration_gpu_tests --se03-check` compared post-victory pixels to a live-hammer control. The `--se03-review weapon-travel` capture showed the cleared scene after Continue and after a step. The [native after-step view](screenshots/spell-effects/se03/weapon-travel.png) replaces the older hovering-hammer evidence.
+
+To review in play, cast on a distant enemy. On the next cleric turn choose **Abilities → Command Spiritual Weapon**, pick a reachable square toward the party or cycle with Left/Right, then press Enter. Repeat on a later turn for a longer return. A visible enemy within two steps can be clicked directly to strike. Defeat the last enemy, choose Continue and move. For Preserve Life, select the ability on Brunna's turn while she is below the healing cap, has a charge and can spend her normal action. The original cave save was unavailable, so the exact reason for the reported disabled state remains unverified.

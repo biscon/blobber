@@ -595,8 +595,7 @@ description now points to them (see SE03 design). A
 [party-step correction](se03_design.md#spiritual-weapon-follows-party-steps--2026-11-06)
 keeps active weapons travelling with the party, with shared collision-aware
 destination prediction and smooth presentation; command cooldowns are unchanged.
-The [exploration hover](se03_design.md#spiritual-weapon-between-encounters) keeps a
-summoned hammer visible when travel takes its tactical cell out of sight.
+The [encounter-lifetime revision](se03_design.md#encounter-lifetime-and-return-movement) dismisses the weapon when a fight ends.
 
 Spell effects SE02 **accepted and implemented (2026-11-05)**:
 [SE02 design](se02_design.md) extends offensive spell identities and replaces party
@@ -626,7 +625,7 @@ Spell targeting **corrected; Ready for review (2026-11-06)**:
 [spell design](spells_design.md#acid-splash-proximity-correction) replaces the same-cell
 restriction with subcell-aware distance, allowing equally close pairs across cell
 boundaries. Shared command validation and UI feedback use the same rule. Spiritual Weapon
-commands also gain immediate single-enemy clicking while retaining floor-only moves.
+commands support immediate single-enemy clicks and floor-only moves. The [encounter-lifetime revision](se03_design.md#encounter-lifetime-and-return-movement) ends summons when combat ends and previews reachable movement toward the party.
 Action Surge activates directly when chosen in Abilities.
 [Targeting hover correction](target_selection_design.md#spell-targeting-inspection--2026-11-06)
 keeps enemy health bars and HP details available while choosing spell recipients.

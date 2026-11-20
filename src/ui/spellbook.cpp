@@ -156,7 +156,9 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
         else
             std::snprintf(line, sizeof(line), "Cantrip / %d mana", e.cost);
         clipped(line, dx + 34, dy + 16, dw - 34, blue, UiTextStyle::Small);
-        wrapped(*this, spellDescription(e.kind, e.description), dx, dy + 34, dw, 5, 10);
+        const char* description = e.category == PickerEntryKind::Spell ? spellDescription(e.kind, e.description)
+                                                                       : e.description;
+        wrapped(*this, description, dx, dy + 34, dw, 5, 10);
         const auto* rules = rules::spellRules(e.kind);
         const char* targeting =
             automatic                           ? "No separate action or activation."
@@ -187,7 +189,12 @@ void HudPainter::spellbook(const HudSnapshot& h) const {
                 automatic   ? "Applies automatically when its conditions are met."
                 : available ? (e.feature == rules::Feature::ActionSurge ? "Click or Enter to activate now."
                                                                         : "Click or Enter to choose.")
-                            : commandMessage(e.reason),
+                : e.feature == rules::Feature::PreserveLife && e.reason == CommandReason::NoCharges
+                    ? "Channel Divinity spent. Take a short or long rest."
+                : e.feature == rules::Feature::PreserveLife && e.reason == CommandReason::Cooldown &&
+                          h.combat.phase == CombatPhase::Turns
+                    ? "Your normal action is spent. Available next turn."
+                    : commandMessage(e.reason),
                 dx, dy + 111, dw, 2);
     }
     if (m.visibleCount > hudLayout::spellRows) {
@@ -259,11 +266,13 @@ void HudPainter::spellTargets(const HudSnapshot& h) const {
     const bool resolving = m.state == CastingState::Resolving;
     const bool enabled = !resolving && !h.suspended && !h.modal() && h.availability == CommandReason::Ready;
     clipped(resolving              ? "Resolving..."
-            : m.single && m.ground ? "Choose an enemy or floor cell"
+            : m.single && m.ground ? (m.feedback[0] ? m.feedback.data()
+                                      : c.aimedCell ? "Enter to move to the marked cell"
+                                                    : "Click floor or use arrows. Enter moves.")
             : m.single             ? (m.hostile ? "Choose an enemy" : "Choose an ally")
             : c.feature == rules::Feature::LayOnHands && m.feedback[0] ? m.feedback.data()
                                    : m.targets.data(),
-            53, 333, m.area || c.feature == rules::Feature::LayOnHands ? 229 : 145, teal, UiTextStyle::Small);
+            53, 333, m.area || m.ground || c.feature == rules::Feature::LayOnHands ? 229 : 145, teal, UiTextStyle::Small);
     const char* hint =
         m.feedback[0]                            ? m.feedback.data()
         : m.single && m.ground                   ? "Click enemy to attack; floor then Enter to move."

@@ -69,7 +69,7 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
                          {"web-burn", rules::SpellKind::Web, 2, 1, true, false},
                          {"weapon", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
                          {"weapon-idle", rules::SpellKind::SpiritualWeapon, 1, 3, true, false},
-                         {"weapon-move", rules::SpellKind::SpiritualWeapon, 2, 1, true, false},
+                         {"weapon-move", rules::SpellKind::SpiritualWeapon, 2, 2, true, false},
                          {"weapon-travel", rules::SpellKind::SpiritualWeapon, 1, 1, false, false},
                          {"npc-bless", rules::SpellKind::Bless, 1, 3, true, false}};
     const auto* cases = se03 ? support : se02 ? offensive : foundation;
@@ -265,7 +265,8 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
             for (unsigned i = 0; i < 10 && game.combat().snapshot().phase != CombatPhase::Victory; ++i)
                 commands.record(game.update(.5, false));
             check(game.combat().continueExploring(), "Travel review continues after the last enemy");
-            commands.record(game.update(25, false));
+            check(!game.effects().ground().weapons[1].active, "Encounter end dismisses the weapon");
+            commands.record(game.update(.5, false));
             present();
             presenter.capture(output / "weapon-before-step.png");
             game.setAnimated(false);
@@ -273,9 +274,8 @@ inline void spellEffectsReview(const std::filesystem::path& assets, const std::f
         }
         if (std::string_view(example.name) == "weapon-move") {
             commands.record(game.update(6, false));
-            if (game.combat().snapshot().phase == CombatPhase::Victory)
-                check(game.combat().continueExploring(),
-                      "Weapon review resumes ordinary exploration after victory");
+            check(game.combat().snapshot().phase != CombatPhase::Victory,
+                  "Move the weapon while the second opponent is still alive");
             if (!realTime(game.combat().snapshot().phase))
                 spellReady(game, 1);
             auto move = featureCommand(game, 1, rules::Feature::SpiritualWeapon);

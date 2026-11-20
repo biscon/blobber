@@ -108,13 +108,7 @@ void CommandController::refreshMagic() noexcept {
         if (!access)
             continue;
         const auto* s = party_.catalog().spell({i});
-        const char* description =
-            s->kind == rules::SpellKind::SpiritualWeapon
-                ? "Summon and attack: 1d8 + WIS force. Lasts 60s, no concentration. Later: Abilities > "
-                  "Command Spiritual Weapon. Move up to 2 cells and attack, free once per turn (6s outside "
-                  "turns)."
-                : s->description.c_str();
-        entry({i}, rules::Feature::None, s->name.c_str(), description, access.cost);
+        entry({i}, rules::Feature::None, s->name.c_str(), s->description.c_str(), access.cost);
         auto& row = m.entries[m.count - 1];
         row.source = access.source;
         row.casting = access.casting;
@@ -146,8 +140,9 @@ void CommandController::refreshMagic() noexcept {
                   0);
         if (cls->progression == rules::ProgressionClass::Cleric && c->build.lifeDomain)
             entry({}, rules::Feature::PreserveLife, "Preserve Life",
-                  "Requires a living party member below half max HP (rounded down). Shares 5 HP per cleric "
-                  "level, lowest HP percentage first, up to that cap. Recharges on a short or long rest.",
+                  "Requires someone below half max HP (rounded down), including the cleric. Shares 5 HP per "
+                  "level up to that cap, lowest HP percentage first. Costs one action and one Channel "
+                  "Divinity use. Recharges on a short or long rest.",
                   0);
         if (cls->progression == rules::ProgressionClass::Rogue)
             entry({}, rules::Feature::CunningAction, "Cunning Action / Defend",
@@ -707,13 +702,17 @@ void CommandController::magicKeyboardTarget(int delta) noexcept {
         return;
     }
     if (m.ground) {
-        std::array<Cell, 169> cells{};
+        const auto* weapon = session_.effects().spiritualWeapon(m.pending.character);
+        if (!weapon)
+            return;
+        std::array<Cell, 25> cells{};
         std::size_t count = 0, index = 0;
         const auto pose = session_.movement().player;
-        for (int y = -6; y <= 6; ++y)
-            for (int x = -6; x <= 6; ++x) {
-                const auto cell = pose.cell + Cell{x, y};
-                if (!spellCell(actors_.map(), pose, cell))
+        for (int y = -2; y <= 2; ++y)
+            for (int x = -2; x <= 2; ++x) {
+                const auto cell = weapon->cell + Cell{x, y};
+                if (!session_.effects().weaponCanMove(m.pending.character, cell) ||
+                    !spellCell(actors_.map(), pose, cell))
                     continue;
                 if (m.pending.aimedCell && *m.pending.aimedCell == cell)
                     index = count;
@@ -765,8 +764,11 @@ void CommandController::magicGround(std::optional<Cell> cell, bool select) noexc
         return;
     if (cell && !spellCell(actors_.map(), session_.movement().player, *cell))
         cell.reset();
+    if (cell && !session_.effects().weaponCanMove(m.pending.character, *cell))
+        cell.reset();
     m.hoverCell = cell;
-    if (select && cell) {
+    if (select) {
+        magicFeedback(cell ? "" : "Choose a floor cell within two steps of the hammer.");
         m.pending.aimedCell = cell;
         m.pending.target.reset();
         m.pending.targetCount = 0;
@@ -787,6 +789,13 @@ SpellArea CommandController::floorPreview() const noexcept {
             aimed.aimedCell = m.hoverCell;
         result = session_.combat().area(aimed, session_.movement().player);
         result.kind = m.kind;
+    }
+    if (m.armed && m.pending.feature == rules::Feature::SpiritualWeapon && !state_.modal()) {
+        const auto cell = m.pending.aimedCell ? m.pending.aimedCell : m.hoverCell;
+        if (cell && session_.effects().weaponCanMove(m.pending.character, *cell)) {
+            result.footprint = wholeCellFootprint(*cell);
+            result.kind = rules::SpellKind::SpiritualWeapon;
+        }
     }
     result.ground = session_.effects().ground();
     return result;

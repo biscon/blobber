@@ -91,7 +91,7 @@ void CommandController::refreshCharacterSheet() noexcept {
                 feature("Champion", "Weapon critical range.", "19-20");
         }
         if (cls.progression == rules::ProgressionClass::Cleric && c->build.lifeDomain)
-            feature("Preserve Life", "Requires a living party member below half max HP (rounded down).",
+            feature("Preserve Life", "Includes the cleric. Heals up to half max HP, rounded down.",
                     c->channelDivinity ? "1 / 1 use" : "0 / 1 use");
         if (cls.progression == rules::ProgressionClass::Rogue)
             feature(c->build.level >= 3 ? "Thief / Fast Hands" : "Cunning Action",

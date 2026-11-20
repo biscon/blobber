@@ -45,6 +45,9 @@ inline const char* monsterName(const ActorWorld& world, const ActorState& actor)
 }
 // Keep legacy catalog bytes/save fingerprints stable while removing authoring notes from UI.
 inline const char* spellDescription(rules::SpellKind kind, const char* authored) noexcept {
+    if (kind == rules::SpellKind::SpiritualWeapon)
+        return "Summon and strike for 1d8 + Wisdom force. Lasts up to 60 seconds or until the fight ends. "
+               "No concentration. Use Command Spiritual Weapon to move up to two cells and strike.";
     if (kind == rules::SpellKind::ShockingGrasp)
         return "Cast from either party row against an exposed enemy in the three cells directly ahead. "
                "Melee spell attack: 1d8 lightning, with advantage against metal armor.";

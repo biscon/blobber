@@ -101,41 +101,25 @@ inline void weaponAfterVictory(GpuResources& resources, WorldRenderer& renderer,
     game.actors().damage(cast.enemies[0], 1000, game.timeMs());
     for (int i = 0; i < 10 && game.combat().snapshot().phase != CombatPhase::Victory; ++i)
         game.update(.5, false);
-    check(continueLocalVictory(game, false), "Victory continues to exploration with a living summon");
-    for (int i = 0; i < 50; ++i)
-        game.update(.5, false);
-
+    check(!game.effects().spiritualWeapon({1}) && !game.effects().ground().weapons[1].active,
+          "Victory ends both the summon and its persistent ground image");
+    check(continueLocalVictory(game, false), "Victory continues without the summon");
+    game.move(Action::Forward);
+    game.update(.5, false);
     NpcAnimator animator(game.actors(), timings, &game.combat());
+    animator.setTime(game.timeMs(), &game.effects());
     CommandController hud(game, timings);
     GameView view(renderer);
-    auto checkHammer = [&] {
-        auto area = hud.floorPreview();
-        check(area.ground.weapons[1].active, "Original summon is still active");
-        animator.setTime(game.timeMs(), &game.effects());
-        view.update(game, animator.snapshot(), area);
-        view.activate();
-        const auto withHammer = spellPixels(resources, renderer.image().target);
-        area.ground.weapons[1].active = false;
-        ++area.ground.revision;
-        view.update(game, animator.snapshot(), area);
-        check(withHammer != spellPixels(resources, renderer.image().target),
-              "Active hammer contributes visible pixels between encounters");
-    };
-    checkHammer();
-    game.move(Action::Forward);
-    check(game.movement().player.cell == Cell{6, 7} &&
-              game.effects().ground().weapons[1].cell == spellSpawn.cell,
-          "Stepping into the defeated rank at a wall leaves the tactical hammer behind the camera");
-    checkHammer();
-    game.move(Action::TurnRight);
-    checkHammer();
-    game.move(Action::TurnRight);
-    checkHammer();
-    game.move(Action::Forward);
-    checkHammer();
-    game.move(Action::TurnLeft);
-    game.move(Action::TurnLeft);
-    checkHammer();
+    auto area = hud.floorPreview();
+    view.update(game, animator.snapshot(), area);
+    view.activate();
+    const auto afterVictory = spellPixels(resources, renderer.image().target);
+    // The same view with a live weapon must be visibly different.
+    area.ground.weapons[1] = {game.movement().player.cell, true};
+    ++area.ground.revision;
+    view.update(game, animator.snapshot(), area);
+    check(afterVictory != spellPixels(resources, renderer.image().target),
+          "A step after victory renders the scene without a lingering hammer");
 }
 inline void spellEffectsGpuChecks() {
     Window window(640, 360, true);

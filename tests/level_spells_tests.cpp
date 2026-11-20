@@ -259,6 +259,117 @@ void weaponNextTurnControls() {
             }
         }
 }
+void weaponReturnAndEncounterEnd() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 4, true);
+    GameSession game(map, catalog, places, 7, spellSpawn, false);
+    levelParty(game, 3, SpellKind::SpiritualWeapon);
+    levelReady(game, 1);
+    auto cast = spellCommand(game, SpellKind::SpiritualWeapon);
+    cast.targetCount = 1;
+    cast.enemies[0] = game.actors().id(0);
+    check(game.submit(cast).reason == CommandReason::Resolved, "Return fixture casts on a live enemy");
+    const auto front = game.effects().spiritualWeapon({1})->cell;
+    const auto back = front + forward(spellSpawn.heading) * 2;
+    CommandController ui(game);
+    for (const auto dest : {back, front}) {
+        game.update(1.1, false);
+        levelReady(game, 1);
+        ui.refresh(allCombatTargets(game), false, false, true);
+        ui.selectCharacter(1);
+        ui.openSpellbook();
+        const auto& book = ui.snapshot().magic;
+        unsigned index = 0;
+        while (index < book.count && book.entries[index].feature != Feature::SpiritualWeapon)
+            ++index;
+        check(index < book.count, "Cleric can command the weapon");
+        ui.chooseSpellbook(index);
+        ui.magicGround(dest, true);
+        ui.magicGround(spellSpawn.cell + Cell{0, -6}, true);
+        check(!book.pending.aimedCell && ui.confirm() != CommandReason::Resolved,
+              "Choosing an unreachable square clears the previous move");
+        for (unsigned k = 0; k < 14 && !(book.pending.aimedCell == dest); ++k)
+            ui.magicKeyboardTarget(1);
+        check(book.pending.aimedCell == dest && ui.floorPreview().footprint == wholeCellFootprint(dest),
+              "Reachable floor destinations can be found and previewed in both directions");
+        check(ui.confirm() == CommandReason::Resolved && game.effects().spiritualWeapon({1})->cell == dest,
+              "A two-cell move resolves at the chosen destination");
+        if (dest == back) {
+            game.update(1.1, false);
+            check(game.submit(featureCommand(game, 1, Feature::EndTurn)).reason == CommandReason::Resolved,
+                  "Finish the cleric's turn before commanding the return");
+        }
+    }
+    for (unsigned i = 0; i < game.actors().snapshot().count; ++i)
+        game.actors().damage(game.actors().id(i), 10000, game.timeMs());
+    for (unsigned i = 0; i < 20 && game.combat().snapshot().phase != CombatPhase::Victory; ++i) {
+        if (game.combat().snapshot().activeCharacter && game.combat().snapshot().awaitingAction)
+            game.submit(featureCommand(game, game.combat().snapshot().activeCharacter->index, Feature::EndTurn));
+        game.update(.5, false);
+    }
+    check(game.combat().snapshot().phase == CombatPhase::Victory &&
+              !game.effects().spiritualWeapon({1}) && !game.effects().ground().weapons[1].active,
+          "The victory screen already has no live or rendered weapon");
+    check(game.combat().continueExploring(), "Continue after dismissing the summon");
+}
+void weaponReturnToVisibleEnemy() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const Cell back{7, 5}, front{8, 6};
+    const NpcWorld places(map, spellSpawn.cell, {"goblin"},
+                          {{{0}, back, {0, 0}, Heading::South}, {{0}, front, {0, 0}, Heading::South}});
+    GameSession game(map, catalog, places, 11, spellSpawn, false);
+    levelParty(game, 3, SpellKind::SpiritualWeapon);
+    auto cast = spellCommand(game, SpellKind::SpiritualWeapon);
+    cast.enemies[0] = game.actors().id(0);
+    cast.targetCount = 1;
+    check(game.submit(cast).reason == CommandReason::Resolved, "Summon on the farther opponent");
+    game.update(6, false);
+    auto strike = featureCommand(game, 1, Feature::SpiritualWeapon);
+    strike.spell = cast.spell;
+    strike.enemies[0] = game.actors().id(1);
+    strike.targetCount = 1;
+    check(!spellCell(game.geometry(), spellSpawn, front) &&
+              game.combat().spellRecipient(strike, spellSpawn, 0) == CommandReason::Ready,
+          "The nearer enemy is visible at the edge even though its cell center fails floor targeting");
+    check(game.submit(strike).reason == CommandReason::Resolved && game.effects().spiritualWeapon({1})->cell == front,
+          "The hammer can return two steps and strike the visible nearer enemy");
+}
+void preserveLifeSelfInCombat() {
+    const auto map = hybridRoom();
+    const auto catalog = creationCatalog(true);
+    const auto places = spellPlacements(map, 4, true);
+    GameSession game(map, catalog, places, 7, spellSpawn, false);
+    levelParty(game, 3);
+    levelReady(game, 1);
+    const CharacterId caster{1};
+    for (std::uint16_t i = 0; i < partySize; ++i)
+        game.party().heal({i}, 100);
+    const auto& cleric = *game.party().character(caster);
+    EffectRequest aid;
+    aid.world = game.actors().snapshot().world;
+    aid.kind = EffectKind::Aid;
+    aid.caster = caster;
+    aid.targets[0] = caster;
+    aid.count = 1;
+    check(bool(game.applyEffect(aid)) && cleric.stats.maxHitPoints == 35, "Aid brings the cleric to 35 max HP");
+    game.party().damage(caster, cleric.hitPoints - 15);
+    CommandController ui(game);
+    ui.refresh(allCombatTargets(game), false, false, true);
+    ui.selectCharacter(1);
+    ui.openSpellbook();
+    const auto& book = ui.snapshot().magic;
+    unsigned index = 0;
+    while (index < book.count && book.entries[index].feature != Feature::PreserveLife)
+        ++index;
+    check(index < book.count && book.entries[index].reason == CommandReason::Ready,
+          "Only the cleric is hurt at 15/35 and the ability is enabled on her turn");
+    ui.chooseSpellbook(index);
+    const auto reason = ui.confirm();
+    check(reason == CommandReason::Resolved && cleric.hitPoints == 17 && !cleric.channelDivinity,
+          "The ability heals the cleric to 17/35 and spends one charge");
+}
 void immediateActionSurge() {
     const auto map = hybridRoom();
     const auto catalog = creationCatalog(true);
@@ -676,6 +787,9 @@ int main(int argc, char**) {
         }
         spells();
         weaponNextTurnControls();
+        weaponReturnAndEncounterEnd();
+        weaponReturnToVisibleEnemy();
+        preserveLifeSelfInCombat();
         weaponFollowsMovement();
         immediateActionSurge();
         aidAndMirror();
